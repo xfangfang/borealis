@@ -29,7 +29,7 @@ namespace brls
 
 class View;
 
-typedef std::function<bool(void)> ActionListener;
+typedef std::function<bool(View*)> ActionListener;
 
 // ZL and ZR do not exist here because GLFW doesn't know them
 enum class Key

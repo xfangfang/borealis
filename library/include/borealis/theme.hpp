@@ -1,6 +1,6 @@
 /*
     Borealis, a Nintendo Switch UI Library
-    Copyright (C) 2019  natinusala
+    Copyright (C) 2019-2020  natinusala
     Copyright (C) 2019  p-sam
 
     This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,10 @@
 
 #include <nanovg/nanovg.h>
 
+#include <initializer_list>
+#include <map>
+#include <string>
+
 namespace brls
 {
 
@@ -30,114 +34,33 @@ enum class ThemeVariant
     DARK
 };
 
-// A Theme instance contains colors for one variant (light or dark)
+class ThemeValues
+{
+  public:
+    ThemeValues(std::initializer_list<std::pair<std::string, NVGcolor>> list);
+
+    void addColor(std::string name, NVGcolor color);
+    NVGcolor getColor(std::string name);
+
+  private:
+    std::map<std::string, NVGcolor> values;
+};
+
+// Simple wrapper around ThemeValues for the array operator
 class Theme
 {
   public:
-    float backgroundColor[3]; // gl color
-    NVGcolor backgroundColorRGB;
+    Theme(ThemeValues* values);
+    NVGcolor operator[](std::string name);
 
-    NVGcolor textColor;
-    NVGcolor descriptionColor;
+    void addColor(std::string name, NVGcolor color);
+    NVGcolor getColor(std::string name);
 
-    NVGcolor notificationTextColor;
-    NVGcolor backdropColor;
-
-    NVGcolor separatorColor;
-
-    NVGcolor sidebarColor;
-    NVGcolor activeTabColor;
-    NVGcolor sidebarSeparatorColor;
-
-    NVGcolor highlightBackgroundColor;
-    NVGcolor highlightColor1;
-    NVGcolor highlightColor2;
-
-    NVGcolor listItemSeparatorColor;
-    NVGcolor listItemValueColor;
-    NVGcolor listItemFaintValueColor;
-
-    NVGcolor tableEvenBackgroundColor;
-    NVGcolor tableBodyTextColor;
-
-    NVGcolor dropdownBackgroundColor;
-
-    NVGcolor nextStageBulletColor;
-
-    NVGcolor spinnerBarColor;
-
-    NVGcolor headerRectangleColor;
-
-    NVGcolor buttonPrimaryEnabledBackgroundColor;
-    NVGcolor buttonPrimaryDisabledBackgroundColor;
-    NVGcolor buttonPrimaryEnabledTextColor;
-    NVGcolor buttonPrimaryDisabledTextColor;
-    NVGcolor buttonBorderedBorderColor;
-    NVGcolor buttonBorderedTextColor;
-    NVGcolor buttonRegularBackgroundColor;
-    NVGcolor buttonRegularTextColor;
-    NVGcolor buttonRegularBorderColor;
-
-    NVGcolor dialogColor;
-    NVGcolor dialogBackdrop;
-    NVGcolor dialogButtonColor;
-    NVGcolor dialogButtonSeparatorColor;
-};
-
-// Helper class to store two Theme variants and get the right one
-// depending on current system theme
-template <class LightTheme, class DarkTheme>
-class GenericThemeVariantsWrapper
-{
   private:
-    LightTheme* lightTheme;
-    DarkTheme* darkTheme;
-
-  public:
-    GenericThemeVariantsWrapper(LightTheme* lightTheme, DarkTheme* darkTheme)
-        : lightTheme(lightTheme)
-        , darkTheme(darkTheme)
-    {
-    }
-
-    Theme* getTheme(ThemeVariant currentThemeVariant)
-    {
-        if (currentThemeVariant == ThemeVariant::DARK)
-            return this->darkTheme;
-
-        return this->lightTheme;
-    }
-
-    Theme* getLightTheme()
-    {
-        return this->lightTheme;
-    }
-
-    Theme* getDarkTheme()
-    {
-        return this->darkTheme;
-    }
-
-    ~GenericThemeVariantsWrapper()
-    {
-        delete this->lightTheme;
-        delete this->darkTheme;
-    }
+    ThemeValues* values;
 };
 
-// Themes variants wrapper specification for built-in library views
-typedef GenericThemeVariantsWrapper<Theme, Theme> LibraryViewsThemeVariantsWrapper;
-
-class HorizonLightTheme : public Theme
-{
-  public:
-    HorizonLightTheme();
-};
-
-class HorizonDarkTheme : public Theme
-{
-  public:
-    HorizonDarkTheme();
-};
+Theme getLightTheme();
+Theme getDarkTheme();
 
 } // namespace brls

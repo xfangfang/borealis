@@ -58,8 +58,7 @@ class Dialog : public View
     Dialog(View* contentView);
     ~Dialog();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style* style, FrameContext* ctx) override;
     View* getDefaultFocus() override;
     virtual bool onCancel();
 
@@ -82,7 +81,7 @@ class Dialog : public View
     void setCancelable(bool cancelable);
 
     void open();
-    void close(std::function<void(void)> cb = []() {});
+    void close(std::function<void(void)> cb = [] {});
 
     bool isTranslucent() override
     {

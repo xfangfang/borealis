@@ -35,8 +35,7 @@ class Notification : public View
     Notification(std::string text);
     ~Notification();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
 
     menu_timer_t timeoutTimer;
 
@@ -55,8 +54,7 @@ class NotificationManager : public View
     NotificationManager();
     ~NotificationManager();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
 
     void notify(std::string text);
 };

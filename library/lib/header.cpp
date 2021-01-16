@@ -1,6 +1,6 @@
 /*
     Borealis, a Nintendo Switch UI Library
-    Copyright (C) 2019  natinusala
+    Copyright (C) 2019-2020  natinusala
     Copyright (C) 2019  p-sam
 
     This program is free software: you can redistribute it and/or modify
@@ -17,58 +17,77 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <borealis/application.hpp>
 #include <borealis/header.hpp>
 
 namespace brls
 {
 
-Header::Header(std::string label, bool separator, std::string sublabel)
-    : label(label)
-    , sublabel(sublabel)
-    , separator(separator)
+const std::string headerXML = R"xml(
+    <brls:Box
+        width="auto"
+        height="auto"
+        axis="row"
+        paddingTop="@style/brls/header/padding_top_bottom"
+        paddingBottom="@style/brls/header/padding_top_bottom"
+        lineBottom="1px"
+        lineColor="@theme/brls/header/border" >
+
+        <brls:Rectangle
+            width="@style/brls/header/rectangle_width"
+            height="@style/brls/header/rectangle_height"
+            color="@theme/brls/header/rectangle"
+            marginRight="@style/brls/header/rectangle_margin" />
+
+        <brls:Label
+            id="brls/header/title"
+            width="auto"
+            height="auto"
+            fontSize="@style/brls/header/font_size" />
+
+        <brls:Padding />
+
+        <brls:Label
+            id="brls/header/subtitle"
+            width="auto"
+            height="auto"
+            fontSize="@style/brls/header/font_size"
+            textColor="@theme/brls/header/subtitle"
+            visibility="gone"
+            textAlign="right" />
+
+    </brls:Box>
+)xml";
+
+Header::Header()
 {
-    Style* style = Application::getStyle();
-    this->setHeight(style->Header.height);
+    this->inflateFromXMLString(headerXML);
+
+    this->title    = (Label*)this->getView("brls/header/title");
+    this->subtitle = (Label*)this->getView("brls/header/subtitle");
+
+    this->registerStringXMLAttribute("title", [this](std::string value) {
+        this->setTitle(value);
+    });
+
+    this->registerStringXMLAttribute("subtitle", [this](std::string value) {
+        this->setSubtitle(value);
+    });
 }
 
-void Header::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
+void Header::setTitle(std::string title)
 {
-    unsigned padding = style->Header.padding;
+    this->title->setText(title);
+}
 
-    // Rectangle
-    nvgBeginPath(vg);
-    nvgFillColor(vg, a(ctx->theme->headerRectangleColor));
-    nvgRect(vg, x, y + padding, style->Header.rectangleWidth, height - padding * 2);
-    nvgFill(vg);
+void Header::setSubtitle(std::string subtitle)
+{
+    this->subtitle->setVisibility(Visibility::VISIBLE);
+    this->subtitle->setText(subtitle);
+}
 
-    // Label
-    nvgBeginPath(vg);
-    nvgFontFaceId(vg, ctx->fontStash->regular);
-    nvgFontSize(vg, style->Header.fontSize);
-    nvgFillColor(vg, a(ctx->theme->textColor));
-    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgText(vg, x + style->Header.rectangleWidth + padding, y + height / 2, this->label.c_str(), nullptr);
-
-    // Sublabel
-    if (this->sublabel != "")
-    {
-        nvgBeginPath(vg);
-        nvgFontFaceId(vg, ctx->fontStash->regular);
-        nvgFontSize(vg, style->Header.fontSize);
-        nvgFillColor(vg, a(ctx->theme->descriptionColor));
-        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
-        nvgText(vg, x + width - style->Header.rectangleWidth - padding, y + height / 2, this->sublabel.c_str(), nullptr);
-    }
-
-    // Separator
-    if (this->separator)
-    {
-        nvgBeginPath(vg);
-        nvgFillColor(vg, a(ctx->theme->listItemSeparatorColor));
-        nvgRect(vg, x, y + height, width, 1);
-        nvgFill(vg);
-    }
+View* Header::create()
+{
+    return new Header();
 }
 
 } // namespace brls

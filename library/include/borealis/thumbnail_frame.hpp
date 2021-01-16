@@ -40,8 +40,7 @@ class ThumbnailSidebar : public View
     ThumbnailSidebar();
     ~ThumbnailSidebar();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style* style, FrameContext* ctx) override;
     View* getDefaultFocus() override;
 
     void setThumbnail(std::string imagePath);
@@ -69,9 +68,6 @@ class ThumbnailFrame : public AppletFrame
 
     void setContentView(View* view) override;
     ThumbnailSidebar* getSidebar();
-
-  protected:
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
 };
 
 } // namespace brls

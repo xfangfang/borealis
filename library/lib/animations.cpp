@@ -585,7 +585,7 @@ void menu_animation_get_highlight(float* gradient_x, float* gradient_y, float* c
         *color = (float)highlight_color;
 }
 
-#define HIGHLIGHT_SPEED 350.0
+#define HIGHLIGHT_SPEED 125.0f
 
 static void menu_animation_update_time(bool timedate_enable)
 {
@@ -813,7 +813,7 @@ bool menu_animation_kill_by_tag(menu_animation_ctx_tag* tag)
 {
     unsigned i;
 
-    if (!tag || *tag == (uintptr_t)-1)
+    if (!tag || *tag == (menu_animation_ctx_tag)-1)
         return false;
 
     for (i = 0; i < anim.list.size(); ++i)
@@ -896,7 +896,7 @@ bool menu_animation_ctl(enum menu_animation_ctl_state state, void* data)
 void menu_timer_start(menu_timer_t* timer, menu_timer_ctx_entry_t* timer_entry)
 {
     menu_animation_ctx_entry_t entry;
-    menu_animation_ctx_tag tag = (uintptr_t)timer;
+    menu_animation_ctx_tag tag = (menu_animation_ctx_tag)timer;
 
     menu_timer_kill(timer);
 
@@ -916,7 +916,7 @@ void menu_timer_start(menu_timer_t* timer, menu_timer_ctx_entry_t* timer_entry)
 
 void menu_timer_kill(menu_timer_t* timer)
 {
-    menu_animation_ctx_tag tag = (uintptr_t)timer;
+    menu_animation_ctx_tag tag = (menu_animation_ctx_tag)timer;
     menu_animation_kill_by_tag(&tag);
 }
 

@@ -19,74 +19,83 @@
 
 #pragma once
 
-#include <borealis/box_layout.hpp>
-#include <string>
-#include <vector>
+#include <borealis/box.hpp>
+#include <borealis/label.hpp>
+#include <borealis/rectangle.hpp>
+#include <borealis/scrolling_frame.hpp>
 
 namespace brls
 {
 
-// A sidebar with multiple tabs
+class SidebarItem;
+
 class SidebarSeparator : public View
 {
   public:
     SidebarSeparator();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
 };
 
-class Sidebar;
-
-// TODO: Use a Label view with integrated ticker for label and sublabel, have the label always tick when active
-class SidebarItem : public View
+class SidebarItemGroup
 {
-  private:
-    std::string label;
-    bool active = false;
-
-    Sidebar* sidebar     = nullptr;
-    View* associatedView = nullptr;
-
   public:
-    SidebarItem(std::string label, Sidebar* sidebar);
+    void add(SidebarItem* item);
+    void setActive(SidebarItem* item);
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
+  private:
+    std::vector<SidebarItem*> items;
+};
 
-    View* getDefaultFocus() override
-    {
-        return this;
-    }
-
-    virtual bool onClick();
-
-    void setActive(bool active);
-    bool isActive();
+class SidebarItem : public Box
+{
+  public:
+    SidebarItem();
 
     void onFocusGained() override;
+    void onFocusLost() override;
 
-    void setAssociatedView(View* view);
-    View* getAssociatedView();
+    void setGroup(SidebarItemGroup* group);
 
-    ~SidebarItem();
+    void setLabel(std::string label);
+
+    void setActive(bool active);
+
+    GenericEvent* getActiveEvent();
+
+  private:
+    Rectangle* accent;
+    Label* label;
+
+    GenericEvent activeEvent;
+
+    SidebarItemGroup* group;
+
+    bool active = false;
 };
 
-class Sidebar : public BoxLayout
+class Sidebar : public ScrollingFrame
 {
-  private:
-    SidebarItem* currentActive = nullptr;
-
   public:
     Sidebar();
 
-    SidebarItem* addItem(std::string label, View* view);
+    /**
+     * Adds an item to this sidebar. The given callback will be called
+     * when the item becomes active.
+     */
+    void addItem(std::string label, GenericEvent::Callback focusCallback);
+
+    /**
+     * Adds a separator to this sidebar.
+     */
     void addSeparator();
 
-    void setActive(SidebarItem* item);
+    static View* create();
 
-    View* getDefaultFocus() override;
-    void onChildFocusGained(View* child) override;
+  private:
+    SidebarItemGroup group;
 
-    size_t lastFocus = 0;
+    Box* contentBox;
 };
 
 } // namespace brls

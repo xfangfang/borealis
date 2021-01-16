@@ -19,160 +19,181 @@
 */
 
 #include <borealis/application.hpp>
-#include <borealis/i18n.hpp>
+#include <borealis/rectangle.hpp>
 #include <borealis/sidebar.hpp>
-
-using namespace brls::i18n::literals;
 
 namespace brls
 {
 
-Sidebar::Sidebar()
-    : BoxLayout(BoxLayoutOrientation::VERTICAL)
+// TODO: restore OK / Back behavior, as well as focus conservation
+
+const std::string sidebarItemXML = R"xml(
+    <brls:Box
+        width="auto"
+        height="@style/brls/sidebar/item_height"
+        focusable="true" >
+
+        <brls:Rectangle
+            id="brls/sidebar/item_accent"
+            width="@style/brls/sidebar/item_accent_rect_width"
+            height="auto"
+            visibility="invisible"
+            color="@theme/brls/sidebar/active_item"
+            marginTop="@style/brls/sidebar/item_accent_margin_top_bottom"
+            marginBottom="@style/brls/sidebar/item_accent_margin_top_bottom"
+            marginLeft="@style/brls/sidebar/item_accent_margin_sides"
+            marginRight="@style/brls/sidebar/item_accent_margin_sides" />
+
+        <brls:Label
+            id="brls/sidebar/item_label"
+            width="auto"
+            height="auto"
+            grow="1.0"
+            fontSize="@style/brls/sidebar/item_font_size"
+            marginTop="@style/brls/sidebar/item_accent_margin_top_bottom"
+            marginBottom="@style/brls/sidebar/item_accent_margin_top_bottom"
+            marginRight="@style/brls/sidebar/item_accent_margin_sides" />
+
+    </brls:Box>
+)xml";
+
+SidebarItem::SidebarItem()
+    : Box(Axis::ROW)
 {
-    Style* style = Application::getStyle();
+    this->inflateFromXMLString(sidebarItemXML);
 
-    this->setWidth(style->Sidebar.width);
-    this->setSpacing(style->Sidebar.spacing);
-    this->setMargins(style->Sidebar.marginTop, style->Sidebar.marginRight, style->Sidebar.marginBottom, style->Sidebar.marginLeft);
-    this->setBackground(ViewBackground::SIDEBAR);
-}
+    this->accent = (Rectangle*)this->getView("brls/sidebar/item_accent");
+    this->label  = (Label*)this->getView("brls/sidebar/item_label");
 
-View* Sidebar::getDefaultFocus()
-{
-    // Sanity check
-    if (this->lastFocus >= this->children.size())
-        this->lastFocus = 0;
-
-    View* toFocus { nullptr };
-    // Try to focus last focused one
-    if (this->children.size() != 0)
-        toFocus = this->children[this->lastFocus]->view->getDefaultFocus();
-
-    if (toFocus)
-        return toFocus;
-
-    // Otherwise just get the first available item
-    return BoxLayout::getDefaultFocus();
-}
-
-void Sidebar::onChildFocusGained(View* child)
-{
-    size_t position = *((size_t*)child->getParentUserData());
-
-    this->lastFocus = position;
-
-    BoxLayout::onChildFocusGained(child);
-}
-
-SidebarItem* Sidebar::addItem(std::string label, View* view)
-{
-    SidebarItem* item = new SidebarItem(label, this);
-    item->setAssociatedView(view);
-
-    if (this->isEmpty())
-        setActive(item);
-
-    this->addView(item);
-
-    return item;
-}
-
-void Sidebar::addSeparator()
-{
-    SidebarSeparator* separator = new SidebarSeparator();
-    this->addView(separator);
-}
-
-void Sidebar::setActive(SidebarItem* active)
-{
-    if (currentActive)
-        currentActive->setActive(false);
-
-    currentActive = active;
-    active->setActive(true);
-}
-
-SidebarItem::SidebarItem(std::string label, Sidebar* sidebar)
-    : label(label)
-    , sidebar(sidebar)
-{
-    Style* style = Application::getStyle();
-    this->setHeight(style->Sidebar.Item.height);
-
-    this->registerAction("brls/hints/ok"_i18n, Key::A, [this] { return this->onClick(); });
-}
-
-void SidebarItem::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
-{
-    // Label
-    nvgFillColor(vg, a(this->active ? ctx->theme->activeTabColor : ctx->theme->textColor));
-    nvgFontSize(vg, style->Sidebar.Item.textSize);
-    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-    nvgFontFaceId(vg, ctx->fontStash->regular);
-    nvgBeginPath(vg);
-    nvgText(vg, x + style->Sidebar.Item.textOffsetX + style->Sidebar.Item.padding, y + height / 2, this->label.c_str(), nullptr);
-
-    // Active marker
-    if (this->active)
-    {
-        nvgFillColor(vg, a(ctx->theme->activeTabColor));
-        nvgBeginPath(vg);
-        nvgRect(vg, x + style->Sidebar.Item.padding, y + style->Sidebar.Item.padding, style->Sidebar.Item.activeMarkerWidth, style->Sidebar.Item.height - style->Sidebar.Item.padding * 2);
-        nvgFill(vg);
-    }
-}
-
-bool SidebarItem::onClick()
-{
-    Application::onGamepadButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, false);
-    return true;
+    this->registerStringXMLAttribute("label", [this](std::string value) {
+        this->setLabel(value);
+    });
 }
 
 void SidebarItem::setActive(bool active)
 {
+    if (active == this->active)
+        return;
+
+    Theme theme = Application::getTheme();
+
+    if (active)
+    {
+        this->activeEvent.fire(this);
+
+        this->accent->setVisibility(Visibility::VISIBLE);
+        this->label->setTextColor(theme["brls/sidebar/active_item"]);
+    }
+    else
+    {
+        this->accent->setVisibility(Visibility::INVISIBLE);
+        this->label->setTextColor(theme["brls/text"]);
+    }
+
     this->active = active;
-}
-
-SidebarSeparator::SidebarSeparator()
-{
-    Style* style = Application::getStyle();
-    this->setHeight(style->Sidebar.Separator.height);
-}
-
-void SidebarSeparator::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
-{
-    nvgFillColor(vg, a(ctx->theme->sidebarSeparatorColor));
-    nvgBeginPath(vg);
-    nvgRect(vg, x, y + height / 2, width, 1);
-    nvgFill(vg);
-}
-
-void SidebarItem::setAssociatedView(View* view)
-{
-    this->associatedView = view;
-}
-
-bool SidebarItem::isActive()
-{
-    return this->active;
 }
 
 void SidebarItem::onFocusGained()
 {
-    this->sidebar->setActive(this);
-    View::onFocusGained();
+    Box::onFocusGained();
+
+    if (this->group)
+        this->group->setActive(this);
 }
 
-View* SidebarItem::getAssociatedView()
+void SidebarItem::onFocusLost()
 {
-    return this->associatedView;
+    Box::onFocusLost();
 }
 
-SidebarItem::~SidebarItem()
+void SidebarItem::setGroup(SidebarItemGroup* group)
 {
-    if (this->associatedView)
-        delete this->associatedView;
+    this->group = group;
+
+    if (group)
+        group->add(this);
+}
+
+GenericEvent* SidebarItem::getActiveEvent()
+{
+    return &this->activeEvent;
+}
+
+void SidebarItem::setLabel(std::string label)
+{
+    this->label->setText(label);
+}
+
+Sidebar::Sidebar()
+{
+    Style style = Application::getStyle();
+
+    this->setScrollingBehavior(ScrollingBehavior::CENTERED);
+    this->setBackground(ViewBackground::SIDEBAR);
+
+    // Create content box
+    this->contentBox = new Box(Axis::COLUMN);
+
+    this->contentBox->setPadding(
+        style["brls/sidebar/padding_top"],
+        style["brls/sidebar/padding_right"],
+        style["brls/sidebar/padding_bottom"],
+        style["brls/sidebar/padding_left"]);
+
+    this->setContentView(this->contentBox);
+}
+
+void Sidebar::addItem(std::string label, GenericEvent::Callback focusCallback)
+{
+    SidebarItem* item = new SidebarItem();
+    item->setGroup(&this->group);
+    item->setLabel(label);
+    item->getActiveEvent()->subscribe(focusCallback);
+
+    this->contentBox->addView(item);
+}
+
+void Sidebar::addSeparator()
+{
+    this->contentBox->addView(new SidebarSeparator());
+}
+
+View* Sidebar::create()
+{
+    return new Sidebar();
+}
+
+void SidebarItemGroup::add(SidebarItem* item)
+{
+    this->items.push_back(item);
+}
+
+void SidebarItemGroup::setActive(SidebarItem* active)
+{
+    for (SidebarItem* item : this->items)
+    {
+        if (item == active)
+            item->setActive(true);
+        else
+            item->setActive(false);
+    }
+}
+
+SidebarSeparator::SidebarSeparator()
+{
+    Style style = Application::getStyle();
+
+    this->setHeight(style["brls/sidebar/separator_height"]);
+}
+
+void SidebarSeparator::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
+{
+    float midY = y + height / 2;
+
+    nvgBeginPath(vg);
+    nvgFillColor(vg, ctx->theme["brls/sidebar/separator"]);
+    nvgRect(vg, x, midY, width, 1);
+    nvgFill(vg);
 }
 
 } // namespace brls

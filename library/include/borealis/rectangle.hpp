@@ -28,17 +28,16 @@ namespace brls
 // A solid color rectangle
 class Rectangle : public View
 {
-  protected:
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
-
   public:
     Rectangle(NVGcolor color);
+    Rectangle();
+    ~Rectangle() { }
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
 
     void setColor(NVGcolor color);
 
-    ~Rectangle() { }
+    static View* create();
 
   private:
     NVGcolor color = nvgRGB(0, 0, 255);

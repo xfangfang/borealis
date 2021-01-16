@@ -2,6 +2,7 @@
     Borealis, a Nintendo Switch UI Library
     Copyright (C) 2019  WerWolv
     Copyright (C) 2019  p-sam
+    Copyright (C) 2020  natinusala
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,81 +20,108 @@
 
 #pragma once
 
-#include <borealis/frame_context.hpp>
 #include <borealis/view.hpp>
 
-// fwd for std::swap
-namespace brls
-{
-class Image;
-}
-// fwd for friend declaration in brls::Image
-namespace std
-{
-void swap(brls::Image& a, brls::Image& b);
-}
-
 namespace brls
 {
 
-enum class ImageScaleType
+// This dictates what to do with the image if there is not
+// enough room for the view to grow and display the whole image,
+// or if the view is bigger than the image
+enum class ImageScalingType
 {
-    NO_RESIZE = 0, // Nothing is resized
-    FIT, // The image is shrinked to fit the view boundaries
-    CROP, // The image is not resized but is cropped if bigger than the view
-    SCALE, // The image is stretched to match the view boundaries
-    VIEW_RESIZE // The view is resized to match the image
+    // The image is scaled to fit the view boundaries, aspect ratio is conserved
+    FIT,
+    // The image is stretched to fit the view boundaries (aspect ratio is not conserved). The original image dimensions are entirely ignored in the layout process.
+    STRETCH,
+    // The image is either cropped (not enough space) or untouched (too much space)
+    CROP,
+
+    // TODO: try to do a TILED type with NVGimageFlags
 };
 
-// An image
+// Alignment of the image inside the view for FIT and CROP scaling types
+// TODO: add diagonals too
+enum class ImageAlignment
+{
+    TOP,
+    RIGHT,
+    BOTTOM,
+    LEFT,
+    CENTER,
+};
+
+// An image. The view will try to grow as much
+// as possible to fit the image. The scaling type dictates
+// what to do with the image if there is not enough or too much space
+// for the view compared to the image inside.
+// Supported formats are: JPG, PNG, TGA, BMP and GIF (not animated).
 class Image : public View
 {
-    friend void std::swap(Image& a, Image& b);
-
   public:
-    Image() = default;
-    Image(std::string imagePath);
-    Image(unsigned char* buffer, size_t bufferSize);
-
+    Image();
     ~Image();
-    Image(const Image& copy);
-    Image(Image&& move) noexcept;
-    Image& operator=(const Image& cp_assign);
-    Image& operator=(Image&& mv_assign);
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+    void onLayout() override;
 
-    void setImage(unsigned char* buffer, size_t bufferSize);
-    void setImage(std::string imagePath);
+    /**
+     * Sets the image from the given resource name.
+     *
+     * See Image class documentation for the list of supported
+     * image formats.
+     */
+    void setImageFromRes(std::string name);
 
-    void setScaleType(ImageScaleType imageScaleType);
-    void setOpacity(float opacity);
+    /**
+     * Sets the image from the given file path.
+     *
+     * See Image class documentation for the list of supported
+     * image formats.
+     */
+    void setImageFromFile(std::string path);
 
-    void setCornerRadius(float radius)
-    {
-        this->cornerRadius = radius;
-    }
+    /**
+     * Sets the scaling type for this image.
+     *
+     * Default is FIT.
+     */
+    void setScalingType(ImageScalingType scalingType);
 
-    unsigned char* copyImgBuf() const;
+    ImageScalingType getScalingType();
+
+    /**
+     * Sets the alignment of the image inside the view.
+     * Only used if scaling it set to FIT when the aspect ratio is different
+     * or CROP, to change the region of the image to draw.
+     *
+     * Default is CENTER.
+     */
+    void setImageAlign(ImageAlignment align);
+
+    int getTexture();
+    float getOriginalImageWidth();
+    float getOriginalImageHeight();
+
+    static View* create();
 
   private:
-    std::string imagePath;
-    unsigned char* imageBuffer = nullptr;
-    size_t imageBufferSize     = 0;
+    ImageScalingType scalingType = ImageScalingType::FIT;
+    ImageAlignment align         = ImageAlignment::CENTER;
 
-    int texture = -1;
-    NVGpaint imgPaint;
+    int texture = 0;
 
-    ImageScaleType imageScaleType = ImageScaleType::FIT;
+    NVGpaint paint;
 
-    float cornerRadius = 0;
+    void invalidateImageBounds();
 
-    int imageX = 0, imageY = 0;
-    int imageWidth = 0, imageHeight = 0;
-    int origViewWidth = 0, origViewHeight = 0;
+    float originalImageWidth  = 0;
+    float originalImageHeight = 0;
 
-    void reloadTexture();
+    float imageX      = 0;
+    float imageY      = 0;
+    float imageHeight = 0;
+    float imageWidth  = 0;
 };
 
 } // namespace brls

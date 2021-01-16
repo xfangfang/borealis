@@ -21,231 +21,153 @@
 
 #include <borealis/application.hpp>
 #include <borealis/button.hpp>
-#include <borealis/i18n.hpp>
-
-using namespace brls::i18n::literals;
 
 namespace brls
 {
 
-// TODO: Disabled bordered button
-// TODO: Regular disabled button
+// TODO: image
+// TODO: click animation
 
-Button::Button(ButtonStyle style)
-    : style(style)
+const std::string buttonXML = R"xml(
+    <brls:Box
+        width="auto"
+        height="auto"
+        axis="row"
+        focusable="true"
+        justifyContent="center"
+        alignItems="center"
+        paddingTop="@style/brls/button/padding_top_bottom"
+        paddingRight="@style/brls/button/padding_sides"
+        paddingBottom="@style/brls/button/padding_top_bottom"
+        paddingLeft="@style/brls/button/padding_sides"
+        cornerRadius="@style/brls/button/corner_radius"
+        highlightCornerRadius="@style/brls/button/corner_radius">
+
+    <brls:Label
+        id="brls/button/label"
+        width="auto"
+        height="auto"
+        fontSize="@style/brls/button/text_size"
+        textAlign="center" />
+
+    </brls:Box>
+)xml";
+
+Button::Button()
 {
-    this->registerAction("brls/hints/ok"_i18n, Key::A, [this] { return this->onClick(); });
+    this->inflateFromXMLString(buttonXML);
+
+    this->label = (Label*)this->getView("brls/button/label");
+
+    this->forwardXMLAttribute("text", this->label);
+    this->forwardXMLAttribute("singleLine", this->label);
+    this->forwardXMLAttribute("fontSize", this->label);
+    this->forwardXMLAttribute("textColor", this->label);
+    this->forwardXMLAttribute("lineHeight", this->label);
+    this->forwardXMLAttribute("animated", this->label);
+    this->forwardXMLAttribute("autoAnimate", this->label);
+    this->forwardXMLAttribute("textAlign", this->label);
+
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "style", const ButtonStyle*, this->setStyle,
+        {
+            { "default", &BUTTONSTYLE_DEFAULT },
+            { "primary", &BUTTONSTYLE_PRIMARY },
+            { "highlight", &BUTTONSTYLE_HIGHLIGHT },
+            { "bordered", &BUTTONSTYLE_BORDERED },
+            { "borderless", &BUTTONSTYLE_BORDERLESS },
+        });
+
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "state", ButtonState, this->setState,
+        {
+            { "enabled", ButtonState::ENABLED },
+            { "disabled", ButtonState::DISABLED },
+        });
+
+    this->applyStyle();
 }
 
-LabelStyle Button::getLabelStyle()
+void Button::applyStyle()
 {
-    switch (this->style)
+    Style style = Application::getStyle();
+    Theme theme = Application::getTheme();
+
+    this->setShadowType(this->style->shadowType);
+    this->setHideHighlightBackground(this->style->hideHighlightBackground);
+
+    if (this->style->highlightPadding != "")
+        this->setHighlightPadding(style[this->style->highlightPadding]);
+    else
+        this->setHighlightPadding(0.0f);
+
+    if (this->style->borderThickness != "")
+        this->setBorderThickness(style[this->style->borderThickness]);
+    else
+        this->setBorderThickness(0.0f);
+
+    std::string backgroundColor;
+    std::string textColor;
+    std::string borderColor;
+
+    switch (this->state)
     {
-        case ButtonStyle::BORDERLESS:
-            return LabelStyle::BUTTON_BORDERLESS;
-        case ButtonStyle::DIALOG:
-            return LabelStyle::BUTTON_DIALOG;
-        case ButtonStyle::CRASH:
-            return LabelStyle::CRASH;
-        case ButtonStyle::BORDERED:
-            return LabelStyle::BUTTON_BORDERED;
-        case ButtonStyle::REGULAR:
-            return LabelStyle::BUTTON_REGULAR;
-        case ButtonStyle::PRIMARY:
-        default:
-            if (this->state == ButtonState::DISABLED)
-                return LabelStyle::BUTTON_PRIMARY_DISABLED;
-            else
-                return LabelStyle::BUTTON_PRIMARY;
+        case ButtonState::ENABLED:
+            backgroundColor = this->style->enabledBackgroundColor;
+            textColor       = this->style->enabledLabelColor;
+            borderColor     = this->style->enabledBorderColor;
+
+            break;
+        case ButtonState::DISABLED:
+            backgroundColor = this->style->disabledBackgroundColor;
+            textColor       = this->style->disabledLabelColor;
+            borderColor     = this->style->disabledBorderColor;
+
+            break;
     }
+
+    if (backgroundColor != "")
+        this->setBackgroundColor(theme[backgroundColor]);
+    else
+        this->setBackground(ViewBackground::NONE);
+
+    this->label->setTextColor(theme[textColor]);
+
+    if (this->getBorderThickness() > 0.0f)
+        this->setBorderColor(theme[borderColor]);
 }
 
-Button::~Button()
+void Button::onFocusGained()
 {
-    if (this->label != nullptr)
-        delete this->label;
-    if (this->image != nullptr)
-        delete this->image;
+    Box::onFocusGained();
+
+    this->setShadowVisibility(false);
+    // TODO: setBorderVisibility(false);
 }
 
-void Button::layout(NVGcontext* vg, Style* style, FontStash* stash)
+void Button::onFocusLost()
 {
-    unsigned imageWidth  = this->label ? this->getHeight() : this->getWidth();
-    unsigned imageHeight = this->getHeight();
+    Box::onFocusLost();
 
-    if (!this->image)
-        imageWidth = 0;
-
-    if (this->label != nullptr)
-    {
-        this->label->setWidth(this->getWidth() - imageWidth);
-        this->label->invalidate(true);
-        this->label->setBoundaries(
-            this->x + imageWidth,
-            this->y + this->getHeight() / 2 - this->label->getHeight() / 2,
-            this->label->getWidth(),
-            this->label->getHeight());
-        this->label->invalidate();
-    }
-    if (this->image != nullptr)
-    {
-        this->image->setHeight(imageHeight);
-        this->image->setWidth(imageWidth);
-        this->image->invalidate(true);
-        this->image->setBoundaries(
-            this->x,
-            this->y + this->getHeight() / 2 - this->image->getHeight() / 2,
-            this->image->getWidth(),
-            this->image->getHeight());
-    }
+    this->setShadowVisibility(true);
+    // TODO: setBorderVisibility(true);
 }
 
-Button* Button::setLabel(std::string label)
+void Button::setStyle(const ButtonStyle* style)
 {
-    if (this->label != nullptr)
-        delete this->label;
-
-    this->label = new Label(this->getLabelStyle(), label, true);
-
-    this->label->setHorizontalAlign(NVG_ALIGN_CENTER);
-    this->label->setParent(this);
-
-    return this;
-}
-
-Button* Button::setImage(std::string path)
-{
-    this->image = new Image(path);
-    this->image->setParent(this);
-    return this;
-}
-
-Button* Button::setImage(unsigned char* buffer, size_t bufferSize)
-{
-    this->image = new Image(buffer, bufferSize);
-    this->image->setParent(this);
-    return this;
+    this->style = style;
+    this->applyStyle();
 }
 
 void Button::setState(ButtonState state)
 {
     this->state = state;
-    if (this->label != nullptr)
-        this->label->setStyle(this->getLabelStyle());
+    this->applyStyle();
 }
 
-ButtonState Button::getState()
+View* Button::create()
 {
-    return this->state;
+    return new Button();
 }
 
-void Button::getHighlightInsets(unsigned* top, unsigned* right, unsigned* bottom, unsigned* left)
-{
-    if (this->style == ButtonStyle::DIALOG)
-    {
-        View::getHighlightInsets(top, right, bottom, left);
-        *right -= 1;
-        return;
-    }
-
-    Style* style = Application::getStyle();
-    *top         = style->Button.highlightInset;
-    *right       = style->Button.highlightInset;
-    *bottom      = style->Button.highlightInset;
-    *left        = style->Button.highlightInset;
-}
-
-void Button::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
-{
-    float cornerRadius = this->cornerRadiusOverride ? this->cornerRadiusOverride : (float)style->Button.cornerRadius;
-
-    // Background
-    switch (this->style)
-    {
-        case ButtonStyle::PRIMARY:
-        {
-            nvgFillColor(vg, a(this->state == ButtonState::DISABLED ? ctx->theme->buttonPrimaryDisabledBackgroundColor : ctx->theme->buttonPrimaryEnabledBackgroundColor));
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-            nvgFill(vg);
-            break;
-        }
-        case ButtonStyle::REGULAR:
-        {
-            nvgFillColor(vg, a(ctx->theme->buttonRegularBackgroundColor));
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-            nvgFill(vg);
-
-            nvgStrokeColor(vg, a(ctx->theme->buttonRegularBorderColor));
-            nvgStrokeWidth(vg, style->Button.regularBorderThickness);
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-            nvgStroke(vg);
-            break;
-        }
-        case ButtonStyle::BORDERED:
-        {
-            nvgStrokeColor(vg, a(ctx->theme->buttonBorderedBorderColor));
-            nvgStrokeWidth(vg, style->Button.borderedBorderThickness);
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-            nvgStroke(vg);
-            break;
-        }
-        default:
-            break;
-    }
-
-    // Shadow
-    if (this->state == ButtonState::ENABLED && (this->style == ButtonStyle::PRIMARY || this->style == ButtonStyle::REGULAR))
-    {
-        float shadowWidth   = style->Button.shadowWidth;
-        float shadowFeather = style->Button.shadowFeather;
-        float shadowOpacity = style->Button.shadowOpacity;
-        float shadowOffset  = style->Button.shadowOffset;
-
-        NVGpaint shadowPaint = nvgBoxGradient(vg,
-            x, y + shadowWidth,
-            width, height,
-            cornerRadius * 2, shadowFeather,
-            RGBA(0, 0, 0, shadowOpacity * alpha), transparent);
-
-        nvgBeginPath(vg);
-        nvgRect(vg, x - shadowOffset, y - shadowOffset,
-            width + shadowOffset * 2, height + shadowOffset * 3);
-        nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-        nvgPathWinding(vg, NVG_HOLE);
-        nvgFillPaint(vg, shadowPaint);
-        nvgFill(vg);
-    }
-
-    // Label
-    if (this->label != nullptr)
-        this->label->frame(ctx);
-
-    if (this->image != nullptr)
-        this->image->frame(ctx);
-}
-
-bool Button::onClick()
-{
-    if (this->state == ButtonState::DISABLED)
-        return false;
-
-    return this->clickEvent.fire(this);
-}
-
-GenericEvent* Button::getClickEvent()
-{
-    return &this->clickEvent;
-}
-
-void Button::setCornerRadius(float cornerRadius)
-{
-    this->cornerRadiusOverride = cornerRadius;
-
-    if (this->image != nullptr)
-        this->image->setCornerRadius(cornerRadius);
-}
 } // namespace brls

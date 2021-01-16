@@ -22,14 +22,16 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <nanovg/nanovg.h>
+#include <tinyxml2.h>
 
+#include <borealis/activity.hpp>
 #include <borealis/animations.hpp>
 #include <borealis/background.hpp>
 #include <borealis/frame_context.hpp>
-#include <borealis/hint.hpp>
+// #include <borealis/hint.hpp> // TODO: restore
 #include <borealis/label.hpp>
 #include <borealis/logger.hpp>
-#include <borealis/notification_manager.hpp>
+// #include <borealis/notification_manager.hpp> TODO: restore
 #include <borealis/style.hpp>
 #include <borealis/task_manager.hpp>
 #include <borealis/theme.hpp>
@@ -41,7 +43,7 @@ namespace brls
 {
 
 // The top-right framerate counter
-class FramerateCounter : public Label
+/*class FramerateCounter : public Label
 {
   private:
     retro_time_t lastSecond = 0;
@@ -51,45 +53,51 @@ class FramerateCounter : public Label
     FramerateCounter();
 
     void frame(FrameContext* ctx) override;
-};
+}; TODO: restore that */
+
+typedef std::function<View*(void)> XMLViewCreator;
 
 class Application
 {
   public:
     // Init with given style and theme, or use defaults if missing
-    static bool init(std::string title, Style* style = nullptr, LibraryViewsThemeVariantsWrapper* themeVariants = nullptr);
+    static bool init(std::string title);
 
     static bool mainLoop();
 
-    static void setBackground(Background* background);
+    // static void setBackground(Background* background);
 
     /**
-      * Pushes a view on this applications's view stack
+      * Pushes a view on this applications's view stack.
       *
       * The view will automatically be resized to take
-      * the whole screen and layout() will be called
+      * the whole screen.
       *
-      * The view will gain focus if applicable
+      * The view will gain focus if applicable.
+      *
+      * The first activity to be pushed cannot be popped.
       */
-    static void pushView(View* view, ViewAnimation animation = ViewAnimation::FADE);
+    static void pushActivity(Activity* view, TransitionAnimation animation = TransitionAnimation::FADE);
 
     /**
-      * Pops the last pushed view from the stack
-      * and gives focus back where it was before
+      * Pops the last pushed activity from the stack
+      * and gives focus back where it was before.
       */
-    static void popView(
-        ViewAnimation animation = ViewAnimation::FADE, std::function<void(void)> cb = []() {});
+    static void popActivity(
+        TransitionAnimation animation = TransitionAnimation::FADE, std::function<void(void)> cb = [] {});
 
     /**
      * Gives the focus to the given view
-     * or clears the focus if given nullptr
+     * or clears the focus if given nullptr.
      */
     static void giveFocus(View* view);
 
-    static Style* getStyle();
+    inline static Style getStyle()
+    {
+        return brls::getStyle();
+    }
 
-    static Theme* getTheme();
-    static LibraryViewsThemeVariantsWrapper* getThemeVariantsWrapper();
+    static Theme getTheme();
     static ThemeVariant getThemeVariant();
 
     static int loadFont(const char* fontName, const char* filePath);
@@ -122,7 +130,7 @@ class Application
 
     static NVGcontext* getNVGContext();
     static TaskManager* getTaskManager();
-    static NotificationManager* getNotificationManager();
+    // static NotificationManager* getNotificationManager(); TODO: restore that
 
     static void setCommonFooter(std::string footer);
     static std::string* getCommonFooter();
@@ -133,7 +141,7 @@ class Application
     static void setMaximumFPS(unsigned fps);
 
     // public so that the glfw callback can access it
-    inline static unsigned contentWidth, contentHeight;
+    inline static float contentWidth, contentHeight;
     inline static float windowScale;
 
     static void resizeFramerateCounter();
@@ -152,6 +160,20 @@ class Application
      */
     static void cleanupNvgGlState();
 
+    /**
+     * Registers a view to be created from XML. You must give the name of the XML node as well
+     * as a function that creates the view.
+     *
+     * If you need attributes, register them with the given functions in the view
+     * class constructor directly. They will be called one by one after the view is instantiated.
+     *
+     * You should not add any children in the function, it is already taken care of.
+     */
+    static void registerXMLView(std::string name, XMLViewCreator creator);
+
+    static bool XMLViewsRegisterContains(std::string name);
+    static XMLViewCreator getXMLViewCreator(std::string name);
+
   private:
     inline static GLFWwindow* window;
     inline static NVGcontext* vg;
@@ -161,30 +183,27 @@ class Application
     inline static Background* background = nullptr;
 
     inline static TaskManager* taskManager;
-    inline static NotificationManager* notificationManager;
+    // inline static NotificationManager* notificationManager; TODO: restore that
 
     inline static FontStash fontStash;
 
-    inline static std::vector<View*> viewStack;
-    inline static std::vector<View*> focusStack;
+    inline static std::vector<Activity*> activitiesStack;
+    inline static std::vector<View*> focusStack; // TODO: move that to the activities stack
 
     inline static unsigned windowWidth, windowHeight;
 
     inline static View* currentFocus;
 
-    inline static LibraryViewsThemeVariantsWrapper* currentThemeVariantsWrapper;
     inline static ThemeVariant currentThemeVariant;
 
     inline static GLFWgamepadstate oldGamepad;
     inline static GLFWgamepadstate gamepad;
 
-    inline static Style* currentStyle;
-
     inline static unsigned blockInputsTokens = 0; // any value > 0 means inputs are blocked
 
     inline static std::string commonFooter = "";
 
-    inline static FramerateCounter* framerateCounter = nullptr;
+    // inline static FramerateCounter* framerateCounter = nullptr; TODO: restore that
 
     inline static float frameTime = 0.0f;
 
@@ -192,6 +211,8 @@ class Application
 
     inline static GenericEvent globalFocusChangeEvent;
     inline static VoidEvent globalHintsUpdateEvent;
+
+    inline static std::map<std::string, XMLViewCreator> xmlViewsRegister;
 
     static void navigate(FocusDirection direction);
 
@@ -207,6 +228,8 @@ class Application
      * Returns true if at least one action has been fired
      */
     static bool handleAction(char button);
+
+    static void registerBuiltInXMLViews();
 };
 
 } // namespace brls

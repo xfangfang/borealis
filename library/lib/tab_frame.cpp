@@ -18,71 +18,68 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <borealis/application.hpp>
-#include <borealis/box_layout.hpp>
-#include <borealis/rectangle.hpp>
-#include <borealis/sidebar.hpp>
+#include <borealis/logger.hpp>
 #include <borealis/tab_frame.hpp>
+
+const std::string tabFrameContentXML = R"xml(
+    <brls:Box
+        width="auto"
+        height="auto"
+        axis="row"
+        marginRight="@style/brls/applet_frame/padding_sides">
+
+        <brls:Sidebar
+            id="brls/tab_frame/sidebar"
+            width="@style/brls/tab_frame/sidebar_width"
+            height="auto" />
+
+        <!-- Content will be injected here with grow="1.0" -->
+
+    </brls:Box>
+)xml";
 
 namespace brls
 {
 
 TabFrame::TabFrame()
-    : AppletFrame(false, true)
 {
-    //Create sidebar
-    this->sidebar = new Sidebar();
+    View* contentView = View::createFromXMLString(tabFrameContentXML);
+    this->setContentView(contentView);
 
-    // Setup content view
-    this->layout = new BoxLayout(BoxLayoutOrientation::HORIZONTAL);
-    layout->addView(sidebar);
-
-    this->setContentView(layout);
+    this->sidebar = (Sidebar*)this->getView("brls/tab_frame/sidebar");
 }
 
-bool TabFrame::onCancel()
+// TODO: change getDefaultFocus to try to focus the right pane instead
+// TODO: remember focus when doing right side -> left sidebar -> right side (add a rememberFocus attribute to Box)
+// TODO: make sidebar items clickable, go to the right side when clicked
+
+void TabFrame::addTab(std::string label, TabViewCreator creator)
 {
-    // Go back to sidebar if not already focused
-    if (!this->sidebar->isChildFocused())
-    {
-        Application::onGamepadButtonPressed(GLFW_GAMEPAD_BUTTON_DPAD_LEFT, false);
-        return true;
-    }
+    this->sidebar->addItem(label, [this, creator](brls::View* view) {
+        // Only trigger when the sidebar item gains focus
+        if (!view->isFocused())
+            return;
 
-    return AppletFrame::onCancel();
-}
+        Box* contentView = (Box*)this->contentView;
 
-void TabFrame::switchToView(View* view)
-{
-    if (this->rightPane == view)
-        return;
+        // Remove the existing tab if it exists
+        if (this->activeTab)
+        {
+            contentView->removeView(this->activeTab); // will call willDisappear and delete
+            this->activeTab = nullptr;
+        }
 
-    if (this->layout->getViewsCount() > 1)
-    {
-        if (this->rightPane)
-            this->rightPane->willDisappear(true);
-        this->layout->removeView(1, false);
-    }
+        // Add the new tab
+        View* newContent = creator();
 
-    this->rightPane = view;
-    if (this->rightPane != nullptr)
-        this->layout->addView(this->rightPane, true, true); // addView() calls willAppear()
-}
+        if (!newContent)
+            return;
 
-void TabFrame::addTab(std::string label, View* view)
-{
-    SidebarItem* item = this->sidebar->addItem(label, view);
-    item->getFocusEvent()->subscribe([this](View* view) {
-        if (SidebarItem* item = dynamic_cast<SidebarItem*>(view))
-            this->switchToView(item->getAssociatedView());
+        newContent->setGrow(1.0f);
+        contentView->addView(newContent); // addView calls willAppear
+
+        this->activeTab = newContent;
     });
-
-    // Switch to first one as soon as we add it
-    if (!this->rightPane)
-    {
-        Logger::debug("Switching to the first tab");
-        this->switchToView(view);
-    }
 }
 
 void TabFrame::addSeparator()
@@ -90,26 +87,48 @@ void TabFrame::addSeparator()
     this->sidebar->addSeparator();
 }
 
-View* TabFrame::getDefaultFocus()
+void TabFrame::handleXMLElement(tinyxml2::XMLElement* element)
 {
-    // Try to focus the right pane
-    if (this->layout->getViewsCount() > 1)
+    std::string name = element->Name();
+
+    if (name == "brls:Tab")
     {
-        View* newFocus = this->rightPane->getDefaultFocus();
+        const tinyxml2::XMLAttribute* labelAttribute = element->FindAttribute("label");
 
-        if (newFocus)
-            return newFocus;
+        if (!labelAttribute)
+            throw std::logic_error("\"label\" attribute missing from \"" + name + "\" tab");
+
+        std::string label = View::getStringXMLAttributeValue(labelAttribute->Value());
+
+        tinyxml2::XMLElement* viewElement = element->FirstChildElement();
+
+        if (viewElement)
+        {
+            this->addTab(label, [viewElement]() {
+                return View::createFromXMLElement(viewElement);
+            });
+
+            if (viewElement->NextSiblingElement())
+                throw std::logic_error("\"brls:Tab\" can only contain one child element");
+        }
+        else
+        {
+            this->addTab(label, [] { return nullptr; });
+        }
     }
-
-    // Otherwise focus sidebar
-    return this->sidebar->getDefaultFocus();
+    else if (name == "brls:Separator")
+    {
+        this->addSeparator();
+    }
+    else
+    {
+        throw std::logic_error("Unknown child element \"" + name + "\" for \"brls:Tab\"");
+    }
 }
 
-TabFrame::~TabFrame()
+View* TabFrame::create()
 {
-    switchToView(nullptr);
-
-    // Content view is freed by ~AppletFrame()
+    return new TabFrame();
 }
 
 } // namespace brls

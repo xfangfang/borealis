@@ -26,6 +26,14 @@
 #include <borealis.hpp>
 #include <string>
 
+// The Switch include must always be BEFORE the Yoga Event include
+// because libnx uses an "Event" struct that also exists in Yoga (name clash)
+// and for some reason the compiler doesn't understand that Event in libnx
+// does NOT mean facebook::yoga::Event (the namespace seems to be ignored)
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -42,9 +50,10 @@
 #include <glm/vec4.hpp>
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg/nanovg_gl.h>
+#include <yoga/event/event.h>
 
-#ifdef __SWITCH__
-#include <switch.h>
+#ifndef YG_ENABLE_EVENTS
+#error Please enable Yoga events with the YG_ENABLE_EVENTS define
 #endif
 
 #include <chrono>
@@ -134,14 +143,14 @@ static void windowKeyCallback(GLFWwindow* window, int key, int scancode, int act
     }
 }
 
-bool Application::init(std::string title, Style* style, LibraryViewsThemeVariantsWrapper* themeVariantsWrapper)
+bool Application::init(std::string title)
 {
     // Init rng
     std::srand(std::time(nullptr));
 
     // Init managers
-    Application::taskManager         = new TaskManager();
-    Application::notificationManager = new NotificationManager();
+    Application::taskManager = new TaskManager();
+    // Application::notificationManager = new NotificationManager(); TODO: restore
 
     // Init static variables
     Application::currentFocus = nullptr;
@@ -149,15 +158,19 @@ bool Application::init(std::string title, Style* style, LibraryViewsThemeVariant
     Application::gamepad      = {};
     Application::title        = title;
 
-    // Init theme and style
-    if (!themeVariantsWrapper)
-        themeVariantsWrapper = new LibraryViewsThemeVariantsWrapper(new HorizonLightTheme(), new HorizonDarkTheme());
+    // Init yoga
+    YGConfig* defaultConfig       = YGConfigGetDefault();
+    defaultConfig->useWebDefaults = true;
 
-    if (!style)
-        style = new HorizonStyle();
+    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData) {
+        View* view = (View*)node.getContext();
 
-    Application::currentThemeVariantsWrapper = themeVariantsWrapper;
-    Application::currentStyle                = style;
+        if (!view)
+            return;
+
+        if (eventType == yoga::Event::NodeLayout)
+            view->onLayout();
+    });
 
     // Init glfw
     glfwSetErrorCallback(errorCallback);
@@ -325,22 +338,27 @@ bool Application::init(std::string title, Style* style, LibraryViewsThemeVariant
     // Default FPS cap
     Application::setMaximumFPS(DEFAULT_FPS);
 
+    // Register built-in XML views
+    Application::registerBuiltInXMLViews();
+
     return true;
 }
 
 bool Application::mainLoop()
 {
     // Frame start
+#ifdef __SWITCH__
     retro_time_t frameStart = 0;
     if (Application::frameTime > 0.0f)
         frameStart = cpu_features_get_time_usec();
+#endif
 
     // glfw events
-    bool is_active;
+    bool isActive;
     do
     {
-        is_active = !glfwGetWindowAttrib(Application::window, GLFW_ICONIFIED);
-        if (is_active)
+        isActive = !glfwGetWindowAttrib(Application::window, GLFW_ICONIFIED);
+        if (isActive)
             glfwPollEvents();
         else
             glfwWaitEvents();
@@ -350,7 +368,7 @@ bool Application::mainLoop()
             Application::exit();
             return false;
         }
-    } while (!is_active);
+    } while (!isActive);
 
     // libnx applet main loop
 #ifdef __SWITCH__
@@ -433,6 +451,7 @@ bool Application::mainLoop()
     glfwSwapBuffers(window);
 
     // Sleep if necessary
+#ifdef __SWITCH__
     if (Application::frameTime > 0.0f)
     {
         retro_time_t currentFrameTime = cpu_features_get_time_usec() - frameStart;
@@ -444,6 +463,7 @@ bool Application::mainLoop()
             std::this_thread::sleep_for(std::chrono::microseconds(toSleep));
         }
     }
+#endif
 
     return true;
 }
@@ -457,21 +477,45 @@ void Application::navigate(FocusDirection direction)
 {
     View* currentFocus = Application::currentFocus;
 
-    // Do nothing if there is no current focus or if it doesn't have a parent
-    // (in which case there is nothing to traverse)
-    if (!currentFocus || !currentFocus->hasParent())
+    // Do nothing if there is no current focus
+    if (!currentFocus)
         return;
 
-    // Get next view to focus by traversing the views tree upwards
-    View* nextFocus = currentFocus->getParent()->getNextFocus(direction, currentFocus);
+    View* nextFocus = nullptr;
 
-    while (!nextFocus) // stop when we find a view to focus
+    // Handle custom navigation routes
+    // By View ptr
+    if (currentFocus->hasCustomNavigationRouteByPtr(direction))
     {
-        if (!currentFocus->hasParent() || !currentFocus->getParent()->hasParent()) // stop when we reach the root of the tree
-            break;
+        nextFocus = currentFocus->getCustomNavigationRoutePtr(direction);
 
-        currentFocus = currentFocus->getParent();
-        nextFocus    = currentFocus->getParent()->getNextFocus(direction, currentFocus);
+        if (!nextFocus)
+            Logger::warning("Tried to follow a navigation route that leads to a nullptr view! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ")");
+    }
+    // By ID
+    else if (currentFocus->hasCustomNavigationRouteById(direction))
+    {
+        std::string id = currentFocus->getCustomNavigationRouteId(direction);
+        nextFocus      = currentFocus->getNearestView(id);
+
+        if (!nextFocus)
+            Logger::warning("Tried to follow a navigation route that leads to an unknown view ID! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ", targetId=\"" + id + "\")");
+    }
+    // Do nothing if current focus doesn't have a parent
+    // (in which case there is nothing to traverse)
+    else if (currentFocus->hasParent())
+    {
+        // Get next view to focus by traversing the views tree upwards
+        nextFocus = currentFocus->getParent()->getNextFocus(direction, currentFocus);
+
+        while (!nextFocus) // stop when we find a view to focus
+        {
+            if (!currentFocus->hasParent() || !currentFocus->getParent()->hasParent()) // stop when we reach the root of the tree
+                break;
+
+            currentFocus = currentFocus->getParent();
+            nextFocus    = currentFocus->getParent()->getNextFocus(direction, currentFocus);
+        }
     }
 
     // No view to focus at the end of the traversal: wiggle and return
@@ -528,14 +572,14 @@ View* Application::getCurrentFocus()
 
 bool Application::handleAction(char button)
 {
-    if (Application::viewStack.empty())
+    if (Application::activitiesStack.empty())
         return false;
 
     View* hintParent = Application::currentFocus;
     std::set<Key> consumedKeys;
 
     if (!hintParent)
-        hintParent = Application::viewStack[Application::viewStack.size() - 1];
+        hintParent = Application::activitiesStack[Application::activitiesStack.size() - 1]->getContentView();
 
     while (hintParent)
     {
@@ -548,7 +592,7 @@ bool Application::handleAction(char button)
                 continue;
 
             if (action.available)
-                if (action.actionListener())
+                if (action.actionListener(hintParent))
                     consumedKeys.insert(action.key);
         }
 
@@ -569,10 +613,11 @@ void Application::frame()
     frameContext.theme      = Application::getTheme();
 
     // GL Clear
+    NVGcolor backgroundColor = frameContext.theme["brls/background"];
     glClearColor(
-        frameContext.theme->backgroundColor[0],
-        frameContext.theme->backgroundColor[1],
-        frameContext.theme->backgroundColor[2],
+        backgroundColor.r,
+        backgroundColor.g,
+        backgroundColor.b,
         1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -585,14 +630,17 @@ void Application::frame()
 
     std::vector<View*> viewsToDraw;
 
-    // Draw all views in the stack
+    // Draw all activities in the stack
     // until we find one that's not translucent
-    for (size_t i = 0; i < Application::viewStack.size(); i++)
+    for (size_t i = 0; i < Application::activitiesStack.size(); i++)
     {
-        View* view = Application::viewStack[Application::viewStack.size() - 1 - i];
-        viewsToDraw.push_back(view);
+        Activity* activity = Application::activitiesStack[Application::activitiesStack.size() - 1 - i];
 
-        if (!view->isTranslucent())
+        View* view = activity->getContentView();
+        if (view)
+            viewsToDraw.push_back(view);
+
+        if (!activity->isTranslucent())
             break;
     }
 
@@ -606,11 +654,11 @@ void Application::frame()
     }
 
     // Framerate counter
-    if (Application::framerateCounter)
-        Application::framerateCounter->frame(&frameContext);
+    /*if (Application::framerateCounter)
+        Application::framerateCounter->frame(&frameContext); TODO: restore that */
 
     // Notifications
-    Application::notificationManager->frame(&frameContext);
+    // Application::notificationManager->frame(&frameContext); TODO: restore
 
     // End frame
     nvgResetTransform(Application::vg); // scale
@@ -631,19 +679,16 @@ void Application::exit()
 
     menu_animation_free();
 
-    if (Application::framerateCounter)
-        delete Application::framerateCounter;
+    /*if (Application::framerateCounter)
+        delete Application::framerateCounter; TODO: restore that*/
 
     delete Application::taskManager;
-    delete Application::notificationManager;
-
-    delete Application::currentThemeVariantsWrapper;
-    delete Application::currentStyle;
+    // delete Application::notificationManager; TODO: restore
 }
 
 void Application::setDisplayFramerate(bool enabled)
 {
-    if (!Application::framerateCounter && enabled)
+    /*if (!Application::framerateCounter && enabled)
     {
         Logger::debug("Enabling framerate counter");
         Application::framerateCounter = new FramerateCounter();
@@ -654,46 +699,46 @@ void Application::setDisplayFramerate(bool enabled)
         Logger::debug("Disabling framerate counter");
         delete Application::framerateCounter;
         Application::framerateCounter = nullptr;
-    }
+    } TODO: restore that */
 }
 
 void Application::toggleFramerateDisplay()
 {
-    Application::setDisplayFramerate(!Application::framerateCounter);
+    // Application::setDisplayFramerate(!Application::framerateCounter); TODO: restore that
 }
 
 void Application::resizeFramerateCounter()
 {
-    if (!Application::framerateCounter)
-        return;
+    //     if (!Application::framerateCounter)
+    //         return;
 
-    Style* style                   = Application::getStyle();
-    unsigned framerateCounterWidth = style->FramerateCounter.width;
-    unsigned width                 = WINDOW_WIDTH;
+    //     Style* style                   = Application::getStyle();
+    //     unsigned framerateCounterWidth = style->FramerateCounter.width;
+    //     unsigned width                 = WINDOW_WIDTH;
 
-    Application::framerateCounter->setBoundaries(
-        width - framerateCounterWidth,
-        0,
-        framerateCounterWidth,
-        style->FramerateCounter.height);
-    Application::framerateCounter->invalidate();
+    //     Application::framerateCounter->setBoundaries(
+    //         width - framerateCounterWidth,
+    //         0,
+    //         framerateCounterWidth,
+    //         style->FramerateCounter.height);
+    //     Application::framerateCounter->invalidate(); TODO: restore that
 }
 
 void Application::resizeNotificationManager()
 {
-    Application::notificationManager->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
-    Application::notificationManager->invalidate();
+    //     Application::notificationManager->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
+    //     Application::notificationManager->invalidate(); TODO: restore that
 }
 
 void Application::notify(std::string text)
 {
-    Application::notificationManager->notify(text);
+    //Application::notificationManager->notify(text); TODO: restore
 }
 
-NotificationManager* Application::getNotificationManager()
+/* NotificationManager* Application::getNotificationManager()
 {
     return Application::notificationManager;
-}
+} TODO: restore */
 
 void Application::giveFocus(View* view)
 {
@@ -716,36 +761,36 @@ void Application::giveFocus(View* view)
     }
 }
 
-void Application::popView(ViewAnimation animation, std::function<void(void)> cb)
+void Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb)
 {
-    if (Application::viewStack.size() <= 1) // never pop the root view
+    if (Application::activitiesStack.size() <= 1) // never pop the first activity
         return;
 
     Application::blockInputs();
 
-    View* last = Application::viewStack[Application::viewStack.size() - 1];
+    Activity* last = Application::activitiesStack[Application::activitiesStack.size() - 1];
     last->willDisappear(true);
 
-    last->setForceTranslucent(true);
+    last->setInFadeAnimation(true);
 
-    bool wait = animation == ViewAnimation::FADE; // wait for the new view animation to be done before showing the old one?
+    bool wait = animation == TransitionAnimation::FADE; // wait for the new activity animation to be done before showing the old one?
 
-    // Hide animation (and show previous view, if any)
+    // Hide animation (and show previous activity, if any)
     last->hide([last, animation, wait, cb]() {
-        last->setForceTranslucent(false);
-        Application::viewStack.pop_back();
+        last->setInFadeAnimation(false);
+        Application::activitiesStack.pop_back();
         delete last;
 
-        // Animate the old view once the new one
+        // Animate the old activity once the new one
         // has ended its animation
-        if (Application::viewStack.size() > 0 && wait)
+        if (Application::activitiesStack.size() > 0 && wait)
         {
-            View* newLast = Application::viewStack[Application::viewStack.size() - 1];
+            Activity* newLast = Application::activitiesStack[Application::activitiesStack.size() - 1];
 
             if (newLast->isHidden())
             {
                 newLast->willAppear(false);
-                newLast->show(cb, true, animation);
+                newLast->show(cb, true, newLast->getShowAnimationDuration(animation));
             }
             else
             {
@@ -755,14 +800,14 @@ void Application::popView(ViewAnimation animation, std::function<void(void)> cb)
 
         Application::unblockInputs();
     },
-        true, animation);
+        true, last->getShowAnimationDuration(animation));
 
-    // Animate the old view immediately
-    if (!wait && Application::viewStack.size() > 1)
+    // Animate the old activity immediately
+    if (!wait && Application::activitiesStack.size() > 1)
     {
-        View* toShow = Application::viewStack[Application::viewStack.size() - 2];
+        Activity* toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
         toShow->willAppear(false);
-        toShow->show(cb, true, animation);
+        toShow->show(cb, true, toShow->getShowAnimationDuration(animation));
     }
 
     // Focus
@@ -777,95 +822,94 @@ void Application::popView(ViewAnimation animation, std::function<void(void)> cb)
     }
 }
 
-void Application::pushView(View* view, ViewAnimation animation)
+// TODO: transition animation should be an attribute of the activity, not given when pushing
+void Application::pushActivity(Activity* activity, TransitionAnimation animation)
 {
     Application::blockInputs();
 
-    // Call hide() on the previous view in the stack if no
-    // views are translucent, then call show() once the animation ends
-    View* last = nullptr;
-    if (Application::viewStack.size() > 0)
-        last = Application::viewStack[Application::viewStack.size() - 1];
+    // Create the activity content view
+    activity->setContentView(activity->createContentView());
+    activity->onContentAvailable();
 
-    bool fadeOut = last && !last->isTranslucent() && !view->isTranslucent(); // play the fade out animation?
-    bool wait    = animation == ViewAnimation::FADE; // wait for the old view animation to be done before showing the new one?
+    // Call hide() on the previous activity in the stack if no
+    // activities are translucent, then call show() once the animation ends
+    Activity* last = nullptr;
+    if (Application::activitiesStack.size() > 0)
+        last = Application::activitiesStack[Application::activitiesStack.size() - 1];
 
-    view->registerAction("brls/hints/exit"_i18n, Key::PLUS, [] { Application::quit(); return true; });
-    view->registerAction(
-        "FPS", Key::MINUS, [] { Application::toggleFramerateDisplay(); return true; }, true);
+    bool fadeOut = last && !last->isTranslucent() && !activity->isTranslucent(); // play the fade out animation?
+    bool wait    = animation == TransitionAnimation::FADE; // wait for the old activity animation to be done before showing the new one?
+
+    activity->registerAction("brls/hints/exit"_i18n, Key::PLUS, [](View* view) { Application::quit(); return true; });
+    activity->registerAction(
+        "FPS", Key::MINUS, [](View* view) { Application::toggleFramerateDisplay(); return true; }, true);
 
     // Fade out animation
     if (fadeOut)
     {
-        view->setForceTranslucent(true); // set the new view translucent until the fade out animation is done playing
+        activity->setInFadeAnimation(true); // set the new activity translucent until the fade out animation is done playing
 
-        // Animate the new view directly
+        // Animate the new activity directly
         if (!wait)
         {
-            view->show([]() {
+            activity->show([] {
                 Application::unblockInputs();
             },
-                true, animation);
+                true, activity->getShowAnimationDuration(animation));
         }
 
         last->hide([animation, wait]() {
-            View* newLast = Application::viewStack[Application::viewStack.size() - 1];
-            newLast->setForceTranslucent(false);
+            Activity* newLast = Application::activitiesStack[Application::activitiesStack.size() - 1];
+            newLast->setInFadeAnimation(false);
 
-            // Animate the new view once the old one
+            // Animate the new activity once the old one
             // has ended its animation
             if (wait)
-                newLast->show([]() { Application::unblockInputs(); }, true, animation);
+                newLast->show([] { Application::unblockInputs(); }, true, newLast->getShowAnimationDuration(animation));
         },
-            true, animation);
+            true, last->getShowAnimationDuration(animation));
     }
 
-    view->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
+    activity->resizeToFitWindow();
 
     if (!fadeOut)
-        view->show([]() { Application::unblockInputs(); }, true, animation);
+        activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
     else
-        view->alpha = 0.0f;
+        activity->setAlpha(0.0f);
 
     // Focus
-    if (Application::viewStack.size() > 0 && Application::currentFocus != nullptr)
+    if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
     {
         Logger::debug("Pushing {} to the focus stack", Application::currentFocus->describe());
         Application::focusStack.push_back(Application::currentFocus);
     }
 
-    // Layout and prepare view
-    view->invalidate(true);
-    view->willAppear(true);
-    Application::giveFocus(view->getDefaultFocus());
+    // Layout and prepare activity
+    activity->willAppear(true);
+    Application::giveFocus(activity->getDefaultFocus());
 
     // And push it
-    Application::viewStack.push_back(view);
+    Application::activitiesStack.push_back(activity);
 }
 
 void Application::onWindowSizeChanged()
 {
     Logger::debug("Layout triggered");
 
-    for (View* view : Application::viewStack)
-    {
-        view->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
-        view->invalidate();
+    for (Activity* activity : Application::activitiesStack)
+        activity->onWindowSizeChanged();
 
-        view->onWindowSizeChanged();
-    }
+    // if (Application::background)
+    // {
+    //     Application::background->setBoundaries(
+    //         0,
+    //         0,
+    //         Application::contentWidth,
+    //         Application::contentHeight);
 
-    if (Application::background)
-    {
-        Application::background->setBoundaries(
-            0,
-            0,
-            Application::contentWidth,
-            Application::contentHeight);
-
-        Application::background->invalidate();
-        Application::background->onWindowSizeChanged();
-    }
+    //     Application::background->invalidate();
+    //     Application::background->onWindowSizeChanged();
+    // }
 
     Application::resizeNotificationManager();
     Application::resizeFramerateCounter();
@@ -873,28 +917,21 @@ void Application::onWindowSizeChanged()
 
 void Application::clear()
 {
-    for (View* view : Application::viewStack)
+    for (Activity* activity : Application::activitiesStack)
     {
-        view->willDisappear(true);
-        delete view;
+        activity->willDisappear(true);
+        delete activity;
     }
 
-    Application::viewStack.clear();
+    Application::activitiesStack.clear();
 }
 
-Style* Application::getStyle()
+Theme Application::getTheme()
 {
-    return Application::currentStyle;
-}
-
-Theme* Application::getTheme()
-{
-    return Application::currentThemeVariantsWrapper->getTheme(Application::currentThemeVariant);
-}
-
-LibraryViewsThemeVariantsWrapper* Application::getThemeVariantsWrapper()
-{
-    return Application::currentThemeVariantsWrapper;
+    if (Application::currentThemeVariant == ThemeVariant::LIGHT)
+        return getLightTheme();
+    else
+        return getDarkTheme();
 }
 
 ThemeVariant Application::getThemeVariant()
@@ -919,8 +956,8 @@ int Application::findFont(const char* fontName)
 
 void Application::crash(std::string text)
 {
-    CrashFrame* crashFrame = new CrashFrame(text);
-    Application::pushView(crashFrame);
+    /* CrashFrame* crashFrame = new CrashFrame(text);
+    Application::pushView(crashFrame); TODO: restore */
 }
 
 void Application::blockInputs()
@@ -954,7 +991,7 @@ std::string* Application::getCommonFooter()
     return &Application::commonFooter;
 }
 
-FramerateCounter::FramerateCounter()
+/*FramerateCounter::FramerateCounter()
     : Label(LabelStyle::LIST_ITEM, "FPS: ---")
 {
     this->setColor(nvgRGB(255, 255, 255));
@@ -962,10 +999,10 @@ FramerateCounter::FramerateCounter()
     this->setHorizontalAlign(NVG_ALIGN_RIGHT);
     this->setBackground(ViewBackground::BACKDROP);
 
-    this->lastSecond = cpu_features_get_time_usec() / 1000;
-}
+    this->lastSecond = cpu_features_get_time_usec() / 1000; TODO: restore that
+}*/
 
-void FramerateCounter::frame(FrameContext* ctx)
+/*void FramerateCounter::frame(FrameContext* ctx)
 {
     // Update counter
     retro_time_t current = cpu_features_get_time_usec() / 1000;
@@ -981,11 +1018,11 @@ void FramerateCounter::frame(FrameContext* ctx)
         this->lastSecond = current;
     }
 
-    this->frames++;
+    this->frames++; TODO: restore that
 
     // Regular frame
-    Label::frame(ctx);
-}
+    Label::frame(ctx); TODO: restore that
+}*/
 
 void Application::setMaximumFPS(unsigned fps)
 {
@@ -1019,20 +1056,20 @@ FontStash* Application::getFontStash()
     return &Application::fontStash;
 }
 
-void Application::setBackground(Background* background)
-{
-    if (Application::background)
-    {
-        Application::background->willDisappear();
-        delete Application::background;
-    }
+// void Application::setBackground(Background* background)
+// {
+//     if (Application::background)
+//     {
+//         Application::background->willDisappear();
+//         delete Application::background;
+//     }
 
-    Application::background = background;
+//     Application::background = background;
 
-    background->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
-    background->invalidate(true);
-    background->willAppear(true);
-}
+//     background->setBoundaries(0, 0, Application::contentWidth, Application::contentHeight);
+//     background->invalidate();
+//     background->willAppear(true);
+// }
 
 void Application::cleanupNvgGlState()
 {
@@ -1041,6 +1078,36 @@ void Application::cleanupNvgGlState()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
+}
+
+bool Application::XMLViewsRegisterContains(std::string name)
+{
+    return Application::xmlViewsRegister.count(name) > 0;
+}
+
+XMLViewCreator Application::getXMLViewCreator(std::string name)
+{
+    return Application::xmlViewsRegister[name];
+}
+
+void Application::registerBuiltInXMLViews()
+{
+    Application::registerXMLView("brls:Box", Box::create);
+    Application::registerXMLView("brls:Rectangle", Rectangle::create);
+    Application::registerXMLView("brls:AppletFrame", AppletFrame::create);
+    Application::registerXMLView("brls:Label", Label::create);
+    Application::registerXMLView("brls:TabFrame", TabFrame::create);
+    Application::registerXMLView("brls:Sidebar", Sidebar::create);
+    Application::registerXMLView("brls:Header", Header::create);
+    Application::registerXMLView("brls:ScrollingFrame", ScrollingFrame::create);
+    Application::registerXMLView("brls:Image", Image::create);
+    Application::registerXMLView("brls:Padding", Padding::create);
+    Application::registerXMLView("brls:Button", Button::create);
+}
+
+void Application::registerXMLView(std::string name, XMLViewCreator creator)
+{
+    Application::xmlViewsRegister[name] = creator;
 }
 
 } // namespace brls

@@ -1,6 +1,6 @@
 /*
     Borealis, a Nintendo Switch UI Library
-    Copyright (C) 2019  natinusala
+    Copyright (C) 2019-2020  natinusala
     Copyright (C) 2019  p-sam
 
     This program is free software: you can redistribute it and/or modify
@@ -19,24 +19,27 @@
 
 #pragma once
 
-#include <borealis/view.hpp>
+#include <borealis/box.hpp>
+#include <borealis/label.hpp>
 
 namespace brls
 {
 
-// A simple header with text, a rectangle on the left
+// A simple header with a title, an optional subtitle, a rectangle on the left
 // and a separator
-class Header : public View
+class Header : public Box
 {
-  private:
-    std::string label;
-    std::string sublabel;
-    bool separator;
-
   public:
-    Header(std::string label, bool separator = true, std::string sublabel = "");
+    Header();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
+    void setTitle(std::string text);
+    void setSubtitle(std::string text);
+
+    static View* create();
+
+  private:
+    Label* title;
+    Label* subtitle;
 };
 
 } // namespace brls

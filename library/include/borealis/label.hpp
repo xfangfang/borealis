@@ -19,96 +19,129 @@
 
 #pragma once
 
+#include <borealis/animations.hpp>
 #include <borealis/view.hpp>
 
 namespace brls
 {
 
-enum class LabelStyle
+enum class TextAlign
 {
-    REGULAR = 0,
-    MEDIUM,
-    SMALL,
-    DESCRIPTION,
-    CRASH,
-    BUTTON_PRIMARY,
-    BUTTON_PRIMARY_DISABLED,
-    BUTTON_BORDERLESS,
-    LIST_ITEM,
-    NOTIFICATION,
-    DIALOG,
-    BUTTON_DIALOG,
-    HINT,
-    BUTTON_BORDERED,
-    BUTTON_REGULAR
+    LEFT,
+    CENTER,
+    RIGHT,
 };
 
-// A Label, multiline or with a ticker
+// Some text. The Label will automatically grow as much as possible.
+// If there is enough space, the label dimensions will fit the text.
+// If there is not enough horizontal space available, it will wrap and expand its height.
+// If there is not enough vertical space available to wrap, the text will be truncated instead.
+// The truncated text will animate if the Label or one of its parents is focused.
+// Animation will be disabled if the alignment is other than LEFT.
+// Warning: to wrap, the label width MUST be constrained
 class Label : public View
 {
-  private:
-    std::string text;
-
-    bool multiline;
-    unsigned fontSize;
-    float lineHeight;
-    LabelStyle labelStyle;
-
-    NVGalign horizontalAlign = NVG_ALIGN_LEFT;
-    NVGalign verticalAlign   = NVG_ALIGN_MIDDLE;
-
-    NVGcolor customColor;
-    bool useCustomColor = false;
-
-    int customFont;
-    bool useCustomFont = false;
-
   public:
-    Label(LabelStyle labelStyle, std::string text, bool multiline = false);
+    Label();
+    ~Label();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+    void onLayout() override;
+    void onFocusGained() override;
+    void onFocusLost() override;
+    void onParentFocusGained(View* focusedView) override;
+    void onParentFocusLost(View* focusedView) override;
 
-    void setVerticalAlign(NVGalign align);
-    void setHorizontalAlign(NVGalign align);
+    /**
+     * Sets the text of the label.
+     */
     void setText(std::string text);
-    void setStyle(LabelStyle style);
-    void setFontSize(unsigned size);
 
     /**
-     * Sets the label color
+     * Sets the alignment of the text inside
+     * the view. Will not move the view, only
+     * the text inside.
      */
-    void setColor(NVGcolor color);
+    void setTextAlign(TextAlign align);
+
+    void setFontSize(float value);
+    void setLineHeight(float value);
+    void setTextColor(NVGcolor color);
+
+    int getFont();
+    float getFontSize();
+    float getLineHeight();
+
+    std::string getFullText();
+
+    static View* create();
+
+    void setRequiredWidth(float requiredWidth);
+    void setEllipsisWidth(float ellipsisWidth);
 
     /**
-     * Unsets the label color - it
-     * will now use the default one
-     * for the label style
+     * If an "animated" label is too large to fit its bounds, the full text will
+     * be displayed in a scrolling animation instead of being truncated
+     * with an ellipsis ("...").
+     *
+     * Unless the autoAnimate flag is set to false, a label will automatically
+     * be set to "animated" if it is focused or if one of its parent is.
      */
-    void unsetColor();
+    void setAnimated(bool animated);
 
     /**
-     * Returns the effective label color
-     * = custom or the style default
+     * Controls whether focus changes automatically animates the label or not.
+     * Doesn't stop the ongoing animation should there be one.
      */
-    NVGcolor getColor(Theme* theme);
+    void setAutoAnimate(bool autoAnimate);
 
     /**
-     * Sets the font id
+     * A single-line label will not wrap and increase its
+     * height, even if the remaining vertical space allows it.
+     *
+     * Instead, it will always be truncated (if too large) to fit the horizontal space.
      */
-    void setFont(int fontId);
+    void setSingleLine(bool singleLine);
+
+    bool isSingleLine();
 
     /**
-     * Unsets the font id - it
-     * will now use the regular one
+     * Internal flag set by the measure function.
      */
-    void unsetFont();
+    void setIsWrapping(bool isWrapping);
 
-    /**
-     * Returns the font used
-     * = custom or the regular font
-     */
-    int getFont(FontStash* stash);
+  private:
+    std::string truncatedText = "";
+    std::string fullText      = "";
+
+    int font;
+    float fontSize;
+    float lineHeight;
+
+    NVGcolor textColor;
+
+    float requiredWidth;
+    unsigned ellipsisWidth;
+
+    bool singleLine = false;
+    bool isWrapping = false;
+
+    bool autoAnimate = true;
+    bool animated    = false; // should it animate?
+    bool animating   = false; // currently animating?
+
+    menu_timer_t scrollingTimer;
+    float scrollingAnimation;
+
+    void stopScrollingAnimation();
+    void resetScrollingAnimation();
+
+    void startScrollTimer();
+    void onScrollTimerFinished();
+
+    TextAlign align = TextAlign::LEFT;
+
+    enum NVGalign getNVGHorizontalAlign();
 };
 
 } // namespace brls

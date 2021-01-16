@@ -26,9 +26,20 @@ namespace brls
 Rectangle::Rectangle(NVGcolor color)
 {
     this->setColor(color);
+
+    // Register XML attributes
+    this->registerColorXMLAttribute("color", [this](NVGcolor color) {
+        this->setColor(color);
+    });
 }
 
-void Rectangle::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
+Rectangle::Rectangle()
+    : Rectangle(nvgRGB(255, 255, 255))
+{
+    // Empty ctor for XML
+}
+
+void Rectangle::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
     NVGcolor color = a(this->color);
 
@@ -47,9 +58,14 @@ void Rectangle::setColor(NVGcolor color)
     this->color = color;
 }
 
-void Rectangle::layout(NVGcontext* vg, Style* style, FontStash* stash)
+// void Rectangle::layout(NVGcontext* vg, Style* style, FontStash* stash)
+// {
+//     // Nothing to do
+// }
+
+View* Rectangle::create()
 {
-    // Nothing to do
+    return new Rectangle();
 }
 
 } // namespace brls

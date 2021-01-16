@@ -2,6 +2,7 @@
     Borealis, a Nintendo Switch UI Library
     Copyright (C) 2019  WerWolv
     Copyright (C) 2019  p-sam
+    Copyright (C) 2020  natinusala
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,234 +20,283 @@
 
 #include <borealis/application.hpp>
 #include <borealis/image.hpp>
-#include <cstring>
 
 namespace brls
 {
 
-Image::Image(std::string imagePath)
+static float measureWidth(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode, float originalWidth, ImageScalingType type)
 {
-    this->setImage(imagePath);
-    this->setOpacity(1.0F);
-}
-
-Image::Image(unsigned char* buffer, size_t bufferSize)
-{
-    this->setImage(buffer, bufferSize);
-    this->setOpacity(1.0F);
-}
-
-Image::Image(Image&& move) noexcept
-    : Image()
-{
-    std::swap(*this, move);
-    move.texture     = -1;
-    move.imageBuffer = nullptr;
-}
-
-Image::Image(const Image& copy)
-    : imagePath { copy.imagePath }
-    , imageBuffer { copy.copyImgBuf() }
-    , imageBufferSize { copy.imageBufferSize }
-    , texture { -1 } // We set as -1 so that reloadTexture() does not try to delete a texture.
-    , imgPaint { copy.imgPaint }
-    , imageScaleType { copy.imageScaleType }
-    , cornerRadius { copy.cornerRadius }
-    , imageX { copy.imageX }
-    , imageY { copy.imageY }
-    , imageWidth { copy.imageWidth }
-    , imageHeight { copy.imageHeight }
-    , origViewWidth { copy.origViewWidth }
-    , origViewHeight { copy.origViewHeight }
-{
-    // Recreate the texture on copy.
-    reloadTexture();
-}
-
-unsigned char* Image::copyImgBuf() const
-{
-    if (imageBuffer && imageBufferSize)
-    {
-        unsigned char* imageBuffer = new unsigned char[imageBufferSize];
-        memcpy(imageBuffer, this->imageBuffer, imageBufferSize);
-        return imageBuffer;
-    }
+    if (widthMode == YGMeasureModeUndefined)
+        return originalWidth;
+    else if (widthMode == YGMeasureModeAtMost)
+        if (type == ImageScalingType::FIT)
+            return width;
+        else
+            return std::min(width, originalWidth);
+    else if (widthMode == YGMeasureModeExactly)
+        return width;
     else
-        return nullptr;
+        throw std::logic_error("Unsupported Image width measure mode: " + std::to_string(widthMode));
 }
 
-Image& Image::operator=(const Image& cp_assign)
+static float measureHeight(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode, float originalHeight, ImageScalingType type)
 {
-    return *this = cp_assign;
+    if (heightMode == YGMeasureModeUndefined)
+        return originalHeight;
+    else if (heightMode == YGMeasureModeAtMost)
+        if (type == ImageScalingType::FIT)
+            return height;
+        else
+            return std::min(height, originalHeight);
+    else if (heightMode == YGMeasureModeExactly)
+        return height;
+    else
+        throw std::logic_error("Unsupported Image height measure mode: " + std::to_string(heightMode));
 }
 
-Image& Image::operator=(Image&& mv_assign)
+static YGSize imageMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode)
 {
-    std::swap(*this, mv_assign);
-    return *this;
-}
+    Image* image                 = (Image*)node->getContext();
+    int texture                  = image->getTexture();
+    float originalWidth          = image->getOriginalImageWidth();
+    float originalHeight         = image->getOriginalImageHeight();
+    ImageScalingType scalingType = image->getScalingType();
 
-Image::~Image()
-{
-    if (this->imageBuffer != nullptr)
-        delete[] this->imageBuffer;
+    YGSize size = {
+        width : width,
+        height : height,
+    };
 
-    if (this->texture != -1)
-        nvgDeleteImage(Application::getNVGContext(), this->texture);
-}
+    if (texture == 0)
+        return size;
 
-void Image::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx)
-{
-    nvgSave(vg);
-
-    if (this->texture != -1)
+    // Stretched mode: we don't care about the size of the image
+    if (scalingType == ImageScalingType::STRETCH)
     {
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + this->imageX, y + this->imageY, this->imageWidth, this->imageHeight, this->cornerRadius);
-        nvgFillPaint(vg, a(this->imgPaint));
-        nvgFill(vg);
+        return size;
+    }
+    // Fit scaling mode: scale the view according to image ratio
+    else if (scalingType == ImageScalingType::FIT && ntz(height) > 0)
+    {
+        float viewAspectRatio  = ntz(width) / ntz(height);
+        float imageAspectRatio = originalWidth / originalHeight;
+
+        // Grow height as much as possible then deduce width
+        if (viewAspectRatio < imageAspectRatio)
+        {
+            size.height = measureHeight(node, width, widthMode, height, heightMode, originalHeight, scalingType);
+            size.width  = measureWidth(node, width, widthMode, height, heightMode, size.height * imageAspectRatio, scalingType);
+        }
+        // Grow width as much as possible then deduce height
+        else
+        {
+            size.width  = measureWidth(node, width, widthMode, height, heightMode, originalWidth, scalingType);
+            size.height = measureHeight(node, width, widthMode, height, heightMode, size.width * imageAspectRatio, scalingType);
+        }
+    }
+    // Crop (and fallback) method: grow as much as possible in both directions
+    else
+    {
+        size.width  = measureWidth(node, width, widthMode, height, heightMode, originalWidth, scalingType);
+        size.height = measureHeight(node, width, widthMode, height, heightMode, originalHeight, scalingType);
     }
 
-    nvgRestore(vg);
+    return size;
 }
 
-void Image::reloadTexture()
+Image::Image()
 {
-    NVGcontext* vg = Application::getNVGContext();
+    YGNodeSetMeasureFunc(this->ygNode, imageMeasureFunc);
 
-    if (this->texture != -1)
-        nvgDeleteImage(vg, this->texture);
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "scalingType", ImageScalingType, this->setScalingType,
+        {
+            { "fit", ImageScalingType::FIT },
+            { "stretch", ImageScalingType::STRETCH },
+            { "crop", ImageScalingType::CROP },
+        });
 
-    if (!this->imagePath.empty())
-        this->texture = nvgCreateImage(vg, this->imagePath.c_str(), 0);
-    else if (this->imageBuffer != nullptr)
-        this->texture = nvgCreateImageMem(vg, 0, this->imageBuffer, this->imageBufferSize);
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
+        "imageAlign", ImageAlignment, this->setImageAlign,
+        {
+            { "top", ImageAlignment::TOP },
+            { "right", ImageAlignment::RIGHT },
+            { "bottom", ImageAlignment::BOTTOM },
+            { "left", ImageAlignment::LEFT },
+            { "center", ImageAlignment::CENTER },
+        });
+
+    this->registerFilePathXMLAttribute("image", [this](std::string value) {
+        this->setImageFromFile(value);
+    });
 }
 
-void Image::layout(NVGcontext* vg, Style* style, FontStash* stash)
+void Image::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
-    if (this->origViewWidth == 0 || this->origViewHeight == 0)
+    if (this->texture == 0)
+        return;
+
+    if (this->scalingType == ImageScalingType::CROP)
     {
-        this->origViewWidth  = this->getWidth();
-        this->origViewHeight = this->getHeight();
+        nvgSave(vg);
+        nvgIntersectScissor(vg, x, y, width, height);
     }
 
-    nvgImageSize(vg, this->texture, &this->imageWidth, &this->imageHeight);
+    float coordX = x + this->imageX;
+    float coordY = y + this->imageY;
 
-    this->setWidth(this->origViewWidth);
-    this->setHeight(this->origViewHeight);
+    this->paint.xform[4] = coordX;
+    this->paint.xform[5] = coordY;
 
-    this->imageX = 0;
-    this->imageY = 0;
+    nvgBeginPath(vg);
+    nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
+    nvgFillPaint(vg, a(this->paint));
+    nvgFill(vg);
 
-    float viewAspectRatio  = static_cast<float>(this->getWidth()) / static_cast<float>(this->getHeight());
-    float imageAspectRatio = static_cast<float>(this->imageWidth) / static_cast<float>(this->imageHeight);
+    if (this->scalingType == ImageScalingType::CROP)
+        nvgRestore(vg);
+}
 
-    switch (imageScaleType)
+void Image::onLayout()
+{
+    this->invalidateImageBounds();
+}
+
+void Image::setImageAlign(ImageAlignment align)
+{
+    this->align = align;
+    this->invalidateImageBounds();
+}
+
+void Image::invalidateImageBounds()
+{
+    if (this->texture == 0)
+        return;
+
+    float width  = this->getWidth();
+    float height = this->getHeight();
+
+    float viewAspectRatio  = width / height;
+    float imageAspectRatio = this->originalImageWidth / this->originalImageHeight;
+
+    switch (this->scalingType)
     {
-        case ImageScaleType::NO_RESIZE:
-            this->imageX = (this->origViewWidth - this->imageWidth) / 2.0F;
-            this->imageY = (this->origViewHeight - this->imageHeight) / 2.0F;
-            break;
-        case ImageScaleType::FIT:
+        case ImageScalingType::FIT:
+        {
+            // TODO: alignment
             if (viewAspectRatio >= imageAspectRatio)
             {
                 this->imageHeight = this->getHeight();
                 this->imageWidth  = this->imageHeight * imageAspectRatio;
-                this->imageX      = (this->origViewWidth - this->imageWidth) / 2.0F;
+                this->imageX      = (width - this->imageWidth) / 2.0F;
+                this->imageY      = 0;
             }
             else
             {
                 this->imageWidth  = this->getWidth();
                 this->imageHeight = this->imageWidth * imageAspectRatio;
-                this->imageY      = (this->origViewHeight - this->imageHeight) / 2.0F;
+                this->imageY      = (height - this->imageHeight) / 2.0F;
+                this->imageX      = 0;
             }
             break;
-        case ImageScaleType::CROP:
-            if (viewAspectRatio < imageAspectRatio)
-            {
-                this->imageHeight = this->getHeight();
-                this->imageWidth  = this->imageHeight * imageAspectRatio;
-                this->imageX      = (this->origViewWidth - this->imageWidth) / 2.0F;
-            }
-            else
-            {
-                this->imageWidth  = this->getWidth();
-                this->imageHeight = this->imageWidth * imageAspectRatio;
-                this->imageY      = (this->origViewHeight - this->imageHeight) / 2.0F;
-            }
-            break;
-        case ImageScaleType::SCALE:
+        }
+        case ImageScalingType::STRETCH:
+            this->imageX      = 0;
+            this->imageY      = 0;
             this->imageWidth  = this->getWidth();
             this->imageHeight = this->getHeight();
             break;
-        case ImageScaleType::VIEW_RESIZE:
-            this->setWidth(this->imageWidth);
-            this->setHeight(this->imageHeight);
+        case ImageScalingType::CROP:
+            // TODO: alignment
+            if (viewAspectRatio < imageAspectRatio)
+            {
+                this->imageHeight = this->originalImageHeight;
+                this->imageWidth  = this->imageHeight * imageAspectRatio;
+                this->imageX      = (width - this->imageWidth) / 2.0F;
+                this->imageY      = 0;
+            }
+            else
+            {
+                this->imageWidth  = this->originalImageWidth;
+                this->imageHeight = this->imageWidth * imageAspectRatio;
+                this->imageY      = (height - this->imageHeight) / 2.0F;
+                this->imageX      = 0;
+            }
             break;
+        default:
+            throw std::logic_error("Unimplemented Image scaling type");
     }
 
-    this->imgPaint = nvgImagePattern(vg, getX() + this->imageX, getY() + this->imageY, this->imageWidth, this->imageHeight, 0, this->texture, this->alpha);
+    // Create the paint - actual X and Y positions are updated every frame in draw() to apply translation (scrolling...)
+    NVGcontext* vg = Application::getNVGContext();
+    this->paint    = nvgImagePattern(vg, 0, 0, this->imageWidth, this->imageHeight, 0, this->texture, 1.0f);
 }
 
-void Image::setImage(unsigned char* buffer, size_t bufferSize)
+void Image::setImageFromRes(std::string name)
 {
-    if (this->imageBuffer != nullptr)
-        delete[] this->imageBuffer;
+    this->setImageFromFile(std::string(BOREALIS_RESOURCES) + name);
+}
 
-    this->imagePath = "";
+void Image::setImageFromFile(std::string path)
+{
+    NVGcontext* vg = Application::getNVGContext();
 
-    this->imageBuffer = new unsigned char[bufferSize];
-    std::memcpy(this->imageBuffer, buffer, bufferSize);
-    this->imageBufferSize = bufferSize;
+    // Free the old texture if necessary
+    if (this->texture != 0)
+        nvgDeleteImage(vg, this->texture);
 
-    this->reloadTexture();
+    // Load the new texture
+    this->texture = nvgCreateImage(vg, path.c_str(), 0);
+
+    if (this->texture == 0)
+        throw std::logic_error("Cannot load image from file \"" + path + "\"");
+
+    int width, height;
+    nvgImageSize(vg, this->texture, &width, &height);
+    this->originalImageWidth  = (float)width;
+    this->originalImageHeight = (float)height;
+
     this->invalidate();
 }
 
-void Image::setImage(std::string imagePath)
+void Image::setScalingType(ImageScalingType scalingType)
 {
-    this->imagePath = imagePath;
-
-    if (this->imageBuffer != nullptr)
-        delete[] this->imageBuffer;
-
-    this->imageBuffer = nullptr;
-
-    this->reloadTexture();
+    this->scalingType = scalingType;
 
     this->invalidate();
 }
 
-void Image::setOpacity(float opacity)
+ImageScalingType Image::getScalingType()
 {
-    this->alpha = opacity;
-    this->invalidate();
+    return this->scalingType;
 }
 
-void Image::setScaleType(ImageScaleType imageScaleType)
+float Image::getOriginalImageWidth()
 {
-    this->imageScaleType = imageScaleType;
-    this->invalidate();
+    return this->originalImageWidth;
+}
+
+int Image::getTexture()
+{
+    return this->texture;
+}
+
+float Image::getOriginalImageHeight()
+{
+    return this->originalImageHeight;
+}
+
+Image::~Image()
+{
+    NVGcontext* vg = Application::getNVGContext();
+
+    if (this->texture != 0)
+        nvgDeleteImage(vg, this->texture);
+}
+
+View* Image::create()
+{
+    return new Image();
 }
 
 } // namespace brls
-
-namespace std
-{
-void swap(brls::Image& a, brls::Image& b)
-{
-    swap(a.imagePath, b.imagePath);
-    swap(a.imageBuffer, b.imageBuffer);
-    swap(a.imageBufferSize, b.imageBufferSize);
-    swap(a.texture, b.texture);
-    swap(a.imgPaint, b.imgPaint);
-    swap(a.imageScaleType, b.imageScaleType);
-    swap(a.imageX, b.imageX);
-    swap(a.imageY, b.imageY);
-    swap(a.imageWidth, b.imageWidth);
-    swap(a.imageHeight, b.imageHeight);
-    swap(a.origViewWidth, b.origViewWidth);
-    swap(a.origViewHeight, b.origViewHeight);
-}
-}

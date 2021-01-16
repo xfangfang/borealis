@@ -13,9 +13,16 @@ SOURCES		:=	$(SOURCES) \
 				$(current_dir)/lib/extern/libretro-common/compat \
 				$(current_dir)/lib/extern/libretro-common/encodings \
 				$(current_dir)/lib/extern/libretro-common/features \
-				$(current_dir)/lib/extern/nxfmtwrapper
+				$(current_dir)/lib/extern/nxfmtwrapper \
+				$(current_dir)/lib/extern/yoga/src/yoga/event \
+				$(current_dir)/lib/extern/yoga/src/yoga \
+				$(current_dir)/lib/extern/tinyxml2/
 
 INCLUDES	:=	$(INCLUDES) \
 				$(current_dir)/include \
 				$(current_dir)/lib/extern/fmt/include \
-				$(current_dir)/include/borealis/extern
+				$(current_dir)/lib/extern/yoga/src \
+				$(current_dir)/include/borealis/extern \
+				$(current_dir)/include/borealis/extern/tinyxml2
+
+CXXFLAGS := $(CXXFLAGS) -DYG_ENABLE_EVENTS

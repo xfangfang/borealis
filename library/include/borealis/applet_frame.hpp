@@ -1,6 +1,6 @@
 /*
     Borealis, a Nintendo Switch UI Library
-    Copyright (C) 2019  natinusala
+    Copyright (C) 2019-2020  natinusala
     Copyright (C) 2019  p-sam
 
     This program is free software: you can redistribute it and/or modify
@@ -19,76 +19,41 @@
 
 #pragma once
 
-#include <borealis/frame_context.hpp>
-#include <borealis/hint.hpp>
+#include <borealis/box.hpp>
 #include <borealis/image.hpp>
-#include <borealis/view.hpp>
-#include <string>
+#include <borealis/label.hpp>
 
 namespace brls
 {
 
-enum class HeaderStyle
-{
-    REGULAR,
-    POPUP // Only meant for PopupFrames. Using it in other contexts might cause weird behaviour
-};
-
 // A Horizon settings-like frame, with header and footer (no sidebar)
-class AppletFrame : public View
+class AppletFrame : public Box
 {
-  private:
-    std::string title      = "";
-    std::string footerText = "";
-
-    std::string subTitleLeft = "", subTitleRight = "";
-
-    View* icon = nullptr;
-    Hint* hint = nullptr;
-
-    View* contentView = nullptr;
-
-    bool slideOut = false;
-    bool slideIn  = false;
-
-    ViewAnimation animation;
-
-  protected:
-    HeaderStyle headerStyle = HeaderStyle::REGULAR;
-
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
-
-    unsigned leftPadding  = 0;
-    unsigned rightPadding = 0;
-
   public:
-    AppletFrame(bool padLeft, bool padRight);
+    AppletFrame();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    View* getDefaultFocus() override;
-    virtual bool onCancel();
-    void willAppear(bool resetState = false) override;
-    void willDisappear(bool resetState = false) override;
-    void show(std::function<void(void)> cb, bool animate = true, ViewAnimation animation = ViewAnimation::FADE) override;
-    void hide(std::function<void(void)> cb, bool animated = true, ViewAnimation animation = ViewAnimation::FADE) override;
-    void onWindowSizeChanged() override;
+    void handleXMLElement(tinyxml2::XMLElement* element) override;
+
+    /**
+     * Sets the content view for that AppletFrame.
+     * Will be placed between header and footer and expanded with grow factor
+     * and width / height to AUTO.
+     */
+    void setContentView(View* view);
 
     void setTitle(std::string title);
-    void setFooterText(std::string footerText);
-    void setSubtitle(std::string left, std::string right);
-    void setIcon(unsigned char* buffer, size_t bufferSize);
-    void setIcon(std::string imagePath);
-    void setIcon(View* view);
-    virtual void setContentView(View* view);
-    bool hasContentView();
-    void setHeaderStyle(HeaderStyle headerStyle);
 
-    void setAnimateHint(bool animate)
-    {
-        this->hint->setAnimate(animate);
-    }
+    void setIconFromRes(std::string name);
+    void setIconFromFile(std::string path);
 
-    ~AppletFrame();
+    static View* create();
+
+  private:
+    Label* title;
+    Image* icon;
+
+  protected:
+    View* contentView = nullptr;
 };
 
 } // namespace brls

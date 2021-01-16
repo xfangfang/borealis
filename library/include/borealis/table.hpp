@@ -64,8 +64,7 @@ class Table : public View
   public:
     ~Table();
 
-    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
-    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style* style, FrameContext* ctx) override;
 
     TableRow* addRow(TableRowType type, std::string label, std::string value = "");
 };

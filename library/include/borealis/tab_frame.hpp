@@ -21,39 +21,31 @@
 
 #include <borealis/applet_frame.hpp>
 #include <borealis/sidebar.hpp>
-#include <string>
-#include <vector>
+#include <functional>
 
 namespace brls
 {
 
-// An applet frame containing a sidebar on the left with multiple tabs
+typedef std::function<View*(void)> TabViewCreator;
+
+// An applet frame containing a sidebar on the left with multiple tabs which content is showing on the right.
+// Only one tab is kept in memory at all times : when switching, the current tab is freed before the the new one is instantiated.
 class TabFrame : public AppletFrame
 {
   public:
     TabFrame();
 
-    /**
-     * Adds a tab with given label and view
-     * All tabs and separators must be added
-     * before the TabFrame is itself added to
-     * the view hierarchy
-     */
-    void addTab(std::string label, View* view);
+    void handleXMLElement(tinyxml2::XMLElement* element) override;
+
+    void addTab(std::string label, TabViewCreator creator);
     void addSeparator();
 
-    View* getDefaultFocus() override;
-
-    virtual bool onCancel() override;
-
-    ~TabFrame();
+    static View* create();
 
   private:
     Sidebar* sidebar;
-    BoxLayout* layout;
-    View* rightPane = nullptr;
 
-    void switchToView(View* view);
+    View* activeTab = nullptr;
 };
 
 } // namespace brls
