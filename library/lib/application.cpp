@@ -247,6 +247,15 @@ bool Application::init(std::string title, Style* style, LibraryViewsThemeVariant
             nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, Application::fontStash.korean);
         }
 
+        // Chinese Simplified font
+        rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
+        if (R_SUCCEEDED(rc))
+        {
+            Logger::info("Adding Switch shared Chinese Simplified");
+            Application::fontStash.chineseSimplified = Application::loadFontFromMemory("chineseSimplified", font.address, font.size, false);
+            nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, Application::fontStash.chineseSimplified);
+        }
+
         // Extented font
         rc = plGetSharedFontByType(&font, PlSharedFontType_NintendoExt);
         if (R_SUCCEEDED(rc))

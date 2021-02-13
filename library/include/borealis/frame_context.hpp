@@ -30,8 +30,9 @@ namespace brls
 class FontStash
 {
   public:
-    int regular = 0;
-    int korean  = 0;
+    int regular           = 0;
+    int korean            = 0;
+    int chineseSimplified = 0;
 
     int material      = 0;
     int sharedSymbols = 0;
