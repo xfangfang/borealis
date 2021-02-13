@@ -89,6 +89,14 @@ void Label::setFontSize(unsigned size)
         this->getParent()->invalidate();
 }
 
+void Label::setLineHeight(float lineHeight)
+{
+    this->lineHeight = lineHeight;
+
+    if (this->getParent())
+        this->getParent()->invalidate();
+}
+
 void Label::setText(std::string text)
 {
     this->text = text;

@@ -74,6 +74,7 @@ class Label : public View
     void setText(std::string text);
     void setStyle(LabelStyle style);
     void setFontSize(unsigned size);
+    void setLineHeight(float lineHeight);
 
     /**
      * Sets the label color
