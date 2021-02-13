@@ -101,7 +101,10 @@ void ScrollView::willDisappear(bool resetState)
 
 View* ScrollView::getDefaultFocus()
 {
-    return this->contentView;
+    if (this->contentView)
+        return this->contentView->getDefaultFocus();
+
+    return nullptr;
 }
 
 void ScrollView::setContentView(View* view)
