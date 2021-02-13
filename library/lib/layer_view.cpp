@@ -124,4 +124,10 @@ void LayerView::willDisappear(bool resetState)
         this->layers[this->selectedIndex]->willDisappear(true);
 }
 
+void LayerView::onWindowSizeChanged()
+{
+    for (View* view : this->layers)
+        view->onWindowSizeChanged();
+}
+
 }

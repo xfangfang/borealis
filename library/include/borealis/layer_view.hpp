@@ -43,6 +43,8 @@ class LayerView : public View
     void willAppear(bool resetState = false) override;
     void willDisappear(bool resetState = false) override;
 
+    void onWindowSizeChanged() override;
+
   private:
     std::vector<View*> layers;
     int selectedIndex = 0;
