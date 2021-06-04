@@ -48,6 +48,12 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
 
 GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
 {
+    if (!glfwInit())
+    {
+        Logger::error("glfw: failed to initialize");
+        return;
+    }
+    
     // Create window
 #ifdef __APPLE__
     // Explicitly ask for a 3.2 context on OS X

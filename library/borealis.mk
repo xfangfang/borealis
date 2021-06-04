@@ -1,7 +1,7 @@
 mkfile_path	:=	$(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir	:=	$(BOREALIS_PATH)/$(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
-LIBS		:=	-ldeko3d -lm $(LIBS)
+LIBS		:=  -lglfw3 -lEGL -lglapi -ldrm_nouveau -lm $(LIBS)
 
 include $(TOPDIR)/$(current_dir)/lib/extern/switch-libpulsar/deps.mk
 
@@ -11,10 +11,9 @@ SOURCES		:=	$(SOURCES) \
 				$(current_dir)/lib/views \
                 $(current_dir)/lib/views/cells \
 				$(current_dir)/lib/platforms/switch \
+				$(current_dir)/lib/platforms/glfw \
 				$(current_dir)/lib/extern/glad \
-				$(current_dir)/lib/extern/nanovg-deko3d/source \
-				$(current_dir)/lib/extern/nanovg-deko3d/source/framework \
-				$(current_dir)/lib/extern/nanovg-deko3d/shaders \
+				$(current_dir)/lib/extern/nanovg-gl \
 				$(current_dir)/lib/extern/libretro-common/compat \
 				$(current_dir)/lib/extern/libretro-common/encodings \
 				$(current_dir)/lib/extern/libretro-common/features \
@@ -28,7 +27,7 @@ INCLUDES	:=	$(INCLUDES) \
 				$(current_dir)/include \
 				$(current_dir)/lib/extern/fmt/include \
 				$(current_dir)/lib/extern/yoga/src \
-				$(current_dir)/lib/extern/nanovg-deko3d/include \
+				$(current_dir)/include/borealis/extern/nanovg-gl \
 				$(current_dir)/lib/extern/tweeny/include \
 				$(current_dir)/include/borealis/extern \
 				$(current_dir)/include/borealis/extern/tinyxml2 \

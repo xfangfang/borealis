@@ -82,6 +82,8 @@ class SwitchVideoContext : public VideoContext
 
     std::optional<nvg::DkRenderer> renderer;
     NVGcontext* nvgContext;
+
+    AppletHookCookie appletCookie;
 };
 
 } // namespace brls

@@ -20,7 +20,7 @@
 #include <borealis/platforms/switch/switch_audio.hpp>
 #include <borealis/platforms/switch/switch_font.hpp>
 #include <borealis/platforms/switch/switch_input.hpp>
-#include <borealis/platforms/switch/switch_video.hpp>
+#include <borealis/platforms/glfw/glfw_video.hpp>
 
 namespace brls
 {
@@ -47,14 +47,13 @@ class SwitchPlatform : public Platform
     void appletCallback(AppletHookType hookType);
 
   private:
-    AppletHookCookie appletCookie;
 
     ThemeVariant themeVariant;
     std::string locale;
 
     SwitchAudioPlayer* audioPlayer;
     SwitchInputManager* inputManager;
-    SwitchVideoContext* videoContext;
+    GLFWVideoContext* videoContext;
     SwitchFontLoader* fontLoader;
 };
 

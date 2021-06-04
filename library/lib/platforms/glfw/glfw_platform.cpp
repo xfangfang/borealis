@@ -20,6 +20,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <strings.h>
 
 // glfw video and input code inspired from the glfw hybrid app by fincs
 // https://github.com/fincs/hybrid_app
