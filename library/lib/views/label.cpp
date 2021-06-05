@@ -523,7 +523,7 @@ void Label::onLayout()
         // Compute the position of the ellipsis (in chars), should the string be truncated
         // Use an approximation based on the text width and ellipsis width
         // Cannot do it in the measure function because the margins are not applied yet there
-        float toRemove      = this->requiredWidth - width + this->ellipsisWidth * 1.5f; // little bit more than ellipsis width to make sure it doesn't overflow
+        float toRemove      = std::min(this->requiredWidth, this->requiredWidth - width + this->ellipsisWidth * 1.5f); // little bit more than ellipsis width to make sure it doesn't overflow
         float toRemoveRatio = toRemove / requiredWidth;
 
         size_t ellipsisPosition = this->fullText.size() - roundf((float)this->fullText.size() * toRemoveRatio);

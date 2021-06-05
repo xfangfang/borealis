@@ -729,6 +729,9 @@ void View::setActionsAvailable(bool available)
 
 void View::setParent(Box* parent, void* parentUserdata)
 {
+    if (this->parentUserdata)
+        free(this->parentUserdata);
+    
     this->parent         = parent;
     this->parentUserdata = parentUserdata;
 }
@@ -1363,6 +1366,8 @@ View::~View()
     clickAlpha.stop();
     highlightAlpha.stop();
     collapseState.stop();
+    
+    YGNodeFree(this->ygNode);
     
     if (deletionToken)
         *deletionToken = true;

@@ -211,7 +211,11 @@ RecyclerFrame::~RecyclerFrame()
     //        delete dataSource;
 
     for (auto it : queueMap)
+    {
+        for (auto item : *it.second)
+            delete item;
         delete it.second;
+    }
 }
 
 void RecyclerFrame::setDataSource(RecyclerDataSource* source)
