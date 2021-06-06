@@ -87,7 +87,7 @@ private:
     
     inline static volatile bool task_loop_active = true;
 
-    static void task_loop();
+    static void* task_loop(void* a);
     
     static void start_task_loop();
 };

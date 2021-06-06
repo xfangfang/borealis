@@ -17,15 +17,9 @@
 #include <borealis/core/thread.hpp>
 #include <libretro-common/retro_timers.h>
 
-#if defined(__SWITCH__)
-#include <switch.h>
-#endif
-
 namespace brls {
 
-#ifdef __SWITCH__
-    static Thread task_loop_thread;
-#endif
+static pthread_t task_loop_thread;
 
 Threading::Threading()
 {
@@ -69,14 +63,10 @@ void Threading::start() {
 
 void Threading::stop() {
     task_loop_active = false;
-    
-    #ifdef __SWITCH__
-    threadWaitForExit(&task_loop_thread);
-    threadClose(&task_loop_thread);
-    #endif
+    pthread_join(task_loop_thread, NULL);
 }
 
-void Threading::task_loop() {
+void* Threading::task_loop(void* a) {
     while (task_loop_active) {
         std::vector<std::function<void()>> m_tasks_copy; {
             std::lock_guard<std::mutex> guard(m_async_mutex);
@@ -90,29 +80,11 @@ void Threading::task_loop() {
         
         retro_sleep(500);
     }
+    return NULL;
 }
 
 void Threading::start_task_loop() {
-#ifdef __SWITCH__
-    threadCreate(
-        &task_loop_thread,
-        [](void* a) {
-            task_loop();
-        },
-        NULL,
-        NULL,
-        0x10000,
-        0x2C,
-        -2
-    );
-    threadStart(&task_loop_thread);
-#else
-    task_loop_active = true;
-    auto thread = std::thread([](){
-        task_loop();
-    });
-    thread.detach();
-#endif
+    pthread_create(&task_loop_thread, NULL, task_loop, NULL);
 }
 
 } // namespace brls
