@@ -32,6 +32,8 @@ class ProgressSpinner : public View
     void willAppear(bool resetState = false) override;
     void willDisappear(bool resetState = false) override;
     
+    void animate(bool animate);
+    
     static brls::View* create();
   private:
     Animatable animationValue = 0.0f;

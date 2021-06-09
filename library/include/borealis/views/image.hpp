@@ -30,10 +30,12 @@ enum class ImageScalingType
 {
     // The image is scaled to fit the view boundaries, aspect ratio is conserved
     FIT,
+    // The image is scaled to fill the view boundaries, aspect ratio is conserved
+    FILL,
     // The image is stretched to fit the view boundaries (aspect ratio is not conserved). The original image dimensions are entirely ignored in the layout process.
     STRETCH,
     // The image is either cropped (not enough space) or untouched (too much space)
-    CROP,
+    CENTER,
 };
 
 // This dictates what interpolation to use when down / up scaling the image
@@ -112,7 +114,17 @@ class Image : public View
      * Default is CENTER.
      */
     void setImageAlign(ImageAlignment align);
+    
+    void setImageCrop(bool crop)
+    {
+        this->crop = crop;
+    }
 
+    bool getImageCrop()
+    {
+        return this->crop;
+    }
+    
     int getTexture();
     float getOriginalImageWidth();
     float getOriginalImageHeight();
@@ -138,6 +150,8 @@ class Image : public View
     float imageY      = 0;
     float imageHeight = 0;
     float imageWidth  = 0;
+    
+    bool crop = true;
 };
 
 } // namespace brls

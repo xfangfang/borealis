@@ -84,7 +84,7 @@ const std::string hintsXML = R"xml(
 
         <brls:Label
             id="brls/hints/time"
-            width="75px"
+            width="auto"
             height="auto"
             fontSize="21.5" />
 
@@ -132,7 +132,7 @@ std::string Hint::getKeyIcon(ControllerButton button)
             return "\uE0E5";
         case BUTTON_START:
             return "\uE0EF";
-        case BUTTON_GUIDE:
+        case BUTTON_BACK:
             return "\uE0F0";
         case BUTTON_LEFT:
             return "\uE0ED";
@@ -151,14 +151,14 @@ Hints::Hints()
 {
     this->inflateFromXMLString(hintsXML);
 
-    hintSubscription = Application::getGlobalFocusChangeEvent()->subscribe([this](View* view) {
-        refillHints(view);
+    hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
+        refillHints(Application::getCurrentFocus());
     });
 }
 
 Hints::~Hints()
 {
-    Application::getGlobalFocusChangeEvent()->unsubscribe(hintSubscription);
+    Application::getGlobalHintsUpdateEvent()->unsubscribe(hintSubscription);
 }
 
 void Hints::refillHints(View* focusView)

@@ -53,7 +53,7 @@ class Hints : public Box
     BRLS_BIND(Box, hints, "brls/hints");
     BRLS_BIND(Label, time, "brls/hints/time");
 
-    GenericEvent::Subscription hintSubscription;
+    VoidEvent::Subscription hintSubscription;
     static bool actionsSortFunc(Action a, Action b);
 };
 

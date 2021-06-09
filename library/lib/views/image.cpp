@@ -114,8 +114,9 @@ Image::Image()
         "scalingType", ImageScalingType, this->setScalingType,
         {
             { "fit", ImageScalingType::FIT },
+            { "fill", ImageScalingType::FILL },
             { "stretch", ImageScalingType::STRETCH },
-            { "crop", ImageScalingType::CROP },
+            { "center", ImageScalingType::CENTER },
         });
 
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
@@ -134,6 +135,10 @@ Image::Image()
             { "linear", ImageInterpolation::LINEAR },
             { "nearest", ImageInterpolation::NEAREST },
         });
+    
+    registerBoolXMLAttribute("crop", [this](bool value) {
+        this->setImageCrop(value);
+    });
 
     this->registerFilePathXMLAttribute("image", [this](std::string value) {
         this->setImageFromFile(value);
@@ -145,7 +150,7 @@ void Image::draw(NVGcontext* vg, float x, float y, float width, float height, St
     if (this->texture == 0)
         return;
 
-    if (this->scalingType == ImageScalingType::CROP)
+    if (this->crop)
     {
         nvgSave(vg);
         nvgIntersectScissor(vg, x, y, width, height);
@@ -158,11 +163,14 @@ void Image::draw(NVGcontext* vg, float x, float y, float width, float height, St
     this->paint.xform[5] = coordY;
 
     nvgBeginPath(vg);
-    nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
+    if (crop)
+        nvgRoundedRect(vg, x, y, width, height, getCornerRadius());
+    else
+        nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
     nvgFillPaint(vg, a(this->paint));
     nvgFill(vg);
 
-    if (this->scalingType == ImageScalingType::CROP)
+    if (this->crop)
         nvgRestore(vg);
 }
 
@@ -208,27 +216,35 @@ void Image::invalidateImageBounds()
             }
             break;
         }
-        case ImageScalingType::STRETCH:
-            this->imageX      = 0;
-            this->imageY      = 0;
-            this->imageWidth  = this->getWidth();
-            this->imageHeight = this->getHeight();
-            break;
-        case ImageScalingType::CROP:
-            if (viewAspectRatio < imageAspectRatio)
+        case ImageScalingType::FILL:
+        {
+            if (viewAspectRatio <= imageAspectRatio)
             {
-                this->imageHeight = this->originalImageHeight;
+                this->imageHeight = this->getHeight();
                 this->imageWidth  = this->imageHeight * imageAspectRatio;
                 this->imageX      = (width - this->imageWidth) / 2.0F;
                 this->imageY      = 0;
             }
             else
             {
-                this->imageWidth  = this->originalImageWidth;
-                this->imageHeight = this->imageWidth * imageAspectRatio;
+                this->imageWidth  = this->getWidth();
+                this->imageHeight = this->imageWidth / imageAspectRatio;
                 this->imageY      = (height - this->imageHeight) / 2.0F;
                 this->imageX      = 0;
             }
+            break;
+        }
+        case ImageScalingType::STRETCH:
+            this->imageX      = 0;
+            this->imageY      = 0;
+            this->imageWidth  = this->getWidth();
+            this->imageHeight = this->getHeight();
+            break;
+        case ImageScalingType::CENTER:
+            this->imageHeight = this->originalImageHeight;
+            this->imageWidth  = this->originalImageWidth;
+            this->imageX      = (width - this->imageWidth) / 2.0F;
+            this->imageY      = (height - this->imageHeight) / 2.0F;
             break;
         default:
             fatal("Unimplemented Image scaling type");

@@ -235,7 +235,7 @@ void Box::clearViews()
         this->children.pop_back();
 
         view->willDisappear(true);
-        delete view;
+        view->freeView();
     }
 
     this->invalidate();

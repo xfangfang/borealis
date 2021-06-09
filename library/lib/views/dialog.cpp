@@ -79,13 +79,14 @@ const std::string dialogXML = R"xml(
                     width="auto"
                     height="72"
                     axis="row"
+                    justifyContent="spaceEvenly"
                     alignItems="stretch"
                     lineTop="2px"
                     lineColor="@theme/brls/sidebar/separator"
                     visibility="gone">
 
                     <brls:Button
-                        id="brls/dialog/button2"
+                        id="brls/dialog/button1"
                         width="auto"
                         height="auto"
                         grow="1"
@@ -102,7 +103,7 @@ const std::string dialogXML = R"xml(
                         visibility="gone"/>
 
                     <brls:Button
-                        id="brls/dialog/button1"
+                        id="brls/dialog/button2"
                         width="auto"
                         height="auto"
                         grow="1"
@@ -113,7 +114,8 @@ const std::string dialogXML = R"xml(
                         text="Continue"
                         style="borderless"
                         fontSize="@style/brls/dialog/fontSize"
-                        textColor="@theme/brls/accent"/>
+                        textColor="@theme/brls/accent"
+                        visibility="gone"/>
 
                 </brls:Box>
             
@@ -189,6 +191,7 @@ void Dialog::rebuildButtons()
 {
     if (this->buttons.size() > 0)
     {
+        setLastFocusedView(button1);
         button1->getParent()->setVisibility(Visibility::VISIBLE);
         
         button1->setVisibility(Visibility::VISIBLE);

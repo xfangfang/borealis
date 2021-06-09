@@ -38,6 +38,18 @@ void ProgressSpinner::restartAnimation()
     this->animationValue.start();
 }
 
+void ProgressSpinner::animate(bool animate)
+{
+    if (animate)
+    {
+        this->animationValue.start();
+    }
+    else
+    {
+        this->animationValue.stop();
+    }
+}
+
 void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
     Theme theme = Application::getTheme();

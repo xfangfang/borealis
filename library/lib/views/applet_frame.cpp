@@ -111,8 +111,7 @@ AppletFrame::AppletFrame()
 AppletFrame::AppletFrame(View* contentView)
     : AppletFrame::AppletFrame()
 {
-    contentViewStack.push_back(contentView);
-    this->setContentView(contentView);
+    this->pushContentView(contentView);
 }
 
 void AppletFrame::setIconFromRes(std::string name)
@@ -205,8 +204,7 @@ void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
         fatal("brls:AppletFrame can only have one child XML element");
 
     View* view = View::createFromXMLElement(element);
-    contentViewStack.push_back(view);
-    this->setContentView(view);
+    this->pushContentView(view);
 }
 
 void AppletFrame::setHeaderStyle(HeaderStyle style)
