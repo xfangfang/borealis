@@ -31,7 +31,7 @@ class DialogButton
 {
   public:
     std::string label;
-    GenericEvent::Callback cb;
+    VoidEvent::Callback cb;
 };
 
 // A modal dialog with zero to three buttons
@@ -51,6 +51,7 @@ class Dialog : public Box
     std::vector<DialogButton*> buttons;
 
     void rebuildButtons();
+    void buttonClick(DialogButton* button);
 
     bool cancelable = true;
 
@@ -68,7 +69,7 @@ class Dialog : public Box
      * Adding a button after the dialog has been opened is
      * NOT SUPPORTED
      */
-    void addButton(std::string label, GenericEvent::Callback cb);
+    void addButton(std::string label, VoidEvent::Callback cb);
 
     /**
      * A cancelable dialog is closed when

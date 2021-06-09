@@ -158,7 +158,7 @@ Dialog::Dialog(std::string text)
         false, SOUND_BACK);
 }
 
-void Dialog::addButton(std::string label, GenericEvent::Callback cb)
+void Dialog::addButton(std::string label, VoidEvent::Callback cb)
 {
     if (this->buttons.size() >= 3)
         return;
@@ -197,7 +197,7 @@ void Dialog::rebuildButtons()
         button1->setVisibility(Visibility::VISIBLE);
         button1->setText(buttons[0]->label);
         button1->registerClickAction([this](View* view) {
-            buttons[0]->cb(view);
+            buttonClick(buttons[0]);
             return true;
         });
     }
@@ -207,7 +207,7 @@ void Dialog::rebuildButtons()
         button2->setVisibility(Visibility::VISIBLE);
         button2->setText(buttons[1]->label);
         button2->registerClickAction([this](View* view) {
-            buttons[1]->cb(view);
+            buttonClick(buttons[1]);
             return true;
         });
     }
@@ -217,10 +217,17 @@ void Dialog::rebuildButtons()
         button3->setVisibility(Visibility::VISIBLE);
         button3->setText(buttons[2]->label);
         button3->registerClickAction([this](View* view) {
-            buttons[2]->cb(view);
+            buttonClick(buttons[2]);
             return true;
         });
     }
+}
+
+void Dialog::buttonClick(DialogButton* button)
+{
+    dismiss([button] {
+        button->cb();
+    });
 }
 
 AppletFrame* Dialog::getAppletFrame()
