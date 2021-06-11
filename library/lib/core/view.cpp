@@ -691,8 +691,6 @@ ActionIdentifier View::registerAction(std::string hintText, enum ControllerButto
         *it = { button, nextIdentifier, hintText, true, hidden, sound, actionListener };
     else
         this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, sound, actionListener });
-    
-    Application::getGlobalHintsUpdateEvent()->fire();
 
     return nextIdentifier;
 }
@@ -704,8 +702,6 @@ void View::unregisterAction(ActionIdentifier identifier)
     };
     if (auto it = std::find_if(this->actions.begin(), this->actions.end(), is_matched_action); it != this->actions.end())
         this->actions.erase(it);
-    
-    Application::getGlobalHintsUpdateEvent()->fire();
 }
 
 void View::registerClickAction(ActionListener actionListener)
@@ -717,8 +713,6 @@ void View::updateActionHint(enum ControllerButton button, std::string hintText)
 {
     if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
         it->hintText = hintText;
-
-    Application::getGlobalHintsUpdateEvent()->fire();
 }
 
 void View::setActionAvailable(enum ControllerButton button, bool available)

@@ -204,7 +204,8 @@ void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
         fatal("brls:AppletFrame can only have one child XML element");
 
     View* view = View::createFromXMLElement(element);
-    this->pushContentView(view);
+    contentViewStack.push_back(view);
+    setContentView(view);
 }
 
 void AppletFrame::setHeaderStyle(HeaderStyle style)
