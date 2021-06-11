@@ -1,5 +1,6 @@
 dep_glfw3 = dependency('glfw3', version : '>=3.3')
 dep_glm   = dependency('glm', version : '>=0.9.8')
+dep_thread = dependency('threads')
 
 borealis_files = files(
     'lib/core/logger.cpp',
@@ -89,5 +90,5 @@ borealis_include = include_directories(
     'lib/extern/tweeny/include',
 )
 
-borealis_dependencies = [ dep_glfw3, dep_glm, ]
+borealis_dependencies = [ dep_glfw3, dep_glm, dep_thread, ]
 borealis_cpp_args = [ '-DNO_TOUCH_SCROLLING=true', '-DYG_ENABLE_EVENTS', '-D__GLFW__', ]

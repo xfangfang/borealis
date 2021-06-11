@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <functional>
 #include <unistd.h>
 #include <thread>
 #include <vector>

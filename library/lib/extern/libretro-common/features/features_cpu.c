@@ -339,29 +339,7 @@ static void arm_enable_runfast_mode(void)
 #if defined(__linux__) && !defined(CPU_X86)
 static unsigned char check_arm_cpu_feature(const char* feature)
 {
-   char line[1024];
-   unsigned char status = 0;
-   RFILE *fp = filestream_open("/proc/cpuinfo",
-         RETRO_VFS_FILE_ACCESS_READ,
-         RETRO_VFS_FILE_ACCESS_HINT_NONE);
-
-   if (!fp)
-      return 0;
-
-   while (filestream_gets(fp, line, sizeof(line)) != NULL)
-   {
-      if (strncmp(line, "Features\t: ", 11))
-         continue;
-
-      if (strstr(line + 11, feature) != NULL)
-         status = 1;
-
-      break;
-   }
-
-   filestream_close(fp);
-
-   return status;
+   return 0;
 }
 
 #if !defined(_SC_NPROCESSORS_ONLN)
