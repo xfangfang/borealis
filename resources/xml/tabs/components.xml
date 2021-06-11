@@ -232,7 +232,7 @@
                         imageWidth="auto"
                         imageHeight="75px"
                         image="@res/img/tiles.png"
-                        scalingType="crop"
+                        scalingType="center"
                         caption="@i18n/demo/components/images_cropped"
                         focusUp="image_upscaled" />
 
