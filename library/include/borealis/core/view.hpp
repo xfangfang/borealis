@@ -216,6 +216,7 @@ class View
     Point translation;
 
     bool wireframeEnabled = false;
+    bool clipsToBounds = false;
 
     std::vector<Action> actions;
     std::vector<GestureRecognizer*> gestureRecognizers;
@@ -1411,6 +1412,16 @@ class View
     std::string getIconFile()
     {
         return iconPath;
+    }
+    
+    bool getClipsToBounds() const
+    {
+        return clipsToBounds;
+    }
+    
+    void setClipsToBounds(bool value)
+    {
+        clipsToBounds = value;
     }
 
     virtual AppletFrame* getAppletFrame();

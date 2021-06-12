@@ -150,8 +150,6 @@ class Image : public View
     float imageY      = 0;
     float imageHeight = 0;
     float imageWidth  = 0;
-    
-    bool crop = true;
 };
 
 } // namespace brls

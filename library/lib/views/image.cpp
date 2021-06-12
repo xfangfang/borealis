@@ -143,18 +143,14 @@ Image::Image()
     this->registerFilePathXMLAttribute("image", [this](std::string value) {
         this->setImageFromFile(value);
     });
+    
+    setClipsToBounds(true);
 }
 
 void Image::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
     if (this->texture == 0)
         return;
-
-    if (this->crop)
-    {
-        nvgSave(vg);
-        nvgIntersectScissor(vg, x, y, width, height);
-    }
 
     float coordX = x + this->imageX;
     float coordY = y + this->imageY;
@@ -163,15 +159,9 @@ void Image::draw(NVGcontext* vg, float x, float y, float width, float height, St
     this->paint.xform[5] = coordY;
 
     nvgBeginPath(vg);
-    if (crop)
-        nvgRoundedRect(vg, x, y, width, height, getCornerRadius());
-    else
-        nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
+    nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
     nvgFillPaint(vg, a(this->paint));
     nvgFill(vg);
-
-    if (this->crop)
-        nvgRestore(vg);
 }
 
 void Image::onLayout()

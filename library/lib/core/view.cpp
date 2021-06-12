@@ -81,6 +81,10 @@ View::View()
     this->registerFloatXMLAttribute("alpha", [this](float value) {
         this->setAlpha(value);
     });
+    
+    this->registerBoolXMLAttribute("clipsToBounds", [this](float value) {
+        this->setClipsToBounds(value);
+    });
 }
 
 static int shakeAnimation(float t, float a) // a = amplitude
@@ -201,21 +205,22 @@ void View::frame(FrameContext* ctx)
             this->drawClickAnimation(ctx->vg, ctx, frame);
 
         // Collapse clipping
-        if (this->collapseState < 1.0f)
+        if (this->collapseState < 1.0f || this->clipsToBounds)
         {
             nvgSave(ctx->vg);
             nvgIntersectScissor(ctx->vg, x, y, width, height * this->collapseState);
         }
-
+        
         // Draw the view
         this->draw(ctx->vg, x, y, width, height, style, ctx);
 
         if (this->wireframeEnabled)
             this->drawWireframe(ctx, frame);
-
+        
         //Reset clipping
-        if (this->collapseState < 1.0f)
+        if (this->collapseState < 1.0f || this->clipsToBounds)
             nvgRestore(ctx->vg);
+        
     }
 
     // Cleanup
