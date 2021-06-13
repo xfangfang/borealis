@@ -33,7 +33,7 @@ class DetailCell : public RecyclerCell
     void setTextColor(NVGcolor color);
     void setDetailText(std::string title);
     void setDetailTextColor(NVGcolor color);
-    
+
     BRLS_BIND(Label, title, "brls/rediocell/title");
     BRLS_BIND(Label, detail, "brls/rediocell/detail");
 

@@ -14,10 +14,12 @@
     limitations under the License.
 */
 
-#include <borealis/core/thread.hpp>
 #include <libretro-common/retro_timers.h>
 
-namespace brls {
+#include <borealis/core/thread.hpp>
+
+namespace brls
+{
 
 static pthread_t task_loop_thread;
 
@@ -26,22 +28,24 @@ Threading::Threading()
     start_task_loop();
 }
 
-void sync(const std::function<void()> &func)
+void sync(const std::function<void()>& func)
 {
     Threading::sync(func);
 }
 
-void async(const std::function<void()> &task)
+void async(const std::function<void()>& task)
 {
     Threading::async(task);
 }
 
-void Threading::sync(const std::function<void()> &func) {
+void Threading::sync(const std::function<void()>& func)
+{
     std::lock_guard<std::mutex> guard(m_sync_mutex);
     m_sync_functions.push_back(func);
 }
 
-void Threading::async(const std::function<void()> &task) {
+void Threading::async(const std::function<void()>& task)
+{
     std::lock_guard<std::mutex> guard(m_async_mutex);
     m_async_tasks.push_back(task);
 }
@@ -52,38 +56,45 @@ void Threading::performSyncTasks()
     auto local = m_sync_functions;
     m_sync_functions.clear();
     m_sync_mutex.unlock();
-    
-    for (auto &f : local)
+
+    for (auto& f : local)
         f();
 }
 
-void Threading::start() {
+void Threading::start()
+{
     start_task_loop();
 }
 
-void Threading::stop() {
+void Threading::stop()
+{
     task_loop_active = false;
     pthread_join(task_loop_thread, NULL);
 }
 
-void* Threading::task_loop(void* a) {
-    while (task_loop_active) {
-        std::vector<std::function<void()>> m_tasks_copy; {
+void* Threading::task_loop(void* a)
+{
+    while (task_loop_active)
+    {
+        std::vector<std::function<void()>> m_tasks_copy;
+        {
             std::lock_guard<std::mutex> guard(m_async_mutex);
             m_tasks_copy = m_async_tasks;
             m_async_tasks.clear();
         }
-        
-        for (auto task: m_tasks_copy) {
+
+        for (auto task : m_tasks_copy)
+        {
             task();
         }
-        
+
         retro_sleep(500);
     }
     return NULL;
 }
 
-void Threading::start_task_loop() {
+void Threading::start_task_loop()
+{
     pthread_create(&task_loop_thread, NULL, task_loop, NULL);
 }
 

@@ -114,17 +114,7 @@ class Image : public View
      * Default is CENTER.
      */
     void setImageAlign(ImageAlignment align);
-    
-    void setImageCrop(bool crop)
-    {
-        this->crop = crop;
-    }
 
-    bool getImageCrop()
-    {
-        return this->crop;
-    }
-    
     int getTexture();
     float getOriginalImageWidth();
     float getOriginalImageHeight();

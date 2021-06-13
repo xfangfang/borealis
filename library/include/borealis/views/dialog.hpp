@@ -19,8 +19,8 @@
 
 #include <borealis/core/bind.hpp>
 #include <borealis/core/box.hpp>
-#include <borealis/views/button.hpp>
 #include <borealis/views/applet_frame.hpp>
+#include <borealis/views/button.hpp>
 
 namespace brls
 {
@@ -59,7 +59,7 @@ class Dialog : public Box
     Dialog(std::string text);
     Dialog(Box* contentView);
     ~Dialog();
-    
+
     AppletFrame* getAppletFrame() override;
 
     /**

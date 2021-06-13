@@ -220,8 +220,8 @@ void AppletFrame::setHeaderStyle(HeaderStyle style)
             title->setFontSize(appStyle["brls/applet_frame/header_title_font_size"]);
             break;
         case HeaderStyle::POPUP:
-//            header->setHeight(appStyle["brls/applet_frame/dropdown_header_height"]);
-//            title->setFontSize(appStyle["brls/applet_frame/dropdown_header_title_font_size"]);
+            //            header->setHeight(appStyle["brls/applet_frame/dropdown_header_height"]);
+            //            title->setFontSize(appStyle["brls/applet_frame/dropdown_header_title_font_size"]);
             break;
         default:
             break;

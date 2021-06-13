@@ -136,7 +136,7 @@ void ScrollingFrame::naturalScrollingBehaviour()
         if (Application::getCurrentFocus() == this && Application::getInputType() == InputType::GAMEPAD)
         {
             View* topMostView = findTopMostFocusableView();
-            
+
             if (topMostView && topMostView != currentFocus)
             {
                 Application::giveFocus(topMostView);
@@ -152,8 +152,8 @@ void ScrollingFrame::naturalScrollingBehaviour()
     {
         ControllerState state;
         input->updateControllerState(&state);
-        float bottomLimit  = this->getContentHeight() - this->getScrollingAreaHeight();
-        
+        float bottomLimit = this->getContentHeight() - this->getScrollingAreaHeight();
+
         // Sets true on border hit to play sound only once
         static bool repeat = false;
 

@@ -61,7 +61,7 @@ Button::Button()
     this->forwardXMLAttribute("animated", this->label);
     this->forwardXMLAttribute("autoAnimate", this->label);
     this->forwardXMLAttribute("textHorizontalAlign", this->label, "horizontalAlign");
-    
+
     this->registerColorXMLAttribute("textColor", [this](NVGcolor color) {
         this->setTextColor(color);
     });
@@ -130,7 +130,7 @@ void Button::applyStyle()
         this->setBackgroundColor(theme[backgroundColor]);
     else
         this->setBackground(ViewBackground::NONE);
-    
+
     if (textColorOverritten)
         this->label->setTextColor(this->textColor);
     else
@@ -156,7 +156,7 @@ void Button::onFocusLost()
 
 void Button::setStyle(const ButtonStyle* style)
 {
-    this->style = style;
+    this->style         = style;
     textColorOverritten = false;
     this->applyStyle();
 }
@@ -169,7 +169,7 @@ void Button::setState(ButtonState state)
 
 void Button::setTextColor(NVGcolor color)
 {
-    textColor = color;
+    textColor           = color;
     textColorOverritten = true;
     applyStyle();
 }

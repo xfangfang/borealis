@@ -23,9 +23,9 @@
 
 #include <algorithm>
 #include <borealis/core/application.hpp>
-#include <borealis/core/thread.hpp>
 #include <borealis/core/font.hpp>
 #include <borealis/core/i18n.hpp>
+#include <borealis/core/thread.hpp>
 #include <borealis/core/time.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/button.hpp>
@@ -36,12 +36,12 @@
 #include <borealis/views/header.hpp>
 #include <borealis/views/hint.hpp>
 #include <borealis/views/image.hpp>
+#include <borealis/views/progress_spinner.hpp>
 #include <borealis/views/rectangle.hpp>
 #include <borealis/views/recycler.hpp>
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
-#include <borealis/views/progress_spinner.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -79,11 +79,11 @@ bool Application::init()
 
     // Init i18n
     loadTranslations();
-    
+
     Threading::start();
-    
+
     Application::inited = true;
-    
+
     return true;
 }
 
@@ -162,8 +162,7 @@ void Application::createWindow(std::string windowTitle)
 bool Application::mainLoop()
 {
     static ControllerState oldControllerState = {};
-    static View* firstResponder;
-    
+
     /* Run sync functions */
     Threading::performSyncTasks();
 
@@ -503,15 +502,15 @@ void Application::frame()
         View* view = viewsToDraw[viewsToDraw.size() - 1 - i];
         view->frame(&frameContext);
     }
-    
+
     if (currentFocus)
         currentFocus->frameHighlight(&frameContext);
-    
+
     if (debuggingViewEnabled)
     {
         if (!debugLayer)
             debugLayer = new DebugLayer();
-        
+
         debugLayer->frame(&frameContext);
     }
 
@@ -533,7 +532,7 @@ void Application::exit()
         delete view;
 
     Application::deletionPool.clear();
-    
+
     Threading::stop();
     delete Application::platform;
 }
@@ -602,7 +601,7 @@ void Application::giveFocus(View* view)
             Logger::debug("Giving focus to {}", newFocus->describe());
         }
     }
-    
+
     Application::globalHintsUpdateEvent.fire();
 }
 
@@ -779,6 +778,16 @@ void Application::addToFreeQueue(View* view)
     deletionPool.push_back(view);
 }
 
+void Application::tryDeinitFirstResponder(View* view)
+{
+    if (view && view == Application::firstResponder)
+    {
+        // Interrupt current gestures if presented
+        Application::firstResponder->interruptGestures(false);
+        Application::firstResponder = nullptr;
+    }
+}
+
 bool Application::loadFontFromFile(std::string fontName, std::string filePath)
 {
     int handle = nvgCreateFont(Application::getNVGContext(), fontName.c_str(), filePath.c_str());
@@ -823,10 +832,10 @@ void Application::unblockInputs()
 {
     if (Application::blockInputsTokens > 0)
         Application::blockInputsTokens -= 1;
-    
+
     if (Application::blockInputsTokens <= 0)
         muteSounds = false;
-    
+
     Logger::debug("Removing an inputs block token (tokens={})", Application::blockInputsTokens);
 }
 

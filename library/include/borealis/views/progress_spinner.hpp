@@ -27,14 +27,15 @@ class ProgressSpinner : public View
 {
   public:
     ProgressSpinner();
-    
+
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     void willAppear(bool resetState = false) override;
     void willDisappear(bool resetState = false) override;
-    
+
     void animate(bool animate);
-    
+
     static brls::View* create();
+
   private:
     Animatable animationValue = 0.0f;
 

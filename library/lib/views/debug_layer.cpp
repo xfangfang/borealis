@@ -14,27 +14,27 @@
     limitations under the License.
 */
 
+#include <borealis/core/thread.hpp>
 #include <borealis/views/debug_layer.hpp>
 #include <borealis/views/label.hpp>
-#include <borealis/core/thread.hpp>
 
 namespace brls
 {
-    
-DebugLayer::DebugLayer() :
-    Box(Axis::COLUMN)
+
+DebugLayer::DebugLayer()
+    : Box(Axis::COLUMN)
 {
     setWidth(1280);
     setHeight(View::AUTO);
-    
+
     setJustifyContent(JustifyContent::FLEX_START);
     setAlignItems(AlignItems::FLEX_END);
-    
+
     Box* contentView = new Box(Axis::COLUMN);
     addView(contentView);
     contentView->setWidth(600);
     contentView->setBackgroundColor(RGBA(0, 0, 0, 80));
-    
+
     Logger::getLogEvent()->subscribe([this, contentView](std::string log) {
         brls::sync([this, contentView, log] {
             Label* label = new Label();
@@ -44,12 +44,11 @@ DebugLayer::DebugLayer() :
             label->setLineBottom(1);
             label->setLineColor(RGB(255, 255, 255));
             contentView->addView(label, 0);
-            
+
             if (contentView->getChildren().size() > 50)
                 contentView->removeView(contentView->getChildren()[contentView->getChildren().size() - 1]);
         });
     });
-    
 }
 
 } // namespace brls

@@ -58,16 +58,16 @@
         return method(view);                                          \
     })
 
-#define ASYNC_RETAIN                   \
-    deletionToken = new bool(false);   \
-    bool* token = deletionToken;
+#define ASYNC_RETAIN                 \
+    deletionToken = new bool(false); \
+    bool* token   = deletionToken;
 
-#define ASYNC_RELEASE                  \
-    bool release = *token;             \
-    delete token;                      \
-    if (release)                       \
-        return;                        \
-    else                               \
+#define ASYNC_RELEASE      \
+    bool release = *token; \
+    delete token;          \
+    if (release)           \
+        return;            \
+    else                   \
         deletionToken = nullptr;
 
 #define ASYNC_TOKEN this, token
@@ -216,7 +216,7 @@ class View
     Point translation;
 
     bool wireframeEnabled = false;
-    bool clipsToBounds = false;
+    bool clipsToBounds    = false;
 
     std::vector<Action> actions;
     std::vector<GestureRecognizer*> gestureRecognizers;
@@ -1018,12 +1018,12 @@ class View
      * Sets the position of the view, if detached.
      */
     void setDetachedPosition(float x, float y);
-    
+
     /**
      * Sets the position X of the view, if detached.
      */
     void setDetachedPositionX(float x);
-    
+
     /**
      * Sets the position Y of the view, if detached.
      */
@@ -1141,7 +1141,7 @@ class View
       * override draw() instead
       */
     virtual void frame(FrameContext* ctx);
-    
+
     /**
       * Called each frame
       */
@@ -1413,12 +1413,12 @@ class View
     {
         return iconPath;
     }
-    
+
     bool getClipsToBounds() const
     {
         return clipsToBounds;
     }
-    
+
     void setClipsToBounds(bool value)
     {
         clipsToBounds = value;

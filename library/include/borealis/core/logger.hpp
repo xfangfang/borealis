@@ -49,7 +49,7 @@ class Logger
             fmt::print("\033{}[{}]\033[0m ", color, prefix);
             fmt::print(format, args...);
             fmt::print("\n");
-            
+
             std::string log = fmt::format(format, args...);
             logEvent.fire(log);
         }
@@ -92,7 +92,7 @@ class Logger
     {
         return &logEvent;
     }
-    
+
   private:
     inline static LogLevel logLevel = LogLevel::INFO;
     inline static Event<std::string> logEvent;

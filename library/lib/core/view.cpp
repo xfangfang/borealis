@@ -67,21 +67,21 @@ View::View()
     this->registerFilePathXMLAttribute("icon", [this](std::string value) {
         this->setIconFromFile(value);
     });
-    
+
     this->registerFloatXMLAttribute("detachedX", [this](float value) {
         this->detach();
         this->setDetachedPositionX(value);
     });
-    
+
     this->registerFloatXMLAttribute("detachedY", [this](float value) {
         this->detach();
         this->setDetachedPositionY(value);
     });
-    
+
     this->registerFloatXMLAttribute("alpha", [this](float value) {
         this->setAlpha(value);
     });
-    
+
     this->registerBoolXMLAttribute("clipsToBounds", [this](float value) {
         this->setClipsToBounds(value);
     });
@@ -147,7 +147,7 @@ Sound View::gestureRecognizerRequest(TouchState touch, View* firstResponder)
             continue;
 
         GestureState state = recognizer->recognitionLoop(touch, this, &soundToPlay);
-        if (state == GestureState::START)
+        if (state == GestureState::START || state == GestureState::END)
             firstResponder->interruptGestures(true);
     }
 
@@ -193,7 +193,7 @@ void View::frame(FrameContext* ctx)
         // Draw border
         if (this->borderThickness > 0.0f)
             this->drawBorder(ctx->vg, ctx, style, frame);
-        
+
         this->drawLine(ctx, frame);
 
         // Draw highlight background
@@ -210,17 +210,16 @@ void View::frame(FrameContext* ctx)
             nvgSave(ctx->vg);
             nvgIntersectScissor(ctx->vg, x, y, width, height * this->collapseState);
         }
-        
+
         // Draw the view
         this->draw(ctx->vg, x, y, width, height, style, ctx);
 
         if (this->wireframeEnabled)
             this->drawWireframe(ctx, frame);
-        
+
         //Reset clipping
         if (this->collapseState < 1.0f || this->clipsToBounds)
             nvgRestore(ctx->vg);
-        
     }
 
     // Cleanup
@@ -232,11 +231,7 @@ void View::frame(FrameContext* ctx)
 
 void View::frameHighlight(FrameContext* ctx)
 {
-    if (this->alpha > 0.0f &&
-        this->collapseState != 0.0f &&
-        this->highlightAlpha > 0.0f &&
-        !this->hideHighlightBorder &&
-        !this->hideHighlight)
+    if (this->alpha > 0.0f && this->collapseState != 0.0f && this->highlightAlpha > 0.0f && !this->hideHighlightBorder && !this->hideHighlight)
         this->drawHighlight(ctx->vg, ctx->theme, this->highlightAlpha, Application::getStyle(), false);
 }
 
@@ -738,7 +733,7 @@ void View::setParent(Box* parent, void* parentUserdata)
 {
     if (this->parentUserdata)
         free(this->parentUserdata);
-    
+
     this->parent         = parent;
     this->parentUserdata = parentUserdata;
 }
@@ -1366,6 +1361,7 @@ View::~View()
     for (tinyxml2::XMLDocument* document : this->boundDocuments)
         delete document;
 
+    Application::tryDeinitFirstResponder(this);
     for (GestureRecognizer* recognizer : this->gestureRecognizers)
         delete recognizer;
 
@@ -1373,9 +1369,9 @@ View::~View()
     clickAlpha.stop();
     highlightAlpha.stop();
     collapseState.stop();
-    
+
     YGNodeFree(this->ygNode);
-    
+
     if (deletionToken)
         *deletionToken = true;
 }
@@ -2171,11 +2167,11 @@ View* View::hitTest(Point point)
         return nullptr;
 
     Rect frame = getFrame();
-//    Logger::debug(describe() + ": --- " + frame.describe());
+    //    Logger::debug(describe() + ": --- " + frame.describe());
 
     if (frame.pointInside(point))
     {
-//        Logger::debug(describe() + ": OK");
+        //        Logger::debug(describe() + ": OK");
         return this;
     }
 

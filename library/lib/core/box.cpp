@@ -223,7 +223,7 @@ void Box::removeView(View* view, bool free)
 
 void Box::clearViews()
 {
-    lastFocusedView = nullptr;
+    lastFocusedView          = nullptr;
     std::vector<View*> views = getChildren();
 
     for (size_t i = 0; i < views.size(); i++)
@@ -347,7 +347,7 @@ View* Box::hitTest(Point point)
     // Check if touch fits in view frame
     if (this->getFrame().pointInside(point))
     {
-//        Logger::debug(describe() + ": --- X: " + std::to_string((int)getX()) + ", Y: " + std::to_string((int)getY()) + ", W: " + std::to_string((int)getWidth()) + ", H: " + std::to_string((int)getHeight()));
+        //        Logger::debug(describe() + ": --- X: " + std::to_string((int)getX()) + ", Y: " + std::to_string((int)getY()) + ", W: " + std::to_string((int)getWidth()) + ", H: " + std::to_string((int)getHeight()));
         for (View* child : this->children)
         {
             View* result = child->hitTest(point);
@@ -356,7 +356,7 @@ View* Box::hitTest(Point point)
                 return result;
         }
 
-//        Logger::debug(describe() + ": OK");
+        //        Logger::debug(describe() + ": OK");
         return this;
     }
 

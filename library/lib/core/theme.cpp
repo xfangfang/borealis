@@ -74,10 +74,10 @@ static ThemeValues lightThemeValues = {
     { "brls/slider/pointer_border_color", nvgRGB(200, 200, 200) },
     { "brls/slider/line_filled", nvgRGB(50, 79, 241) },
     { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
-    
+
     // Spinner
     { "brls/spinner/bar_color", nvgRGBA(131, 131, 131, 102) },
-    
+
 };
 
 static ThemeValues darkThemeValues = {
@@ -132,7 +132,7 @@ static ThemeValues darkThemeValues = {
     { "brls/slider/pointer_border_color", nvgRGB(120, 120, 120) },
     { "brls/slider/line_filled", nvgRGB(1, 255, 201) },
     { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
-    
+
     // Spinner
     { "brls/spinner/bar_color", nvgRGBA(131, 131, 131, 102) }, // TODO: get this right
 };

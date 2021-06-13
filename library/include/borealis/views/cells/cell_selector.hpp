@@ -37,7 +37,7 @@ class SelectorCell : public DetailCell
     {
         this->data = data;
     }
-    
+
     void setSelection(int selection);
     int getSelection()
     {

@@ -15,10 +15,10 @@
     limitations under the License.
 */
 
-#include <borealis/views/dialog.hpp>
-#include <borealis/views/label.hpp>
 #include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
+#include <borealis/views/dialog.hpp>
+#include <borealis/views/label.hpp>
 
 using namespace brls::literals;
 
@@ -135,20 +135,20 @@ Dialog::Dialog(Box* contentView)
 Dialog::Dialog(std::string text)
 {
     Style style = Application::getStyle();
-    
+
     Label* label = new Label();
     label->setText(text);
     label->setFontSize(style["brls/dialog/fontSize"]);
     label->setHorizontalAlign(HorizontalAlign::CENTER);
-    
+
     Box* box = new Box();
     box->addView(label);
     box->setAlignItems(AlignItems::CENTER);
     box->setJustifyContent(JustifyContent::CENTER);
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
-    
+
     new (this) Dialog(box);
-    
+
     appletFrame->registerAction(
         "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
             if (cancelable)
@@ -193,7 +193,7 @@ void Dialog::rebuildButtons()
     {
         setLastFocusedView(button1);
         button1->getParent()->setVisibility(Visibility::VISIBLE);
-        
+
         button1->setVisibility(Visibility::VISIBLE);
         button1->setText(buttons[0]->label);
         button1->registerClickAction([this](View* view) {
@@ -201,7 +201,7 @@ void Dialog::rebuildButtons()
             return true;
         });
     }
-    
+
     if (this->buttons.size() > 1)
     {
         button2->setVisibility(Visibility::VISIBLE);
@@ -211,7 +211,7 @@ void Dialog::rebuildButtons()
             return true;
         });
     }
-    
+
     if (this->buttons.size() > 2)
     {
         button3->setVisibility(Visibility::VISIBLE);
@@ -237,7 +237,6 @@ AppletFrame* Dialog::getAppletFrame()
 
 Dialog::~Dialog()
 {
-    
 }
 
 } // namespace brls

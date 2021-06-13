@@ -43,7 +43,7 @@ class Hints : public Box
   public:
     Hints();
     ~Hints();
-    
+
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
 
     static View* create();

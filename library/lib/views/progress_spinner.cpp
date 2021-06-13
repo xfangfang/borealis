@@ -15,8 +15,8 @@
     limitations under the License.
 */
 
-#include <borealis/views/progress_spinner.hpp>
 #include <borealis/core/application.hpp>
+#include <borealis/views/progress_spinner.hpp>
 
 namespace brls
 {
@@ -27,10 +27,9 @@ void ProgressSpinner::restartAnimation()
 {
     Style style = Application::getStyle();
 
-    
     this->animationValue.reset(0);
     this->animationValue.stop();
-    this->animationValue.setEndCallback([this](bool done){
+    this->animationValue.setEndCallback([this](bool done) {
         if (done)
             this->restartAnimation();
     });
@@ -52,7 +51,7 @@ void ProgressSpinner::animate(bool animate)
 
 void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
-    Theme theme = Application::getTheme();
+    Theme theme       = Application::getTheme();
     NVGcolor barColor = a(theme["brls/spinner/bar_color"]);
 
     // Each bar of the spinner

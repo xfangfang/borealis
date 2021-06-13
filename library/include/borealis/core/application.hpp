@@ -30,11 +30,10 @@
 #include <borealis/core/style.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/view.hpp>
+#include <borealis/views/debug_layer.hpp>
 #include <borealis/views/label.hpp>
 #include <unordered_map>
 #include <vector>
-
-#include <borealis/views/debug_layer.hpp>
 
 namespace brls
 {
@@ -212,15 +211,17 @@ class Application
     {
         return inputType;
     }
-    
+
     inline static void enableDebuggingView(bool enable)
     {
         debuggingViewEnabled = enable;
     }
 
+    static void tryDeinitFirstResponder(View* view);
+
   private:
-    inline static bool inited        = false;
-    inline static bool quitRequested = false;
+    inline static bool inited               = false;
+    inline static bool quitRequested        = false;
     inline static bool debuggingViewEnabled = false;
 
     inline static Platform* platform = nullptr;
@@ -235,7 +236,8 @@ class Application
 
     inline static unsigned windowWidth, windowHeight;
 
-    inline static View* currentFocus;
+    inline static View* currentFocus   = nullptr;
+    inline static View* firstResponder = nullptr;
 
     // Return true if input type was changed
     static bool setInputType(InputType type);
@@ -243,8 +245,8 @@ class Application
     inline static InputType inputType = InputType::GAMEPAD;
 
     inline static unsigned blockInputsTokens = 0; // any value > 0 means inputs are blocked
-    inline static bool muteSounds = false;
-    
+    inline static bool muteSounds            = false;
+
     inline static std::string commonFooter = "";
 
     inline static bool globalQuitEnabled                     = false;
@@ -278,7 +280,7 @@ class Application
     static void registerBuiltInXMLViews();
 
     static ActionIdentifier registerFPSToggleAction(Activity* activity);
-    
+
     inline static DebugLayer* debugLayer = nullptr;
 };
 

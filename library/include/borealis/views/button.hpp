@@ -167,7 +167,7 @@ class Button : public Box
      * Sets the text of the button. 
      */
     void setText(std::string text);
-    
+
     /**
      * Override style text color of the button.
      */
@@ -181,7 +181,7 @@ class Button : public Box
   private:
     const ButtonStyle* style = &BUTTONSTYLE_DEFAULT;
     ButtonState state        = ButtonState::ENABLED;
-    
+
     NVGcolor textColor;
     bool textColorOverritten = false;
 

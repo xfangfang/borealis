@@ -16,13 +16,15 @@
 
 #pragma once
 
-#include <functional>
 #include <unistd.h>
+
+#include <functional>
+#include <mutex>
 #include <thread>
 #include <vector>
-#include <mutex>
 
-namespace brls {
+namespace brls
+{
 
 /**
  * Enqueue a function to be executed before
@@ -33,7 +35,7 @@ namespace brls {
  *
  * It's a shortcut for brls::Application::sync(&func);
  */
-extern void sync(const std::function<void()> &func);
+extern void sync(const std::function<void()>& func);
 
 /**
  * Enqueue a function to be executed in
@@ -41,13 +43,13 @@ extern void sync(const std::function<void()> &func);
  *
  * It's a shortcut for brls::Application::async(&func);
  */
-extern void async(const std::function<void()> &func);
+extern void async(const std::function<void()>& func);
 
 class Threading
 {
-public:
+  public:
     Threading();
-    
+
     /**
      * Enqueue a function to be executed before
      * the application is redrawn the next time.
@@ -55,41 +57,41 @@ public:
      * Borealis is not thread-safe, and sync() provides a mechanism
      * for queuing up UI-related state changes from other threads.
      */
-    static void sync(const std::function<void()> &func);
-    
+    static void sync(const std::function<void()>& func);
+
     /**
      * Enqueue a function to be executed in
      * parallel with application's main thread.
      */
-    static void async(const std::function<void()> &func);
-    
+    static void async(const std::function<void()>& func);
+
     static void start();
 
     static void stop();
-    
+
     static void performSyncTasks();
-    
+
     static std::vector<std::function<void()>>* getSyncFunctions()
     {
         return &m_sync_functions;
     }
-    
+
     static std::vector<std::function<void()>>* getAsyncTasks()
     {
         return &m_async_tasks;
     }
-    
-private:
+
+  private:
     inline static std::mutex m_sync_mutex;
     inline static std::vector<std::function<void()>> m_sync_functions;
-    
+
     inline static std::mutex m_async_mutex;
     inline static std::vector<std::function<void()>> m_async_tasks;
-    
+
     inline static volatile bool task_loop_active = true;
 
     static void* task_loop(void* a);
-    
+
     static void start_task_loop();
 };
 

@@ -135,15 +135,11 @@ Image::Image()
             { "linear", ImageInterpolation::LINEAR },
             { "nearest", ImageInterpolation::NEAREST },
         });
-    
-    registerBoolXMLAttribute("crop", [this](bool value) {
-        this->setImageCrop(value);
-    });
 
     this->registerFilePathXMLAttribute("image", [this](std::string value) {
         this->setImageFromFile(value);
     });
-    
+
     setClipsToBounds(true);
 }
 
