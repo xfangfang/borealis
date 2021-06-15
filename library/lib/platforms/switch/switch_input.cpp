@@ -27,7 +27,7 @@ static const uint64_t SWITCH_BUTTONS_MAPPING[_BUTTON_MAX] = {
     HidNpadButton_L, // BUTTON_LB
 
     HidNpadButton_StickL, // BUTTON_LSB
-    
+
     HidNpadButton_Up, // BUTTON_UP
     HidNpadButton_Right, // BUTTON_RIGHT
     HidNpadButton_Down, // BUTTON_DOWN
@@ -71,31 +71,39 @@ void SwitchInputManager::updateControllerState(ControllerState* state)
         uint64_t switchKey = SWITCH_BUTTONS_MAPPING[i];
         state->buttons[i]  = keysDown & switchKey;
     }
-    
+
     HidAnalogStickState analog_stick_l = padGetStickPos(&this->padState, 0);
     HidAnalogStickState analog_stick_r = padGetStickPos(&this->padState, 1);
 
-    state->axes[LEFT_X] =  (float)analog_stick_l.x / (float)0x7FFF;
-    state->axes[LEFT_Y] =  (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
+    state->axes[LEFT_X]  = (float)analog_stick_l.x / (float)0x7FFF;
+    state->axes[LEFT_Y]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
     state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
     state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
 }
 
-void SwitchInputManager::updateTouchState(RawTouchState* state)
+void SwitchInputManager::updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states)
 {
     // Get touchscreen state
     static HidTouchScreenState hidState = { 0 };
 
-    state->pressed = false;
+    for (int i = 0; i < TOUCHES_MAX; i++)
+        (*states)[i].pressed = false;
+
     if (hidGetTouchScreenStates(&hidState, 1))
     {
-        if (hidState.count > 0)
+        for (int i = 0; i < hidState.count && i < TOUCHES_MAX; i++)
         {
-            state->pressed    = true;
-            state->position.x = hidState.touches[0].x / Application::windowScale;
-            state->position.y = hidState.touches[0].y / Application::windowScale;
+            (*states)[i].pressed    = true;
+            (*states)[i].fingerId   = hidState.touches[i].finger_id;
+            (*states)[i].position.x = hidState.touches[i].x / Application::windowScale;
+            (*states)[i].position.y = hidState.touches[i].y / Application::windowScale;
         }
     }
+}
+
+void SwitchInputManager::updateMouseStates(RawMouseState* state)
+{
+    state->position = Point();
 }
 
 } // namespace brls

@@ -28,27 +28,27 @@ ScrollGestureRecognizer::ScrollGestureRecognizer(PanGestureEvent::Callback respo
 {
 }
 
-GestureState ScrollGestureRecognizer::recognitionLoop(TouchState touch, View* view, Sound* soundToPlay)
+GestureState ScrollGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
 {
     if (!enabled)
         return GestureState::FAILED;
 
-    if (touch.phase == TouchPhase::NONE)
-        state = GestureState::UNSURE;
+    if (touches[0].phase != TouchPhase::NONE)
+        return PanGestureRecognizer::recognitionLoop(touches, mouse, view, soundToPlay);
 
     GestureState result;
     if (NO_TOUCH_SCROLLING)
         result = GestureState::FAILED;
+    else if (mouse.scroll.x == 0 && mouse.scroll.y == 0)
+        result = PanGestureRecognizer::recognitionLoop(touches, mouse, view, soundToPlay);
     else
-        result = PanGestureRecognizer::recognitionLoop(touch, view, soundToPlay);
-
-    if (result == GestureState::FAILED && (touch.scroll.x != 0 || touch.scroll.y != 0))
     {
+        result = GestureState::STAY;
         PanGestureStatus status {
             .state         = GestureState::STAY,
             .position      = Point(),
             .startPosition = Point(),
-            .delta         = touch.scroll,
+            .delta         = mouse.scroll,
             .deltaOnly     = true,
         };
         this->getPanGestureEvent().fire(status, soundToPlay);

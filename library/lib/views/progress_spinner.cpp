@@ -21,7 +21,15 @@
 namespace brls
 {
 
-ProgressSpinner::ProgressSpinner() { }
+ProgressSpinner::ProgressSpinner(ProgressSpinnerSize size)
+    : size(size)
+{
+    BRLS_REGISTER_ENUM_XML_ATTRIBUTE("size", ProgressSpinnerSize, this->setSize,
+    {
+        { "normal", ProgressSpinnerSize::NORMAL },
+        { "large", ProgressSpinnerSize::LARGE },
+    });
+}
 
 void ProgressSpinner::restartAnimation()
 {
@@ -33,7 +41,8 @@ void ProgressSpinner::restartAnimation()
         if (done)
             this->restartAnimation();
     });
-    this->animationValue.addStep(8.0f, style["brls/spinner/animation_duration"], EasingFunction::linear);
+    float animationLength = size == NORMAL ? 8.0f : 12.0f;
+    this->animationValue.addStep(animationLength, style["brls/spinner/animation_duration"], EasingFunction::linear);
     this->animationValue.start();
 }
 
@@ -53,23 +62,46 @@ void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float 
 {
     Theme theme       = Application::getTheme();
     NVGcolor barColor = a(theme["brls/spinner/bar_color"]);
-
+    
     // Each bar of the spinner
-    for (int i = 0 + animationValue; i < 8 + animationValue; i++)
-    {
-        barColor.a = fmax((i - animationValue) / 8.0f, a(theme["brls/spinner/bar_color"]).a);
-        nvgSave(vg);
-        nvgTranslate(vg, x + width / 2, y + height / 2);
-        nvgRotate(vg, nvgDegToRad(i * 45)); // Internal angle of octagon
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, height * style["brls/spinner/center_gap_multiplier"], 0);
-        nvgLineTo(vg, height / 2 - height * style["brls/spinner/center_gap_multiplier"], 0);
-        nvgStrokeColor(vg, barColor);
-        nvgStrokeWidth(vg, height * style["brls/spinner/bar_width_multiplier"]);
-        nvgLineCap(vg, NVG_SQUARE);
-        nvgStroke(vg);
-        nvgRestore(vg);
+    switch (size) {
+        case NORMAL:
+            for (int i = 0 + animationValue; i < 8 + animationValue; i++)
+            {
+                barColor.a = fmax((i - animationValue) / 8.0f, a(theme["brls/spinner/bar_color"]).a);
+                nvgSave(vg);
+                nvgTranslate(vg, x + width / 2, y + height / 2);
+                nvgRotate(vg, nvgDegToRad(i * 45)); // Internal angle of octagon
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, height * style["brls/spinner/center_gap_multiplier"], 0);
+                nvgLineTo(vg, height / 2 - height * style["brls/spinner/center_gap_multiplier"], 0);
+                nvgStrokeColor(vg, barColor);
+                nvgStrokeWidth(vg, height * style["brls/spinner/bar_width_multiplier"]);
+                nvgLineCap(vg, NVG_SQUARE);
+                nvgStroke(vg);
+                nvgRestore(vg);
+            }
+            break;
+        case LARGE:
+            for (int i = 0 + animationValue; i < 12 + animationValue; i++)
+            {
+                barColor.a = fmax((i - animationValue) / 12.0f, a(theme["brls/spinner/bar_color"]).a);
+                nvgSave(vg);
+                nvgTranslate(vg, x + width / 2, y + height / 2);
+                nvgRotate(vg, nvgDegToRad(i * 30)); // Internal angle of octagon
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, height * style["brls/spinner/center_gap_multiplier_large"], 0);
+                nvgLineTo(vg, height / 2 - height * style["brls/spinner/center_gap_multiplier_large"], 0);
+                nvgStrokeColor(vg, barColor);
+                nvgStrokeWidth(vg, height * style["brls/spinner/bar_width_multiplier_large"]);
+                nvgLineCap(vg, NVG_SQUARE);
+                nvgStroke(vg);
+                nvgRestore(vg);
+            }
+            break;
     }
+
+    
 }
 
 void ProgressSpinner::willAppear(bool resetState)

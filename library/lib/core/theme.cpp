@@ -134,7 +134,7 @@ static ThemeValues darkThemeValues = {
     { "brls/slider/line_empty", nvgRGB(140, 140, 140) },
 
     // Spinner
-    { "brls/spinner/bar_color", nvgRGBA(131, 131, 131, 102) }, // TODO: get this right
+    { "brls/spinner/bar_color", nvgRGBA(192, 192, 192, 102) }, // TODO: get this right
 };
 
 static Theme lightTheme(&lightThemeValues);

@@ -66,7 +66,7 @@ class PanGestureRecognizer : public GestureRecognizer
 {
   public:
     PanGestureRecognizer(PanGestureEvent::Callback respond, PanAxis axis);
-    GestureState recognitionLoop(TouchState touch, View* view, Sound* soundToPlay) override;
+    GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay) override;
 
     // Get pan gesture axis
     PanAxis getAxis() const { return this->axis; }
@@ -78,6 +78,7 @@ class PanGestureRecognizer : public GestureRecognizer
     PanGestureEvent getPanGestureEvent() const { return panEvent; }
 
   private:
+    int lastFingerId = 0;
     PanGestureEvent panEvent;
     Point position;
     Point startPosition;

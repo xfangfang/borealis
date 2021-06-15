@@ -30,9 +30,11 @@ class SwitchInputManager : public InputManager
   public:
     SwitchInputManager();
 
-    void updateControllerState(ControllerState* state);
+    void updateControllerState(ControllerState* state) override;
 
-    void updateTouchState(RawTouchState* state);
+    void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) override;
+
+    void updateMouseStates(RawMouseState* state) override;
 
   private:
     PadState padState;

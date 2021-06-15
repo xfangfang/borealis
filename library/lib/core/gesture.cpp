@@ -19,7 +19,7 @@
 namespace brls
 {
 
-GestureState GestureRecognizer::recognitionLoop(TouchState touch, View* view, Sound* soundToPlay)
+GestureState GestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
 {
     return GestureState::FAILED;
 }

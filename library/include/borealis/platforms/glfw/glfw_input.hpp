@@ -32,7 +32,11 @@ class GLFWInputManager : public InputManager
 
     void updateControllerState(ControllerState* state) override;
 
-    void updateTouchState(RawTouchState* state) override;
+    void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) override;
+    
+    void updateMouseStates(RawMouseState* state) override;
+    
+    void freeOnRunloop() override;
 
   private:
     Point scrollOffset;

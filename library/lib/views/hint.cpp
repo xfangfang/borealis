@@ -57,6 +57,10 @@ const std::string hintsXML = R"xml(
 <brls:Box
     width="auto"
     height="@style/brls/applet_frame/footer_height"
+    lineColor="@theme/brls/applet_frame/separator"
+    lineTop="1px"
+    marginLeft="@style/brls/hints/footer_margin_sides"
+    marginRight="@style/brls/hints/footer_margin_sides"
     paddingLeft="@style/brls/hints/footer_padding_sides"
     paddingRight="@style/brls/hints/footer_padding_sides"
     alignItems="stretch">
@@ -66,13 +70,9 @@ const std::string hintsXML = R"xml(
         axis="row"
         grow="1"
         direction="rightToLeft"
-        lineColor="@theme/brls/applet_frame/separator"
-        lineTop="1px"
         justifyContent="spaceBetween"
         paddingTop="@style/brls/hints/footer_padding_top_bottom"
-        paddingBottom="@style/brls/hints/footer_padding_top_bottom"
-        paddingLeft="@style/brls/hints/footer_padding_top_bottom"
-        paddingRight="@style/brls/hints/footer_padding_top_bottom" >
+        paddingBottom="@style/brls/hints/footer_padding_top_bottom" >
 
         <brls:Box
             id="brls/hints"

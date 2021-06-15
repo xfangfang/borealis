@@ -344,6 +344,10 @@ View* Box::getDefaultFocus()
 
 View* Box::hitTest(Point point)
 {
+    // Check if can focus fearther first
+    if (alpha == 0.0f || getVisibility() != Visibility::VISIBLE)
+        return nullptr;
+    
     // Check if touch fits in view frame
     if (this->getFrame().pointInside(point))
     {

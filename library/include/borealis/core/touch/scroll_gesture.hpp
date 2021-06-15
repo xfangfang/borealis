@@ -37,7 +37,7 @@ class ScrollGestureRecognizer : public PanGestureRecognizer
 {
   public:
     ScrollGestureRecognizer(PanGestureEvent::Callback respond, PanAxis axis);
-    GestureState recognitionLoop(TouchState touch, View* view, Sound* soundToPlay) override;
+    GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay) override;
 };
 
 } // namespace brls

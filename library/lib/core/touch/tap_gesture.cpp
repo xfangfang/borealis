@@ -81,14 +81,23 @@ TapGestureRecognizer::TapGestureRecognizer(TapGestureEvent::Callback respond)
     tapEvent.subscribe(respond);
 }
 
-GestureState TapGestureRecognizer::recognitionLoop(TouchState touch, View* view, Sound* soundToPlay)
+GestureState TapGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
 {
-    if (!enabled || touch.phase == TouchPhase::NONE)
+    TouchPhase phase = touches[0].phase;
+    Point position = touches[0].position;
+    
+    if (phase == TouchPhase::NONE)
+    {
+        position = mouse.position;
+        phase = mouse.leftButton;
+    }
+    
+    if (!enabled || phase == TouchPhase::NONE)
         return GestureState::FAILED;
-
+    
     // If not first touch frame and state is
     // INTERRUPTED or FAILED, stop recognition
-    if (touch.phase != TouchPhase::START)
+    if (phase != TouchPhase::START)
     {
         if (this->state == GestureState::INTERRUPTED || this->state == GestureState::FAILED)
         {
@@ -100,17 +109,17 @@ GestureState TapGestureRecognizer::recognitionLoop(TouchState touch, View* view,
         }
     }
 
-    switch (touch.phase)
+    switch (phase)
     {
         case TouchPhase::START:
             this->state    = GestureState::UNSURE;
-            this->position = touch.position;
+            this->position = position;
             this->tapEvent.fire(getCurrentStatus(), soundToPlay);
             break;
         case TouchPhase::STAY:
             // Check if touch is out view's bounds
             // if true, FAIL recognition
-            if (touch.position.x < view->getX() || touch.position.x > view->getX() + view->getWidth() || touch.position.y < view->getY() || touch.position.y > view->getY() + view->getHeight())
+            if (position.x < view->getX() || position.x > view->getX() + view->getWidth() || position.y < view->getY() || position.y > view->getY() + view->getHeight())
             {
                 this->state = GestureState::FAILED;
                 this->tapEvent.fire(getCurrentStatus(), soundToPlay);

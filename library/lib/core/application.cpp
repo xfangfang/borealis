@@ -175,51 +175,53 @@ bool Application::mainLoop()
 
     // Input
     ControllerState controllerState = {};
-    RawTouchState rawTouch          = {};
+    std::array<RawTouchState, TOUCHES_MAX> rawTouch;
+    RawMouseState rawMouse;
 
     InputManager* inputManager = Application::platform->getInputManager();
-    inputManager->updateTouchState(&rawTouch);
+    inputManager->updateTouchStates(&rawTouch);
+    inputManager->updateMouseStates(&rawMouse);
     inputManager->updateControllerState(&controllerState);
 
-    static TouchState oldTouch;
-    TouchState touchState = InputManager::computeTouchState(rawTouch, oldTouch);
-    oldTouch              = touchState;
-
-    // Touch controller events
-    switch (touchState.phase)
+    static std::array<RawTouchState, TOUCHES_MAX> oldTouch;
+    std::array<TouchState, TOUCHES_MAX> touchState;
+    for (int i = 0; i < TOUCHES_MAX; i++)
     {
-        case TouchPhase::START:
-            Logger::debug("Touched at X: " + std::to_string(touchState.position.x) + ", Y: " + std::to_string(touchState.position.y));
-            Application::setInputType(InputType::TOUCH);
-
-            // Search for first responder, which will be the root of recognition tree
-            if (Application::activitiesStack.size() > 0)
-                firstResponder = Application::activitiesStack[Application::activitiesStack.size() - 1]
-                                     ->getContentView()
-                                     ->hitTest(touchState.position);
-            break;
-        case TouchPhase::NONE:
-            firstResponder = nullptr;
-            break;
-        default:
-            break;
+        touchState[i] = InputManager::computeTouchState(rawTouch[i], oldTouch[i]);
     }
+    oldTouch = rawTouch;
+    
+    static RawMouseState oldMouse;
+    MouseState mouseState = InputManager::computeMouseState(rawMouse, oldMouse);
+    oldMouse = rawMouse;
 
-    if (!firstResponder && (touchState.scroll.x != 0 || touchState.scroll.y != 0))
+    if (touchState[0].phase == TouchPhase::NONE &&
+        mouseState.scroll.x == 0 &&
+        mouseState.scroll.y == 0 &&
+        mouseState.leftButton == TouchPhase::NONE &&
+        mouseState.middleButton == TouchPhase::NONE &&
+        mouseState.rightButton == TouchPhase::NONE)
+        firstResponder = nullptr;
+    else if (firstResponder == nullptr)
     {
-        Logger::debug("Touched at X: " + std::to_string(touchState.position.x) + ", Y: " + std::to_string(touchState.position.y));
+        Point position;
+        if (touchState[0].phase != TouchPhase::NONE)
+            position = touchState[0].position;
+        else
+            position = mouseState.position;
+        
         Application::setInputType(InputType::TOUCH);
 
         // Search for first responder, which will be the root of recognition tree
         if (Application::activitiesStack.size() > 0)
             firstResponder = Application::activitiesStack[Application::activitiesStack.size() - 1]
                                  ->getContentView()
-                                 ->hitTest(touchState.position);
+                                 ->hitTest(position);
     }
-
+       
     if (firstResponder)
     {
-        Sound sound = firstResponder->gestureRecognizerRequest(touchState, firstResponder);
+        Sound sound = firstResponder->gestureRecognizerRequest(touchState, mouseState, firstResponder);
         float pitch = 1;
         if (sound == SOUND_TOUCH)
         {
@@ -264,6 +266,10 @@ bool Application::mainLoop()
 
     // Render
     Application::frame();
+    
+    // Trigger RunLoop subscribers
+    runLoopEvent.fire();
+    getPlatform()->getInputManager()->freeOnRunloop();
 
     // Free views deletion pool
     for (auto view : Application::deletionPool)
@@ -895,6 +901,11 @@ VoidEvent* Application::getGlobalHintsUpdateEvent()
 Event<InputType>* Application::getGlobalInputTypeChangeEvent()
 {
     return &Application::globalInputTypeChangeEvent;
+}
+
+VoidEvent* Application::getRunLoopEvent()
+{
+    return &Application::runLoopEvent;
 }
 
 int Application::getFont(std::string fontName)

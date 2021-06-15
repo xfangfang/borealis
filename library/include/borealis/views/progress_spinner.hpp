@@ -22,11 +22,17 @@
 namespace brls
 {
 
+enum ProgressSpinnerSize
+{
+    NORMAL,
+    LARGE
+};
+
 // A progress spinner
 class ProgressSpinner : public View
 {
   public:
-    ProgressSpinner();
+    ProgressSpinner(ProgressSpinnerSize size = ProgressSpinnerSize::NORMAL);
 
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     void willAppear(bool resetState = false) override;
@@ -38,6 +44,11 @@ class ProgressSpinner : public View
 
   private:
     Animatable animationValue = 0.0f;
+    ProgressSpinnerSize size;
+    void setSize(ProgressSpinnerSize size)
+    {
+        this->size = size;
+    }
 
     void restartAnimation();
 };

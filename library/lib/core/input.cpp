@@ -19,31 +19,41 @@
 namespace brls
 {
 
-TouchState InputManager::computeTouchState(RawTouchState currentTouch, TouchState lastFrameState)
+TouchPhase getPhase(bool oldState, bool newState)
 {
-    if (currentTouch.pressed)
-    {
-        lastFrameState.position = currentTouch.position;
-        if (lastFrameState.phase == TouchPhase::START || lastFrameState.phase == TouchPhase::STAY)
-            lastFrameState.phase = TouchPhase::STAY;
-        else
-            lastFrameState.phase = TouchPhase::START;
-    }
+    if (!oldState && newState)
+        return TouchPhase::START;
+    
+    if (oldState && newState)
+        return TouchPhase::STAY;
+    
+    if (oldState && !newState)
+        return TouchPhase::END;
+    
+    return TouchPhase::NONE;
+}
+
+TouchState InputManager::computeTouchState(RawTouchState currentTouch, RawTouchState lastFrameState)
+{
+    TouchState state;
+    state.fingerId = currentTouch.fingerId;
+    state.phase = getPhase(lastFrameState.pressed, currentTouch.pressed);
+    if (state.phase == TouchPhase::END)
+        state.position = lastFrameState.position;
     else
-    {
-        if (lastFrameState.phase == TouchPhase::END || lastFrameState.phase == TouchPhase::NONE)
-            lastFrameState.phase = TouchPhase::NONE;
-        else
-            lastFrameState.phase = TouchPhase::END;
-    }
+        state.position = currentTouch.position;
+    return state;
+}
 
-    if (currentTouch.scroll.x != 0 || currentTouch.scroll.y != 0)
-    {
-        lastFrameState.position = currentTouch.position;
-    }
-    lastFrameState.scroll = currentTouch.scroll;
-
-    return lastFrameState;
+MouseState InputManager::computeMouseState(RawMouseState currentTouch, RawMouseState lastFrameState)
+{
+    MouseState state;
+    state.position = currentTouch.position;
+    state.scroll = currentTouch.scroll;
+    state.leftButton = getPhase(lastFrameState.leftButton, currentTouch.leftButton);
+    state.middleButton = getPhase(lastFrameState.middleButton, currentTouch.middleButton);
+    state.rightButton = getPhase(lastFrameState.rightButton, currentTouch.rightButton);
+    return state;
 }
 
 } // namespace brls

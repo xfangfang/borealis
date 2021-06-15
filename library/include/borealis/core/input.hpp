@@ -18,9 +18,12 @@
 #pragma once
 
 #include <borealis/core/geometry.hpp>
+#include <array>
 
 namespace brls
 {
+
+#define TOUCHES_MAX 10
 
 // Abstract buttons enum - names correspond to a generic Xbox controller
 // LT and RT should not be buttons but for the sake of simplicity we'll assume they are.
@@ -87,17 +90,36 @@ enum class TouchPhase
 // Contains raw touch data, filled in by platform driver
 struct RawTouchState
 {
-    bool pressed;
+    int fingerId = 0;
+    bool pressed = false;
     Point position;
-    Point scroll;
 };
 
 // Contains touch data automatically filled with current phase by the library
 struct TouchState
 {
+    int fingerId = 0;
     TouchPhase phase;
     Point position;
+};
+
+// Contains raw touch data, filled in by platform driver
+struct RawMouseState
+{
+    Point position;
     Point scroll;
+    bool leftButton = false;
+    bool middleButton = false;
+    bool rightButton = false;
+};
+
+struct MouseState
+{
+    Point position;
+    Point scroll;
+    TouchPhase leftButton;
+    TouchPhase middleButton;
+    TouchPhase rightButton;
 };
 
 // Interface responsible for reporting input state to the application - button presses,
@@ -115,12 +137,28 @@ class InputManager
     /**
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */
-    virtual void updateTouchState(RawTouchState* state) = 0;
+    virtual void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) = 0;
+    
+    /**
+     * Called once every frame to fill the given RawTouchState struct with the raw touch data.
+     */
+    virtual void updateMouseStates(RawMouseState* state) = 0;
+    
+    /**
+     * Called once every runloop cycle to perform some cleanup before new one.
+     * For internal call only
+     */
+    virtual void freeOnRunloop() {};
 
     /**
      * Calculate current touch phase based on it's previous state
      */
-    static TouchState computeTouchState(RawTouchState currentTouch, TouchState lastFrameState);
+    static TouchState computeTouchState(RawTouchState currentTouch, RawTouchState lastFrameState);
+    
+    /**
+     * Calculate current touch phase based on it's previous state
+     */
+    static MouseState computeMouseState(RawMouseState currentTouch, RawMouseState lastFrameState);
 };
 
 }; // namespace brls

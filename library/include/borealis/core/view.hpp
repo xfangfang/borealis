@@ -524,6 +524,11 @@ class View
      * Sets the visibility of the view.
      */
     void setVisibility(Visibility visibility);
+    
+    /**
+     * Gets the visibility of the view.
+     */
+    Visibility getVisibility();
 
     /**
      * Sets the top position of the view, in pixels.
@@ -1133,7 +1138,7 @@ class View
      * 
      * @returns sound to play invoked by touch recognizers.
      */
-    Sound gestureRecognizerRequest(TouchState touch, View* firstResponder);
+    Sound gestureRecognizerRequest(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* firstResponder);
 
     /**
       * Called each frame

@@ -40,14 +40,25 @@ PanGestureRecognizer::PanGestureRecognizer(PanGestureEvent::Callback respond, Pa
     panEvent.subscribe(respond);
 }
 
-GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, View* view, Sound* soundToPlay)
+GestureState PanGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
 {
     if (!enabled)
         return GestureState::FAILED;
+    
+    TouchPhase phase = touches[0].phase;
+    Point position = touches[0].position;
+    int fingerId = touches[0].fingerId;
+    
+    if (phase == TouchPhase::NONE)
+    {
+        fingerId = 0;
+        position = mouse.position;
+        phase = mouse.leftButton;
+    }
 
     // If not first touch frame and state is
     // INTERRUPTED or FAILED, stop recognition
-    if (touch.phase != TouchPhase::START)
+    if (phase != TouchPhase::START)
     {
         if (this->state == GestureState::INTERRUPTED || this->state == GestureState::FAILED)
         {
@@ -59,26 +70,33 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, View* view,
         }
     }
 
-    switch (touch.phase)
+    switch (phase)
     {
         case TouchPhase::START:
             this->posHistory.clear();
             this->state         = GestureState::UNSURE;
-            this->startPosition = touch.position;
-            this->position      = touch.position;
+            this->startPosition = position;
+            this->position      = position;
+            this->lastFingerId  = fingerId;
             this->panEvent.fire(getCurrentStatus(), soundToPlay);
             break;
         case TouchPhase::STAY:
         case TouchPhase::END:
+            if (lastFingerId != fingerId)
+            {
+                this->state = GestureState::FAILED;
+                lastState = this->state;
+                return this->state;
+            }
+            
+            this->delta = position - this->position;
 
-            this->delta = touch.position - this->position;
-
-            this->position = touch.position;
+            this->position = position;
 
             // Check if pass any condition to set state START
             if (this->state == GestureState::UNSURE)
             {
-                if (fabs(this->startPosition.x - touch.position.x) > MAX_DELTA_MOVEMENT || fabs(this->startPosition.y - touch.position.y) > MAX_DELTA_MOVEMENT)
+                if (fabs(this->startPosition.x - position.x) > MAX_DELTA_MOVEMENT || fabs(this->startPosition.y - position.y) > MAX_DELTA_MOVEMENT)
                 {
                     switch (axis)
                     {
@@ -98,7 +116,7 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, View* view,
             }
             else
             {
-                if (touch.phase == TouchPhase::STAY)
+                if (phase == TouchPhase::STAY)
                     this->state = GestureState::STAY;
                 else
                     this->state = GestureState::END;

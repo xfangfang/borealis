@@ -137,23 +137,23 @@ void View::addGestureRecognizer(GestureRecognizer* recognizer)
     this->gestureRecognizers.push_back(recognizer);
 }
 
-Sound View::gestureRecognizerRequest(TouchState touch, View* firstResponder)
+Sound View::gestureRecognizerRequest(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* firstResponder)
 {
-    Sound soundToPlay = touch.phase == TouchPhase::START ? SOUND_TOUCH : SOUND_NONE;
+    Sound soundToPlay = touches[0].phase == TouchPhase::START ? SOUND_TOUCH : SOUND_NONE;
 
     for (GestureRecognizer* recognizer : getGestureRecognizers())
     {
         if (!recognizer->isEnabled())
             continue;
 
-        GestureState state = recognizer->recognitionLoop(touch, this, &soundToPlay);
+        GestureState state = recognizer->recognitionLoop(touches, mouse, this, &soundToPlay);
         if (state == GestureState::START || state == GestureState::END)
             firstResponder->interruptGestures(true);
     }
 
     Sound parentSound = SOUND_NONE;
     if (parent)
-        parentSound = parent->gestureRecognizerRequest(touch, firstResponder);
+        parentSound = parent->gestureRecognizerRequest(touches, mouse, firstResponder);
 
     if (soundToPlay == SOUND_NONE)
         soundToPlay = parentSound;
@@ -2061,6 +2061,11 @@ void View::setVisibility(Visibility visibility)
         this->willDisappear();
 }
 
+Visibility View::getVisibility()
+{
+    return visibility;
+}
+
 void View::printXMLAttributeErrorMessage(tinyxml2::XMLElement* element, std::string name, std::string value)
 {
     if (this->knownAttributes.find(name) != this->knownAttributes.end())
@@ -2163,7 +2168,7 @@ View* View::getDefaultFocus()
 View* View::hitTest(Point point)
 {
     // Check if can focus ourself first
-    if (!this->isFocusable())
+    if (!this->isFocusable() || alpha == 0.0f || visibility != Visibility::VISIBLE)
         return nullptr;
 
     Rect frame = getFrame();

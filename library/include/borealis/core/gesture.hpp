@@ -70,7 +70,7 @@ class GestureRecognizer
     virtual ~GestureRecognizer() { }
 
     // Main recognition loop, for internal usage only, should not be called anywhere, but Application
-    virtual GestureState recognitionLoop(TouchState touch, View* view, Sound* soundToPlay);
+    virtual GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay);
 
     // Interrupt this recognizer
     // If onlyIfUnsureState == true recognizer will be interupted

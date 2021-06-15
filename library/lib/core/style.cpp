@@ -116,10 +116,13 @@ static StyleValues styleValues = {
     { "brls/listitem/selectRadius", 15.0f },
 
     // Hints
-    { "brls/hints/footer_padding_sides", 35.0f },
+    { "brls/hints/footer_margin_sides", 30.0f },
+    { "brls/hints/footer_padding_sides", 25.0f },
     { "brls/hints/footer_padding_top_bottom", 20.0f },
 
     // Spinner
+    { "brls/spinner/center_gap_multiplier_large", 0.207f },
+    { "brls/spinner/bar_width_multiplier_large", 0.035f },
     { "brls/spinner/center_gap_multiplier", 0.2f },
     { "brls/spinner/bar_width_multiplier", 0.06f },
     { "brls/spinner/animation_duration", 1000 },
