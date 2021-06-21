@@ -24,7 +24,11 @@ static int nxlink_sock = -1;
 void userAppInit()
 {
     romfsInit();
-    socketInitializeDefault();
+
+    SocketInitConfig cfg = *(socketGetDefaultInitConfig());
+    cfg.num_bsd_sessions = 8;
+    socketInitialize(&cfg);
+
     plInitialize(PlServiceType_User);
     setsysInitialize();
     setInitialize();
