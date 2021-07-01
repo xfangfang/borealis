@@ -107,8 +107,8 @@ void SwitchInputManager::updateTouchStates(std::array<RawTouchState, TOUCHES_MAX
 void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
     if (controller == 0) {
-        float low = (float)low_freq_motor / 0xFFFF;
-        float high = (float)high_freq_motor / 0xFFFF;
+        float low = (float)lowFreqMotor / 0xFFFF;
+        float high = (float)highFreqMotor / 0xFFFF;
         
         memset(m_vibration_values, 0, sizeof(m_vibration_values));
         
