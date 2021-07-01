@@ -59,6 +59,9 @@ SwitchInputManager::SwitchInputManager()
 {
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&this->padState);
+    
+    hidInitializeVibrationDevices(m_vibration_device_handles[0], 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
+    hidInitializeVibrationDevices(m_vibration_device_handles[1], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
 }
 
 void SwitchInputManager::updateControllerState(ControllerState* state)
@@ -98,6 +101,29 @@ void SwitchInputManager::updateTouchStates(std::array<RawTouchState, TOUCHES_MAX
             (*states)[i].position.x = hidState.touches[i].x / Application::windowScale;
             (*states)[i].position.y = hidState.touches[i].y / Application::windowScale;
         }
+    }
+}
+
+void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
+{
+    if (controller == 0) {
+        float low = (float)low_freq_motor / 0xFFFF;
+        float high = (float)high_freq_motor / 0xFFFF;
+        
+        memset(m_vibration_values, 0, sizeof(m_vibration_values));
+        
+        m_vibration_values[0].amp_low   = low;
+        m_vibration_values[0].freq_low  = low * 50;
+        m_vibration_values[0].amp_high  = high;
+        m_vibration_values[0].freq_high = high * 100;
+        
+        m_vibration_values[1].amp_low   = low;
+        m_vibration_values[1].freq_low  = low * 50;
+        m_vibration_values[1].amp_high  = high;
+        m_vibration_values[1].freq_high = high * 100;
+        
+        int target_device = padIsHandheld(&this->padState) ? 0 : 1;
+        hidSendVibrationValues(m_vibration_device_handles[target_device], m_vibration_values, 2);
     }
 }
 

@@ -36,8 +36,12 @@ class SwitchInputManager : public InputManager
 
     void updateMouseStates(RawMouseState* state) override;
 
+    void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) override;
+
   private:
     PadState padState;
+    HidVibrationDeviceHandle m_vibration_device_handles[2][2];
+    HidVibrationValue m_vibration_values[2];
 };
 
 } // namespace brls

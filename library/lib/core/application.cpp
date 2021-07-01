@@ -509,8 +509,11 @@ void Application::frame()
         view->frame(&frameContext);
     }
 
-    if (currentFocus)
+    if (currentFocus && Application::getInputType() != InputType::TOUCH)
+    {
+        currentFocus->frame(&frameContext);
         currentFocus->frameHighlight(&frameContext);
+    }
 
     if (debuggingViewEnabled)
     {

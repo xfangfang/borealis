@@ -162,6 +162,9 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     state->scroll     = scrollOffset;
 }
 
+void GLFWInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
+{ }
+
 void GLFWInputManager::freeOnRunloop()
 {
     scrollOffset.x = 0;

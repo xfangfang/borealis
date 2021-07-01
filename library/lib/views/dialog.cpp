@@ -87,7 +87,7 @@ const std::string dialogXML = R"xml(
 
                     <brls:Button
                         id="brls/dialog/button1"
-                        width="auto"
+                        width="0"
                         height="auto"
                         grow="1"
                         focusable="true"
@@ -96,15 +96,13 @@ const std::string dialogXML = R"xml(
                         highlightCornerRadius="6"
                         text="Continue"
                         style="borderless"
-                        lineRight="2px"
-                        lineColor="@theme/brls/sidebar/separator"
                         fontSize="@style/brls/dialog/fontSize"
                         textColor="@theme/brls/accent"
                         visibility="gone"/>
 
                     <brls:Button
                         id="brls/dialog/button2"
-                        width="auto"
+                        width="0"
                         height="auto"
                         grow="1"
                         focusable="true"
@@ -113,6 +111,8 @@ const std::string dialogXML = R"xml(
                         highlightCornerRadius="6"
                         text="Continue"
                         style="borderless"
+                        lineLeft="2px"
+                        lineColor="@theme/brls/sidebar/separator"
                         fontSize="@style/brls/dialog/fontSize"
                         textColor="@theme/brls/accent"
                         visibility="gone"/>

@@ -36,6 +36,8 @@ class GLFWInputManager : public InputManager
     
     void updateMouseStates(RawMouseState* state) override;
     
+    void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) override;
+    
     void freeOnRunloop() override;
 
   private:

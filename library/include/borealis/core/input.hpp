@@ -143,6 +143,11 @@ class InputManager
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */
     virtual void updateMouseStates(RawMouseState* state) = 0;
+
+    /**
+     * Calls to update gamepad's rumble state.
+     */
+    virtual void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) = 0;
     
     /**
      * Called once every runloop cycle to perform some cleanup before new one.
