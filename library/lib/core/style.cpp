@@ -122,7 +122,7 @@ static StyleValues styleValues = {
 
     // Spinner
     { "brls/spinner/center_gap_multiplier_large", 0.207f },
-    { "brls/spinner/bar_width_multiplier_large", 0.035f },
+    { "brls/spinner/bar_width_multiplier_large", 0.034f },
     { "brls/spinner/center_gap_multiplier", 0.2f },
     { "brls/spinner/bar_width_multiplier", 0.06f },
     { "brls/spinner/animation_duration", 1000 },
