@@ -1430,6 +1430,10 @@ class View
     }
 
     virtual AppletFrame* getAppletFrame();
+    virtual View* getHintView()
+    {
+        return nullptr;
+    }
 
     void present(View* view);
     void dismiss(std::function<void(void)> cb = [] {});

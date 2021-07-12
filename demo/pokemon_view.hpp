@@ -39,11 +39,14 @@ class PokemonView : public brls::Box
         : PokemonView(Pokemon("001", "ТУПА ПАКИМОН!!!"))
     {
     }
+    
+    View* getHintView() override;
 
     static brls::View* create();
 
   private:
     Pokemon pokemon;
+    View* hintView = nullptr;
     BRLS_BIND(brls::Image, image, "image");
     BRLS_BIND(brls::Label, description, "description");
 };

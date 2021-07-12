@@ -511,7 +511,6 @@ void Application::frame()
 
     if (currentFocus && Application::getInputType() != InputType::TOUCH)
     {
-        currentFocus->frame(&frameContext);
         currentFocus->frameHighlight(&frameContext);
     }
 

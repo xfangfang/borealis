@@ -41,6 +41,7 @@ const std::string appletFrameXML = R"xml(
             width="auto"
             height="@style/brls/applet_frame/header_height"
             axis="row"
+            justifyContent="spaceBetween"
             paddingTop="@style/brls/applet_frame/header_padding_top_bottom"
             paddingBottom="@style/brls/applet_frame/header_padding_top_bottom"
             paddingLeft="@style/brls/applet_frame/header_padding_sides"
@@ -50,19 +51,31 @@ const std::string appletFrameXML = R"xml(
             lineColor="@theme/brls/applet_frame/separator"
             lineBottom="1px">
 
-            <brls:Image
-                id="brls/applet_frame/title_icon"
+            <brls:Box
                 width="auto"
                 height="auto"
-                marginRight="@style/brls/applet_frame/header_image_title_spacing"
-                visibility="gone" />
+                axis="row">
+                <brls:Image
+                    id="brls/applet_frame/title_icon"
+                    width="auto"
+                    height="auto"
+                    marginRight="@style/brls/applet_frame/header_image_title_spacing"
+                    visibility="gone" />
 
-            <brls:Label
-                id="brls/applet_frame/title_label"
+                <brls:Label
+                    id="brls/applet_frame/title_label"
+                    width="auto"
+                    height="auto"
+                    marginTop="@style/brls/applet_frame/header_title_top_offset"
+                    fontSize="@style/brls/applet_frame/header_title_font_size" />
+            </brls:Box>
+
+            <brls:Box
+                id="brls/applet_frame/hint_box"
                 width="auto"
                 height="auto"
                 marginTop="@style/brls/applet_frame/header_title_top_offset"
-                fontSize="@style/brls/applet_frame/header_title_font_size" />
+                axis="row"/>
 
         </brls:Box>
 
@@ -182,6 +195,7 @@ void AppletFrame::setContentView(View* view)
         // Remove the node
         this->removeView(this->contentView, false);
         this->contentView = nullptr;
+        this->hintBox->clearViews();
     }
 
     if (!view)
@@ -193,6 +207,9 @@ void AppletFrame::setContentView(View* view)
     this->contentView->setGrow(1.0f);
 
     this->addView(this->contentView, 1);
+    
+    if (view->getHintView())
+        this->hintBox->addView(view->getHintView());
 
     this->setTitle(view->getTitle());
     this->setIconFromFile(view->getIconFile());

@@ -16,10 +16,6 @@
 
 #include <borealis.hpp>
 
-#ifndef NO_TOUCH_SCROLLING
-#define NO_TOUCH_SCROLLING false
-#endif
-
 namespace brls
 {
 
@@ -37,11 +33,7 @@ GestureState ScrollGestureRecognizer::recognitionLoop(std::array<TouchState, TOU
         return PanGestureRecognizer::recognitionLoop(touches, mouse, view, soundToPlay);
 
     GestureState result;
-    if (NO_TOUCH_SCROLLING)
-        result = GestureState::FAILED;
-    else if (mouse.scroll.x == 0 && mouse.scroll.y == 0)
-        result = PanGestureRecognizer::recognitionLoop(touches, mouse, view, soundToPlay);
-    else
+    if (mouse.scroll.x != 0 || mouse.scroll.y != 0)
     {
         result = GestureState::STAY;
         PanGestureStatus status {
@@ -52,6 +44,14 @@ GestureState ScrollGestureRecognizer::recognitionLoop(std::array<TouchState, TOU
             .deltaOnly     = true,
         };
         this->getPanGestureEvent().fire(status, soundToPlay);
+    }
+    else
+    {
+#ifdef NO_TOUCH_SCROLLING
+        result = GestureState::FAILED;
+#else
+        result = PanGestureRecognizer::recognitionLoop(touches, mouse, view, soundToPlay);
+#endif
     }
 
     return result;

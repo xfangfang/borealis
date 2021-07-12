@@ -29,9 +29,9 @@ class Hint : public Box
 {
   public:
     Hint(Action action);
+    static std::string getKeyIcon(ControllerButton button);
 
   private:
-    std::string getKeyIcon(ControllerButton button);
     Action action;
 
     BRLS_BIND(Label, icon, "icon");

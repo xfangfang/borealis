@@ -73,6 +73,7 @@ class AppletFrame : public Box
     BRLS_BIND(Hints, footer, "brls/applet_frame/footer");
     BRLS_BIND(Label, title, "brls/applet_frame/title_label");
     BRLS_BIND(Image, icon, "brls/applet_frame/title_icon");
+    BRLS_BIND(Box, hintBox, "brls/applet_frame/hint_box");
 
     HeaderStyle style = HeaderStyle::REGULAR;
 
