@@ -838,8 +838,7 @@ void Application::blockInputs(bool muteSounds)
 
 void Application::unblockInputs()
 {
-    if (Application::blockInputsTokens > 0)
-        Application::blockInputsTokens -= 1;
+    Application::blockInputsTokens -= 1;
 
     if (Application::blockInputsTokens <= 0)
         muteSounds = false;

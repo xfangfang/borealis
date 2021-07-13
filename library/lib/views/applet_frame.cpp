@@ -42,8 +42,6 @@ const std::string appletFrameXML = R"xml(
             height="@style/brls/applet_frame/header_height"
             axis="row"
             justifyContent="spaceBetween"
-            paddingTop="@style/brls/applet_frame/header_padding_top_bottom"
-            paddingBottom="@style/brls/applet_frame/header_padding_top_bottom"
             paddingLeft="@style/brls/applet_frame/header_padding_sides"
             paddingRight="@style/brls/applet_frame/header_padding_sides"
             marginLeft="@style/brls/applet_frame/padding_sides"
@@ -54,7 +52,9 @@ const std::string appletFrameXML = R"xml(
             <brls:Box
                 width="auto"
                 height="auto"
-                axis="row">
+                axis="row"
+                paddingTop="@style/brls/applet_frame/header_padding_top_bottom"
+                paddingBottom="@style/brls/applet_frame/header_padding_top_bottom">
                 <brls:Image
                     id="brls/applet_frame/title_icon"
                     width="auto"
