@@ -608,9 +608,9 @@ void Application::giveFocus(View* view)
             newFocus->onFocusGained();
             Logger::debug("Giving focus to {}", newFocus->describe());
         }
+        
+        Application::globalHintsUpdateEvent.fire();
     }
-
-    Application::globalHintsUpdateEvent.fire();
 }
 
 bool Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb)

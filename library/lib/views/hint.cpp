@@ -36,7 +36,11 @@ const std::string hintXML = R"xml(
         width="auto"
         height="auto"
         axis="row"
-        marginLeft="32">
+        paddingTop="4"
+        paddingBottom="4"
+        paddingLeft="16"
+        paddingRight="16"
+        cornerRadius="6">
             <brls:Label
                 id="icon"
                 width="auto"
@@ -97,9 +101,18 @@ Hint::Hint(Action action)
 {
     this->inflateFromXMLString(hintXML);
     this->setFocusable(false);
-
+    
     icon->setText(getKeyIcon(action.button));
     hint->setText(action.hintText);
+    
+    if (action.button != BUTTON_A)
+    {
+        this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action](){
+            if (action.available) {
+                action.actionListener(this);
+            }
+        }));
+    }
 
     if (!action.available)
     {
