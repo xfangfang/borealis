@@ -154,6 +154,10 @@ class Application
       * blockInputs()
       */
     static void unblockInputs();
+    
+    static bool isActionsBlock();
+    
+    static void setActionsBlock(bool block);
 
     static void setCommonFooter(std::string footer);
     static std::string* getCommonFooter();
@@ -224,6 +228,7 @@ class Application
     inline static bool inited               = false;
     inline static bool quitRequested        = false;
     inline static bool debuggingViewEnabled = false;
+    inline static bool actionsBlock         = false;
 
     inline static Platform* platform = nullptr;
 

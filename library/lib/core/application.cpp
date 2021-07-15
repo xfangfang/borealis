@@ -846,6 +846,17 @@ void Application::unblockInputs()
     Logger::debug("Removing an inputs block token (tokens={})", Application::blockInputsTokens);
 }
 
+bool Application::isActionsBlock()
+{
+    return actionsBlock;
+}
+
+void Application::setActionsBlock(bool block)
+{
+    actionsBlock = block;
+    getGlobalHintsUpdateEvent()->fire();
+}
+
 NVGcontext* Application::getNVGContext()
 {
     return Application::platform->getVideoContext()->getNVGContext();

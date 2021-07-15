@@ -719,14 +719,16 @@ void View::setActionAvailable(enum ControllerButton button, bool available)
 {
     if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
         it->available = available;
+    
+    Application::getGlobalHintsUpdateEvent()->fire();
 }
 
 void View::setActionsAvailable(bool available)
 {
-    for (auto action : this->actions)
-    {
-        action.available = available;
-    }
+    for (int i = 0; i < this->actions.size(); i++)
+        this->actions[i].available = available;
+    
+    Application::getGlobalHintsUpdateEvent()->fire();
 }
 
 void View::setParent(Box* parent, void* parentUserdata)
