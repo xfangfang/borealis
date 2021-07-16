@@ -83,8 +83,6 @@ RecyclerHeader::RecyclerHeader()
     this->header = new Header();
     this->addView(header);
     header->setGrow(1);
-
-    this->setActionAvailable(ControllerButton::BUTTON_A, false);
 }
 
 void RecyclerHeader::setTitle(std::string title)
