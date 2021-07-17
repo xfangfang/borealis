@@ -85,11 +85,27 @@ const std::string hintsXML = R"xml(
             axis="row"
             direction="leftToRight" />
 
-        <brls:Label
-            id="brls/hints/time"
+        <brls:Box
             width="auto"
             height="auto"
-            fontSize="21.5" />
+            axis="row"
+            alignItems="center"
+            direction="leftToRight" >
+                
+
+            <brls:Battery
+                id="brls/battery"
+                marginRight="21"
+                marginBottom="5"/>
+
+            <brls:Label
+                id="brls/hints/time"
+                width="auto"
+                height="auto"
+                verticalAlign="center"
+                fontSize="21.5" />
+
+        </brls:Box>
 
     </brls:Box>
 </brls:Box>
@@ -160,6 +176,9 @@ std::string Hint::getKeyIcon(ControllerButton button)
 Hints::Hints()
 {
     this->inflateFromXMLString(hintsXML);
+    
+    if (!Application::getPlatform()->canShowBatteryLevel())
+        battery->setVisibility(Visibility::GONE);
 
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
         refillHints(Application::getCurrentFocus());

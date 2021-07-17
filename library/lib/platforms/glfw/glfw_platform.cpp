@@ -59,6 +59,19 @@ void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, u
     this->inputManager = new GLFWInputManager(this->videoContext->getGLFWWindow());
 }
 
+bool GLFWPlatform::canShowBatteryLevel()
+{
+    return false;
+}
+
+int battery = 50;
+int GLFWPlatform::getBatteryLevel()
+{
+    battery %= 100;
+    battery++;
+    return battery;
+}
+
 std::string GLFWPlatform::getName()
 {
     return "GLFW";

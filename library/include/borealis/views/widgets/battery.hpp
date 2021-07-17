@@ -17,45 +17,28 @@
 #pragma once
 
 #include <borealis/core/application.hpp>
-#include <borealis/core/bind.hpp>
 #include <borealis/core/box.hpp>
 #include <borealis/views/image.hpp>
-#include <borealis/views/label.hpp>
+#include <borealis/views/rectangle.hpp>
 
 namespace brls
 {
 
-class Hint : public Box
+class BatteryWidget : public Box
 {
-  public:
-    Hint(Action action);
-    static std::string getKeyIcon(ControllerButton button);
-
-  private:
-    Action action;
-
-    BRLS_BIND(Label, icon, "icon");
-    BRLS_BIND(Label, hint, "hint");
-};
-
-class Hints : public Box
-{
-  public:
-    Hints();
-    ~Hints();
-
+public:
+    BatteryWidget();
+    
+    void applyTheme(ThemeVariant theme);
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
-
     static View* create();
-
-  private:
-    void refillHints(View* focusView);
-    BRLS_BIND(Box, hints, "brls/hints");
-    BRLS_BIND(Label, time, "brls/hints/time");
-    BRLS_BIND(View, battery, "brls/battery");
-
-    VoidEvent::Subscription hintSubscription;
-    static bool actionsSortFunc(Action a, Action b);
+    
+private:
+    ThemeVariant lastTheme = ThemeVariant::LIGHT;
+    Image* back;
+    Rectangle* level;
+    Platform* platform;
 };
+
 
 } // namespace brls

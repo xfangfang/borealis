@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C33AB2A26A2FBFF0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2726A2F5AE0008B0A6 /* battery.cpp */; };
 		7C8AD2E7269C8B7500210332 /* pokemon_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */; };
 		7C8AD2E8269C8B7500210332 /* components_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DC269C8B7500210332 /* components_tab.cpp */; };
 		7C8AD2E9269C8B7500210332 /* main_activity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DD269C8B7500210332 /* main_activity.cpp */; };
@@ -97,6 +98,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C33AB2726A2F5AE0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
+		7C33AB2826A2F5AE0008B0A6 /* battery.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
 		7C8AD2CD269C8B4700210332 /* Borealis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Borealis; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pokemon_view.cpp; sourceTree = "<group>"; };
 		7C8AD2DB269C8B7500210332 /* settings_tab.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = settings_tab.hpp; sourceTree = "<group>"; };
@@ -311,6 +314,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7C33AB2526A2F4990008B0A6 /* widgets */ = {
+			isa = PBXGroup;
+			children = (
+				7C33AB2726A2F5AE0008B0A6 /* battery.cpp */,
+			);
+			path = widgets;
+			sourceTree = "<group>";
+		};
+		7C33AB2626A2F4A50008B0A6 /* widgets */ = {
+			isa = PBXGroup;
+			children = (
+				7C33AB2826A2F5AE0008B0A6 /* battery.hpp */,
+			);
+			path = widgets;
+			sourceTree = "<group>";
+		};
 		7C8AD2C4269C8B4700210332 = {
 			isa = PBXGroup;
 			children = (
@@ -569,6 +588,7 @@
 		7C8ADA70269C8BA600210332 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB2626A2F4A50008B0A6 /* widgets */,
 				7C8ADA71269C8BA600210332 /* cells */,
 				7C8ADA77269C8BA600210332 /* slider.hpp */,
 				7C8ADA78269C8BA600210332 /* debug_layer.hpp */,
@@ -861,6 +881,7 @@
 		7C8ADFA9269C8BA800210332 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				7C33AB2526A2F4990008B0A6 /* widgets */,
 				7C8ADFAA269C8BA800210332 /* cells */,
 				7C8ADFB0269C8BA800210332 /* progress_spinner.cpp */,
 				7C8ADFB1269C8BA800210332 /* button.cpp */,
@@ -969,6 +990,7 @@
 				7C8AE008269C8BA800210332 /* pan_gesture.cpp in Sources */,
 				7C8ADFFB269C8BA800210332 /* glfw_platform.cpp in Sources */,
 				7C8AE0CD269C8BA800210332 /* Yoga.cpp in Sources */,
+				7C33AB2A26A2FBFF0008B0A6 /* battery.cpp in Sources */,
 				7C8AE136269C8BA800210332 /* recycler.cpp in Sources */,
 				7C8AE014269C8BA800210332 /* time.cpp in Sources */,
 				7C8AE0D6269C8BA800210332 /* nanovg.c in Sources */,

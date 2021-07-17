@@ -9,6 +9,7 @@ SOURCES		:=	$(SOURCES) \
 				$(current_dir)/lib/core \
 				$(current_dir)/lib/core/touch \
 				$(current_dir)/lib/views \
+				$(current_dir)/lib/views/widgets \
                 $(current_dir)/lib/views/cells \
 				$(current_dir)/lib/platforms/switch \
 				$(current_dir)/lib/platforms/glfw \

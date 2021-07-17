@@ -43,6 +43,8 @@ class SwitchPlatform : public Platform
     AudioPlayer* getAudioPlayer() override;
     InputManager* getInputManager() override;
     FontLoader* getFontLoader() override;
+    bool canShowBatteryLevel() override;
+    int getBatteryLevel() override;
 
     void appletCallback(AppletHookType hookType);
 

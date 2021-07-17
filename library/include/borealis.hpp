@@ -60,6 +60,9 @@
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
 
+// Widgets
+#include <borealis/views/widgets/battery.hpp>
+
 // Cells
 #include <borealis/views/cells/cell_bool.hpp>
 #include <borealis/views/cells/cell_input.hpp>

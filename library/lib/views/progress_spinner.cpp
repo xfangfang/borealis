@@ -68,7 +68,7 @@ void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float 
         case NORMAL:
             for (int i = 0 + animationValue; i < 8 + animationValue; i++)
             {
-                barColor.a = fmax((i - animationValue) / 8.0f, a(theme["brls/spinner/bar_color"]).a);
+                barColor.a = fmax((i - animationValue) / 8.0f, theme["brls/spinner/bar_color"].a) * this->getAlpha();
                 nvgSave(vg);
                 nvgTranslate(vg, x + width / 2, y + height / 2);
                 nvgRotate(vg, nvgDegToRad(i * 45)); // Internal angle of octagon
@@ -85,7 +85,7 @@ void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float 
         case LARGE:
             for (int i = 0 + animationValue; i < 12 + animationValue; i++)
             {
-                barColor.a = fmax((i - animationValue) / 12.0f, a(theme["brls/spinner/bar_color"]).a);
+                barColor.a = fmax((i - animationValue) / 12.0f, theme["brls/spinner/bar_color"].a) * this->getAlpha();
                 nvgSave(vg);
                 nvgTranslate(vg, x + width / 2, y + height / 2);
                 nvgRotate(vg, nvgDegToRad(i * 30)); // Internal angle of octagon

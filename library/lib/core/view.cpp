@@ -831,6 +831,12 @@ void View::setHeight(float height)
     this->invalidate();
 }
 
+void View::setSize(Size size)
+{
+    setWidth(size.width);
+    setHeight(size.height);
+}
+
 void View::setWidthPercentage(float percentage)
 {
     YGNodeStyleSetWidthPercent(this->ygNode, percentage);

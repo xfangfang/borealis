@@ -379,6 +379,15 @@ class View
      * to never shrink below the given height.
      */
     void setHeight(float height);
+    
+    /**
+     * Sets the preferred width and height of the view. Use brls::View::AUTO
+     * to have the layout automatically resize the view.
+     *
+     * If set to anything else than AUTO, the view is guaranteed
+     * to never shrink below the given height.
+     */
+    void setSize(Size size);
 
     /**
      * Shortcut to setWidth + setHeight.

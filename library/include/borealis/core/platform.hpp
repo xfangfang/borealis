@@ -43,6 +43,16 @@ class Platform
      * Returns the human-readable name of the platform.
      */
     virtual std::string getName() = 0;
+    
+    /**
+     * Returns if battery level supports.
+     */
+    virtual bool canShowBatteryLevel() = 0;
+    
+    /**
+     * Returns the battery level from 0 to 100.
+     */
+    virtual int getBatteryLevel() = 0;
 
     /**
      * Called at every iteration of the main loop.

@@ -41,6 +41,8 @@ class GLFWPlatform : public Platform
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
     FontLoader* getFontLoader() override;
+    bool canShowBatteryLevel() override;
+    int getBatteryLevel() override;
 
   private:
     NullAudioPlayer* audioPlayer   = nullptr;

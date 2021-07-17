@@ -42,6 +42,7 @@
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
+#include <borealis/views/widgets/battery.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -421,11 +422,11 @@ bool Application::handleAction(char button)
     if (button == BUTTON_A && setInputType(InputType::GAMEPAD))
         return false;
 
-    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
-    {
-        activitiesStack.back()->getContentView()->dismiss();
-        return true;
-    }
+//    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
+//    {
+//        activitiesStack.back()->getContentView()->dismiss();
+//        return true;
+//    }
 
     if (Application::activitiesStack.empty())
         return false;
@@ -964,6 +965,9 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:SelectorCell", SelectorCell::create);
     Application::registerXMLView("brls:InputCell", InputCell::create);
     Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
+    
+    // Widgets
+    Application::registerXMLView("brls:Battery", BatteryWidget::create);
 }
 
 void Application::registerXMLView(std::string name, XMLViewCreator creator)

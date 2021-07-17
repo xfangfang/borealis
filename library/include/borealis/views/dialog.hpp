@@ -81,7 +81,7 @@ class Dialog : public Box
     void setCancelable(bool cancelable);
 
     void open();
-    void close();
+    void close(std::function<void(void)> cb = []{});
 
     bool isTranslucent() override
     {

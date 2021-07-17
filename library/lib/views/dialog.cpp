@@ -177,9 +177,9 @@ void Dialog::open()
     Application::pushActivity(new Activity(this));
 }
 
-void Dialog::close()
+void Dialog::close(std::function<void(void)> cb)
 {
-    Box::dismiss();
+    Box::dismiss(cb);
 }
 
 void Dialog::setCancelable(bool cancelable)
