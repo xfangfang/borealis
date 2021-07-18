@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7C33AB2A26A2FBFF0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2726A2F5AE0008B0A6 /* battery.cpp */; };
+		7C33AB3326A34D240008B0A6 /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3126A34D240008B0A6 /* wireless.cpp */; };
 		7C8AD2E7269C8B7500210332 /* pokemon_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */; };
 		7C8AD2E8269C8B7500210332 /* components_tab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DC269C8B7500210332 /* components_tab.cpp */; };
 		7C8AD2E9269C8B7500210332 /* main_activity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DD269C8B7500210332 /* main_activity.cpp */; };
@@ -100,6 +101,8 @@
 /* Begin PBXFileReference section */
 		7C33AB2726A2F5AE0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
 		7C33AB2826A2F5AE0008B0A6 /* battery.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
+		7C33AB3126A34D240008B0A6 /* wireless.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wireless.cpp; sourceTree = "<group>"; };
+		7C33AB3226A34D240008B0A6 /* wireless.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = wireless.hpp; sourceTree = "<group>"; };
 		7C8AD2CD269C8B4700210332 /* Borealis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Borealis; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pokemon_view.cpp; sourceTree = "<group>"; };
 		7C8AD2DB269C8B7500210332 /* settings_tab.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = settings_tab.hpp; sourceTree = "<group>"; };
@@ -318,6 +321,7 @@
 			isa = PBXGroup;
 			children = (
 				7C33AB2726A2F5AE0008B0A6 /* battery.cpp */,
+				7C33AB3126A34D240008B0A6 /* wireless.cpp */,
 			);
 			path = widgets;
 			sourceTree = "<group>";
@@ -326,6 +330,7 @@
 			isa = PBXGroup;
 			children = (
 				7C33AB2826A2F5AE0008B0A6 /* battery.hpp */,
+				7C33AB3226A34D240008B0A6 /* wireless.hpp */,
 			);
 			path = widgets;
 			sourceTree = "<group>";
@@ -434,13 +439,13 @@
 		7C8ADA2F269C8BA600210332 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				7C8ADA36269C8BA600210332 /* touch */,
 				7C8ADA30269C8BA600210332 /* frame_context.hpp */,
 				7C8ADA31269C8BA600210332 /* event.hpp */,
 				7C8ADA32269C8BA600210332 /* logger.hpp */,
 				7C8ADA33269C8BA600210332 /* application.hpp */,
 				7C8ADA34269C8BA600210332 /* time.hpp */,
 				7C8ADA35269C8BA600210332 /* actions.hpp */,
-				7C8ADA36269C8BA600210332 /* touch */,
 				7C8ADA3A269C8BA600210332 /* theme.hpp */,
 				7C8ADA3B269C8BA600210332 /* animation.hpp */,
 				7C8ADA3C269C8BA600210332 /* task.hpp */,
@@ -1011,6 +1016,7 @@
 				7C8AD2EB269C8B7500210332 /* captioned_image.cpp in Sources */,
 				7C8AE128269C8BA800210332 /* cell_input.cpp in Sources */,
 				7C8AE010269C8BA800210332 /* task.cpp in Sources */,
+				7C33AB3326A34D240008B0A6 /* wireless.cpp in Sources */,
 				7C8AE12A269C8BA800210332 /* cell_selector.cpp in Sources */,
 				7C8AD2ED269C8B7500210332 /* main.cpp in Sources */,
 				7C8AE000269C8BA800210332 /* geometry.cpp in Sources */,

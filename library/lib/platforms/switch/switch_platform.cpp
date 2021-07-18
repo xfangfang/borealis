@@ -78,6 +78,22 @@ int SwitchPlatform::getBatteryLevel()
     return (int)charge;
 }
 
+bool SwitchPlatform::hasWirelessConnection()
+{
+    bool res = false;
+    nifmIsWirelessCommunicationEnabled(&res);
+    return res;
+}
+
+int SwitchPlatform::getWirelessLevel()
+{
+    NifmInternetConnectionType type;
+    u32 wifiSignal;
+    NifmInternetConnectionStatus status;
+    nifmGetInternetConnectionStatus(&type, &wifiSignal, &status);
+    return wifiSignal;
+}
+
 std::string SwitchPlatform::getName()
 {
     return "Switch";

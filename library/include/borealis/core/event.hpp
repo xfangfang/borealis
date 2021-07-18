@@ -58,7 +58,8 @@ typename Event<Ts...>::Subscription Event<Ts...>::subscribe(Event<Ts...>::Callba
 template <typename... Ts>
 void Event<Ts...>::unsubscribe(Event<Ts...>::Subscription subscription)
 {
-    this->callbacks.erase(subscription);
+    if (this->callbacks.size() > 0)
+        this->callbacks.erase(subscription);
 }
 
 template <typename... Ts>

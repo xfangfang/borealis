@@ -44,6 +44,10 @@ class Platform
      */
     virtual std::string getName() = 0;
     
+    virtual bool hasWirelessConnection() = 0;
+    
+    virtual int getWirelessLevel() = 0;
+    
     /**
      * Returns if battery level supports.
      */

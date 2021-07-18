@@ -43,6 +43,7 @@
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
 #include <borealis/views/widgets/battery.hpp>
+#include <borealis/views/widgets/wireless.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -968,6 +969,7 @@ void Application::registerBuiltInXMLViews()
     
     // Widgets
     Application::registerXMLView("brls:Battery", BatteryWidget::create);
+    Application::registerXMLView("brls:Wireless", WirelessWidget::create);
 }
 
 void Application::registerXMLView(std::string name, XMLViewCreator creator)

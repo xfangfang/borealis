@@ -62,6 +62,7 @@
 
 // Widgets
 #include <borealis/views/widgets/battery.hpp>
+#include <borealis/views/widgets/wireless.hpp>
 
 // Cells
 #include <borealis/views/cells/cell_bool.hpp>

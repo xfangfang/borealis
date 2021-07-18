@@ -91,10 +91,14 @@ const std::string hintsXML = R"xml(
             axis="row"
             alignItems="center"
             direction="leftToRight" >
-                
-
+              
             <brls:Battery
                 id="brls/battery"
+                marginRight="21"
+                marginBottom="5"/>
+
+            <brls:Wireless
+                id="brls/wireless"
                 marginRight="21"
                 marginBottom="5"/>
 
@@ -177,8 +181,9 @@ Hints::Hints()
 {
     this->inflateFromXMLString(hintsXML);
     
-    if (!Application::getPlatform()->canShowBatteryLevel())
-        battery->setVisibility(Visibility::GONE);
+    Platform* platform = Application::getPlatform();
+    
+    battery->setVisibility(platform->canShowBatteryLevel() ? Visibility::VISIBLE : Visibility::GONE);
 
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
         refillHints(Application::getCurrentFocus());

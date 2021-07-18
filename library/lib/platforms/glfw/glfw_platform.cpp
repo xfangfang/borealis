@@ -61,7 +61,7 @@ void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, u
 
 bool GLFWPlatform::canShowBatteryLevel()
 {
-    return false;
+    return true;
 }
 
 int battery = 50;
@@ -70,6 +70,16 @@ int GLFWPlatform::getBatteryLevel()
     battery %= 100;
     battery++;
     return battery;
+}
+
+bool GLFWPlatform::hasWirelessConnection()
+{
+    return true;
+}
+
+int GLFWPlatform::getWirelessLevel()
+{
+    return battery / 20;
 }
 
 std::string GLFWPlatform::getName()

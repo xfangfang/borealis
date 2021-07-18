@@ -45,6 +45,8 @@ class SwitchPlatform : public Platform
     FontLoader* getFontLoader() override;
     bool canShowBatteryLevel() override;
     int getBatteryLevel() override;
+    bool hasWirelessConnection() override;
+    int getWirelessLevel() override;
 
     void appletCallback(AppletHookType hookType);
 
