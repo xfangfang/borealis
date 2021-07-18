@@ -164,6 +164,8 @@ class InputManager
      * Calculate current touch phase based on it's previous state
      */
     static MouseState computeMouseState(RawMouseState currentTouch, RawMouseState lastFrameState);
+    
+    static ControllerButton mapControllerState(ControllerButton button);
 };
 
 }; // namespace brls

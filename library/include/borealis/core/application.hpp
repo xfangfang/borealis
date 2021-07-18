@@ -221,6 +221,16 @@ class Application
     {
         debuggingViewEnabled = enable;
     }
+    
+    inline static void setSwapInputKeys(bool swap)
+    {
+        swapInputKeys = swap;
+    }
+    
+    inline static bool isSwapInputKeys()
+    {
+        return swapInputKeys;
+    }
 
     static void tryDeinitFirstResponder(View* view);
 
@@ -229,6 +239,7 @@ class Application
     inline static bool quitRequested        = false;
     inline static bool debuggingViewEnabled = false;
     inline static bool actionsBlock         = false;
+    inline static bool swapInputKeys        = false;
 
     inline static Platform* platform = nullptr;
 

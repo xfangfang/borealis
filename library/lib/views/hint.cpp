@@ -142,6 +142,7 @@ Hint::Hint(Action action)
 
 std::string Hint::getKeyIcon(ControllerButton button)
 {
+    button = InputManager::mapControllerState(button);
     switch (button)
     {
         case BUTTON_A:

@@ -15,6 +15,7 @@
 */
 
 #include <borealis/core/input.hpp>
+#include <borealis/core/application.hpp>
 
 namespace brls
 {
@@ -54,6 +55,24 @@ MouseState InputManager::computeMouseState(RawMouseState currentTouch, RawMouseS
     state.middleButton = getPhase(lastFrameState.middleButton, currentTouch.middleButton);
     state.rightButton = getPhase(lastFrameState.rightButton, currentTouch.rightButton);
     return state;
+}
+
+ControllerButton InputManager::mapControllerState(ControllerButton button)
+{
+    if (!Application::isSwapInputKeys()) return button;
+    
+    switch (button) {
+        case BUTTON_A:
+            return BUTTON_B;
+        case BUTTON_B:
+            return BUTTON_A;
+        case BUTTON_X:
+            return BUTTON_Y;
+        case BUTTON_Y:
+            return BUTTON_X;
+        default:
+            return button;
+    }
 }
 
 } // namespace brls

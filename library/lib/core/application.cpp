@@ -184,6 +184,16 @@ bool Application::mainLoop()
     inputManager->updateTouchStates(&rawTouch);
     inputManager->updateMouseStates(&rawMouse);
     inputManager->updateControllerState(&controllerState);
+    
+    if (isSwapInputKeys())
+    {
+        bool swapKeys[ControllerButton::_BUTTON_MAX];
+        for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
+            swapKeys[i] = controllerState.buttons[InputManager::mapControllerState((ControllerButton)i)];
+        
+        for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
+            controllerState.buttons[i] = swapKeys[i];
+    }
 
     static std::array<RawTouchState, TOUCHES_MAX> oldTouch;
     std::array<TouchState, TOUCHES_MAX> touchState;
