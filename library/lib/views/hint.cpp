@@ -125,14 +125,14 @@ Hint::Hint(Action action)
     icon->setText(getKeyIcon(action.button));
     hint->setText(action.hintText);
     
-    if (action.button != BUTTON_A && action.available && !Application::isActionsBlock())
+    if (action.button != BUTTON_A && action.available && !Application::isInputBlocks())
     {
         this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]() {
             action.actionListener(this);
         }));
     }
 
-    if (!action.available || Application::isActionsBlock())
+    if (!action.available || Application::isInputBlocks())
     {
         Theme theme = Application::getTheme();
         icon->setTextColor(theme["brls/text_disabled"]);

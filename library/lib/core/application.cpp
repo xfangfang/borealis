@@ -845,6 +845,7 @@ void Application::blockInputs(bool muteSounds)
 {
     Application::muteSounds |= muteSounds;
     Application::blockInputsTokens += 1;
+    getGlobalHintsUpdateEvent()->fire();
     Logger::debug("Adding an inputs block token (tokens={})", Application::blockInputsTokens);
 }
 
@@ -854,19 +855,14 @@ void Application::unblockInputs()
 
     if (Application::blockInputsTokens <= 0)
         muteSounds = false;
-
+    
+    getGlobalHintsUpdateEvent()->fire();
     Logger::debug("Removing an inputs block token (tokens={})", Application::blockInputsTokens);
 }
 
-bool Application::isActionsBlock()
+bool Application::isInputBlocks()
 {
-    return actionsBlock;
-}
-
-void Application::setActionsBlock(bool block)
-{
-    actionsBlock = block;
-    getGlobalHintsUpdateEvent()->fire();
+    return Application::blockInputsTokens > 0;
 }
 
 NVGcontext* Application::getNVGContext()
