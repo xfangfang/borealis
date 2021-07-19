@@ -130,6 +130,14 @@ Dialog::Dialog(Box* contentView)
 {
     this->inflateFromXMLString(dialogXML);
     container->addView(contentView);
+    
+    appletFrame->registerAction(
+        "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
+            if (cancelable)
+                this->dismiss();
+            return cancelable;
+        },
+        false, SOUND_BACK);
 }
 
 Dialog::Dialog(std::string text)
@@ -148,14 +156,6 @@ Dialog::Dialog(std::string text)
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
 
     new (this) Dialog(box);
-
-    appletFrame->registerAction(
-        "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
-            if (cancelable)
-                this->dismiss();
-            return cancelable;
-        },
-        false, SOUND_BACK);
 }
 
 void Dialog::addButton(std::string label, VoidEvent::Callback cb)

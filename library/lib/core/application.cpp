@@ -865,6 +865,12 @@ bool Application::isInputBlocks()
     return Application::blockInputsTokens > 0;
 }
 
+void Application::setSwapInputKeys(bool swap)
+{
+    swapInputKeys = swap;
+    getGlobalHintsUpdateEvent()->fire();
+}
+
 NVGcontext* Application::getNVGContext()
 {
     return Application::platform->getVideoContext()->getNVGContext();

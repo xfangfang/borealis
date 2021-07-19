@@ -157,6 +157,10 @@ std::string Hint::getKeyIcon(ControllerButton button)
             return "\uE104";
         case BUTTON_RSB:
             return "\uE105";
+        case BUTTON_LT:
+            return "\uE0E6";
+        case BUTTON_RT:
+            return "\uE0E7";
         case BUTTON_LB:
             return "\uE0E4";
         case BUTTON_RB:
@@ -170,7 +174,7 @@ std::string Hint::getKeyIcon(ControllerButton button)
         case BUTTON_UP:
             return "\uE0EB";
         case BUTTON_RIGHT:
-            return "\uE0EF";
+            return "\uE0EE";
         case BUTTON_DOWN:
             return "\uE0EC";
         default:

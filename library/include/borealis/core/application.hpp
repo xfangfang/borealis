@@ -220,10 +220,7 @@ class Application
         debuggingViewEnabled = enable;
     }
     
-    inline static void setSwapInputKeys(bool swap)
-    {
-        swapInputKeys = swap;
-    }
+    static void setSwapInputKeys(bool swap);
     
     inline static bool isSwapInputKeys()
     {
