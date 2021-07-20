@@ -29,7 +29,7 @@ class Hint : public Box
 {
   public:
     Hint(Action action);
-    static std::string getKeyIcon(ControllerButton button);
+    static std::string getKeyIcon(ControllerButton button, bool ignoreKeysSwap = false);
 
   private:
     Action action;

@@ -140,9 +140,11 @@ Hint::Hint(Action action)
     }
 }
 
-std::string Hint::getKeyIcon(ControllerButton button)
+std::string Hint::getKeyIcon(ControllerButton button, bool ignoreKeysSwap)
 {
-    button = InputManager::mapControllerState(button);
+    if (!ignoreKeysSwap)
+        button = InputManager::mapControllerState(button);
+    
     switch (button)
     {
         case BUTTON_A:
