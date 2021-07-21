@@ -29,17 +29,17 @@ class WirelessWidget : public Box
 public:
     WirelessWidget();
     
-    void applyTheme(ThemeVariant theme);
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
     
 private:
-    ThemeVariant lastTheme = ThemeVariant::LIGHT;
     Image* _0;
     Image* _1;
     Image* _2;
     Image* _3;
     Platform* platform;
+    
+    void applyTheme(ThemeVariant theme);
 };
 
 

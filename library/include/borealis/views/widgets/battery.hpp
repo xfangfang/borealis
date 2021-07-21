@@ -29,15 +29,16 @@ class BatteryWidget : public Box
 public:
     BatteryWidget();
     
-    void applyTheme(ThemeVariant theme);
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
     
 private:
-    ThemeVariant lastTheme = ThemeVariant::LIGHT;
     Image* back;
     Rectangle* level;
     Platform* platform;
+    
+    void applyBackTheme(ThemeVariant theme);
+    void applyLevelTheme(ThemeVariant theme);
 };
 
 

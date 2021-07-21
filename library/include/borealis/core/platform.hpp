@@ -44,8 +44,14 @@ class Platform
      */
     virtual std::string getName() = 0;
     
+    /**
+     * Returns true if device has wireless connection.
+     */
     virtual bool hasWirelessConnection() = 0;
     
+    /**
+     * Returns wireless quality level from 0 to 3.
+     */
     virtual int getWirelessLevel() = 0;
     
     /**
@@ -57,6 +63,11 @@ class Platform
      * Returns the battery level from 0 to 100.
      */
     virtual int getBatteryLevel() = 0;
+    
+    /**
+     * Returns the battery level from 0 to 100.
+     */
+    virtual bool isBatteryCharging() = 0;
 
     /**
      * Called at every iteration of the main loop.

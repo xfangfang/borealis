@@ -44,8 +44,7 @@ WirelessWidget::WirelessWidget()
     _3->detach();
     
     platform = Application::getPlatform();
-    lastTheme = platform->getThemeVariant();
-    applyTheme(lastTheme);
+    applyTheme(platform->getThemeVariant());
     
     addView(_0);
     addView(_1);
@@ -73,12 +72,6 @@ void WirelessWidget::applyTheme(ThemeVariant theme)
 
 void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
-    if (lastTheme != platform->getThemeVariant())
-    {
-        lastTheme = platform->getThemeVariant();
-        applyTheme(lastTheme);
-    }
-    
     if (!platform->hasWirelessConnection())
     {
         _0->setVisibility(Visibility::VISIBLE);

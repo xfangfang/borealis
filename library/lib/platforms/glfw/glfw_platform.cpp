@@ -72,6 +72,11 @@ int GLFWPlatform::getBatteryLevel()
     return battery;
 }
 
+bool GLFWPlatform::isBatteryCharging() 
+{
+    return true;
+}
+
 bool GLFWPlatform::hasWirelessConnection()
 {
     return true;

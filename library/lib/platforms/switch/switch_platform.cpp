@@ -78,6 +78,13 @@ int SwitchPlatform::getBatteryLevel()
     return (int)charge;
 }
 
+bool SwitchPlatform::isBatteryCharging() 
+{
+    PsmChargerType type;
+    psmGetChargerType(&type);
+    return type == PsmChargerType_EnoughPower || type == PsmChargerType_LowPower;
+}
+
 bool SwitchPlatform::hasWirelessConnection()
 {
     bool res = false;
