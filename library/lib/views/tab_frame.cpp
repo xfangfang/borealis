@@ -28,8 +28,7 @@ const std::string tabFrameContentXML = R"xml(
     <brls:Box
         width="auto"
         height="auto"
-        axis="row"
-        marginRight="@style/brls/applet_frame/padding_sides">
+        axis="row">
 
         <brls:Sidebar
             id="brls/tab_frame/sidebar"

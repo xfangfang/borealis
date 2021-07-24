@@ -19,6 +19,7 @@
 
 #include <borealis/core/animation.hpp>
 #include <borealis/core/box.hpp>
+#include <borealis/views/rectangle.hpp>
 
 namespace brls
 {
@@ -91,6 +92,7 @@ class ScrollingFrame : public Box
 
   private:
     View* contentView = nullptr;
+    Rectangle* scrollingIndicator = nullptr;
 
     bool updateScrollingOnNextFrame = false;
     bool childFocused               = false;
@@ -117,6 +119,9 @@ class ScrollingFrame : public Box
     void naturalScrollingBehaviour();
     void naturalScrollingButtonProcessing(FocusDirection focusDirection, bool* repeat);
     View* findTopMostFocusableView();
+    
+    void setupScrollingIndicator();
+    void updateScrollingIndicatior();
 
     Event<InputType>::Subscription inputTypeSubscription;
 };

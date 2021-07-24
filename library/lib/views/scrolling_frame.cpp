@@ -23,6 +23,8 @@
 namespace brls
 {
 
+#define SCROLLING_INDICATOR_WIDTH 4
+
 ScrollingFrame::ScrollingFrame()
 {
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
@@ -31,6 +33,8 @@ ScrollingFrame::ScrollingFrame()
             { "natural", ScrollingBehavior::NATURAL },
             { "centered", ScrollingBehavior::CENTERED },
         });
+    
+    setupScrollingIndicator();
 
     input = Application::getPlatform()->getInputManager();
     this->setFocusable(true);
@@ -95,8 +99,36 @@ ScrollingFrame::ScrollingFrame()
     setHideHighlightBorder(true);
 }
 
+void ScrollingFrame::setupScrollingIndicator()
+{
+    Theme theme = Application::getTheme();
+    scrollingIndicator = new Rectangle(theme["brls/text"]);
+    scrollingIndicator->setSize(Size(SCROLLING_INDICATOR_WIDTH, 0));
+    scrollingIndicator->setCornerRadius(SCROLLING_INDICATOR_WIDTH / 2);
+    scrollingIndicator->detach();
+    Box::addView(scrollingIndicator);
+}
+
+void ScrollingFrame::updateScrollingIndicatior()
+{
+    float ch = getContentHeight();
+    float vh = getHeight();
+    if (ch <= vh)
+    {
+        scrollingIndicator->setAlpha(0);
+        return;
+    }
+    scrollingIndicator->setAlpha(ch <= vh ? 0 : 0.3f);
+        
+    scrollingIndicator->setHeight(vh / ch * vh);
+    float o = getContentOffsetY() / ch * getHeight();
+    
+    scrollingIndicator->setDetachedPosition(getWidth() - 14 - SCROLLING_INDICATOR_WIDTH, o);
+}
+
 void ScrollingFrame::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
+    updateScrollingIndicatior();
     naturalScrollingBehaviour();
 
     // Update scrolling - try until it works
