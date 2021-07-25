@@ -168,6 +168,7 @@ Sidebar::Sidebar()
         style["brls/sidebar/padding_left"]);
 
     this->setContentView(this->contentBox);
+    this->setScrollingIndicatorVisible(false);
 }
 
 void Sidebar::addItem(std::string label, GenericEvent::Callback focusCallback)

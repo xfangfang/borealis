@@ -87,6 +87,11 @@ class ScrollingFrame : public Box
      * Sets the offset from the content view’s origin that corresponds to the receiver’s origin.
      */
     void setContentOffsetY(float value, bool animated);
+    
+    void setScrollingIndicatorVisible(bool visible)
+    {
+        showScrollingIndicator = visible;
+    }
 
     static View* create();
 
@@ -96,6 +101,7 @@ class ScrollingFrame : public Box
 
     bool updateScrollingOnNextFrame = false;
     bool childFocused               = false;
+    bool showScrollingIndicator     = true;
 
     float middleY = 0; // y + height/2
     float bottomY = 0; // y + height

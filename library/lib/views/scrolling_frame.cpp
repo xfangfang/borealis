@@ -111,19 +111,20 @@ void ScrollingFrame::setupScrollingIndicator()
 
 void ScrollingFrame::updateScrollingIndicatior()
 {
-    float ch = getContentHeight();
-    float vh = getHeight();
-    if (ch <= vh)
+    float contentHeight = getContentHeight();
+    float viewHeight = getHeight();
+    
+    if (contentHeight <= viewHeight || !showScrollingIndicator)
     {
         scrollingIndicator->setAlpha(0);
         return;
     }
-    scrollingIndicator->setAlpha(ch <= vh ? 0 : 0.3f);
-        
-    scrollingIndicator->setHeight(vh / ch * vh);
-    float o = getContentOffsetY() / ch * getHeight();
     
-    scrollingIndicator->setDetachedPosition(getWidth() - 14 - SCROLLING_INDICATOR_WIDTH, o);
+    scrollingIndicator->setAlpha(contentHeight <= viewHeight ? 0 : 0.3f);
+    scrollingIndicator->setHeight(viewHeight / contentHeight * viewHeight);
+    
+    float scrollViewOffset = getContentOffsetY() / contentHeight * getHeight();
+    scrollingIndicator->setDetachedPosition(getWidth() - 14 - SCROLLING_INDICATOR_WIDTH, scrollViewOffset);
 }
 
 void ScrollingFrame::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
