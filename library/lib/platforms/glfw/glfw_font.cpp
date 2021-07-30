@@ -21,9 +21,9 @@
 #include <borealis/platforms/glfw/glfw_font.hpp>
 
 #define USER_REGULAR_PATH BRLS_ASSET("User-Regular.ttf")
-#define INTER_FONT_PATH BRLS_ASSET("inter/Inter-Switch.ttf")
+#define INTER_FONT_PATH BRLS_ASSET("font/switch_font.ttf")
 
-#define USER_SWITCH_ICONS_PATH BRLS_ASSET("User-Switch-Icons.ttf")
+#define USER_SWITCH_ICONS_PATH BRLS_ASSET("font/switch_icons.ttf")
 
 namespace brls
 {
