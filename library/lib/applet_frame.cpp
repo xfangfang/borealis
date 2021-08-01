@@ -118,6 +118,21 @@ void AppletFrame::draw(NVGcontext* vg, int x, int y, unsigned width, unsigned he
         nvgRect(vg, x + style->AppletFrame.separatorSpacing, y + style->AppletFrame.headerHeightPopup - 1, width - style->AppletFrame.separatorSpacing * 2, 1);
         nvgFill(vg);
     }
+    else if (this->headerStyle == HeaderStyle::DOWN)
+    {
+        // Title
+        NVGcolor titleColor = a(ctx->theme->textColor);
+
+        if (this->contentView)
+            titleColor.a *= this->contentView->getAlpha();
+
+        nvgFillColor(vg, titleColor);
+        nvgFontSize(vg, style->AppletFrame.titleSize);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgFontFaceId(vg, ctx->fontStash->regular);
+        nvgBeginPath(vg);
+        nvgText(vg, x + style->AppletFrame.titleStart, height - style->AppletFrame.footerHeight + y + style->AppletFrame.headerHeightRegular / 2 - style->AppletFrame.titleOffset, this->title.c_str(), nullptr);
+    }
 
     // Footer
     NVGcolor footerColor = a(ctx->theme->textColor);
@@ -200,6 +215,11 @@ void AppletFrame::layout(NVGcontext* vg, Style* style, FontStash* stash)
             this->icon->setBoundaries(style->PopupFrame.edgePadding + style->PopupFrame.imageLeftPadding, style->PopupFrame.imageTopPadding, style->PopupFrame.imageSize, style->PopupFrame.imageSize);
             this->icon->invalidate();
         }
+        else if (this->headerStyle == HeaderStyle::DOWN)
+        {
+            this->icon->setBoundaries(style->AppletFrame.imageLeftPadding, this->height -style->AppletFrame.footerHeight + style->AppletFrame.titleOffset, style->AppletFrame.imageSize, style->AppletFrame.imageSize);
+            this->icon->invalidate();
+        }
     }
 
     // Content
@@ -209,6 +229,8 @@ void AppletFrame::layout(NVGcontext* vg, Style* style, FontStash* stash)
             this->contentView->setBoundaries(this->x + leftPadding, this->y + style->AppletFrame.headerHeightRegular, this->width - this->leftPadding - this->rightPadding, this->height - style->AppletFrame.footerHeight - style->AppletFrame.headerHeightRegular);
         else if (this->headerStyle == HeaderStyle::POPUP)
             this->contentView->setBoundaries(this->x + leftPadding, this->y + style->AppletFrame.headerHeightPopup, this->width - this->leftPadding - this->rightPadding, this->height - style->AppletFrame.footerHeight - style->AppletFrame.headerHeightPopup);
+        else if (this->headerStyle == HeaderStyle::DOWN)
+            this->contentView->setBoundaries(this->x + leftPadding, this->y + 10, this->width - this->leftPadding - this->rightPadding, this->height - style->AppletFrame.footerHeight - 20);
 
         this->contentView->invalidate();
     }

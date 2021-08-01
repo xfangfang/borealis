@@ -31,7 +31,8 @@ namespace brls
 enum class HeaderStyle
 {
     REGULAR,
-    POPUP // Only meant for PopupFrames. Using it in other contexts might cause weird behaviour
+    POPUP, // Only meant for PopupFrames. Using it in other contexts might cause weird behaviour
+    DOWN
 };
 
 // A Horizon settings-like frame, with header and footer (no sidebar)
