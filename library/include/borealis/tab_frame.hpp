@@ -41,6 +41,8 @@ class TabFrame : public AppletFrame
      */
     void addTab(std::string label, View* view);
     void addSeparator();
+    void setSiderbarWidth(int width);
+    void setSiderbarMargins(int top, int right, int bottom, int left);
 
     View* getDefaultFocus() override;
 

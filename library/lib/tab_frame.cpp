@@ -90,6 +90,15 @@ void TabFrame::addSeparator()
     this->sidebar->addSeparator();
 }
 
+void TabFrame::setSiderbarWidth(int width)
+{
+    this->sidebar->setWidth(width);
+}
+
+void TabFrame::setSiderbarMargins(int top, int right, int bottom, int left){
+  this->sidebar->setMargins(top,right,bottom,left);
+}
+
 View* TabFrame::getDefaultFocus()
 {
     // Try to focus the right pane
