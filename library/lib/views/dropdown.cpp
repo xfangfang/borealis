@@ -75,12 +75,12 @@ const std::string dropdownFrameXML = R"xml(
                     
                     <brls:RecyclerFrame
                         id="brls/dropdown/recycler"
-                        width="70%"
+                        width="100%"
                         height="auto"
                         paddingTop="@style/brls/dropdown/listPadding"
-                        paddingRight="@style/brls/dropdown/listPadding"
+                        paddingRight="@style/brls/dropdown/listPaddingSides"
                         paddingBottom="@style/brls/dropdown/listPadding"
-                        paddingLeft="@style/brls/dropdown/listPadding"/>
+                        paddingLeft="@style/brls/dropdown/listPaddingSides"/>
 
                 </brls:Box>
 

@@ -104,6 +104,7 @@ static StyleValues styleValues = {
 
     // Dropdown
     { "brls/dropdown/listPadding", 40.0f },
+    { "brls/dropdown/listPaddingSides", 232.0f },
     { "brls/dropdown/listItemHeight", 60.0f },
     { "brls/dropdown/listItemTextSize", 20.0f },
 
