@@ -43,6 +43,28 @@ void LayerView::addLayer(View* view)
     }
 }
 
+void LayerView::pushLayer(View* view)
+{
+    if (view)
+    {
+        view->setParent(this);
+        this->layers.push_back(view);
+        changeLayer(this->layers.size()-1, true);
+    }
+}
+
+void LayerView::popLayer()
+{
+    int length = this->layers.size();
+    if ( length == 0) return;
+    if (this->selectedIndex == length - 1){
+        this->changeLayer(length-2);
+    }
+    View * view = this->layers[length-1];
+    this->layers.pop_back();
+    delete view;
+}
+
 void LayerView::changeLayer(int index, bool focus)
 {
     if (index >= 0 && index < static_cast<int>(this->layers.size()))
@@ -62,7 +84,7 @@ void LayerView::changeLayer(int index, bool focus)
                 Application::giveFocus(this->layers[this->selectedIndex]->getDefaultFocus());
             Application::unblockInputs();
         });
-
+        this->layers[index]->setBoundaries(this->getX(), this->getY(), this->getWidth(), this->getHeight());
         this->layers[index]->invalidate();
     }
 

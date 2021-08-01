@@ -32,6 +32,8 @@ class LayerView : public View
     ~LayerView();
 
     void addLayer(View* view);
+    void pushLayer(View* view);
+    void popLayer();
     void changeLayer(int index, bool focus = false);
     int getLayerIndex();
 
