@@ -2243,4 +2243,20 @@ void View::freeView()
     Application::addToFreeQueue(this);
 }
 
+Activity* View::getParentActivity()
+{
+    if (parentActivity != nullptr)
+        return parentActivity;
+    
+    if (parent != nullptr)
+        return parent->getParentActivity();
+    
+    return nullptr;
+}
+
+void View::setParentActivity(Activity* activity)
+{
+    parentActivity = activity;
+}
+
 } // namespace brls

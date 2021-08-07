@@ -112,7 +112,7 @@ GestureState TapGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHE
     switch (phase)
     {
         case TouchPhase::START:
-            this->state    = GestureState::UNSURE;
+            this->state    = forceRecognision ? GestureState::START : GestureState::UNSURE;
             this->position = position;
             this->tapEvent.fire(getCurrentStatus(), soundToPlay);
             break;

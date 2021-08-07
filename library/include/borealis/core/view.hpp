@@ -145,6 +145,7 @@ extern const NVGcolor transparent;
 class View;
 class Box;
 class AppletFrame;
+class Activity;
 
 typedef Event<View*> GenericEvent;
 typedef Event<> VoidEvent;
@@ -273,6 +274,7 @@ class View
 
     bool focused = false;
 
+    Activity* parentActivity = nullptr;
     Box* parent = nullptr;
 
     GenericEvent focusEvent;
@@ -1449,6 +1451,9 @@ class View
 
     bool* deletionToken = nullptr;
     void freeView();
+    
+    Activity* getParentActivity();
+    void setParentActivity(Activity* activity);
 };
 
 } // namespace brls

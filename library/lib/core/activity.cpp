@@ -36,11 +36,13 @@ void Activity::setContentView(View* view)
 {
     if (this->contentView)
     {
+        this->contentView->setParentActivity(nullptr);
         this->contentView->willDisappear();
         delete this->contentView;
     }
 
     this->contentView = view;
+    this->contentView->setParentActivity(this);
     // willAppear is only called when the activity is pushed onto the stack
 
     this->resizeToFitWindow();

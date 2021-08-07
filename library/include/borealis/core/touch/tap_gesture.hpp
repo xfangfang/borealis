@@ -70,11 +70,17 @@ class TapGestureRecognizer : public GestureRecognizer
 
     // Get tap gesture event
     TapGestureEvent getPanGestureEvent() const { return tapEvent; }
+    
+    void setForceRecognision(bool forceRecognision)
+    {
+        this->forceRecognision = forceRecognision;
+    }
 
   private:
     TapGestureEvent tapEvent;
     Point position;
     GestureState lastState;
+    bool forceRecognision = false;
 };
 
 } // namespace brls

@@ -79,6 +79,9 @@ class Application
      * and when the context is ready (to setup the initial content scaling).
      */
     static void onWindowResized(int width, int height);
+    
+    
+    static std::vector<Activity*> getActivitiesStack();
 
     /**
       * Pushes a view on this applications's view stack.

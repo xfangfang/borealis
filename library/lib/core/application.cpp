@@ -695,6 +695,11 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     return true;
 }
 
+std::vector<Activity*> Application::getActivitiesStack()
+{
+    return activitiesStack;
+}
+
 void Application::pushActivity(Activity* activity, TransitionAnimation animation)
 {
     Application::blockInputs();
