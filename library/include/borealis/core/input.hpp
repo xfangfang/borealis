@@ -54,6 +54,11 @@ enum ControllerButton
     BUTTON_RB,
     BUTTON_RT,
 
+    BUTTON_NAV_UP,
+    BUTTON_NAV_RIGHT,
+    BUTTON_NAV_DOWN,
+    BUTTON_NAV_LEFT,
+
     _BUTTON_MAX,
 };
 

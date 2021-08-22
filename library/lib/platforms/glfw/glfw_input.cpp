@@ -129,6 +129,11 @@ void GLFWInputManager::updateControllerState(ControllerState* state)
     
     state->buttons[BUTTON_LT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.1f;
     state->buttons[BUTTON_RT] = glfwState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.1f;
+
+    state->buttons[BUTTON_NAV_UP] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.1f || state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_RIGHT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] > 0.1f || state->buttons[BUTTON_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.1f || state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.1f || state->buttons[BUTTON_LEFT];
     
     for (size_t i = 0; i < GLFW_GAMEPAD_AXIS_MAX; i++)
     {

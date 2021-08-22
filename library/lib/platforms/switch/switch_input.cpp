@@ -46,6 +46,11 @@ static const uint64_t SWITCH_BUTTONS_MAPPING[_BUTTON_MAX] = {
 
     HidNpadButton_R, // BUTTON_RB
     HidNpadButton_ZR, // BUTTON_RT
+
+    HidNpadButton_AnyUp, // BUTTON_NAV_UP
+    HidNpadButton_AnyRight, // BUTTON_NAV_RIGHT
+    HidNpadButton_AnyDown, // BUTTON_NAV_DOWN
+    HidNpadButton_AnyLeft, // BUTTON_NAV_LEFT
 };
 
 static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {

@@ -388,16 +388,16 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
     // (allows overriding DPAD buttons using actions)
     switch (button)
     {
-        case BUTTON_DOWN:
+        case BUTTON_NAV_DOWN:
             Application::navigate(FocusDirection::DOWN);
             return;
-        case BUTTON_UP:
+        case BUTTON_NAV_UP:
             Application::navigate(FocusDirection::UP);
             return;
-        case BUTTON_LEFT:
+        case BUTTON_NAV_LEFT:
             Application::navigate(FocusDirection::LEFT);
             return;
-        case BUTTON_RIGHT:
+        case BUTTON_NAV_RIGHT:
             Application::navigate(FocusDirection::RIGHT);
             return;
         default:

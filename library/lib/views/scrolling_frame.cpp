@@ -191,15 +191,15 @@ void ScrollingFrame::naturalScrollingBehaviour()
         static bool repeat = false;
 
         // Do nothing if both up and down buttons pressed simultaneously
-        if (state.buttons[BUTTON_DOWN] && state.buttons[BUTTON_UP])
+        if (state.buttons[BUTTON_NAV_DOWN] && state.buttons[BUTTON_NAV_UP])
             return;
 
-        if (state.buttons[BUTTON_DOWN])
+        if (state.buttons[BUTTON_NAV_DOWN])
         {
             naturalScrollingButtonProcessing(FocusDirection::DOWN, &repeat);
         }
 
-        if (state.buttons[BUTTON_UP])
+        if (state.buttons[BUTTON_NAV_UP])
         {
             naturalScrollingButtonProcessing(FocusDirection::UP, &repeat);
         }
@@ -207,14 +207,14 @@ void ScrollingFrame::naturalScrollingBehaviour()
         // If there is focus inside scroll, and navigation buttons are not pressed
         // disable natural scrolling
         View* currentFocus = Application::getCurrentFocus();
-        if (!state.buttons[BUTTON_DOWN] && !state.buttons[BUTTON_UP] && (currentFocus != this))
+        if (!state.buttons[BUTTON_NAV_DOWN] && !state.buttons[BUTTON_NAV_UP] && (currentFocus != this))
         {
             naturalScrollingCanScroll = false;
         }
 
         // If navigation buttons are not pressed and content offset not above border
         // unflag repeat value to play border hit sound if needed
-        if ((!state.buttons[BUTTON_DOWN] && !state.buttons[BUTTON_UP]) || (getContentOffsetY() > 0.01f && getContentOffsetY() < bottomLimit))
+        if ((!state.buttons[BUTTON_NAV_DOWN] && !state.buttons[BUTTON_NAV_UP]) || (getContentOffsetY() > 0.01f && getContentOffsetY() < bottomLimit))
         {
             repeat = false;
         }
