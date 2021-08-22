@@ -177,7 +177,7 @@ bool Application::mainLoop()
 
     // Input
     ControllerState controllerState = {};
-    std::array<RawTouchState, TOUCHES_MAX> rawTouch;
+    std::vector<RawTouchState> rawTouch;
     RawMouseState rawMouse;
 
     InputManager* inputManager = Application::platform->getInputManager();
@@ -195,45 +195,92 @@ bool Application::mainLoop()
             controllerState.buttons[i] = swapKeys[i];
     }
 
-    static std::array<RawTouchState, TOUCHES_MAX> oldTouch;
-    std::array<TouchState, TOUCHES_MAX> touchState;
-    for (int i = 0; i < TOUCHES_MAX; i++)
+    std::vector<TouchState> touchState;
+    for (int i = 0; i < rawTouch.size(); i++)
     {
-        touchState[i] = InputManager::computeTouchState(rawTouch[i], oldTouch[i]);
-    }
-    oldTouch = rawTouch;
-    
-    static RawMouseState oldMouse;
-    MouseState mouseState = InputManager::computeMouseState(rawMouse, oldMouse);
-    oldMouse = rawMouse;
+        auto old = std::find_if(std::begin(currentTouchState), std::end(currentTouchState), [rawTouch, i](TouchState touch) {
+            return touch.fingerId == rawTouch[i].fingerId;
+        });
 
-    if (touchState[0].phase == TouchPhase::NONE &&
-        mouseState.scroll.x == 0 &&
+        if (old != std::end(currentTouchState)) {
+            touchState.push_back(InputManager::computeTouchState(rawTouch[i], *old));
+        } else {
+            TouchState state;
+            state.fingerId = rawTouch[i].fingerId;
+            touchState.push_back(InputManager::computeTouchState(rawTouch[i], state));
+        }
+    }
+    
+    for (int i = 0; i < currentTouchState.size(); i++)
+    {
+        if (currentTouchState[i].phase == TouchPhase::NONE)
+            continue;
+        
+        auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [i](RawTouchState touch) {
+            return touch.fingerId == currentTouchState[i].fingerId;
+        });
+        
+        if (old == std::end(rawTouch)) {
+            touchState.push_back(InputManager::computeTouchState(RawTouchState(), currentTouchState[i]));
+        }
+    }
+
+    for (int i = 0; i < touchState.size(); i++)
+    {
+        if (touchState[i].phase == TouchPhase::NONE)
+        {
+            touchState[i].view = nullptr;
+            break;
+        }
+        else if (!touchState[i].view || touchState[i].phase == TouchPhase::START)
+        {
+            Point position = touchState[i].position;
+            Application::setInputType(InputType::TOUCH);
+
+            // Search for first responder, which will be the root of recognition tree
+            if (Application::activitiesStack.size() > 0)
+                touchState[i].view = Application::activitiesStack[Application::activitiesStack.size() - 1]
+                                    ->getContentView()
+                                    ->hitTest(position);
+        }
+
+        if (touchState[i].view && touchState[i].phase != TouchPhase::NONE)
+        {
+            Sound sound = touchState[i].view->gestureRecognizerRequest(touchState[i], MouseState(), touchState[i].view);
+            float pitch = 1;
+            if (sound == SOUND_TOUCH)
+            {
+                // Play touch sound with random pitch
+                pitch = (rand() % 10) / 10.0f + 1.0f;
+            }
+            Application::getAudioPlayer()->play(sound, pitch);
+        }
+    }
+    currentTouchState = touchState;
+    
+    MouseState mouseState = InputManager::computeMouseState(rawMouse, currentMouseState);
+    
+    if (mouseState.scroll.x == 0 &&
         mouseState.scroll.y == 0 &&
         mouseState.leftButton == TouchPhase::NONE &&
         mouseState.middleButton == TouchPhase::NONE &&
         mouseState.rightButton == TouchPhase::NONE)
-        firstResponder = nullptr;
-    else if (firstResponder == nullptr)
-    {
-        Point position;
-        if (touchState[0].phase != TouchPhase::NONE)
-            position = touchState[0].position;
-        else
-            position = mouseState.position;
-        
+        mouseState.view = nullptr;
+    else if (mouseState.view == nullptr) {
+        Point position = mouseState.position;
         Application::setInputType(InputType::TOUCH);
 
         // Search for first responder, which will be the root of recognition tree
         if (Application::activitiesStack.size() > 0)
-            firstResponder = Application::activitiesStack[Application::activitiesStack.size() - 1]
-                                 ->getContentView()
-                                 ->hitTest(position);
+            mouseState.view = Application::activitiesStack[Application::activitiesStack.size() - 1]
+                                ->getContentView()
+                                ->hitTest(position);
     }
-       
-    if (firstResponder)
+    currentMouseState = mouseState;
+    
+    if (mouseState.view)
     {
-        Sound sound = firstResponder->gestureRecognizerRequest(touchState, mouseState, firstResponder);
+        Sound sound = mouseState.view->gestureRecognizerRequest(TouchState(), mouseState, mouseState.view);
         float pitch = 1;
         if (sound == SOUND_TOUCH)
         {
@@ -805,11 +852,21 @@ void Application::addToFreeQueue(View* view)
 
 void Application::tryDeinitFirstResponder(View* view)
 {
-    if (view && view == Application::firstResponder)
+    if (!view)
+        return;
+    
+    // Interrupt current gestures if presented
+    for (int i = 0; i < currentTouchState.size(); i++)
     {
-        // Interrupt current gestures if presented
-        Application::firstResponder->interruptGestures(false);
-        Application::firstResponder = nullptr;
+        if (currentTouchState[i].view == view) {
+            currentTouchState[i].view->interruptGestures(false);
+            currentTouchState[i].view = nullptr;
+        }
+    }
+
+    if (currentMouseState.view == view) {
+        currentMouseState.view->interruptGestures(false);
+        currentMouseState.view = nullptr;
     }
 }
 

@@ -63,7 +63,7 @@ class TapGestureRecognizer : public GestureRecognizer
     // Complex ctor with fully controllable response.
     TapGestureRecognizer(TapGestureEvent::Callback respond);
 
-    GestureState recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay) override;
+    GestureState recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay) override;
 
     // Get current state of recognizer
     TapGestureStatus getCurrentStatus();

@@ -148,10 +148,21 @@ bool sameSign(int a, int b)
     return (a >= 0) ^ (b < 0);
 }
 
-void GLFWInputManager::updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states)
+void GLFWInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
-    // Get touchscreen state
-    (*states)[0].pressed = false;
+    // Uncomment to enable touch simulation by mouse
+//    double x, y;
+//    glfwGetCursorPos(this->window, &x, &y);
+//
+//    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+//    {
+//        RawTouchState state;
+//        state.fingerId = 0;
+//        state.pressed = true;
+//        state.position.x = x / Application::windowScale;
+//        state.position.y = y / Application::windowScale;
+//        states->push_back(state);
+//    }
 }
 
 void GLFWInputManager::updateMouseStates(RawMouseState* state)

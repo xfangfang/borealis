@@ -40,14 +40,14 @@ PanGestureRecognizer::PanGestureRecognizer(PanGestureEvent::Callback respond, Pa
     panEvent.subscribe(respond);
 }
 
-GestureState PanGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
+GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
 {
     if (!enabled)
         return GestureState::FAILED;
     
-    TouchPhase phase = touches[0].phase;
-    Point position = touches[0].position;
-    int fingerId = touches[0].fingerId;
+    TouchPhase phase = touch.phase;
+    Point position = touch.position;
+    int fingerId = touch.fingerId;
     
     if (phase == TouchPhase::NONE)
     {

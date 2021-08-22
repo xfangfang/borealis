@@ -34,11 +34,18 @@ TouchPhase getPhase(bool oldState, bool newState)
     return TouchPhase::NONE;
 }
 
-TouchState InputManager::computeTouchState(RawTouchState currentTouch, RawTouchState lastFrameState)
+TouchPhase getPhase(TouchPhase oldState, bool newState)
+{
+    bool old = oldState == TouchPhase::START || oldState == TouchPhase::STAY;
+    return getPhase(old, newState);
+}
+
+TouchState InputManager::computeTouchState(RawTouchState currentTouch, TouchState lastFrameState)
 {
     TouchState state;
     state.fingerId = currentTouch.fingerId;
-    state.phase = getPhase(lastFrameState.pressed, currentTouch.pressed);
+    state.view = lastFrameState.view;
+    state.phase = getPhase(lastFrameState.phase, currentTouch.pressed);
     if (state.phase == TouchPhase::END)
         state.position = lastFrameState.position;
     else
@@ -46,9 +53,10 @@ TouchState InputManager::computeTouchState(RawTouchState currentTouch, RawTouchS
     return state;
 }
 
-MouseState InputManager::computeMouseState(RawMouseState currentTouch, RawMouseState lastFrameState)
+MouseState InputManager::computeMouseState(RawMouseState currentTouch, MouseState lastFrameState)
 {
     MouseState state;
+    state.view = lastFrameState.view;
     state.position = currentTouch.position;
     state.scroll = currentTouch.scroll;
     state.leftButton = getPhase(lastFrameState.leftButton, currentTouch.leftButton);

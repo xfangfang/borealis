@@ -81,10 +81,10 @@ TapGestureRecognizer::TapGestureRecognizer(TapGestureEvent::Callback respond)
     tapEvent.subscribe(respond);
 }
 
-GestureState TapGestureRecognizer::recognitionLoop(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* view, Sound* soundToPlay)
+GestureState TapGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
 {
-    TouchPhase phase = touches[0].phase;
-    Point position = touches[0].position;
+    TouchPhase phase = touch.phase;
+    Point position = touch.position;
     
     if (phase == TouchPhase::NONE)
     {

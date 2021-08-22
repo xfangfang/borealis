@@ -18,12 +18,10 @@
 #pragma once
 
 #include <borealis/core/geometry.hpp>
-#include <array>
+#include <vector>
 
 namespace brls
 {
-
-#define TOUCHES_MAX 10
 
 // Abstract buttons enum - names correspond to a generic Xbox controller
 // LT and RT should not be buttons but for the sake of simplicity we'll assume they are.
@@ -101,11 +99,13 @@ struct RawTouchState
 };
 
 // Contains touch data automatically filled with current phase by the library
+class View;
 struct TouchState
 {
     int fingerId = 0;
-    TouchPhase phase;
+    TouchPhase phase = TouchPhase::NONE;
     Point position;
+    View* view = nullptr;
 };
 
 // Contains raw touch data, filled in by platform driver
@@ -125,6 +125,7 @@ struct MouseState
     TouchPhase leftButton;
     TouchPhase middleButton;
     TouchPhase rightButton;
+    View* view = nullptr;
 };
 
 // Interface responsible for reporting input state to the application - button presses,
@@ -142,7 +143,7 @@ class InputManager
     /**
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */
-    virtual void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) = 0;
+    virtual void updateTouchStates(std::vector<RawTouchState>* states) = 0;
     
     /**
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
@@ -163,12 +164,12 @@ class InputManager
     /**
      * Calculate current touch phase based on it's previous state
      */
-    static TouchState computeTouchState(RawTouchState currentTouch, RawTouchState lastFrameState);
+    static TouchState computeTouchState(RawTouchState currentTouch, TouchState lastFrameState);
     
     /**
      * Calculate current touch phase based on it's previous state
      */
-    static MouseState computeMouseState(RawMouseState currentTouch, RawMouseState lastFrameState);
+    static MouseState computeMouseState(RawMouseState currentTouch, MouseState lastFrameState);
     
     static ControllerButton mapControllerState(ControllerButton button);
 };

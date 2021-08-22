@@ -62,7 +62,7 @@ static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {
 
 SwitchInputManager::SwitchInputManager()
 {
-    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    padConfigureInput(2, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&this->padState);
     
     hidInitializeVibrationDevices(m_vibration_device_handles[0], 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
@@ -89,22 +89,21 @@ void SwitchInputManager::updateControllerState(ControllerState* state)
     state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
 }
 
-void SwitchInputManager::updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states)
+void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
     // Get touchscreen state
-    static HidTouchScreenState hidState = { 0 };
-
-    for (int i = 0; i < TOUCHES_MAX; i++)
-        (*states)[i].pressed = false;
+    static HidTouchScreenState hidState;
 
     if (hidGetTouchScreenStates(&hidState, 1))
     {
-        for (int i = 0; i < hidState.count && i < TOUCHES_MAX; i++)
+        for (int i = 0; i < hidState.count; i++)
         {
-            (*states)[i].pressed    = true;
-            (*states)[i].fingerId   = hidState.touches[i].finger_id;
-            (*states)[i].position.x = hidState.touches[i].x / Application::windowScale;
-            (*states)[i].position.y = hidState.touches[i].y / Application::windowScale;
+            RawTouchState state;
+            state.pressed    = true;
+            state.fingerId   = hidState.touches[i].finger_id;
+            state.position.x = hidState.touches[i].x / Application::windowScale;
+            state.position.y = hidState.touches[i].y / Application::windowScale;
+            states->push_back(state);
         }
     }
 }

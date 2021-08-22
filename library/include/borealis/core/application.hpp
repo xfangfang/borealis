@@ -251,7 +251,8 @@ class Application
     inline static unsigned windowWidth, windowHeight;
 
     inline static View* currentFocus   = nullptr;
-    inline static View* firstResponder = nullptr;
+    inline static std::vector<TouchState> currentTouchState;
+    inline static MouseState currentMouseState;
 
     // Return true if input type was changed
     static bool setInputType(InputType type);

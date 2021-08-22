@@ -1149,7 +1149,7 @@ class View
      * 
      * @returns sound to play invoked by touch recognizers.
      */
-    Sound gestureRecognizerRequest(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* firstResponder);
+    Sound gestureRecognizerRequest(TouchState touch, MouseState mouse, View* firstResponder);
 
     /**
       * Called each frame

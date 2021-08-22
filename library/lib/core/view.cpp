@@ -137,23 +137,24 @@ void View::addGestureRecognizer(GestureRecognizer* recognizer)
     this->gestureRecognizers.push_back(recognizer);
 }
 
-Sound View::gestureRecognizerRequest(std::array<TouchState, TOUCHES_MAX> touches, MouseState mouse, View* firstResponder)
+Sound View::gestureRecognizerRequest(TouchState touch, MouseState mouse, View* firstResponder)
 {
-    Sound soundToPlay = touches[0].phase == TouchPhase::START ? SOUND_TOUCH : SOUND_NONE;
+    Sound soundToPlay = touch.phase == TouchPhase::START ? SOUND_TOUCH : SOUND_NONE;
 
     for (GestureRecognizer* recognizer : getGestureRecognizers())
     {
         if (!recognizer->isEnabled())
             continue;
 
-        GestureState state = recognizer->recognitionLoop(touches, mouse, this, &soundToPlay);
+        
+        GestureState state = recognizer->recognitionLoop(touch, mouse, this, &soundToPlay);
         if (state == GestureState::START || state == GestureState::END)
             firstResponder->interruptGestures(true);
     }
 
     Sound parentSound = SOUND_NONE;
     if (parent)
-        parentSound = parent->gestureRecognizerRequest(touches, mouse, firstResponder);
+        parentSound = parent->gestureRecognizerRequest(touch, mouse, firstResponder);
 
     if (soundToPlay == SOUND_NONE)
         soundToPlay = parentSound;

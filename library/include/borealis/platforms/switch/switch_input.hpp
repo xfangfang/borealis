@@ -21,6 +21,8 @@
 
 #include <borealis/core/input.hpp>
 
+#define TOUCHES_MAX 10
+
 namespace brls
 {
 
@@ -32,7 +34,7 @@ class SwitchInputManager : public InputManager
 
     void updateControllerState(ControllerState* state) override;
 
-    void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) override;
+    void updateTouchStates(std::vector<RawTouchState>* states) override;
 
     void updateMouseStates(RawMouseState* state) override;
 

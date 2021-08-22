@@ -32,7 +32,7 @@ class GLFWInputManager : public InputManager
 
     void updateControllerState(ControllerState* state) override;
 
-    void updateTouchStates(std::array<RawTouchState, TOUCHES_MAX>* states) override;
+    void updateTouchStates(std::vector<RawTouchState>* states) override;
     
     void updateMouseStates(RawMouseState* state) override;
     
