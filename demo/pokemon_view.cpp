@@ -62,7 +62,7 @@ PokemonView::PokemonView(Pokemon pokemon)
             this->dismiss();
             return true;
         },
-        false, brls::SOUND_BACK);
+        false, false, brls::SOUND_BACK);
 }
 
 brls::View* PokemonView::getHintView()

@@ -231,7 +231,7 @@ void Hints::refillHints(View* focusView)
 
     if (std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
     {
-        actions.push_back(Action { BUTTON_A, NULL, "brls/hints/ok"_i18n, false, false, Sound::SOUND_NONE, NULL });
+        actions.push_back(Action { BUTTON_A, NULL, "brls/hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
     }
 
     // Sort the actions

@@ -69,10 +69,10 @@ SidebarItem::SidebarItem()
 
     this->registerAction(
         "brls/hints/ok"_i18n, BUTTON_A, [](View* view) {
-            Application::onControllerButtonPressed(BUTTON_RIGHT, false);
+            Application::onControllerButtonPressed(BUTTON_NAV_RIGHT, false);
             return true;
         },
-        false, SOUND_CLICK_SIDEBAR);
+        false, false, SOUND_CLICK_SIDEBAR);
 
     this->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* soundToPlay) {
         if (this->active)

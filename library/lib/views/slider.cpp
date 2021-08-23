@@ -63,22 +63,22 @@ Slider::Slider()
     lineEmpty->setColor(theme["brls/slider/line_empty"]);
 
     pointer->registerAction(
-        "Right Click Blocker", BUTTON_RIGHT, [this](View* view) {
+        "Right Click Blocker", BUTTON_NAV_RIGHT, [this](View* view) {
             return true;
         },
-        true, SOUND_NONE);
+        true, false, SOUND_NONE);
 
     pointer->registerAction(
-        "Right Click Blocker", BUTTON_LEFT, [this](View* view) {
+        "Right Click Blocker", BUTTON_NAV_LEFT, [this](View* view) {
             return true;
         },
-        true, SOUND_NONE);
+        true, false, SOUND_NONE);
 
     pointer->registerAction(
         "A Button Click Blocker", BUTTON_A, [this](View* view) {
             return true;
         },
-        true, SOUND_NONE);
+        true, false, SOUND_NONE);
 
     pointer->addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* soundToPlay) {
         Application::giveFocus(pointer);
@@ -140,10 +140,10 @@ void Slider::buttonsProcessing()
         input->updateControllerState(&state);
         static bool repeat = false;
 
-        if (state.buttons[BUTTON_RIGHT] && state.buttons[BUTTON_LEFT])
+        if (state.buttons[BUTTON_NAV_RIGHT] && state.buttons[BUTTON_NAV_LEFT])
             return;
 
-        if (state.buttons[BUTTON_RIGHT])
+        if (state.buttons[BUTTON_NAV_RIGHT])
         {
             setProgress(progress += 0.5f / 60.0f);
             if (progress >= 1 && !repeat)
@@ -154,7 +154,7 @@ void Slider::buttonsProcessing()
             }
         }
 
-        if (state.buttons[BUTTON_LEFT])
+        if (state.buttons[BUTTON_NAV_LEFT])
         {
             setProgress(progress -= 0.5f / 60.0f);
             if (progress <= 0 && !repeat)
@@ -165,7 +165,7 @@ void Slider::buttonsProcessing()
             }
         }
 
-        if ((!state.buttons[BUTTON_RIGHT] && !state.buttons[BUTTON_LEFT]) || (progress > 0.01f && progress < 0.99f))
+        if ((!state.buttons[BUTTON_NAV_RIGHT] && !state.buttons[BUTTON_NAV_LEFT]) || (progress > 0.01f && progress < 0.99f))
         {
             repeat = false;
         }

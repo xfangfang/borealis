@@ -118,7 +118,7 @@ AppletFrame::AppletFrame()
             this->contentViewStack.back()->dismiss();
             return true;
         },
-        false, SOUND_BACK);
+        false, false, SOUND_BACK);
 }
 
 AppletFrame::AppletFrame(View* contentView)

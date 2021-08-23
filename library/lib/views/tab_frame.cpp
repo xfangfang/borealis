@@ -81,7 +81,7 @@ void TabFrame::addTab(std::string label, TabViewCreator creator)
                     Application::giveFocus(this->sidebar);
                 return true;
             },
-            false, SOUND_BACK);
+            false, false, SOUND_BACK);
     });
 }
 

@@ -117,10 +117,10 @@ bool Activity::isHidden()
     return this->contentView->isHidden();
 }
 
-ActionIdentifier Activity::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, enum Sound sound)
+ActionIdentifier Activity::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, bool allowRepeating, enum Sound sound)
 {
     if (this->contentView)
-        return this->contentView->registerAction(hintText, button, actionListener, hidden, sound);
+        return this->contentView->registerAction(hintText, button, actionListener, hidden, allowRepeating, sound);
 
     return ACTION_NONE;
 }

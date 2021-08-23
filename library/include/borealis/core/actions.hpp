@@ -40,6 +40,7 @@ struct Action
     std::string hintText;
     bool available;
     bool hidden;
+    bool allowRepeating;
     enum Sound sound;
     ActionListener actionListener;
 

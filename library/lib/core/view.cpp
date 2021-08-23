@@ -684,14 +684,14 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
     }
 }
 
-ActionIdentifier View::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, enum Sound sound)
+ActionIdentifier View::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, bool allowRepeating, enum Sound sound)
 {
     ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back().identifier + 1;
 
     if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        *it = { button, nextIdentifier, hintText, true, hidden, sound, actionListener };
+        *it = { button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener };
     else
-        this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, sound, actionListener });
+        this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener });
 
     return nextIdentifier;
 }
@@ -707,7 +707,7 @@ void View::unregisterAction(ActionIdentifier identifier)
 
 void View::registerClickAction(ActionListener actionListener)
 {
-    this->registerAction("brls/hints/ok"_i18n, BUTTON_A, actionListener, false, SOUND_CLICK);
+    this->registerAction("brls/hints/ok"_i18n, BUTTON_A, actionListener, false, false, SOUND_CLICK);
 }
 
 void View::updateActionHint(enum ControllerButton button, std::string hintText)

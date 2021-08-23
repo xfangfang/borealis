@@ -354,8 +354,14 @@ void Application::quit()
     Application::quitRequested = true;
 }
 
-void Application::navigate(FocusDirection direction)
+void Application::navigate(FocusDirection direction, bool repeating)
 {
+    // Dismiss if repeating the same
+    if (repeating && Application::repetitionOldFocus == Application::currentFocus)
+        return;
+
+    Application::repetitionOldFocus = Application::currentFocus;
+    
     // Dismiss navigation if input type was changed
     if (Application::setInputType(InputType::GAMEPAD))
         return;
@@ -421,13 +427,8 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
         return;
     }
 
-    if (repeating && Application::repetitionOldFocus == Application::currentFocus)
-        return;
-
-    Application::repetitionOldFocus = Application::currentFocus;
-
     // Actions
-    if (Application::handleAction(button))
+    if (Application::handleAction(button, repeating))
         return;
 
     // Navigation
@@ -436,16 +437,16 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
     switch (button)
     {
         case BUTTON_NAV_DOWN:
-            Application::navigate(FocusDirection::DOWN);
+            Application::navigate(FocusDirection::DOWN, repeating);
             return;
         case BUTTON_NAV_UP:
-            Application::navigate(FocusDirection::UP);
+            Application::navigate(FocusDirection::UP, repeating);
             return;
         case BUTTON_NAV_LEFT:
-            Application::navigate(FocusDirection::LEFT);
+            Application::navigate(FocusDirection::LEFT, repeating);
             return;
         case BUTTON_NAV_RIGHT:
-            Application::navigate(FocusDirection::RIGHT);
+            Application::navigate(FocusDirection::RIGHT, repeating);
             return;
         default:
             break;
@@ -474,7 +475,7 @@ View* Application::getCurrentFocus()
     return Application::currentFocus;
 }
 
-bool Application::handleAction(char button)
+bool Application::handleAction(char button, bool repeating)
 {
     // Dismiss if input type was changed
     if (button == BUTTON_A && setInputType(InputType::GAMEPAD))
@@ -505,7 +506,7 @@ bool Application::handleAction(char button)
             if (consumedButtons.find(action.button) != consumedButtons.end())
                 continue;
 
-            if (action.available)
+            if (action.available && (!repeating || action.allowRepeating))
             {
                 if (action.actionListener(hintParent))
                 {

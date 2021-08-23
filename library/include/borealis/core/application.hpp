@@ -278,7 +278,7 @@ class Application
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;
 
-    static void navigate(FocusDirection direction);
+    static void navigate(FocusDirection direction, bool repeating);
 
     static void onWindowSizeChanged();
 
@@ -291,7 +291,7 @@ class Application
      * the given button
      * Returns true if at least one action has been fired
      */
-    static bool handleAction(char button);
+    static bool handleAction(char button, bool repeating);
 
     static void registerBuiltInXMLViews();
 

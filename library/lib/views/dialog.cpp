@@ -137,7 +137,7 @@ Dialog::Dialog(Box* contentView)
                 this->dismiss();
             return cancelable;
         },
-        false, SOUND_BACK);
+        false, false, SOUND_BACK);
 }
 
 Dialog::Dialog(std::string text)
