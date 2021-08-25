@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C09602E26D6E91A00CF5061 /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602D26D6E91A00CF5061 /* bottom_bar.cpp */; };
 		7C33AB2A26A2FBFF0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2726A2F5AE0008B0A6 /* battery.cpp */; };
 		7C33AB3326A34D240008B0A6 /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3126A34D240008B0A6 /* wireless.cpp */; };
 		7C8AD2E7269C8B7500210332 /* pokemon_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */; };
@@ -99,6 +100,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C09602C26D6E8A100CF5061 /* bottom_bar.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = bottom_bar.hpp; sourceTree = "<group>"; };
+		7C09602D26D6E91A00CF5061 /* bottom_bar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bottom_bar.cpp; sourceTree = "<group>"; };
 		7C33AB2726A2F5AE0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
 		7C33AB2826A2F5AE0008B0A6 /* battery.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
 		7C33AB3126A34D240008B0A6 /* wireless.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wireless.cpp; sourceTree = "<group>"; };
@@ -611,6 +614,7 @@
 				7C8ADA84269C8BA600210332 /* button.hpp */,
 				7C8ADA85269C8BA600210332 /* image.hpp */,
 				7C8ADA86269C8BA600210332 /* sidebar.hpp */,
+				7C09602C26D6E8A100CF5061 /* bottom_bar.hpp */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -904,6 +908,7 @@
 				7C8ADFBD269C8BA800210332 /* rectangle.cpp */,
 				7C8ADFBE269C8BA800210332 /* slider.cpp */,
 				7C8ADFBF269C8BA800210332 /* debug_layer.cpp */,
+				7C09602D26D6E91A00CF5061 /* bottom_bar.cpp */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -1046,6 +1051,7 @@
 				7C8AE12E269C8BA800210332 /* sidebar.cpp in Sources */,
 				7C8AE0D5269C8BA800210332 /* event.cpp in Sources */,
 				7C8AE12C269C8BA800210332 /* button.cpp in Sources */,
+				7C09602E26D6E91A00CF5061 /* bottom_bar.cpp in Sources */,
 				7C8AE00B269C8BA800210332 /* view.cpp in Sources */,
 				7C8AE137269C8BA800210332 /* tab_frame.cpp in Sources */,
 				7C8AE002269C8BA800210332 /* gesture.cpp in Sources */,

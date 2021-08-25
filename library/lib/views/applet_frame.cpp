@@ -86,7 +86,7 @@ const std::string appletFrameXML = R"xml(
             Direction inverted so that the bottom left text can be
             set to visibility="gone" without affecting the hint
         -->
-        <brls:Hints
+        <brls:BottomBar
             id="brls/applet_frame/footer"/>
 
     </brls:Box>

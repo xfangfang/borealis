@@ -21,10 +21,6 @@
 #include <borealis/core/util.hpp>
 #include <borealis/views/applet_frame.hpp>
 #include <borealis/views/hint.hpp>
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 
 using namespace brls::literals;
 
@@ -55,64 +51,6 @@ const std::string hintXML = R"xml(
                 marginLeft="8"/>
 
     </brls:Box>
-)xml";
-
-const std::string hintsXML = R"xml(
-<brls:Box
-    width="auto"
-    height="@style/brls/applet_frame/footer_height"
-    lineColor="@theme/brls/applet_frame/separator"
-    lineTop="1px"
-    marginLeft="@style/brls/hints/footer_margin_sides"
-    marginRight="@style/brls/hints/footer_margin_sides"
-    paddingLeft="@style/brls/hints/footer_padding_sides"
-    paddingRight="@style/brls/hints/footer_padding_sides"
-    alignItems="stretch">
-    <brls:Box
-        width="auto"
-        height="@style/brls/applet_frame/footer_height"
-        axis="row"
-        grow="1"
-        direction="rightToLeft"
-        justifyContent="spaceBetween"
-        paddingTop="@style/brls/hints/footer_padding_top_bottom"
-        paddingBottom="@style/brls/hints/footer_padding_top_bottom" >
-
-        <brls:Box
-            id="brls/hints"
-            width="auto"
-            height="auto"
-            axis="row"
-            direction="leftToRight" />
-
-        <brls:Box
-            width="auto"
-            height="auto"
-            axis="row"
-            alignItems="center"
-            direction="leftToRight" >
-              
-            <brls:Battery
-                id="brls/battery"
-                marginRight="21"
-                marginBottom="5"/>
-
-            <brls:Wireless
-                id="brls/wireless"
-                marginRight="21"
-                marginBottom="5"/>
-
-            <brls:Label
-                id="brls/hints/time"
-                width="auto"
-                height="auto"
-                verticalAlign="center"
-                fontSize="21.5" />
-
-        </brls:Box>
-
-    </brls:Box>
-</brls:Box>
 )xml";
 
 Hint::Hint(Action action)
@@ -186,14 +124,15 @@ std::string Hint::getKeyIcon(ControllerButton button, bool ignoreKeysSwap)
 
 Hints::Hints()
 {
-    this->inflateFromXMLString(hintsXML);
+    setAxis(Axis::ROW);
+    setDirection(Direction::LEFT_TO_RIGHT);
     
-    Platform* platform = Application::getPlatform();
-    
-    battery->setVisibility(platform->canShowBatteryLevel() ? Visibility::VISIBLE : Visibility::GONE);
-
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
         refillHints(Application::getCurrentFocus());
+    });
+    
+    this->registerBoolXMLAttribute("addBaseAction", [this](bool value) {
+        this->setAddUnabledAButtonAction(value);
     });
 }
 
@@ -206,8 +145,8 @@ void Hints::refillHints(View* focusView)
 {
     if (!focusView)
         return;
-
-    hints->clearViews();
+    
+    clearViews();
 
     std::set<ControllerButton> addedButtons; // we only ever want one action per key
     std::vector<Action> actions;
@@ -229,7 +168,7 @@ void Hints::refillHints(View* focusView)
         focusView = focusView->getParent();
     }
 
-    if (std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
+    if (addUnabledAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
     {
         actions.push_back(Action { BUTTON_A, NULL, "brls/hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
     }
@@ -240,7 +179,7 @@ void Hints::refillHints(View* focusView)
     for (Action action : actions)
     {
         Hint* hint = new Hint(action);
-        hints->addView(hint);
+        addView(hint);
     }
 }
 
@@ -265,18 +204,6 @@ bool Hints::actionsSortFunc(Action a, Action b)
 
     // Keep original order for the rest
     return false;
-}
-
-void Hints::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
-{
-    auto timeNow   = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(timeNow);
-
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
-
-    time->setText(ss.str());
-    Box::draw(vg, x, y, width, height, style, ctx);
 }
 
 View* Hints::create()

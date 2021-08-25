@@ -25,41 +25,18 @@
 namespace brls
 {
 
-class Hint : public Box
+class BottomBar : public Box
 {
-  public:
-    Hint(Action action);
-    static std::string getKeyIcon(ControllerButton button, bool ignoreKeysSwap = false);
-
-  private:
-    Action action;
-
-    BRLS_BIND(Label, icon, "icon");
-    BRLS_BIND(Label, hint, "hint");
-};
-
-class Hints : public Box
-{
-  public:
-    Hints();
-    ~Hints();
-    
-    void setAddUnabledAButtonAction(bool value) {
-        addUnabledAButtonAction = value;
-    }
-    
-    bool getAddUnabledAButtonAction() const {
-        return addUnabledAButtonAction;
-    }
-
+public:
+    BottomBar();
+    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
-
-  private:
-    void refillHints(View* focusView);
-    bool addUnabledAButtonAction = true;
-
-    VoidEvent::Subscription hintSubscription;
-    static bool actionsSortFunc(Action a, Action b);
+    
+private:
+    BRLS_BIND(Box, hints, "brls/hints");
+    BRLS_BIND(Label, time, "brls/hints/time");
+    BRLS_BIND(View, battery, "brls/battery");
+    BRLS_BIND(View, wireless, "brls/wireless");
 };
 
 } // namespace brls
