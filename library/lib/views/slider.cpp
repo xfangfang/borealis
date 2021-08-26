@@ -66,13 +66,13 @@ Slider::Slider()
         "Right Click Blocker", BUTTON_NAV_RIGHT, [this](View* view) {
             return true;
         },
-        true, false, SOUND_NONE);
+        true, true, SOUND_NONE);
 
     pointer->registerAction(
         "Right Click Blocker", BUTTON_NAV_LEFT, [this](View* view) {
             return true;
         },
-        true, false, SOUND_NONE);
+        true, true, SOUND_NONE);
 
     pointer->registerAction(
         "A Button Click Blocker", BUTTON_A, [this](View* view) {
