@@ -241,8 +241,11 @@ void View::resetClickAnimation()
     this->clickAlpha.stop();
 }
 
-void View::playClickAnimation(bool reverse)
+void View::playClickAnimation(bool reverse, bool animateBack, bool force)
 {
+    if (hideClickAnimation && !force)
+        return;
+    
     this->resetClickAnimation();
 
     Style style = Application::getStyle();
@@ -254,8 +257,8 @@ void View::playClickAnimation(bool reverse)
         style["brls/animations/highlight"],
         reverse ? EasingFunction::quadraticOut : EasingFunction::quadraticIn);
 
-    this->clickAlpha.setEndCallback([this, reverse](bool finished) {
-        if (reverse || Application::getInputType() == InputType::TOUCH)
+    this->clickAlpha.setEndCallback([this, reverse, animateBack](bool finished) {
+        if (reverse || !animateBack || Application::getInputType() == InputType::TOUCH)
             return;
 
         this->playClickAnimation(true);

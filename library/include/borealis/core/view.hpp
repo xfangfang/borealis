@@ -210,6 +210,7 @@ class View
     bool hideHighlightBackground = false;
     bool hideHighlightBorder     = false;
     bool hideHighlight           = false;
+    bool hideClickAnimation      = false;
 
     bool detached = false;
     Point detachedOrigin;
@@ -801,6 +802,11 @@ class View
     {
         this->hideHighlight = hide;
     }
+    
+    inline void setHideClickAnimation(bool hide)
+    {
+        this->hideClickAnimation = hide;
+    }
 
     /**
      * Sets the highlight padding of the view, aka the space between the
@@ -1088,7 +1094,7 @@ class View
     void setActionsAvailable(bool available);
 
     void resetClickAnimation();
-    void playClickAnimation(bool reverse = false);
+    void playClickAnimation(bool reverse = false, bool animateBack = true, bool force = false);
 
     std::string getClassString() const
     {
