@@ -38,6 +38,11 @@ void async(const std::function<void()>& task)
     Threading::async(task);
 }
 
+void delay(long milliseconds, const std::function<void()>& func)
+{
+    Threading::delay(milliseconds, func);
+}
+
 void Threading::sync(const std::function<void()>& func)
 {
     std::lock_guard<std::mutex> guard(m_sync_mutex);
@@ -50,6 +55,16 @@ void Threading::async(const std::function<void()>& task)
     m_async_tasks.push_back(task);
 }
 
+void Threading::delay(long milliseconds, const std::function<void()>& func)
+{
+    std::lock_guard<std::mutex> guard(m_delay_mutex);
+    DelayOperation operation;
+    operation.startPoint = std::chrono::high_resolution_clock::now();
+    operation.delayMilliseconds = milliseconds;
+    operation.func = func;
+    m_delay_tasks.push_back(operation);
+}
+
 void Threading::performSyncTasks()
 {
     m_sync_mutex.lock();
@@ -59,6 +74,26 @@ void Threading::performSyncTasks()
 
     for (auto& f : local)
         f();
+    
+    m_delay_mutex.lock();
+    auto delay_local = m_delay_tasks;
+    m_delay_tasks.clear();
+    m_delay_mutex.unlock();
+    
+    for (auto& d : delay_local)
+    {
+        auto timeNow = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
+        
+        if (duration >= d.delayMilliseconds)
+            d.func();
+        else
+        {
+            m_delay_mutex.lock();
+            m_delay_tasks.push_back(d);
+            m_delay_mutex.unlock();
+        }
+    }
 }
 
 void Threading::start()
