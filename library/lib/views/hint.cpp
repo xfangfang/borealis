@@ -59,10 +59,10 @@ Hint::Hint(Action action)
 {
     this->inflateFromXMLString(hintXML);
     this->setFocusable(false);
-    
+
     icon->setText(getKeyIcon(action.button));
     hint->setText(action.hintText);
-    
+
     if (action.button != BUTTON_A && action.available && !Application::isInputBlocks())
     {
         this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]() {
@@ -82,7 +82,7 @@ std::string Hint::getKeyIcon(ControllerButton button, bool ignoreKeysSwap)
 {
     if (!ignoreKeysSwap)
         button = InputManager::mapControllerState(button);
-    
+
     switch (button)
     {
         case BUTTON_A:
@@ -126,11 +126,11 @@ Hints::Hints()
 {
     setAxis(Axis::ROW);
     setDirection(Direction::LEFT_TO_RIGHT);
-    
+
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
         refillHints(Application::getCurrentFocus());
     });
-    
+
     this->registerBoolXMLAttribute("addBaseAction", [this](bool value) {
         this->setAddUnabledAButtonAction(value);
     });
@@ -145,7 +145,7 @@ void Hints::refillHints(View* focusView)
 {
     if (!focusView)
         return;
-    
+
     clearViews();
 
     std::set<ControllerButton> addedButtons; // we only ever want one action per key

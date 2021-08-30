@@ -84,17 +84,17 @@ TapGestureRecognizer::TapGestureRecognizer(TapGestureEvent::Callback respond)
 GestureState TapGestureRecognizer::recognitionLoop(TouchState touch, MouseState mouse, View* view, Sound* soundToPlay)
 {
     TouchPhase phase = touch.phase;
-    Point position = touch.position;
-    
+    Point position   = touch.position;
+
     if (phase == TouchPhase::NONE)
     {
         position = mouse.position;
-        phase = mouse.leftButton;
+        phase    = mouse.leftButton;
     }
-    
+
     if (!enabled || phase == TouchPhase::NONE)
         return GestureState::FAILED;
-    
+
     // If not first touch frame and state is
     // INTERRUPTED or FAILED, stop recognition
     if (phase != TouchPhase::START)

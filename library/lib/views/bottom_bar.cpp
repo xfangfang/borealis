@@ -15,10 +15,10 @@
 */
 
 #include <borealis/views/bottom_bar.hpp>
-#include <sstream>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <sstream>
 
 namespace brls
 {
@@ -81,7 +81,7 @@ const std::string bottomBarXML = R"xml(
 BottomBar::BottomBar()
 {
     this->inflateFromXMLString(bottomBarXML);
-    
+
     Platform* platform = Application::getPlatform();
     battery->setVisibility(platform->canShowBatteryLevel() ? Visibility::VISIBLE : Visibility::GONE);
 }

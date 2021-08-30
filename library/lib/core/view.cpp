@@ -146,7 +146,6 @@ Sound View::gestureRecognizerRequest(TouchState touch, MouseState mouse, View* f
         if (!recognizer->isEnabled())
             continue;
 
-        
         GestureState state = recognizer->recognitionLoop(touch, mouse, this, &soundToPlay);
         if (state == GestureState::START || state == GestureState::END)
             firstResponder->interruptGestures(true);
@@ -245,7 +244,7 @@ void View::playClickAnimation(bool reverse, bool animateBack, bool force)
 {
     if (hideClickAnimation && !force)
         return;
-    
+
     this->resetClickAnimation();
 
     Style style = Application::getStyle();
@@ -723,7 +722,7 @@ void View::setActionAvailable(enum ControllerButton button, bool available)
 {
     if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
         it->available = available;
-    
+
     Application::getGlobalHintsUpdateEvent()->fire();
 }
 
@@ -731,7 +730,7 @@ void View::setActionsAvailable(bool available)
 {
     for (int i = 0; i < this->actions.size(); i++)
         this->actions[i].available = available;
-    
+
     Application::getGlobalHintsUpdateEvent()->fire();
 }
 
@@ -2251,10 +2250,10 @@ Activity* View::getParentActivity()
 {
     if (parentActivity != nullptr)
         return parentActivity;
-    
+
     if (parent != nullptr)
         return parent->getParentActivity();
-    
+
     return nullptr;
 }
 

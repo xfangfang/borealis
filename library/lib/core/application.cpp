@@ -28,6 +28,7 @@
 #include <borealis/core/thread.hpp>
 #include <borealis/core/time.hpp>
 #include <borealis/core/util.hpp>
+#include <borealis/views/bottom_bar.hpp>
 #include <borealis/views/button.hpp>
 #include <borealis/views/cells/cell_bool.hpp>
 #include <borealis/views/cells/cell_input.hpp>
@@ -42,7 +43,6 @@
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
-#include <borealis/views/bottom_bar.hpp>
 #include <borealis/views/widgets/battery.hpp>
 #include <borealis/views/widgets/wireless.hpp>
 #include <stdexcept>
@@ -182,13 +182,13 @@ bool Application::mainLoop()
     inputManager->updateTouchStates(&rawTouch);
     inputManager->updateMouseStates(&rawMouse);
     inputManager->updateControllerState(&controllerState);
-    
+
     if (isSwapInputKeys())
     {
         bool swapKeys[ControllerButton::_BUTTON_MAX];
         for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
             swapKeys[i] = controllerState.buttons[InputManager::mapControllerState((ControllerButton)i)];
-        
+
         for (int i = 0; i < ControllerButton::_BUTTON_MAX; i++)
             controllerState.buttons[i] = swapKeys[i];
     }
@@ -200,25 +200,29 @@ bool Application::mainLoop()
             return touch.fingerId == rawTouch[i].fingerId;
         });
 
-        if (old != std::end(currentTouchState)) {
+        if (old != std::end(currentTouchState))
+        {
             touchState.push_back(InputManager::computeTouchState(rawTouch[i], *old));
-        } else {
+        }
+        else
+        {
             TouchState state;
             state.fingerId = rawTouch[i].fingerId;
             touchState.push_back(InputManager::computeTouchState(rawTouch[i], state));
         }
     }
-    
+
     for (int i = 0; i < currentTouchState.size(); i++)
     {
         if (currentTouchState[i].phase == TouchPhase::NONE)
             continue;
-        
+
         auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [i](RawTouchState touch) {
             return touch.fingerId == currentTouchState[i].fingerId;
         });
-        
-        if (old == std::end(rawTouch)) {
+
+        if (old == std::end(rawTouch))
+        {
             touchState.push_back(InputManager::computeTouchState(RawTouchState(), currentTouchState[i]));
         }
     }
@@ -238,8 +242,8 @@ bool Application::mainLoop()
             // Search for first responder, which will be the root of recognition tree
             if (Application::activitiesStack.size() > 0)
                 touchState[i].view = Application::activitiesStack[Application::activitiesStack.size() - 1]
-                                    ->getContentView()
-                                    ->hitTest(position);
+                                         ->getContentView()
+                                         ->hitTest(position);
         }
 
         if (touchState[i].view && touchState[i].phase != TouchPhase::NONE)
@@ -255,27 +259,24 @@ bool Application::mainLoop()
         }
     }
     currentTouchState = touchState;
-    
+
     MouseState mouseState = InputManager::computeMouseState(rawMouse, currentMouseState);
-    
-    if (mouseState.scroll.x == 0 &&
-        mouseState.scroll.y == 0 &&
-        mouseState.leftButton == TouchPhase::NONE &&
-        mouseState.middleButton == TouchPhase::NONE &&
-        mouseState.rightButton == TouchPhase::NONE)
+
+    if (mouseState.scroll.x == 0 && mouseState.scroll.y == 0 && mouseState.leftButton == TouchPhase::NONE && mouseState.middleButton == TouchPhase::NONE && mouseState.rightButton == TouchPhase::NONE)
         mouseState.view = nullptr;
-    else if (mouseState.view == nullptr) {
+    else if (mouseState.view == nullptr)
+    {
         Point position = mouseState.position;
         Application::setInputType(InputType::TOUCH);
 
         // Search for first responder, which will be the root of recognition tree
         if (Application::activitiesStack.size() > 0)
             mouseState.view = Application::activitiesStack[Application::activitiesStack.size() - 1]
-                                ->getContentView()
-                                ->hitTest(position);
+                                  ->getContentView()
+                                  ->hitTest(position);
     }
     currentMouseState = mouseState;
-    
+
     if (mouseState.view)
     {
         Sound sound = mouseState.view->gestureRecognizerRequest(TouchState(), mouseState, mouseState.view);
@@ -362,7 +363,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
         return;
 
     Application::repetitionOldFocus = Application::currentFocus;
-    
+
     // Dismiss navigation if input type was changed
     if (Application::setInputType(InputType::GAMEPAD))
         return;
@@ -482,11 +483,11 @@ bool Application::handleAction(char button, bool repeating)
     if (button == BUTTON_A && setInputType(InputType::GAMEPAD))
         return false;
 
-//    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
-//    {
-//        activitiesStack.back()->getContentView()->dismiss();
-//        return true;
-//    }
+    //    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
+    //    {
+    //        activitiesStack.back()->getContentView()->dismiss();
+    //        return true;
+    //    }
 
     if (Application::activitiesStack.empty())
         return false;
@@ -669,7 +670,7 @@ void Application::giveFocus(View* view)
             newFocus->onFocusGained();
             Logger::debug("Giving focus to {}", newFocus->describe());
         }
-        
+
         Application::globalHintsUpdateEvent.fire();
     }
 }
@@ -856,17 +857,19 @@ void Application::tryDeinitFirstResponder(View* view)
 {
     if (!view)
         return;
-    
+
     // Interrupt current gestures if presented
     for (int i = 0; i < currentTouchState.size(); i++)
     {
-        if (currentTouchState[i].view == view) {
+        if (currentTouchState[i].view == view)
+        {
             currentTouchState[i].view->interruptGestures(false);
             currentTouchState[i].view = nullptr;
         }
     }
 
-    if (currentMouseState.view == view) {
+    if (currentMouseState.view == view)
+    {
         currentMouseState.view->interruptGestures(false);
         currentMouseState.view = nullptr;
     }
@@ -919,7 +922,7 @@ void Application::unblockInputs()
 
     if (Application::blockInputsTokens <= 0)
         muteSounds = false;
-    
+
     getGlobalHintsUpdateEvent()->fire();
     Logger::debug("Removing an inputs block token (tokens={})", Application::blockInputsTokens);
 }
@@ -1043,7 +1046,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:SelectorCell", SelectorCell::create);
     Application::registerXMLView("brls:InputCell", InputCell::create);
     Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
-    
+
     // Widgets
     Application::registerXMLView("brls:Battery", BatteryWidget::create);
     Application::registerXMLView("brls:Wireless", WirelessWidget::create);

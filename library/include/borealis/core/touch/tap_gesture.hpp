@@ -70,7 +70,7 @@ class TapGestureRecognizer : public GestureRecognizer
 
     // Get tap gesture event
     TapGestureEvent getPanGestureEvent() const { return tapEvent; }
-    
+
     void setForceRecognision(bool forceRecognision)
     {
         this->forceRecognision = forceRecognision;

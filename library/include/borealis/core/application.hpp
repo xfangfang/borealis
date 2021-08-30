@@ -79,8 +79,7 @@ class Application
      * and when the context is ready (to setup the initial content scaling).
      */
     static void onWindowResized(int width, int height);
-    
-    
+
     static std::vector<Activity*> getActivitiesStack();
 
     /**
@@ -157,7 +156,7 @@ class Application
       * blockInputs()
       */
     static void unblockInputs();
-    
+
     static bool isInputBlocks();
 
     static void setCommonFooter(std::string footer);
@@ -222,9 +221,9 @@ class Application
     {
         debuggingViewEnabled = enable;
     }
-    
+
     static void setSwapInputKeys(bool swap);
-    
+
     inline static bool isSwapInputKeys()
     {
         return swapInputKeys;
@@ -250,7 +249,7 @@ class Application
 
     inline static unsigned windowWidth, windowHeight;
 
-    inline static View* currentFocus   = nullptr;
+    inline static View* currentFocus = nullptr;
     inline static std::vector<TouchState> currentTouchState;
     inline static MouseState currentMouseState;
 

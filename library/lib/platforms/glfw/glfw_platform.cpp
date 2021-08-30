@@ -72,7 +72,7 @@ int GLFWPlatform::getBatteryLevel()
     return battery;
 }
 
-bool GLFWPlatform::isBatteryCharging() 
+bool GLFWPlatform::isBatteryCharging()
 {
     return true;
 }

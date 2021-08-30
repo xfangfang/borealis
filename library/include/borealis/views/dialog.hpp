@@ -51,8 +51,8 @@ class Dialog : public Box
     void buttonClick(DialogButton* button);
 
     bool cancelable = true;
-    
-protected:
+
+  protected:
     BRLS_BIND(Button, button1, "brls/dialog/button1");
     BRLS_BIND(Button, button2, "brls/dialog/button2");
     BRLS_BIND(Button, button3, "brls/dialog/button3");
@@ -83,7 +83,7 @@ protected:
     void setCancelable(bool cancelable);
 
     virtual void open();
-    void close(std::function<void(void)> cb = []{});
+    void close(std::function<void(void)> cb = [] {});
 
     bool isTranslucent() override
     {

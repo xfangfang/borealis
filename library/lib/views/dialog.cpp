@@ -130,7 +130,7 @@ Dialog::Dialog(Box* contentView)
 {
     this->inflateFromXMLString(dialogXML);
     container->addView(contentView);
-    
+
     appletFrame->registerAction(
         "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
             if (cancelable)

@@ -24,28 +24,29 @@ namespace brls
 BatteryWidget::BatteryWidget()
 {
     setSize(Size(44, 44));
-    
+
     back = new Image();
     back->setSize(Size(44, 44));
     back->setScalingType(ImageScalingType::FIT);
     back->detach();
-    
+
     level = new Rectangle();
     level->setDetachedPosition(11, 18);
     level->setSize(Size(BATTERY_MAX_WIDTH, 10));
     level->detach();
-    
+
     platform = Application::getPlatform();
     applyBackTheme(platform->getThemeVariant());
     applyLevelTheme(platform->getThemeVariant());
-    
+
     addView(level);
     addView(back);
 }
 
 void BatteryWidget::applyBackTheme(ThemeVariant theme)
 {
-    switch (theme) {
+    switch (theme)
+    {
         case ThemeVariant::LIGHT:
             back->setImageFromRes("img/sys/battery_back_light.png");
             break;
@@ -57,7 +58,8 @@ void BatteryWidget::applyBackTheme(ThemeVariant theme)
 
 void BatteryWidget::applyLevelTheme(ThemeVariant theme)
 {
-    switch (theme) {
+    switch (theme)
+    {
         case ThemeVariant::LIGHT:
             level->setColor(RGB(0, 0, 0));
             break;
@@ -73,7 +75,7 @@ void BatteryWidget::draw(NVGcontext* vg, float x, float y, float width, float he
         level->setColor(RGB(140, 251, 79));
     else
         applyLevelTheme(platform->getThemeVariant());
-    
+
     level->setWidth(BATTERY_MAX_WIDTH * platform->getBatteryLevel() / 100.0f);
     Box::draw(vg, x, y, width, height, style, ctx);
 }

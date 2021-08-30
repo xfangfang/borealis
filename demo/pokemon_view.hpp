@@ -39,7 +39,7 @@ class PokemonView : public brls::Box
         : PokemonView(Pokemon("001", "ТУПА ПАКИМОН!!!"))
     {
     }
-    
+
     View* getHintView() override;
 
     static brls::View* create();

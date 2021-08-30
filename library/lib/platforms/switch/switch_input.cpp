@@ -110,22 +110,23 @@ void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 
 void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
-    if (controller == 0) {
-        float low = (float)lowFreqMotor / 0xFFFF;
+    if (controller == 0)
+    {
+        float low  = (float)lowFreqMotor / 0xFFFF;
         float high = (float)highFreqMotor / 0xFFFF;
-        
+
         memset(m_vibration_values, 0, sizeof(m_vibration_values));
-        
+
         m_vibration_values[0].amp_low   = low;
         m_vibration_values[0].freq_low  = low * 50;
         m_vibration_values[0].amp_high  = high;
         m_vibration_values[0].freq_high = high * 100;
-        
+
         m_vibration_values[1].amp_low   = low;
         m_vibration_values[1].freq_low  = low * 50;
         m_vibration_values[1].amp_high  = high;
         m_vibration_values[1].freq_high = high * 100;
-        
+
         int target_device = padIsHandheld(&this->padState) ? 0 : 1;
         hidSendVibrationValues(m_vibration_device_handles[target_device], m_vibration_values, 2);
     }

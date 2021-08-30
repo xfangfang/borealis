@@ -22,30 +22,30 @@ namespace brls
 WirelessWidget::WirelessWidget()
 {
     setSize(Size(44, 44));
-    
+
     _0 = new Image();
     _0->setSize(Size(44, 44));
     _0->setScalingType(ImageScalingType::FIT);
     _0->detach();
-    
+
     _1 = new Image();
     _1->setSize(Size(44, 44));
     _1->setScalingType(ImageScalingType::FIT);
     _1->detach();
-    
+
     _2 = new Image();
     _2->setSize(Size(44, 44));
     _2->setScalingType(ImageScalingType::FIT);
     _2->detach();
-    
+
     _3 = new Image();
     _3->setSize(Size(44, 44));
     _3->setScalingType(ImageScalingType::FIT);
     _3->detach();
-    
+
     platform = Application::getPlatform();
     applyTheme(platform->getThemeVariant());
-    
+
     addView(_0);
     addView(_1);
     addView(_2);
@@ -54,7 +54,8 @@ WirelessWidget::WirelessWidget()
 
 void WirelessWidget::applyTheme(ThemeVariant theme)
 {
-    switch (theme) {
+    switch (theme)
+    {
         case ThemeVariant::LIGHT:
             _0->setImageFromRes("img/sys/wifi_0_light.png");
             _1->setImageFromRes("img/sys/wifi_1_light.png");
@@ -85,9 +86,10 @@ void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float h
         _1->setVisibility(Visibility::VISIBLE);
         _2->setVisibility(Visibility::VISIBLE);
         _3->setVisibility(Visibility::VISIBLE);
-    
+
         int wifiLevel = platform->getWirelessLevel();
-        switch (wifiLevel) {
+        switch (wifiLevel)
+        {
             case 0:
                 _1->setAlpha(0.2f);
                 _2->setAlpha(0.2f);
@@ -110,7 +112,7 @@ void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float h
                 break;
         }
     }
-    
+
     Box::draw(vg, x, y, width, height, style, ctx);
 }
 

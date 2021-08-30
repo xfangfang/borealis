@@ -30,24 +30,24 @@ PokemonView::PokemonView(Pokemon pokemon)
 {
     // Inflate the tab from the XML file
     this->inflateFromXMLRes("xml/views/pokemon.xml");
-    
+
     auto dismissAction = [this](View* view) {
         this->dismiss();
         return true;
     };
-    
+
     brls::Label* label = new brls::Label();
     label->setText(brls::Hint::getKeyIcon(brls::ControllerButton::BUTTON_RB) + " Закрыть");
     label->setFontSize(24);
     label->setMargins(0, 12, 0, 12);
-    
+
     brls::Box* holder = new brls::Box();
     holder->addView(label);
     holder->setFocusable(true);
     holder->addGestureRecognizer(new brls::TapGestureRecognizer(holder));
-    
+
     hintView = holder;
-    
+
     holder->registerClickAction(dismissAction);
     holder->registerAction("Close", brls::ControllerButton::BUTTON_RB, dismissAction, true);
     registerAction("Close", brls::ControllerButton::BUTTON_RB, dismissAction, true);

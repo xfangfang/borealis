@@ -78,7 +78,7 @@ int SwitchPlatform::getBatteryLevel()
     return (int)charge;
 }
 
-bool SwitchPlatform::isBatteryCharging() 
+bool SwitchPlatform::isBatteryCharging()
 {
     PsmChargerType type;
     psmGetChargerType(&type);

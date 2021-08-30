@@ -26,21 +26,20 @@ namespace brls
 
 class WirelessWidget : public Box
 {
-public:
+  public:
     WirelessWidget();
-    
+
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
-    
-private:
+
+  private:
     Image* _0;
     Image* _1;
     Image* _2;
     Image* _3;
     Platform* platform;
-    
+
     void applyTheme(ThemeVariant theme);
 };
-
 
 } // namespace brls

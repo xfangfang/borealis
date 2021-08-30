@@ -43,27 +43,27 @@ class Platform
      * Returns the human-readable name of the platform.
      */
     virtual std::string getName() = 0;
-    
+
     /**
      * Returns true if device has wireless connection.
      */
     virtual bool hasWirelessConnection() = 0;
-    
+
     /**
      * Returns wireless quality level from 0 to 3.
      */
     virtual int getWirelessLevel() = 0;
-    
+
     /**
      * Returns if battery level supports.
      */
     virtual bool canShowBatteryLevel() = 0;
-    
+
     /**
      * Returns the battery level from 0 to 100.
      */
     virtual int getBatteryLevel() = 0;
-    
+
     /**
      * Returns the battery level from 0 to 100.
      */

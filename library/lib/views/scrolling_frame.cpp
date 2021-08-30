@@ -33,7 +33,7 @@ ScrollingFrame::ScrollingFrame()
             { "natural", ScrollingBehavior::NATURAL },
             { "centered", ScrollingBehavior::CENTERED },
         });
-    
+
     setupScrollingIndicator();
 
     input = Application::getPlatform()->getInputManager();
@@ -101,7 +101,7 @@ ScrollingFrame::ScrollingFrame()
 
 void ScrollingFrame::setupScrollingIndicator()
 {
-    Theme theme = Application::getTheme();
+    Theme theme        = Application::getTheme();
     scrollingIndicator = new Rectangle(theme["brls/text"]);
     scrollingIndicator->setSize(Size(SCROLLING_INDICATOR_WIDTH, 0));
     scrollingIndicator->setCornerRadius(SCROLLING_INDICATOR_WIDTH / 2);
@@ -112,17 +112,17 @@ void ScrollingFrame::setupScrollingIndicator()
 void ScrollingFrame::updateScrollingIndicatior()
 {
     float contentHeight = getContentHeight();
-    float viewHeight = getHeight();
-    
+    float viewHeight    = getHeight();
+
     if (contentHeight <= viewHeight || !showScrollingIndicator)
     {
         scrollingIndicator->setAlpha(0);
         return;
     }
-    
+
     scrollingIndicator->setAlpha(contentHeight <= viewHeight ? 0 : 0.3f);
     scrollingIndicator->setHeight(viewHeight / contentHeight * viewHeight);
-    
+
     float scrollViewOffset = getContentOffsetY() / contentHeight * getHeight();
     scrollingIndicator->setDetachedPosition(getWidth() - 14 - SCROLLING_INDICATOR_WIDTH, scrollViewOffset);
 }

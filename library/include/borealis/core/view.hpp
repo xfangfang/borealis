@@ -276,7 +276,7 @@ class View
     bool focused = false;
 
     Activity* parentActivity = nullptr;
-    Box* parent = nullptr;
+    Box* parent              = nullptr;
 
     GenericEvent focusEvent;
 
@@ -382,7 +382,7 @@ class View
      * to never shrink below the given height.
      */
     void setHeight(float height);
-    
+
     /**
      * Sets the preferred width and height of the view. Use brls::View::AUTO
      * to have the layout automatically resize the view.
@@ -536,7 +536,7 @@ class View
      * Sets the visibility of the view.
      */
     void setVisibility(Visibility visibility);
-    
+
     /**
      * Gets the visibility of the view.
      */
@@ -802,7 +802,7 @@ class View
     {
         this->hideHighlight = hide;
     }
-    
+
     inline void setHideClickAnimation(bool hide)
     {
         this->hideClickAnimation = hide;
@@ -1457,7 +1457,7 @@ class View
 
     bool* deletionToken = nullptr;
     void freeView();
-    
+
     Activity* getParentActivity();
     void setParentActivity(Activity* activity);
 };

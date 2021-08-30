@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#include <borealis/core/input.hpp>
 #include <borealis/core/application.hpp>
+#include <borealis/core/input.hpp>
 
 namespace brls
 {
@@ -24,13 +24,13 @@ TouchPhase getPhase(bool oldState, bool newState)
 {
     if (!oldState && newState)
         return TouchPhase::START;
-    
+
     if (oldState && newState)
         return TouchPhase::STAY;
-    
+
     if (oldState && !newState)
         return TouchPhase::END;
-    
+
     return TouchPhase::NONE;
 }
 
@@ -44,8 +44,8 @@ TouchState InputManager::computeTouchState(RawTouchState currentTouch, TouchStat
 {
     TouchState state;
     state.fingerId = currentTouch.fingerId;
-    state.view = lastFrameState.view;
-    state.phase = getPhase(lastFrameState.phase, currentTouch.pressed);
+    state.view     = lastFrameState.view;
+    state.phase    = getPhase(lastFrameState.phase, currentTouch.pressed);
     if (state.phase == TouchPhase::END)
         state.position = lastFrameState.position;
     else
@@ -56,20 +56,22 @@ TouchState InputManager::computeTouchState(RawTouchState currentTouch, TouchStat
 MouseState InputManager::computeMouseState(RawMouseState currentTouch, MouseState lastFrameState)
 {
     MouseState state;
-    state.view = lastFrameState.view;
-    state.position = currentTouch.position;
-    state.scroll = currentTouch.scroll;
-    state.leftButton = getPhase(lastFrameState.leftButton, currentTouch.leftButton);
+    state.view         = lastFrameState.view;
+    state.position     = currentTouch.position;
+    state.scroll       = currentTouch.scroll;
+    state.leftButton   = getPhase(lastFrameState.leftButton, currentTouch.leftButton);
     state.middleButton = getPhase(lastFrameState.middleButton, currentTouch.middleButton);
-    state.rightButton = getPhase(lastFrameState.rightButton, currentTouch.rightButton);
+    state.rightButton  = getPhase(lastFrameState.rightButton, currentTouch.rightButton);
     return state;
 }
 
 ControllerButton InputManager::mapControllerState(ControllerButton button)
 {
-    if (!Application::isSwapInputKeys()) return button;
-    
-    switch (button) {
+    if (!Application::isSwapInputKeys())
+        return button;
+
+    switch (button)
+    {
         case BUTTON_A:
             return BUTTON_B;
         case BUTTON_B:

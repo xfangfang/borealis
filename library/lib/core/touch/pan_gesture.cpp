@@ -44,16 +44,16 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
 {
     if (!enabled)
         return GestureState::FAILED;
-    
+
     TouchPhase phase = touch.phase;
-    Point position = touch.position;
-    int fingerId = touch.fingerId;
-    
+    Point position   = touch.position;
+    int fingerId     = touch.fingerId;
+
     if (phase == TouchPhase::NONE)
     {
         fingerId = 0;
         position = mouse.position;
-        phase = mouse.leftButton;
+        phase    = mouse.leftButton;
     }
 
     // If not first touch frame and state is
@@ -85,10 +85,10 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
             if (lastFingerId != fingerId)
             {
                 this->state = GestureState::FAILED;
-                lastState = this->state;
+                lastState   = this->state;
                 return this->state;
             }
-            
+
             this->delta = position - this->position;
 
             this->position = position;

@@ -18,11 +18,11 @@
 
 #include <unistd.h>
 
+#include <chrono>
 #include <functional>
 #include <mutex>
 #include <thread>
 #include <vector>
-#include <chrono>
 
 namespace brls
 {
@@ -74,7 +74,7 @@ class Threading
      * parallel with application's main thread.
      */
     static void async(const std::function<void()>& func);
-    
+
     static void delay(long milliseconds, const std::function<void()>& func);
 
     static void start();
@@ -99,7 +99,7 @@ class Threading
 
     inline static std::mutex m_async_mutex;
     inline static std::vector<std::function<void()>> m_async_tasks;
-    
+
     inline static std::mutex m_delay_mutex;
     inline static std::vector<DelayOperation> m_delay_tasks;
 

@@ -43,12 +43,14 @@ class Hints : public Box
   public:
     Hints();
     ~Hints();
-    
-    void setAddUnabledAButtonAction(bool value) {
+
+    void setAddUnabledAButtonAction(bool value)
+    {
         addUnabledAButtonAction = value;
     }
-    
-    bool getAddUnabledAButtonAction() const {
+
+    bool getAddUnabledAButtonAction() const
+    {
         return addUnabledAButtonAction;
     }
 

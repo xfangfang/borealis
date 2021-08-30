@@ -126,15 +126,15 @@ void GLFWInputManager::updateControllerState(ControllerState* state)
         size_t brlsButton          = GLFW_BUTTONS_MAPPING[i];
         state->buttons[brlsButton] = (bool)glfwState.buttons[i];
     }
-    
+
     state->buttons[BUTTON_LT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.1f;
     state->buttons[BUTTON_RT] = glfwState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.1f;
 
-    state->buttons[BUTTON_NAV_UP] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.5f || state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_UP]    = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.5f || state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] > 0.5f || state->buttons[BUTTON_RIGHT];
-    state->buttons[BUTTON_NAV_DOWN] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f || state->buttons[BUTTON_DOWN];
-    state->buttons[BUTTON_NAV_LEFT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.5f || state->buttons[BUTTON_LEFT];
-    
+    state->buttons[BUTTON_NAV_DOWN]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f || state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.5f || state->buttons[BUTTON_LEFT];
+
     for (size_t i = 0; i < GLFW_GAMEPAD_AXIS_MAX; i++)
     {
         state->axes[GLFW_AXIS_MAPPING[i]] = glfwState.axes[i];
@@ -151,18 +151,18 @@ bool sameSign(int a, int b)
 void GLFWInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
     // Uncomment to enable touch simulation by mouse
-//    double x, y;
-//    glfwGetCursorPos(this->window, &x, &y);
-//
-//    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-//    {
-//        RawTouchState state;
-//        state.fingerId = 0;
-//        state.pressed = true;
-//        state.position.x = x / Application::windowScale;
-//        state.position.y = y / Application::windowScale;
-//        states->push_back(state);
-//    }
+    //    double x, y;
+    //    glfwGetCursorPos(this->window, &x, &y);
+    //
+    //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    //    {
+    //        RawTouchState state;
+    //        state.fingerId = 0;
+    //        state.pressed = true;
+    //        state.position.x = x / Application::windowScale;
+    //        state.position.y = y / Application::windowScale;
+    //        states->push_back(state);
+    //    }
 }
 
 void GLFWInputManager::updateMouseStates(RawMouseState* state)
@@ -170,16 +170,17 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     double x, y;
     glfwGetCursorPos(this->window, &x, &y);
 
-    state->leftButton    = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-    state->middleButton    = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-    state->rightButton    = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-    state->position.x = x / Application::windowScale;
-    state->position.y = y / Application::windowScale;
-    state->scroll     = scrollOffset;
+    state->leftButton   = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    state->middleButton = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+    state->rightButton  = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+    state->position.x   = x / Application::windowScale;
+    state->position.y   = y / Application::windowScale;
+    state->scroll       = scrollOffset;
 }
 
 void GLFWInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
-{ }
+{
+}
 
 void GLFWInputManager::freeOnRunloop()
 {

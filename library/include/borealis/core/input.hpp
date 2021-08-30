@@ -102,7 +102,7 @@ struct RawTouchState
 class View;
 struct TouchState
 {
-    int fingerId = 0;
+    int fingerId     = 0;
     TouchPhase phase = TouchPhase::NONE;
     Point position;
     View* view = nullptr;
@@ -113,9 +113,9 @@ struct RawMouseState
 {
     Point position;
     Point scroll;
-    bool leftButton = false;
+    bool leftButton   = false;
     bool middleButton = false;
-    bool rightButton = false;
+    bool rightButton  = false;
 };
 
 struct MouseState
@@ -144,7 +144,7 @@ class InputManager
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */
     virtual void updateTouchStates(std::vector<RawTouchState>* states) = 0;
-    
+
     /**
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */
@@ -154,7 +154,7 @@ class InputManager
      * Calls to update gamepad's rumble state.
      */
     virtual void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) = 0;
-    
+
     /**
      * Called once every runloop cycle to perform some cleanup before new one.
      * For internal call only
@@ -165,12 +165,12 @@ class InputManager
      * Calculate current touch phase based on it's previous state
      */
     static TouchState computeTouchState(RawTouchState currentTouch, TouchState lastFrameState);
-    
+
     /**
      * Calculate current touch phase based on it's previous state
      */
     static MouseState computeMouseState(RawMouseState currentTouch, MouseState lastFrameState);
-    
+
     static ControllerButton mapControllerState(ControllerButton button);
 };
 

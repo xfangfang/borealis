@@ -25,10 +25,10 @@ ProgressSpinner::ProgressSpinner(ProgressSpinnerSize size)
     : size(size)
 {
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE("size", ProgressSpinnerSize, this->setSize,
-    {
-        { "normal", ProgressSpinnerSize::NORMAL },
-        { "large", ProgressSpinnerSize::LARGE },
-    });
+        {
+            { "normal", ProgressSpinnerSize::NORMAL },
+            { "large", ProgressSpinnerSize::LARGE },
+        });
 }
 
 void ProgressSpinner::restartAnimation()
@@ -62,9 +62,10 @@ void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float 
 {
     Theme theme       = Application::getTheme();
     NVGcolor barColor = a(theme["brls/spinner/bar_color"]);
-    
+
     // Each bar of the spinner
-    switch (size) {
+    switch (size)
+    {
         case NORMAL:
             for (int i = 0 + animationValue; i < 8 + animationValue; i++)
             {
@@ -100,8 +101,6 @@ void ProgressSpinner::draw(NVGcontext* vg, float x, float y, float width, float 
             }
             break;
     }
-
-    
 }
 
 void ProgressSpinner::willAppear(bool resetState)

@@ -33,11 +33,11 @@ class GLFWInputManager : public InputManager
     void updateControllerState(ControllerState* state) override;
 
     void updateTouchStates(std::vector<RawTouchState>* states) override;
-    
+
     void updateMouseStates(RawMouseState* state) override;
-    
+
     void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) override;
-    
+
     void freeOnRunloop() override;
 
   private:

@@ -207,7 +207,7 @@ void AppletFrame::setContentView(View* view)
     this->contentView->setGrow(1.0f);
 
     this->addView(this->contentView, 1);
-    
+
     if (view->getHintView())
         this->hintBox->addView(view->getHintView());
 

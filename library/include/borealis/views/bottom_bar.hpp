@@ -27,12 +27,12 @@ namespace brls
 
 class BottomBar : public Box
 {
-public:
+  public:
     BottomBar();
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
-    
-private:
+
+  private:
     BRLS_BIND(Box, hints, "brls/hints");
     BRLS_BIND(Label, time, "brls/hints/time");
     BRLS_BIND(View, battery, "brls/battery");
