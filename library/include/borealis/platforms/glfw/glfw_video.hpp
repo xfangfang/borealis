@@ -43,6 +43,11 @@ class GLFWVideoContext : public VideoContext
   private:
     GLFWwindow* window     = nullptr;
     NVGcontext* nvgContext = nullptr;
+    
+#ifdef __SWITCH__
+    GLFWmonitor* monitor = nullptr;
+    int oldWidth, oldHeight;
+#endif
 };
 
 } // namespace brls

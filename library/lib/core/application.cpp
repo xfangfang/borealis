@@ -166,9 +166,6 @@ bool Application::mainLoop()
 {
     static ControllerState oldControllerState = {};
 
-    /* Run sync functions */
-    Threading::performSyncTasks();
-
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
     {
@@ -326,6 +323,9 @@ bool Application::mainLoop()
 
     // Render
     Application::frame();
+    
+    // Run sync functions
+    Threading::performSyncTasks();
     
     // Trigger RunLoop subscribers
     runLoopEvent.fire();

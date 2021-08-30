@@ -33,6 +33,10 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg-gl/nanovg_gl.h>
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 namespace brls
 {
 
@@ -102,10 +106,26 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 
     // Setup scaling
     glfwWindowFramebufferSizeCallback(window, windowWidth, windowHeight);
+    
+#ifdef __SWITCH__
+    monitor = glfwGetPrimaryMonitor();
+#endif
 }
 
 void GLFWVideoContext::beginFrame()
 {
+#ifdef __SWITCH__
+    const GLFWvidmode* return_struct = glfwGetVideoMode(monitor);
+    int width = return_struct->width;
+    int height = return_struct->height;
+    
+    if (oldWidth != width || oldHeight != height) {
+        oldWidth = width;
+        oldHeight = height;
+        
+        glfwSetWindowSize(window, width, height);
+    }
+#endif
 }
 
 void GLFWVideoContext::endFrame()
