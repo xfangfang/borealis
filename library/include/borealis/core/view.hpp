@@ -1011,6 +1011,11 @@ class View
     }
 
     bool isFocusable();
+    
+    /**
+     * Removes view from it's parent
+     */
+    void removeFromSuperView(bool free = true);
 
     /**
      * Sets the sound to play when this view gets focused.

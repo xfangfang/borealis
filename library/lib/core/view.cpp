@@ -1202,6 +1202,11 @@ void View::setInFadeAnimation(bool inFadeAnimation)
     this->inFadeAnimation = inFadeAnimation;
 }
 
+void View::removeFromSuperView(bool free) {
+    if (parent)
+        parent->removeView(this, free);
+}
+
 bool View::isTranslucent()
 {
     return this->fadeIn || this->inFadeAnimation;
