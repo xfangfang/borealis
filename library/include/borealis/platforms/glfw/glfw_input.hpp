@@ -38,12 +38,19 @@ class GLFWInputManager : public InputManager
 
     void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) override;
 
-    void freeOnRunloop() override;
+    void runloopStart() override;
+    
+    void setPointerLock(bool lock) override;
 
   private:
     Point scrollOffset;
+    Point pointerOffset;
+    Point pointerOffsetBuffer;
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    static void cursorCallback(GLFWwindow* window, double xoffset, double yoffset);
+    static void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     GLFWwindow* window;
+    bool pointerLocked = false;
 };
 
 };

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <borealis/core/geometry.hpp>
+#include <borealis/core/event.hpp>
 #include <vector>
 
 namespace brls
@@ -74,6 +75,13 @@ enum ControllerAxis
     _AXES_MAX,
 };
 
+struct KeyState
+{
+    short key;
+    short mods;
+    bool pressed;
+};
+
 // Represents the state of the controller (a gamepad or a keyboard) in the current frame
 struct ControllerState
 {
@@ -112,6 +120,7 @@ struct TouchState
 struct RawMouseState
 {
     Point position;
+    Point offset;
     Point scroll;
     bool leftButton   = false;
     bool middleButton = false;
@@ -159,7 +168,21 @@ class InputManager
      * Called once every runloop cycle to perform some cleanup before new one.
      * For internal call only
      */
-    virtual void freeOnRunloop() {};
+    virtual void runloopStart() {};
+    
+    virtual void setPointerLock(bool lock) {};
+    
+    inline Event<Point> *getMouseCusorOffsetChanged() {
+        return &mouseCusorOffsetChanged;
+    }
+    
+    inline Event<Point> *getMouseScrollOffsetChanged() {
+        return &mouseScrollOffsetChanged;
+    }
+    
+    inline Event<KeyState> *getKeyboardKeyStateChanged() {
+        return &keyboardKeyStateChanged;
+    }
 
     /**
      * Calculate current touch phase based on it's previous state
@@ -172,6 +195,11 @@ class InputManager
     static MouseState computeMouseState(RawMouseState currentTouch, MouseState lastFrameState);
 
     static ControllerButton mapControllerState(ControllerButton button);
+    
+private:
+    Event<Point> mouseCusorOffsetChanged;
+    Event<Point> mouseScrollOffsetChanged;
+    Event<KeyState> keyboardKeyStateChanged;
 };
 
 }; // namespace brls

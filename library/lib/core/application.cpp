@@ -179,6 +179,7 @@ bool Application::mainLoop()
     RawMouseState rawMouse;
 
     InputManager* inputManager = Application::platform->getInputManager();
+    inputManager->runloopStart();
     inputManager->updateTouchStates(&rawTouch);
     inputManager->updateMouseStates(&rawMouse);
     inputManager->updateControllerState(&controllerState);
@@ -330,7 +331,6 @@ bool Application::mainLoop()
     
     // Trigger RunLoop subscribers
     runLoopEvent.fire();
-    getPlatform()->getInputManager()->freeOnRunloop();
 
     // Free views deletion pool
     for (auto view : Application::deletionPool)
