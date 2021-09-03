@@ -50,12 +50,17 @@ borealis_files = files(
     'lib/views/dropdown.cpp',
     'lib/views/progress_spinner.cpp',
     'lib/views/debug_layer.cpp',
+    'lib/views/bottom_bar.cpp',
+    'lib/views/dialog.cpp',
 
     'lib/views/cells/cell_bool.cpp',
     'lib/views/cells/cell_detail.cpp',
     'lib/views/cells/cell_input.cpp',
     'lib/views/cells/cell_radio.cpp',
     'lib/views/cells/cell_selector.cpp',
+
+    'lib/views/widgets/battery.cpp',
+    'lib/views/widgets/wireless.cpp',
 
     'lib/extern/glad/glad.c',
     'lib/extern/nanovg-gl/nanovg.c',
