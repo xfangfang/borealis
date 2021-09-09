@@ -88,84 +88,11 @@ static void glfwJoystickCallback(int jid, int event)
     }
 }
 
-int glfwKeyToVKKey(int key) {
-    switch (key) {
-        case GLFW_KEY_BACKSPACE:
-            return 0x08;
-        case GLFW_KEY_PERIOD:
-            return 0xBE;
-        case GLFW_KEY_GRAVE_ACCENT:
-            return 0xC0;
-        case GLFW_KEY_LEFT_BRACKET:
-            return 0xDB;
-        case GLFW_KEY_BACKSLASH:
-            return 0xDC;
-        case GLFW_KEY_APOSTROPHE:
-            return 0xDE;
-        case GLFW_KEY_TAB:
-            return 0x09;
-        case GLFW_KEY_CAPS_LOCK:
-            return 0x14;
-        case GLFW_KEY_LEFT_SHIFT:
-        case GLFW_KEY_RIGHT_SHIFT:
-            return 0xA1;
-        case GLFW_KEY_LEFT_CONTROL:
-        case GLFW_KEY_RIGHT_CONTROL:
-            return 0xA3;
-        case GLFW_KEY_LEFT_ALT:
-        case GLFW_KEY_RIGHT_ALT:
-            return 0xA5;
-        case GLFW_KEY_DELETE:
-            return 0x2E;
-        case GLFW_KEY_ENTER:
-            return 0x0D;
-        case GLFW_KEY_LEFT_SUPER:
-        case GLFW_KEY_RIGHT_SUPER:
-            return 0x5C;
-        case GLFW_KEY_LEFT:
-            return 0x25;
-        case GLFW_KEY_UP:
-            return 0x26;
-        case GLFW_KEY_RIGHT:
-            return 0x27;
-        case GLFW_KEY_DOWN:
-            return 0x28;
-        case GLFW_KEY_ESCAPE:
-            return 0x1B;
-        case GLFW_KEY_F1:
-            return 0x70;
-        case GLFW_KEY_F2:
-            return 0x71;
-        case GLFW_KEY_F3:
-            return 0x72;
-        case GLFW_KEY_F4:
-            return 0x73;
-        case GLFW_KEY_F5:
-            return 0x74;
-        case GLFW_KEY_F6:
-            return 0x75;
-        case GLFW_KEY_F7:
-            return 0x76;
-        case GLFW_KEY_F8:
-            return 0x77;
-        case GLFW_KEY_F9:
-            return 0x78;
-        case GLFW_KEY_F10:
-            return 0x79;
-        case GLFW_KEY_F11:
-            return 0x7A;
-        case GLFW_KEY_F12:
-            return 0x7B;
-        default:
-            return key;
-    }
-}
-
 void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
     KeyState state;
-    state.key = glfwKeyToVKKey(key);
+    state.key = key;
     state.mods = mods;
     state.pressed = action != GLFW_RELEASE;
     const char* key_name = glfwGetKeyName(key, scancode);

@@ -64,9 +64,14 @@ SwitchInputManager::SwitchInputManager()
 {
     padConfigureInput(2, HidNpadStyleSet_NpadStandard);
     padInitializeDefault(&this->padState);
-    
+
+    hidInitializeMouse();
+    hidInitializeKeyboard();
+
     hidInitializeVibrationDevices(m_vibration_device_handles[0], 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
     hidInitializeVibrationDevices(m_vibration_device_handles[1], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
+
+    m_hid_keyboard_state.assign(256, false);
 }
 
 void SwitchInputManager::updateControllerState(ControllerState* state)
@@ -135,6 +140,98 @@ void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lo
 void SwitchInputManager::updateMouseStates(RawMouseState* state)
 {
     state->position = Point();
+}
+
+void SwitchInputManager::runloopStart()
+{
+    HidKeyboardState state;
+    
+    if (hidGetKeyboardStates(&state, 1)) {
+        for (int i = 0; i < 256; ++i) {
+            auto is_pressed = (state.keys[i / 64] & (1ul << (i % 64))) != 0;
+            if (m_hid_keyboard_state[i] != is_pressed) 
+            {
+                m_hid_keyboard_state[i] = is_pressed;
+                int glfwKey = switchKeyToGlfwKey(i);
+
+                KeyState state;
+                state.key = glfwKey;
+                state.pressed = is_pressed;
+                
+                getKeyboardKeyStateChanged()->fire(state);
+            }
+        }
+    } else {
+        Logger::debug("Keyboard failed!");
+    }
+}
+
+int SwitchInputManager::switchKeyToGlfwKey(int key)
+{
+    if (KBD_A <= key && key <= KBD_Z) {
+        return key - KBD_A + BRLS_KBD_KEY_A;
+    } else if (KBD_1 <= key && key <= KBD_9) {
+        return key - KBD_1 + BRLS_KBD_KEY_1;
+    } else if (KBD_F1 <= key && key <= KBD_F12) {
+        return key - KBD_F1 + BRLS_KBD_KEY_F1;
+    } else if (KBD_KP1 <= key && key <= KBD_KP9) {
+        return key - KBD_KP1 + BRLS_KBD_KEY_KP_1;
+    }
+    
+    switch (key) {
+        case KBD_0: return BRLS_KBD_KEY_0;
+        case KBD_SPACE: return BRLS_KBD_KEY_SPACE;
+        case KBD_APOSTROPHE: return BRLS_KBD_KEY_APOSTROPHE;
+        case KBD_COMMA: return BRLS_KBD_KEY_COMMA;
+        case KBD_MINUS: return BRLS_KBD_KEY_MINUS;
+        case KBD_DOT: return BRLS_KBD_KEY_PERIOD;
+        case KBD_SLASH: return BRLS_KBD_KEY_SLASH;
+        case KBD_SEMICOLON: return BRLS_KBD_KEY_SEMICOLON;
+        case KBD_EQUAL: return BRLS_KBD_KEY_EQUAL;
+        case KBD_LEFTBRACE: return BRLS_KBD_KEY_LEFT_BRACKET;
+        case KBD_RIGHTBRACE: return BRLS_KBD_KEY_RIGHT_BRACKET;
+        case KBD_BACKSLASH: return BRLS_KBD_KEY_BACKSLASH;
+        case KBD_GRAVE: return BRLS_KBD_KEY_GRAVE_ACCENT;
+        case KBD_ESC: return BRLS_KBD_KEY_ESCAPE;
+        case KBD_ENTER: return BRLS_KBD_KEY_ENTER;
+        case KBD_TAB: return BRLS_KBD_KEY_TAB;
+        case KBD_BACKSPACE: return BRLS_KBD_KEY_BACKSPACE;
+        case KBD_CAPSLOCK: return BRLS_KBD_KEY_CAPS_LOCK;
+        case KBD_LEFTSHIFT: return BRLS_KBD_KEY_LEFT_SHIFT;
+        case KBD_LEFTCTRL: return BRLS_KBD_KEY_LEFT_CONTROL;
+        case KBD_LEFTALT: return BRLS_KBD_KEY_LEFT_ALT;
+        case KBD_LEFTMETA: return BRLS_KBD_KEY_LEFT_SUPER;
+        case KBD_RIGHTSHIFT: return BRLS_KBD_KEY_RIGHT_SHIFT;
+        case KBD_RIGHTCTRL: return BRLS_KBD_KEY_RIGHT_CONTROL;
+        case KBD_RIGHTALT: return BRLS_KBD_KEY_RIGHT_ALT;
+        case KBD_RIGHTMETA: return BRLS_KBD_KEY_RIGHT_SUPER;
+        case KBD_LEFT: return BRLS_KBD_KEY_LEFT;
+        case KBD_RIGHT: return BRLS_KBD_KEY_RIGHT;
+        case KBD_UP: return BRLS_KBD_KEY_UP;
+        case KBD_DOWN: return BRLS_KBD_KEY_DOWN;
+        
+        case KBD_SYSRQ: return BRLS_KBD_KEY_PRINT_SCREEN;
+        case KBD_SCROLLLOCK: return BRLS_KBD_KEY_SCROLL_LOCK;
+        case KBD_PAUSE: return BRLS_KBD_KEY_PAUSE;
+        case KBD_INSERT: return BRLS_KBD_KEY_INSERT;
+        case KBD_HOME: return BRLS_KBD_KEY_HOME;
+        case KBD_PAGEUP: return BRLS_KBD_KEY_PAGE_UP;
+        case KBD_DELETE: return BRLS_KBD_KEY_DELETE;
+        case KBD_END: return BRLS_KBD_KEY_END;
+        case KBD_PAGEDOWN: return BRLS_KBD_KEY_PAGE_DOWN;
+
+        case KBD_NUMLOCK: return BRLS_KBD_KEY_NUM_LOCK;
+        case KBD_KPSLASH: return BRLS_KBD_KEY_KP_DIVIDE;
+        case KBD_KPASTERISK: return BRLS_KBD_KEY_KP_MULTIPLY;
+        case KBD_KPMINUS: return BRLS_KBD_KEY_KP_SUBTRACT;
+        case KBD_KPPLUS: return BRLS_KBD_KEY_KP_ADD;
+        case KBD_KPENTER: return BRLS_KBD_KEY_KP_ENTER;
+        case KBD_KPDOT: return BRLS_KBD_KEY_KP_DECIMAL;
+        case KBD_KP0: return BRLS_KBD_KEY_KP_0;
+
+        // case KBD_HASHTILDE: return GLFW_HASHTILDE;
+        default: return -1;
+    }
 }
 
 } // namespace brls
