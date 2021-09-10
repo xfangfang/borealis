@@ -49,6 +49,8 @@ class SwitchInputManager : public InputManager
 
     std::vector<bool> m_hid_keyboard_state;
 
+    void handleMouse();
+    void handleKeyboard();
     int switchKeyToGlfwKey(int key);
     int glfwKeyToVKKey(int key);
 };

@@ -139,10 +139,35 @@ void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lo
 
 void SwitchInputManager::updateMouseStates(RawMouseState* state)
 {
-    state->position = Point();
+    HidMouseState mouseState;
+
+    if (hidGetMouseStates(&mouseState, 1) && (mouseState.attributes & HidMouseAttribute_IsConnected)) {
+        state->position = Point(mouseState.x, mouseState.y);
+        state->offset = Point(mouseState.delta_x, mouseState.delta_y);
+        state->leftButton = mouseState.buttons & HidMouseButton_Left;
+        state->middleButton = mouseState.buttons & HidMouseButton_Middle;
+        state->rightButton = mouseState.buttons & HidMouseButton_Right;
+        lastCoursorPosition = state->position;
+    }
 }
 
 void SwitchInputManager::runloopStart()
+{
+    handleMouse();
+    handleKeyboard();
+}
+
+void SwitchInputManager::handleMouse()
+{
+    HidMouseState state;
+
+    if (hidGetMouseStates(&state, 1)) {
+        getMouseCusorOffsetChanged()->fire(Point(state.delta_x, state.delta_y));
+        getMouseScrollOffsetChanged()->fire(Point(state.wheel_delta_y, state.wheel_delta_x));
+    }
+}
+
+void SwitchInputManager::handleKeyboard()
 {
     HidKeyboardState state;
     
