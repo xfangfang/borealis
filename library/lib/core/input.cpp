@@ -58,6 +58,7 @@ MouseState InputManager::computeMouseState(RawMouseState currentTouch, MouseStat
     MouseState state;
     state.view         = lastFrameState.view;
     state.position     = currentTouch.position;
+    state.offset       = currentTouch.offset;
     state.scroll       = currentTouch.scroll;
     state.leftButton   = getPhase(lastFrameState.leftButton, currentTouch.leftButton);
     state.middleButton = getPhase(lastFrameState.middleButton, currentTouch.middleButton);

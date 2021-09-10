@@ -72,6 +72,16 @@ SwitchInputManager::SwitchInputManager()
     hidInitializeVibrationDevices(m_vibration_device_handles[1], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
 
     m_hid_keyboard_state.assign(256, false);
+
+    
+}
+
+SwitchInputManager::~SwitchInputManager() 
+{
+    NVGcontext* vg = Application::getNVGContext();
+
+    if (this->cursorTexture != 0)
+        nvgDeleteImage(vg, this->cursorTexture);
 }
 
 void SwitchInputManager::updateControllerState(ControllerState* state)
@@ -144,6 +154,7 @@ void SwitchInputManager::updateMouseStates(RawMouseState* state)
     if (hidGetMouseStates(&mouseState, 1) && (mouseState.attributes & HidMouseAttribute_IsConnected)) {
         state->position = Point(mouseState.x, mouseState.y);
         state->offset = Point(mouseState.delta_x, mouseState.delta_y);
+        state->scroll = Point(0, mouseState.wheel_delta_x);
         state->leftButton = mouseState.buttons & HidMouseButton_Left;
         state->middleButton = mouseState.buttons & HidMouseButton_Middle;
         state->rightButton = mouseState.buttons & HidMouseButton_Right;
@@ -188,6 +199,43 @@ void SwitchInputManager::handleKeyboard()
         }
     } else {
         Logger::debug("Keyboard failed!");
+    }
+}
+
+void SwitchInputManager::setPointerLock(bool lock)
+{
+    pointerLocked = lock;
+}
+
+void SwitchInputManager::drawCoursor(NVGcontext* vg)
+{
+    initCursor(vg);
+    if (!pointerLocked) {
+        this->paint.xform[4] = lastCoursorPosition.x;
+        this->paint.xform[5] = lastCoursorPosition.y;
+
+        nvgBeginPath(vg);
+        nvgRect(vg, lastCoursorPosition.x, lastCoursorPosition.y, this->cursorWidth, this->cursorHeight);
+        nvgFillPaint(vg, this->paint);
+        nvgFill(vg);
+    }
+}
+
+void SwitchInputManager::initCursor(NVGcontext* vg) 
+{
+    if (cursorInited) return; 
+    if (vg) {
+        this->pointerIcon = std::string(BRLS_RESOURCES) + "img/sys/cursor.png";
+        this->cursorTexture = nvgCreateImage(vg, pointerIcon.c_str(), NVG_IMAGE_NEAREST);
+
+        int width, height;
+        nvgImageSize(vg, cursorTexture, &width, &height);
+        float aspect = (float)height / (float)width;
+        this->cursorWidth  = 18;
+        this->cursorHeight = 18 * aspect;
+
+        this->paint   = nvgImagePattern(vg, 0, 0, this->cursorWidth, this->cursorHeight, 0, this->cursorTexture, 1.0f);
+        this->cursorInited = true;
     }
 }
 

@@ -239,6 +239,7 @@ bool Application::mainLoop()
         {
             Point position = touchState[i].position;
             Application::setInputType(InputType::TOUCH);
+            Application::setDrawCoursor(false);
 
             // Search for first responder, which will be the root of recognition tree
             if (Application::activitiesStack.size() > 0)
@@ -263,12 +264,21 @@ bool Application::mainLoop()
 
     MouseState mouseState = InputManager::computeMouseState(rawMouse, currentMouseState);
 
+    if (mouseState.offset.x != 0 || mouseState.offset.y != 0 ||
+        mouseState.scroll.x != 0 || mouseState.scroll.y != 0 ||
+        mouseState.leftButton != TouchPhase::NONE ||
+        mouseState.middleButton != TouchPhase::NONE ||
+        mouseState.rightButton != TouchPhase::NONE)
+    {
+        Application::setInputType(InputType::TOUCH);
+        Application::setDrawCoursor(true);
+    }
+
     if (mouseState.scroll.x == 0 && mouseState.scroll.y == 0 && mouseState.leftButton == TouchPhase::NONE && mouseState.middleButton == TouchPhase::NONE && mouseState.rightButton == TouchPhase::NONE)
         mouseState.view = nullptr;
     else if (mouseState.view == nullptr)
     {
         Point position = mouseState.position;
-        Application::setInputType(InputType::TOUCH);
 
         // Search for first responder, which will be the root of recognition tree
         if (Application::activitiesStack.size() > 0)
@@ -466,8 +476,10 @@ bool Application::setInputType(InputType type)
     Application::inputType = type;
     globalInputTypeChangeEvent.fire(type);
 
-    if (type == InputType::GAMEPAD)
+    if (type == InputType::GAMEPAD) {
+        Application::setDrawCoursor(false);
         Application::currentFocus->onFocusGained();
+    }
 
     return true;
 }
@@ -574,6 +586,11 @@ void Application::frame()
     if (currentFocus && Application::getInputType() != InputType::TOUCH)
     {
         currentFocus->frameHighlight(&frameContext);
+    }
+
+    if (isDrawCoursor())
+    {
+        getPlatform()->getInputManager()->drawCoursor(frameContext.vg);
     }
 
     if (debuggingViewEnabled)

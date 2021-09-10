@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <nanovg.h>
 #include <borealis/core/geometry.hpp>
 #include <borealis/core/event.hpp>
 #include <vector>
@@ -263,10 +264,11 @@ struct RawMouseState
 struct MouseState
 {
     Point position;
+    Point offset;
     Point scroll;
-    TouchPhase leftButton;
-    TouchPhase middleButton;
-    TouchPhase rightButton;
+    TouchPhase leftButton = TouchPhase::NONE;
+    TouchPhase middleButton = TouchPhase::NONE;
+    TouchPhase rightButton = TouchPhase::NONE;
     View* view = nullptr;
 };
 
@@ -302,6 +304,8 @@ class InputManager
      * For internal call only
      */
     virtual void runloopStart() {};
+
+    virtual void drawCoursor(NVGcontext* vg) {};
     
     virtual void setPointerLock(bool lock) {};
     

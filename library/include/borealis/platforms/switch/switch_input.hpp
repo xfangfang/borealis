@@ -31,6 +31,7 @@ class SwitchInputManager : public InputManager
 {
   public:
     SwitchInputManager();
+    ~SwitchInputManager() override;
 
     void updateControllerState(ControllerState* state) override;
 
@@ -41,14 +42,28 @@ class SwitchInputManager : public InputManager
     void sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor) override;
 
     void runloopStart() override;
+    
+    void setPointerLock(bool lock) override;
+
+    void drawCoursor(NVGcontext* vg) override;
 
   private:
+    bool cursorInited = false;
+    int cursorWidth, cursorHeight;
+    int cursorTexture = 0;
+    NVGpaint paint;
+    std::string pointerIcon;
+    Point lastCoursorPosition;
     PadState padState;
+    PadState padState2;
+    PadState padState3;
     HidVibrationDeviceHandle m_vibration_device_handles[2][2];
     HidVibrationValue m_vibration_values[2];
+    bool pointerLocked = false;
 
     std::vector<bool> m_hid_keyboard_state;
 
+    void initCursor(NVGcontext* vg);
     void handleMouse();
     void handleKeyboard();
     int switchKeyToGlfwKey(int key);

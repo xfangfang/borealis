@@ -229,6 +229,16 @@ class Application
         return swapInputKeys;
     }
 
+    inline static void setDrawCoursor(bool draw)
+    {
+        drawCoursor = draw;
+    }
+
+    inline static bool isDrawCoursor()
+    {
+        return drawCoursor;
+    }
+
     static void tryDeinitFirstResponder(View* view);
 
   private:
@@ -236,6 +246,7 @@ class Application
     inline static bool quitRequested        = false;
     inline static bool debuggingViewEnabled = false;
     inline static bool swapInputKeys        = false;
+    inline static bool drawCoursor          = false;
 
     inline static Platform* platform = nullptr;
 
