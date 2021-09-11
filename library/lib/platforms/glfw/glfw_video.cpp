@@ -155,6 +155,13 @@ void GLFWVideoContext::resetState()
     glDisable(GL_STENCIL_TEST);
 }
 
+void GLFWVideoContext::disableScreenDimming(bool disable)
+{
+#ifdef __SWITCH__
+    appletSetMediaPlaybackState(disable);
+#endif
+}
+
 GLFWVideoContext::~GLFWVideoContext()
 {
     if (this->nvgContext)
