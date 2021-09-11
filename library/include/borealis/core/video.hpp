@@ -43,6 +43,8 @@ class VideoContext
      */
     virtual void endFrame() = 0;
 
+    virtual void disableScreenDimming(bool disable) = 0;
+
     /**
      * Can be called by the application to reset the graphics
      * state, in case there is a need to use the graphics API
