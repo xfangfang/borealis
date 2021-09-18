@@ -25,6 +25,13 @@
 namespace brls
 {
 
+typedef enum {
+    BRLS_KBD_MODIFIER_SHIFT = 0x01,
+    BRLS_KBD_MODIFIER_CTRL  = 0x02,
+    BRLS_KBD_MODIFIER_ALT   = 0x04,
+    BRLS_KBD_MODIFIER_META  = 0x08,
+} BrlsKeyboardModifiers;
+
 /// HidKeyboardScancode
 /// Uses the same key codes as GLFW
 typedef enum {

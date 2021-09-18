@@ -59,7 +59,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     }
     
     // Create window
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(_WIN32) 
     // Explicitly ask for a 3.2 context on OS X
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

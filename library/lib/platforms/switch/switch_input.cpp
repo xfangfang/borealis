@@ -72,8 +72,6 @@ SwitchInputManager::SwitchInputManager()
     hidInitializeVibrationDevices(m_vibration_device_handles[1], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
 
     m_hid_keyboard_state.assign(256, false);
-
-    
 }
 
 SwitchInputManager::~SwitchInputManager() 
@@ -149,32 +147,34 @@ void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lo
 
 void SwitchInputManager::updateMouseStates(RawMouseState* state)
 {
-    HidMouseState mouseState;
-
-    if (hidGetMouseStates(&mouseState, 1) && (mouseState.attributes & HidMouseAttribute_IsConnected)) {
-        state->position = Point(mouseState.x, mouseState.y);
-        state->offset = Point(mouseState.delta_x, mouseState.delta_y);
-        state->scroll = Point(0, mouseState.wheel_delta_x);
-        state->leftButton = mouseState.buttons & HidMouseButton_Left;
-        state->middleButton = mouseState.buttons & HidMouseButton_Middle;
-        state->rightButton = mouseState.buttons & HidMouseButton_Right;
+    if (currentMouseState.attributes & HidMouseAttribute_IsConnected) {
+        state->position = Point(currentMouseState.x, currentMouseState.y);
+        state->offset = Point(currentMouseState.delta_x, currentMouseState.delta_y);
+        state->scroll = Point(0, currentMouseState.wheel_delta_x);
+        state->leftButton = currentMouseState.buttons & HidMouseButton_Left;
+        state->middleButton = currentMouseState.buttons & HidMouseButton_Middle;
+        state->rightButton = currentMouseState.buttons & HidMouseButton_Right;
         lastCoursorPosition = state->position;
     }
 }
 
 void SwitchInputManager::runloopStart()
 {
+    upToDateMouseState();
     handleMouse();
     handleKeyboard();
 }
 
+void SwitchInputManager::upToDateMouseState() 
+{
+    hidGetMouseStates(&currentMouseState, 1);
+}
+
 void SwitchInputManager::handleMouse()
 {
-    HidMouseState state;
-
-    if (hidGetMouseStates(&state, 1)) {
-        getMouseCusorOffsetChanged()->fire(Point(state.delta_x, state.delta_y));
-        getMouseScrollOffsetChanged()->fire(Point(state.wheel_delta_y, state.wheel_delta_x));
+    if (currentMouseState.attributes & HidMouseAttribute_IsConnected) {
+        getMouseCusorOffsetChanged()->fire(Point(currentMouseState.delta_x, currentMouseState.delta_y));
+        getMouseScrollOffsetChanged()->fire(Point(currentMouseState.wheel_delta_y, currentMouseState.wheel_delta_x));
     }
 }
 
@@ -190,11 +190,23 @@ void SwitchInputManager::handleKeyboard()
                 m_hid_keyboard_state[i] = is_pressed;
                 int glfwKey = switchKeyToGlfwKey(i);
 
-                KeyState state;
-                state.key = glfwKey;
-                state.pressed = is_pressed;
+                KeyState keyState;
+                keyState.key = glfwKey;
+                keyState.pressed = is_pressed;
                 
-                getKeyboardKeyStateChanged()->fire(state);
+                if (state.modifiers & HidKeyboardModifier_LeftAlt)
+                    keyState.mods |= BRLS_KBD_MODIFIER_ALT;
+                
+                if (state.modifiers & HidKeyboardModifier_Control)
+                    keyState.mods |= BRLS_KBD_MODIFIER_CTRL;
+                
+                if (state.modifiers & HidKeyboardModifier_Shift)
+                    keyState.mods |= BRLS_KBD_MODIFIER_SHIFT;
+                
+                if (state.modifiers & HidKeyboardModifier_Gui)
+                    keyState.mods |= BRLS_KBD_MODIFIER_META;
+                
+                getKeyboardKeyStateChanged()->fire(keyState);
             }
         }
     } else {

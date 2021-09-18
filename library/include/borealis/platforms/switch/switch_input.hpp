@@ -60,12 +60,14 @@ class SwitchInputManager : public InputManager
     HidVibrationDeviceHandle m_vibration_device_handles[2][2];
     HidVibrationValue m_vibration_values[2];
     bool pointerLocked = false;
+    HidMouseState currentMouseState;
 
     std::vector<bool> m_hid_keyboard_state;
 
     void initCursor(NVGcontext* vg);
     void handleMouse();
     void handleKeyboard();
+    void upToDateMouseState();
     int switchKeyToGlfwKey(int key);
     int glfwKeyToVKKey(int key);
 };
