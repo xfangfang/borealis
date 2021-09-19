@@ -132,7 +132,7 @@ Dialog::Dialog(Box* contentView)
     container->addView(contentView);
 
     appletFrame->registerAction(
-        "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
+        "hints/back"_i18n, BUTTON_B, [this](View* view) {
             if (cancelable)
                 this->dismiss();
             return cancelable;

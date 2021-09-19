@@ -68,7 +68,7 @@ SidebarItem::SidebarItem()
     this->setFocusSound(SOUND_FOCUS_SIDEBAR);
 
     this->registerAction(
-        "brls/hints/ok"_i18n, BUTTON_A, [](View* view) {
+        "hints/ok"_i18n, BUTTON_A, [](View* view) {
             Application::onControllerButtonPressed(BUTTON_NAV_RIGHT, false);
             return true;
         },

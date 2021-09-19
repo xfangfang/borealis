@@ -58,7 +58,7 @@ PokemonView::PokemonView(Pokemon pokemon)
     description->setText("It's a pokemon with name: " + pokemon.name + "\nCollect them all to became a Shaman king!");
 
     this->getView("close_button")->registerAction(
-        "brls/hints/ok"_i18n, brls::BUTTON_A, [this](brls::View* view) {
+        "hints/ok"_i18n, brls::BUTTON_A, [this](brls::View* view) {
             this->dismiss();
             return true;
         },

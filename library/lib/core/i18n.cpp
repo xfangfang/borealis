@@ -22,6 +22,10 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#ifndef BRLS_I18N_PREFIX
+#define BRLS_I18N_PREFIX "brls/"
+#endif
+
 namespace brls
 {
 
@@ -99,7 +103,7 @@ namespace internal
 
         try
         {
-            pointer = nlohmann::json::json_pointer("/" + stringName);
+            pointer = nlohmann::json::json_pointer("/" + std::string(BRLS_I18N_PREFIX) + stringName);
         }
         catch (const std::exception& e)
         {

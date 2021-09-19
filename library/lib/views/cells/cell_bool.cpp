@@ -73,7 +73,7 @@ void BooleanCell::setOn(bool on, bool animated)
 void BooleanCell::updateUI()
 {
     Theme theme = Application::getTheme();
-    detail->setText(state ? "brls/hints/on"_i18n : "brls/hints/off"_i18n);
+    detail->setText(state ? "hints/on"_i18n : "hints/off"_i18n);
     detail->setTextColor(state ? theme["brls/list/listItem_value_color"] : theme["brls/text_disabled"]);
 }
 

@@ -114,7 +114,7 @@ AppletFrame::AppletFrame()
     });
 
     this->registerAction(
-        "brls/hints/back"_i18n, BUTTON_B, [this](View* view) {
+        "hints/back"_i18n, BUTTON_B, [this](View* view) {
             this->contentViewStack.back()->dismiss();
             return true;
         },
