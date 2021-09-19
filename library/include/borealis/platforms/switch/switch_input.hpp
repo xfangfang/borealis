@@ -68,8 +68,8 @@ class SwitchInputManager : public InputManager
     void handleMouse();
     void handleKeyboard();
     void upToDateMouseState();
-    int switchKeyToGlfwKey(int key);
-    int glfwKeyToVKKey(int key);
+    BrlsKeyboardScancode switchKeyToGlfwKey(int key);
+    int glfwKeyToVKKey(BrlsKeyboardScancode key);
 };
 
 /// HidKeyboardScancode

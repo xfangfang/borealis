@@ -188,7 +188,7 @@ void SwitchInputManager::handleKeyboard()
             if (m_hid_keyboard_state[i] != is_pressed) 
             {
                 m_hid_keyboard_state[i] = is_pressed;
-                int glfwKey = switchKeyToGlfwKey(i);
+                BrlsKeyboardScancode glfwKey = switchKeyToGlfwKey(i);
 
                 KeyState keyState;
                 keyState.key = glfwKey;
@@ -251,16 +251,16 @@ void SwitchInputManager::initCursor(NVGcontext* vg)
     }
 }
 
-int SwitchInputManager::switchKeyToGlfwKey(int key)
+BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
 {
     if (KBD_A <= key && key <= KBD_Z) {
-        return key - KBD_A + BRLS_KBD_KEY_A;
+        return (BrlsKeyboardScancode)(key - KBD_A + BRLS_KBD_KEY_A);
     } else if (KBD_1 <= key && key <= KBD_9) {
-        return key - KBD_1 + BRLS_KBD_KEY_1;
+        return (BrlsKeyboardScancode)(key - KBD_1 + BRLS_KBD_KEY_1);
     } else if (KBD_F1 <= key && key <= KBD_F12) {
-        return key - KBD_F1 + BRLS_KBD_KEY_F1;
+        return (BrlsKeyboardScancode)(key - KBD_F1 + BRLS_KBD_KEY_F1);
     } else if (KBD_KP1 <= key && key <= KBD_KP9) {
-        return key - KBD_KP1 + BRLS_KBD_KEY_KP_1;
+        return (BrlsKeyboardScancode)(key - KBD_KP1 + BRLS_KBD_KEY_KP_1);
     }
     
     switch (key) {
@@ -315,7 +315,7 @@ int SwitchInputManager::switchKeyToGlfwKey(int key)
         case KBD_KP0: return BRLS_KBD_KEY_KP_0;
 
         // case KBD_HASHTILDE: return GLFW_HASHTILDE;
-        default: return -1;
+        default: return BRLS_KBD_KEY_UNKNOWN;
     }
 }
 

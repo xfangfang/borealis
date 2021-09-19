@@ -218,7 +218,7 @@ enum ControllerAxis
 
 struct KeyState
 {
-    short key;
+    BrlsKeyboardScancode key;
     short mods;
     bool pressed;
 };
