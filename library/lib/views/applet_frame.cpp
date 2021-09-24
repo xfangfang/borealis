@@ -165,7 +165,6 @@ void AppletFrame::pushContentView(View* view)
 {
     contentViewStack.push_back(view);
     setContentView(view);
-    Application::giveFocus(view);
 }
 
 void AppletFrame::popContentView(std::function<void(void)> cb)
