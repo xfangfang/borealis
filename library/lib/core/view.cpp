@@ -695,6 +695,8 @@ ActionIdentifier View::registerAction(std::string hintText, enum ControllerButto
     else
         this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener });
 
+
+    Application::getGlobalHintsUpdateEvent()->fire();
     return nextIdentifier;
 }
 
