@@ -32,6 +32,8 @@ class GLFWInputManager : public InputManager
 
     void updateControllerState(ControllerState* state) override;
 
+    bool getKeyboardKeyState(BrlsKeyboardScancode state) override;
+
     void updateTouchStates(std::vector<RawTouchState>* states) override;
 
     void updateMouseStates(RawMouseState* state) override;

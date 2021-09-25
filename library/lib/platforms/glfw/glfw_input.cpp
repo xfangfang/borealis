@@ -183,10 +183,20 @@ void GLFWInputManager::updateControllerState(ControllerState* state)
     state->buttons[BUTTON_NAV_DOWN]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f || state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.5f || state->buttons[BUTTON_LEFT];
 
+    state->buttons[BUTTON_NAV_UP]    |= glfwGetKey(this->window, GLFW_KEY_UP);
+    state->buttons[BUTTON_NAV_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_RIGHT);
+    state->buttons[BUTTON_NAV_DOWN]  |= glfwGetKey(this->window, GLFW_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT]  |= glfwGetKey(this->window, GLFW_KEY_LEFT);
+
     for (size_t i = 0; i < GLFW_GAMEPAD_AXIS_MAX; i++)
     {
         state->axes[GLFW_AXIS_MAPPING[i]] = glfwState.axes[i];
     }
+}
+
+bool GLFWInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
+{
+    return glfwGetKey(this->window, key);
 }
 
 bool sameSign(int a, int b)

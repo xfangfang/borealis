@@ -291,6 +291,8 @@ class InputManager
      */
     virtual void updateControllerState(ControllerState* state) = 0;
 
+    virtual bool getKeyboardKeyState(BrlsKeyboardScancode state) = 0;
+
     /**
      * Called once every frame to fill the given RawTouchState struct with the raw touch data.
      */

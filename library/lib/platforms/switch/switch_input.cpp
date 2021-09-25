@@ -100,6 +100,20 @@ void SwitchInputManager::updateControllerState(ControllerState* state)
     state->axes[LEFT_Y]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
     state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
     state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
+
+    state->buttons[BUTTON_NAV_UP]    |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
+    state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
+    state->buttons[BUTTON_NAV_DOWN]  |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT]  |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
+}
+
+bool SwitchInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
+{
+    for (int i = 0; i < 256; ++i) {
+        if (key == switchKeyToGlfwKey(i))
+            return m_hid_keyboard_state[i];
+    }
+    return false;
 }
 
 void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
