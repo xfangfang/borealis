@@ -270,6 +270,8 @@ class View
     std::string title;
     std::string iconPath;
 
+    int ptrLockCounter = 0;
+
   protected:
     Animatable collapseState = 1.0f;
 
@@ -1461,6 +1463,9 @@ class View
     void dismiss(std::function<void(void)> cb = [] {});
 
     bool* deletionToken = nullptr;
+    void ptrLock();
+    void ptrUnlock();
+    bool isPtrLocked();
     void freeView();
 
     Activity* getParentActivity();

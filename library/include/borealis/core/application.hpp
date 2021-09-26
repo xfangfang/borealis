@@ -256,7 +256,7 @@ class Application
 
     inline static std::vector<Activity*> activitiesStack;
     inline static std::vector<View*> focusStack;
-    inline static std::vector<View*> deletionPool;
+    inline static std::set<View*> deletionPool;
 
     inline static unsigned windowWidth, windowHeight;
 

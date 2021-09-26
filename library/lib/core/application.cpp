@@ -346,10 +346,14 @@ bool Application::mainLoop()
     runLoopEvent.fire();
 
     // Free views deletion pool
-    for (auto view : Application::deletionPool)
-        delete view;
-
-    Application::deletionPool.clear();
+    std::set<View*> undeletedViews;
+    for (auto view : Application::deletionPool) {
+        if (!view->isPtrLocked())
+            delete view;
+        else
+            undeletedViews.insert(view);
+    }
+    Application::deletionPool = undeletedViews;
 
     return true;
 }
@@ -870,7 +874,7 @@ std::string Application::getLocale()
 
 void Application::addToFreeQueue(View* view)
 {
-    deletionPool.push_back(view);
+    deletionPool.insert(view);
 }
 
 void Application::tryDeinitFirstResponder(View* view)

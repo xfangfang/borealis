@@ -2246,6 +2246,21 @@ void View::dismiss(std::function<void(void)> cb)
     applet->popContentView(cb);
 }
 
+void View::ptrLock()
+{
+    ptrLockCounter++;
+}
+
+void View::ptrUnlock()
+{
+    ptrLockCounter--;
+}
+
+bool View::isPtrLocked()
+{
+    return ptrLockCounter > 0;
+}
+
 void View::freeView()
 {
     Application::addToFreeQueue(this);

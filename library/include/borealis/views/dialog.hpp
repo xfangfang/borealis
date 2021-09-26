@@ -21,6 +21,7 @@
 #include <borealis/core/box.hpp>
 #include <borealis/views/applet_frame.hpp>
 #include <borealis/views/button.hpp>
+#include <borealis/views/rectangle.hpp>
 
 namespace brls
 {
@@ -56,6 +57,9 @@ class Dialog : public Box
     BRLS_BIND(Button, button1, "brls/dialog/button1");
     BRLS_BIND(Button, button2, "brls/dialog/button2");
     BRLS_BIND(Button, button3, "brls/dialog/button3");
+
+    BRLS_BIND(Rectangle, button2separator, "brls/dialog/button2/separator");
+    BRLS_BIND(Rectangle, button3separator, "brls/dialog/button3/separator");
 
   public:
     Dialog(std::string text);

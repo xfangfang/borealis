@@ -58,6 +58,12 @@ const std::string dialogXML = R"xml(
                     grow="1"
                     axis="column"/>
 
+                <brls:Rectangle
+                    id="brls/dialog/button3/separator"
+                    width="auto"
+                    height="2"
+                    color="@theme/brls/sidebar/separator" />
+
                 <brls:Button
                     id="brls/dialog/button3"
                     width="auto"
@@ -66,8 +72,6 @@ const std::string dialogXML = R"xml(
                     focusable="true"
                     justifyContent="center"
                     alignItems="center"
-                    lineTop="2px"
-                    lineColor="@theme/brls/sidebar/separator"
                     highlightCornerRadius="6"
                     fontSize="@style/brls/dialog/fontSize"
                     style="borderless"
@@ -100,6 +104,12 @@ const std::string dialogXML = R"xml(
                         textColor="@theme/brls/accent"
                         visibility="gone"/>
 
+                    <brls:Rectangle
+                        id="brls/dialog/button2/separator"
+                        width="2"
+                        height="auto"
+                        color="@theme/brls/sidebar/separator" />
+
                     <brls:Button
                         id="brls/dialog/button2"
                         width="0"
@@ -111,8 +121,6 @@ const std::string dialogXML = R"xml(
                         highlightCornerRadius="6"
                         text="Continue"
                         style="borderless"
-                        lineLeft="2px"
-                        lineColor="@theme/brls/sidebar/separator"
                         fontSize="@style/brls/dialog/fontSize"
                         textColor="@theme/brls/accent"
                         visibility="gone"/>
@@ -204,6 +212,7 @@ void Dialog::rebuildButtons()
 
     if (this->buttons.size() > 1)
     {
+        button2separator->setVisibility(Visibility::VISIBLE);
         button2->setVisibility(Visibility::VISIBLE);
         button2->setText(buttons[1]->label);
         button2->registerClickAction([this](View* view) {
@@ -214,6 +223,7 @@ void Dialog::rebuildButtons()
 
     if (this->buttons.size() > 2)
     {
+        button3separator->setVisibility(Visibility::VISIBLE);
         button3->setVisibility(Visibility::VISIBLE);
         button3->setText(buttons[2]->label);
         button3->registerClickAction([this](View* view) {
