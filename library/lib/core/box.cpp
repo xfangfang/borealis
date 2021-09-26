@@ -665,7 +665,8 @@ Box::~Box()
 {
     for (auto it : getChildren())
     {
-        delete it;
+        if (!it->isPtrLocked())
+            delete it;
     }
 }
 
