@@ -58,19 +58,33 @@
         return method(view);                                          \
     })
 
-#define ASYNC_RETAIN                 \
-    deletionToken = new bool(false); \
-    bool* token   = deletionToken;
+#define ASYNC_RETAIN                                \
+    if (!deletionToken && !deletionTokenCounter) {  \
+        deletionToken = new bool(false);            \
+        deletionTokenCounter = new int(0);          \
+    }                                               \
+    (*deletionTokenCounter)++;                      \
+    bool* token   = deletionToken;                  \
+    int* tokenCounter   = deletionTokenCounter;
 
-#define ASYNC_RELEASE      \
-    bool release = *token; \
-    delete token;          \
-    if (release)           \
-        return;            \
-    else                   \
-        deletionToken = nullptr;
+#define ASYNC_RELEASE                           \
+    bool release = *token;                      \
+    int counter = *tokenCounter;                \
+    if (counter > 0) {                          \
+        (*tokenCounter)--;                      \
+        if (*tokenCounter == 0) {               \
+            delete token;                       \
+            delete tokenCounter;                \
+            if (!release) {                     \
+                deletionToken = nullptr;        \
+                deletionTokenCounter = nullptr; \
+            }                                   \
+                                                \
+        }                                       \
+    }                                           \
+    if (release) return;    
 
-#define ASYNC_TOKEN this, token
+#define ASYNC_TOKEN this, token, tokenCounter
 
 namespace brls
 {
@@ -1463,6 +1477,7 @@ class View
     void dismiss(std::function<void(void)> cb = [] {});
 
     bool* deletionToken = nullptr;
+    int* deletionTokenCounter = nullptr;
     void ptrLock();
     void ptrUnlock();
     bool isPtrLocked();
