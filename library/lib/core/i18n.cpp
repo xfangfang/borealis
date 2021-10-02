@@ -23,7 +23,7 @@
 #include <string>
 
 #ifndef BRLS_I18N_PREFIX
-#define BRLS_I18N_PREFIX "brls/"
+#define BRLS_I18N_PREFIX ""
 #endif
 
 namespace brls

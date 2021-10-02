@@ -111,7 +111,7 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
     // Measure the required height, with wrapping
 
     // Is wrapping necessary and allowed ?
-    if (availableWidth < requiredWidth && !label->isSingleLine())
+    if ((availableWidth < requiredWidth || fullText.find("\n") != std::string::npos) && !label->isSingleLine())
     {
         float boxBounds[4];
         nvgTextBoxBounds(vg, 0, 0, availableWidth, fullText.c_str(), nullptr, boxBounds);

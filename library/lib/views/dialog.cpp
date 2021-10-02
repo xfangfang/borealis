@@ -157,6 +157,7 @@ Dialog::Dialog(std::string text)
     label->setText(text);
     label->setFontSize(style["brls/dialog/fontSize"]);
     label->setHorizontalAlign(HorizontalAlign::CENTER);
+    label->setSingleLine(false);
 
     Box* box = new Box();
     box->addView(label);
