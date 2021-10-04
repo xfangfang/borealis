@@ -1279,7 +1279,9 @@ void View::hide(std::function<void(void)> cb, bool animated, float animationDura
 
         this->alpha.addStep(0.0f, animationDuration, EasingFunction::quadraticOut);
 
-        this->alpha.setEndCallback([cb](bool finished) { cb(); });
+        this->alpha.setEndCallback([cb](bool finished) {
+            if (finished) cb();
+        });
 
         this->alpha.start();
     }
