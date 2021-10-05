@@ -47,14 +47,18 @@ class AppletFrame : public Box
     void popContentView(std::function<void(void)> cb = [] {});
 
     void setTitle(std::string title);
-
-    void setIconFromRes(std::string name);
-    void setIconFromFile(std::string path);
+    void setIcon(std::string path);
 
     void setHeaderVisibility(Visibility visibility);
     void setFooterVisibility(Visibility visibility);
 
     void setHeaderStyle(HeaderStyle style);
+    void updateAppletFrameItem();
+
+    View* getContentView()
+    {
+        return contentView;
+    }
 
     Box* getHeader()
     {

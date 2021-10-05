@@ -154,6 +154,24 @@ enum class ShadowType
     CUSTOM, // customized shadow (use the provided methods to tweak it)
 };
 
+struct AppletFrameItem {
+    std::string title;
+    std::string iconPath;
+    View* hintView = nullptr;
+
+    void setIconFromRes(std::string name)
+    {
+        iconPath = std::string(BRLS_RESOURCES) + name;
+    }
+
+    void setIconFromFile(std::string path)
+    {
+        iconPath = path;
+    }
+
+    ~AppletFrameItem();
+};
+
 extern const NVGcolor transparent;
 
 class View;
@@ -281,8 +299,7 @@ class View
     std::unordered_map<FocusDirection, std::string> customFocusById;
     std::unordered_map<FocusDirection, View*> customFocusByPtr;
 
-    std::string title;
-    std::string iconPath;
+    AppletFrameItem appletFrameItem;
 
     int ptrLockCounter = 0;
 
@@ -1435,27 +1452,12 @@ class View
      */
     static std::string getFilePathXMLAttributeValue(std::string value);
 
-    virtual void setTitle(std::string title);
-
-    std::string getTitle()
+    AppletFrameItem *getAppletFrameItem()
     {
-        return this->title;
+        return &this->appletFrameItem;
     }
 
-    void setIconFromRes(std::string name)
-    {
-        iconPath = std::string(BRLS_RESOURCES) + name;
-    }
-
-    void setIconFromFile(std::string path)
-    {
-        iconPath = path;
-    }
-
-    std::string getIconFile()
-    {
-        return iconPath;
-    }
+    void updateAppletFrameItem();
 
     bool getClipsToBounds() const
     {
@@ -1468,10 +1470,6 @@ class View
     }
 
     virtual AppletFrame* getAppletFrame();
-    virtual View* getHintView()
-    {
-        return nullptr;
-    }
 
     void present(View* view);
     void dismiss(std::function<void(void)> cb = [] {});

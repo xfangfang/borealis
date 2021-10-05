@@ -46,13 +46,13 @@ PokemonView::PokemonView(Pokemon pokemon)
     holder->setFocusable(true);
     holder->addGestureRecognizer(new brls::TapGestureRecognizer(holder));
 
-    hintView = holder;
-
     holder->registerClickAction(dismissAction);
     holder->registerAction("Close", brls::ControllerButton::BUTTON_RB, dismissAction, true);
     registerAction("Close", brls::ControllerButton::BUTTON_RB, dismissAction, true);
 
-    setTitle(pokemon.name);
+    getAppletFrameItem()->title = pokemon.name;
+    getAppletFrameItem()->setIconFromRes("img/pokemon/" + pokemon.id + ".png");
+    getAppletFrameItem()->hintView = holder;
     image->setImageFromRes("img/pokemon/" + pokemon.id + ".png");
 
     description->setText("It's a pokemon with name: " + pokemon.name + "\nCollect them all to became a Shaman king!");
@@ -63,11 +63,6 @@ PokemonView::PokemonView(Pokemon pokemon)
             return true;
         },
         false, false, brls::SOUND_BACK);
-}
-
-brls::View* PokemonView::getHintView()
-{
-    return hintView;
 }
 
 brls::View* PokemonView::create()

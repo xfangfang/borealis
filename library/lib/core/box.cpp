@@ -221,7 +221,7 @@ void Box::removeView(View* view, bool free)
     this->invalidate();
 }
 
-void Box::clearViews()
+void Box::clearViews(bool free)
 {
     lastFocusedView          = nullptr;
     std::vector<View*> views = getChildren();
@@ -235,7 +235,8 @@ void Box::clearViews()
         this->children.pop_back();
 
         view->willDisappear(true);
-        view->freeView();
+        if (free)
+            view->freeView();
     }
 
     this->invalidate();

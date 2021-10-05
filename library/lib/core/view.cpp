@@ -43,6 +43,12 @@ static bool startsWith(const std::string& data, const std::string& prefix)
     return data.rfind(prefix, 0) == 0;
 }
 
+AppletFrameItem::~AppletFrameItem()
+{
+    if (hintView)
+        delete hintView;
+}
+
 View::View()
 {
     // Instantiate and prepare YGNode
@@ -61,11 +67,11 @@ View::View()
     this->highlightCornerRadius = style["brls/highlight/corner_radius"];
 
     this->registerStringXMLAttribute("title", [this](std::string value) {
-        this->setTitle(value);
+        this->getAppletFrameItem()->title = value;
     });
 
     this->registerFilePathXMLAttribute("icon", [this](std::string value) {
-        this->setIconFromFile(value);
+        this->getAppletFrameItem()->setIconFromFile(value);
     });
 
     this->registerFloatXMLAttribute("detachedX", [this](float value) {
@@ -1637,15 +1643,6 @@ bool View::applyXMLAttribute(std::string name, std::string value)
     }
 }
 
-void View::setTitle(std::string title)
-{
-    this->title = title;
-
-    AppletFrame* appletFrame = this->getAppletFrame();
-    if (appletFrame)
-        appletFrame->setTitle(title);
-}
-
 void View::applyXMLAttributes(tinyxml2::XMLElement* element)
 {
     if (!element)
@@ -2228,6 +2225,16 @@ AppletFrame* View::getAppletFrame()
         view = view->getParent();
     }
     return nullptr;
+}
+
+void View::updateAppletFrameItem()
+{
+    AppletFrame* appletFrame = this->getAppletFrame();
+    if (appletFrame) {
+        appletFrame->updateAppletFrameItem();
+        appletFrame->setTitle(getAppletFrameItem()->title);
+        appletFrame->setIcon(getAppletFrameItem()->iconPath);
+    }
 }
 
 void View::present(View* view)

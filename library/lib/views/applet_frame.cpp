@@ -127,13 +127,7 @@ AppletFrame::AppletFrame(View* contentView)
     this->pushContentView(contentView);
 }
 
-void AppletFrame::setIconFromRes(std::string name)
-{
-    this->icon->setVisibility(Visibility::VISIBLE);
-    this->icon->setImageFromRes(name);
-}
-
-void AppletFrame::setIconFromFile(std::string path)
+void AppletFrame::setIcon(std::string path)
 {
     if (path.empty())
     {
@@ -194,7 +188,6 @@ void AppletFrame::setContentView(View* view)
         // Remove the node
         this->removeView(this->contentView, false);
         this->contentView = nullptr;
-        this->hintBox->clearViews();
     }
 
     if (!view)
@@ -207,11 +200,7 @@ void AppletFrame::setContentView(View* view)
 
     this->addView(this->contentView, 1);
 
-    if (view->getHintView())
-        this->hintBox->addView(view->getHintView());
-
-    this->setTitle(view->getTitle());
-    this->setIconFromFile(view->getIconFile());
+    this->updateAppletFrameItem();
 }
 
 void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
@@ -222,6 +211,17 @@ void AppletFrame::handleXMLElement(tinyxml2::XMLElement* element)
     View* view = View::createFromXMLElement(element);
     contentViewStack.push_back(view);
     setContentView(view);
+}
+
+void AppletFrame::updateAppletFrameItem()
+{
+    hintBox->clearViews(false);
+
+    setTitle(contentView->getAppletFrameItem()->title);
+    setIcon(contentView->getAppletFrameItem()->iconPath);
+
+    if (contentView->getAppletFrameItem()->hintView)
+        hintBox->addView(contentView->getAppletFrameItem()->hintView);
 }
 
 void AppletFrame::setHeaderStyle(HeaderStyle style)
