@@ -109,7 +109,8 @@ const std::string dialogXML = R"xml(
                         id="brls/dialog/button2/separator"
                         width="2"
                         height="auto"
-                        color="@theme/brls/sidebar/separator" />
+                        color="@theme/brls/sidebar/separator"
+                        visibility="gone" />
 
                     <brls:Button
                         id="brls/dialog/button2"
