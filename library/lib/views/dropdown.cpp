@@ -102,10 +102,11 @@ float min(float a, float b)
     return b;
 }
 
-Dropdown::Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected)
+Dropdown::Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected, ValueSelectedEvent::Callback dismissCb)
     : values(values)
     , cb(cb)
     , selected(selected)
+    , dismissCb(dismissCb)
 {
     this->inflateFromXMLString(dropdownFrameXML);
     this->title->setText(title);
@@ -147,7 +148,9 @@ RecyclerCell* Dropdown::cellForRow(RecyclerFrame* recycler, IndexPath index)
 void Dropdown::didSelectRowAt(RecyclerFrame* recycler, IndexPath index)
 {
     this->cb(index.row);
-    Application::popActivity();
+    Application::popActivity(TransitionAnimation::FADE, [this, index] {
+        this->dismissCb(index.row);
+    });
 }
 
 AppletFrame* Dropdown::getAppletFrame()

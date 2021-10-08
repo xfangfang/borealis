@@ -50,6 +50,7 @@ class Dropdown : public Box, private RecyclerDataSource
     BRLS_BIND(AppletFrame, applet, "brls/dropdown/applet");
     BRLS_BIND(Hints, hints, "brls/dropdown/hints");
     ValueSelectedEvent::Callback cb;
+    ValueSelectedEvent::Callback dismissCb;
     std::vector<std::string> values;
     size_t selected;
     Animatable showOffset = 0;
@@ -64,7 +65,7 @@ class Dropdown : public Box, private RecyclerDataSource
     float getShowAnimationDuration(TransitionAnimation animation) override;
 
   public:
-    Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected = 0);
+    Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected = 0, ValueSelectedEvent::Callback dismissCb = [](int){});
 
     //    ~Dropdown();
 
