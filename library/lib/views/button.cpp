@@ -179,6 +179,11 @@ void Button::setText(std::string text)
     this->label->setText(text);
 }
 
+void Button::setFontSize(float value)
+{
+    this->label->setFontSize(value);
+}
+
 std::string Button::getText()
 {
     return label->getFullText();

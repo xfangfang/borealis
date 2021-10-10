@@ -124,7 +124,8 @@ AppletFrame::AppletFrame()
 AppletFrame::AppletFrame(View* contentView)
     : AppletFrame::AppletFrame()
 {
-    this->pushContentView(contentView);
+    contentViewStack.push_back(contentView);
+    setContentView(contentView);
 }
 
 void AppletFrame::setIcon(std::string path)
@@ -159,6 +160,7 @@ void AppletFrame::pushContentView(View* view)
 {
     contentViewStack.push_back(view);
     setContentView(view);
+    Application::giveFocus(view);
 }
 
 void AppletFrame::popContentView(std::function<void(void)> cb)

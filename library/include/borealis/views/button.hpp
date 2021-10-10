@@ -169,6 +169,11 @@ class Button : public Box
     void setText(std::string text);
 
     /**
+     * Sets the font sise of the button.
+     */
+    void setFontSize(float value);
+
+    /**
      * Override style text color of the button.
      */
     void setTextColor(NVGcolor color);

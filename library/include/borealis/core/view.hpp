@@ -1472,7 +1472,7 @@ class View
     virtual AppletFrame* getAppletFrame();
 
     void present(View* view);
-    void dismiss(std::function<void(void)> cb = [] {});
+    virtual void dismiss(std::function<void(void)> cb = [] {});
 
     bool* deletionToken = nullptr;
     int* deletionTokenCounter = nullptr;
