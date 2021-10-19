@@ -204,6 +204,18 @@ void Dropdown::hide(std::function<void(void)> cb, bool animated, float animation
     Box::hide(cb, animated, animationDuration);
 }
 
+View* Dropdown::getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction)
+{
+    View* result = Box::getParentNavigationDecision(from, newFocus, direction);
+
+    RecyclerCell* cell = dynamic_cast<RecyclerCell*>(result);
+    if (cell && cell != from) {
+        cellFocusDidChangeEvent.fire(cell);
+    }
+
+    return result;
+}
+
 float Dropdown::getShowAnimationDuration(TransitionAnimation animation)
 {
     return View::getShowAnimationDuration(animation) / 2;

@@ -39,7 +39,6 @@ typedef Event<int> ValueSelectedEvent;
 
 // Allows the user to select between multiple
 // values
-// Use Dropdown::open()
 class Dropdown : public Box, private RecyclerDataSource
 {
   private:
@@ -54,6 +53,7 @@ class Dropdown : public Box, private RecyclerDataSource
     std::vector<std::string> values;
     size_t selected;
     Animatable showOffset = 0;
+    Event<RecyclerCell*> cellFocusDidChangeEvent;
 
     int numberOfRows(RecyclerFrame* recycler, int section) override;
     RecyclerCell* cellForRow(RecyclerFrame* recycler, IndexPath index) override;
@@ -67,18 +67,15 @@ class Dropdown : public Box, private RecyclerDataSource
   public:
     Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected = 0, ValueSelectedEvent::Callback dismissCb = [](int){});
 
-    //    ~Dropdown();
-
-    //    View* getDefaultFocus() override;
-    //    virtual bool onCancel();
     void show(std::function<void(void)> cb, bool animate, float animationDuration) override;
     void hide(std::function<void(void)> cb, bool animated, float animationDuration) override;
-    //    void willAppear(bool resetState = false) override;
-    //    void willDisappear(bool resetState = false) override;
-    //
-    //    static void open(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected = -1);
 
     virtual AppletFrame* getAppletFrame() override;
+    virtual View* getParentNavigationDecision(View* from, View* newFocus, FocusDirection direction) override;
+
+    Event<RecyclerCell*> *getCellFocusDidChangeEvent() {
+        return &cellFocusDidChangeEvent;
+    }
 
     bool isTranslucent() override
     {
