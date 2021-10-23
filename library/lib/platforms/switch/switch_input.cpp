@@ -22,7 +22,7 @@ namespace brls
 
 static const uint64_t HidNpadButton_None = ((uint64_t)1 << (63));
 
-static const uint64_t SWITCH_BUTTONS_MAPPING[_BUTTON_MAX] = {
+static const uint64_t SWITCH_BUTTONS_FULL_MAPPING[_BUTTON_MAX] = {
     HidNpadButton_ZL, // BUTTON_LT
     HidNpadButton_L, // BUTTON_LB
 
@@ -53,6 +53,42 @@ static const uint64_t SWITCH_BUTTONS_MAPPING[_BUTTON_MAX] = {
     HidNpadButton_AnyLeft, // BUTTON_NAV_LEFT
 };
 
+static const uint64_t SWITCH_BUTTONS_HALF_MAPPING[_BUTTON_MAX] = {
+    HidNpadButton_None, // BUTTON_LT
+    HidNpadButton_AnySL, // BUTTON_LB
+
+    HidNpadButton_StickL | HidNpadButton_StickR, // BUTTON_LSB
+
+    // HidNpadButton_StickLRight | HidNpadButton_StickRLeft, // BUTTON_UP
+    // HidNpadButton_StickLDown  | HidNpadButton_StickRUp, // BUTTON_RIGHT
+    // HidNpadButton_StickLLeft  | HidNpadButton_StickRRight, // BUTTON_DOWN
+    // HidNpadButton_StickLUp    | HidNpadButton_StickRDown, // BUTTON_LEFT
+
+    HidNpadButton_None, // BUTTON_UP
+    HidNpadButton_None, // BUTTON_RIGHT
+    HidNpadButton_None, // BUTTON_DOWN
+    HidNpadButton_None, // BUTTON_LEFT
+
+    HidNpadButton_None, // BUTTON_BACK
+    HidNpadButton_None, // BUTTON_GUIDE
+    HidNpadButton_Plus | HidNpadButton_Minus, // BUTTON_START
+
+    HidNpadButton_None, // BUTTON_RSB
+
+    HidNpadButton_B | HidNpadButton_Up, // BUTTON_Y
+    HidNpadButton_A | HidNpadButton_Left, // BUTTON_B
+    HidNpadButton_X | HidNpadButton_Down, // BUTTON_A
+    HidNpadButton_Y | HidNpadButton_Right, // BUTTON_X
+
+    HidNpadButton_AnySR, // BUTTON_RB
+    HidNpadButton_None, // BUTTON_RT
+
+    HidNpadButton_StickLRight | HidNpadButton_StickRLeft, // BUTTON_NAV_UP
+    HidNpadButton_StickLDown  | HidNpadButton_StickRUp, // BUTTON_NAV_RIGHT
+    HidNpadButton_StickLLeft  | HidNpadButton_StickRRight, // BUTTON_NAV_DOWN
+    HidNpadButton_StickLUp    | HidNpadButton_StickRDown, // BUTTON_NAV_LEFT
+};
+
 static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {
     LEFT_X,
     LEFT_Y,
@@ -62,14 +98,21 @@ static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {
 
 SwitchInputManager::SwitchInputManager()
 {
-    padConfigureInput(2, HidNpadStyleSet_NpadStandard);
-    padInitializeDefault(&this->padState);
+    padConfigureInput(GAMEPADS_MAX, HidNpadStyleSet_NpadStandard);
+    hidSetNpadJoyHoldType(HidNpadJoyHoldType_Horizontal);
+    for (int i = 0; i < GAMEPADS_MAX; i++) {
+        if (i == 0) {
+            padInitializeDefault(&this->padsState[i]);
+            hidInitializeVibrationDevices(m_vibration_device_handles[i], 2, HidNpadIdType_Handheld, HidNpadStyleSet_NpadStandard);
+        }
+        else {
+            padInitialize(&this->padsState[i], (HidNpadIdType)i);
+            hidInitializeVibrationDevices(m_vibration_device_handles[i], 2, (HidNpadIdType)i, HidNpadStyleSet_NpadStandard);
+        }
+    }
 
     hidInitializeMouse();
     hidInitializeKeyboard();
-
-    hidInitializeVibrationDevices(m_vibration_device_handles[0], 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
-    hidInitializeVibrationDevices(m_vibration_device_handles[1], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
 
     m_hid_keyboard_state.assign(256, false);
 }
@@ -82,24 +125,68 @@ SwitchInputManager::~SwitchInputManager()
         nvgDeleteImage(vg, this->cursorTexture);
 }
 
-void SwitchInputManager::updateControllerState(ControllerState* state)
+void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
 {
-    padUpdate(&this->padState);
-    uint64_t keysDown = padGetButtons(&this->padState);
+    for (size_t i = 0; i < _BUTTON_MAX; i++)
+        state->buttons[i] = false;
+
+    for (size_t i = 0; i < _AXES_MAX; i++)
+        state->axes[i] = 0;
+
+    for (int i = 0; i < GAMEPADS_MAX; i++) {
+        ControllerState localState;
+        updateControllerState(&localState, i);
+
+        for (size_t i = 0; i < _BUTTON_MAX; i++)
+            state->buttons[i] |= localState.buttons[i];
+
+        for (size_t i = 0; i < _AXES_MAX; i++) {
+            state->axes[i] += localState.axes[i];
+
+            if (state->axes[i] < -1) state->axes[i] = -1;
+            else if (state->axes[i] > 1) state->axes[i] = 1;
+        }
+    } 
+}
+
+short SwitchInputManager::getControllersConnectedCount()
+{
+    int controllers = 1;
+    for (; controllers < GAMEPADS_MAX; controllers++) {
+        if (hidGetNpadDeviceType((HidNpadIdType)controllers) == 0)
+            break;
+    }
+    return controllers;
+}
+
+void SwitchInputManager::updateControllerState(ControllerState* state, int controller)
+{
+    padUpdate(&this->padsState[controller]);
+    uint64_t keysDown = padGetButtons(&this->padsState[controller]);
+
+    u32 type = hidGetNpadDeviceType((HidNpadIdType)controller);
+    bool full = type != HidDeviceTypeBits_JoyLeft && type != HidDeviceTypeBits_JoyRight;
 
     for (size_t i = 0; i < _BUTTON_MAX; i++)
     {
-        uint64_t switchKey = SWITCH_BUTTONS_MAPPING[i];
+        uint64_t switchKey = full ? SWITCH_BUTTONS_FULL_MAPPING[i] : SWITCH_BUTTONS_HALF_MAPPING[i];
         state->buttons[i]  = keysDown & switchKey;
     }
 
-    HidAnalogStickState analog_stick_l = padGetStickPos(&this->padState, 0);
-    HidAnalogStickState analog_stick_r = padGetStickPos(&this->padState, 1);
+    HidAnalogStickState analog_stick_l = padGetStickPos(&this->padsState[controller], 0);
+    HidAnalogStickState analog_stick_r = padGetStickPos(&this->padsState[controller], 1);
 
-    state->axes[LEFT_X]  = (float)analog_stick_l.x / (float)0x7FFF;
-    state->axes[LEFT_Y]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
-    state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
-    state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
+    if (full) {
+        state->axes[LEFT_X]  = (float)analog_stick_l.x / (float)0x7FFF;
+        state->axes[LEFT_Y]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
+        state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
+        state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
+    } else {
+        state->axes[LEFT_X]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f + (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
+        state->axes[LEFT_Y]  = (float)analog_stick_l.x / (float)0x7FFF + (float)analog_stick_r.x / (float)0x7FFF;
+        state->axes[RIGHT_X] = 0;
+        state->axes[RIGHT_Y] = 0;
+    }
 
     state->buttons[BUTTON_NAV_UP]    |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
     state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
@@ -137,26 +224,22 @@ void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 
 void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
-    if (controller == 0)
-    {
-        float low  = (float)lowFreqMotor / 0xFFFF;
-        float high = (float)highFreqMotor / 0xFFFF;
+    float low  = (float)lowFreqMotor / 0xFFFF;
+    float high = (float)highFreqMotor / 0xFFFF;
 
-        memset(m_vibration_values, 0, sizeof(m_vibration_values));
+    memset(m_vibration_values, 0, sizeof(m_vibration_values));
 
-        m_vibration_values[0].amp_low   = low;
-        m_vibration_values[0].freq_low  = low * 50;
-        m_vibration_values[0].amp_high  = high;
-        m_vibration_values[0].freq_high = high * 100;
+    m_vibration_values[0].amp_low   = low;
+    m_vibration_values[0].freq_low  = low * 50;
+    m_vibration_values[0].amp_high  = high;
+    m_vibration_values[0].freq_high = high * 100;
 
-        m_vibration_values[1].amp_low   = low;
-        m_vibration_values[1].freq_low  = low * 50;
-        m_vibration_values[1].amp_high  = high;
-        m_vibration_values[1].freq_high = high * 100;
+    m_vibration_values[1].amp_low   = low;
+    m_vibration_values[1].freq_low  = low * 50;
+    m_vibration_values[1].amp_high  = high;
+    m_vibration_values[1].freq_high = high * 100;
 
-        int target_device = padIsHandheld(&this->padState) ? 0 : 1;
-        hidSendVibrationValues(m_vibration_device_handles[target_device], m_vibration_values, 2);
-    }
+    hidSendVibrationValues(m_vibration_device_handles[controller], m_vibration_values, 2);
 }
 
 void SwitchInputManager::updateMouseStates(RawMouseState* state)

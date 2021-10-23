@@ -30,7 +30,11 @@ class GLFWInputManager : public InputManager
   public:
     GLFWInputManager(GLFWwindow* window);
 
-    void updateControllerState(ControllerState* state) override;
+    short getControllersConnectedCount() override;
+
+    void updateUnifiedControllerState(ControllerState* state) override;
+    
+    void updateControllerState(ControllerState* state, int controller) override;
 
     bool getKeyboardKeyState(BrlsKeyboardScancode state) override;
 

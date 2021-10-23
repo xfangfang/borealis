@@ -137,7 +137,7 @@ void Slider::buttonsProcessing()
     if (pointer->isFocused())
     {
         ControllerState state;
-        input->updateControllerState(&state);
+        input->updateUnifiedControllerState(&state);
         static bool repeat = false;
 
         if (state.buttons[BUTTON_NAV_RIGHT] && state.buttons[BUTTON_NAV_LEFT])

@@ -184,7 +184,7 @@ void ScrollingFrame::naturalScrollingBehaviour()
     if (focused || childFocused)
     {
         ControllerState state;
-        input->updateControllerState(&state);
+        input->updateUnifiedControllerState(&state);
         float bottomLimit = this->getContentHeight() - this->getScrollingAreaHeight();
 
         // Sets true on border hit to play sound only once

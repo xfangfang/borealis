@@ -73,18 +73,25 @@ static const size_t GLFW_AXIS_MAPPING[GLFW_GAMEPAD_AXIS_MAX] = {
     RIGHT_Y,
 };
 
+static short controllersCount = 0;
+
 static void glfwJoystickCallback(int jid, int event)
 {
     if (event == GLFW_CONNECTED)
     {
         Logger::info("glfw: joystick {} connected", jid);
 
-        if (glfwJoystickIsGamepad(jid))
+        if (glfwJoystickIsGamepad(jid)) {
             Logger::info("glfw: joystick {} is gamepad: \"{}\"", jid, glfwGetGamepadName(jid));
+        }
+
+        controllersCount++;
     }
     else if (event == GLFW_DISCONNECTED)
     {
         Logger::info("glfw: joystick {} disconnected", jid);
+
+        controllersCount--;
     }
 }
 
@@ -142,10 +149,12 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     glfwSetCursorPosCallback(window, cursorCallback);
     glfwSetKeyCallback(window, keyboardCallback);
 
-    if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1))
-    {
-        Logger::info("glfw: joystick {} connected", GLFW_JOYSTICK_1);
-        Logger::info("glfw: joystick {} is gamepad: \"{}\"", GLFW_JOYSTICK_1, glfwGetGamepadName(GLFW_JOYSTICK_1));
+    for (int i = 0; i < GAMEPADS_MAX; i++) {
+        if (glfwJoystickIsGamepad(i))
+        {
+            Logger::info("glfw: joystick {} connected", i);
+            Logger::info("glfw: joystick {} is gamepad: \"{}\"", i, glfwGetGamepadName(i));
+        }
     }
     
     Application::getRunLoopEvent()->subscribe([this, window]() {
@@ -156,11 +165,40 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     });
 }
 
-void GLFWInputManager::updateControllerState(ControllerState* state)
+short GLFWInputManager::getControllersConnectedCount()
+{
+    return controllersCount;
+}
+
+void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
+{
+    for (size_t i = 0; i < _BUTTON_MAX; i++)
+        state->buttons[i] = false;
+
+    for (size_t i = 0; i < _AXES_MAX; i++)
+        state->axes[i] = 0;
+
+    for (int i = 0; i < GAMEPADS_MAX; i++) {
+        ControllerState localState;
+        updateControllerState(&localState, i);
+
+        for (size_t i = 0; i < _BUTTON_MAX; i++)
+            state->buttons[i] |= localState.buttons[i];
+
+        for (size_t i = 0; i < _AXES_MAX; i++) {
+            state->axes[i] += localState.axes[i];
+
+            if (state->axes[i] < -1) state->axes[i] = -1;
+            else if (state->axes[i] > 1) state->axes[i] = 1;
+        }
+    }
+}
+
+void GLFWInputManager::updateControllerState(ControllerState* state, int controller)
 {
     // Get gamepad state
     GLFWgamepadstate glfwState = {};
-    glfwGetGamepadState(GLFW_JOYSTICK_1, &glfwState);
+    glfwGetGamepadState(controller, &glfwState);
 
     for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
     {

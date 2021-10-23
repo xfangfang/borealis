@@ -22,6 +22,8 @@
 #include <borealis/core/event.hpp>
 #include <vector>
 
+#define GAMEPADS_MAX 2
+
 namespace brls
 {
 
@@ -286,10 +288,13 @@ class InputManager
   public:
     virtual ~InputManager() { }
 
+    virtual short getControllersConnectedCount() = 0;
+
+    virtual void updateUnifiedControllerState(ControllerState* state) = 0;
     /**
      * Called once every frame to fill the given ControllerState struct with the controller state.
      */
-    virtual void updateControllerState(ControllerState* state) = 0;
+    virtual void updateControllerState(ControllerState* state, int controller) = 0;
 
     virtual bool getKeyboardKeyState(BrlsKeyboardScancode state) = 0;
 

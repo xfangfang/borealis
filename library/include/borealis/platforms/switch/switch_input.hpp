@@ -33,7 +33,11 @@ class SwitchInputManager : public InputManager
     SwitchInputManager();
     ~SwitchInputManager() override;
 
-    void updateControllerState(ControllerState* state) override;
+    short getControllersConnectedCount() override;
+    
+    void updateUnifiedControllerState(ControllerState* state) override;
+    
+    void updateControllerState(ControllerState* state, int controller) override;
 
     bool getKeyboardKeyState(BrlsKeyboardScancode state) override;
 
@@ -56,10 +60,8 @@ class SwitchInputManager : public InputManager
     NVGpaint paint;
     std::string pointerIcon;
     Point lastCoursorPosition;
-    PadState padState;
-    PadState padState2;
-    PadState padState3;
-    HidVibrationDeviceHandle m_vibration_device_handles[2][2];
+    PadState padsState[GAMEPADS_MAX];
+    HidVibrationDeviceHandle m_vibration_device_handles[2][GAMEPADS_MAX];
     HidVibrationValue m_vibration_values[2];
     bool pointerLocked = false;
     HidMouseState currentMouseState;
