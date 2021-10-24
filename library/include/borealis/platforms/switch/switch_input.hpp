@@ -60,7 +60,10 @@ class SwitchInputManager : public InputManager
     NVGpaint paint;
     std::string pointerIcon;
     Point lastCoursorPosition;
+    PadState padStateHendheld;
+    HidVibrationDeviceHandle m_vibration_device_hendheld[2];
     PadState padsState[GAMEPADS_MAX];
+    u32 padsStyleSet[GAMEPADS_MAX];
     HidVibrationDeviceHandle m_vibration_device_handles[2][GAMEPADS_MAX];
     HidVibrationValue m_vibration_values[2];
     bool pointerLocked = false;
@@ -74,6 +77,8 @@ class SwitchInputManager : public InputManager
     void upToDateMouseState();
     BrlsKeyboardScancode switchKeyToGlfwKey(int key);
     int glfwKeyToVKKey(BrlsKeyboardScancode key);
+    void updateControllerStateInner(ControllerState* state, PadState* pad);
+    void reinitVibration(int controller);
 };
 
 /// HidKeyboardScancode

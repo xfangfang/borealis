@@ -100,15 +100,15 @@ SwitchInputManager::SwitchInputManager()
 {
     padConfigureInput(GAMEPADS_MAX, HidNpadStyleSet_NpadStandard);
     hidSetNpadJoyHoldType(HidNpadJoyHoldType_Horizontal);
+
+    padInitialize(&this->padStateHendheld, HidNpadIdType_Handheld);
+    hidInitializeVibrationDevices(m_vibration_device_hendheld, 2, HidNpadIdType_Handheld, HidNpadStyleSet_NpadStandard);
+    padUpdate(&this->padStateHendheld);
     for (int i = 0; i < GAMEPADS_MAX; i++) {
-        if (i == 0) {
-            padInitializeDefault(&this->padsState[i]);
-            hidInitializeVibrationDevices(m_vibration_device_handles[i], 2, HidNpadIdType_Handheld, HidNpadStyleSet_NpadStandard);
-        }
-        else {
-            padInitialize(&this->padsState[i], (HidNpadIdType)i);
-            hidInitializeVibrationDevices(m_vibration_device_handles[i], 2, (HidNpadIdType)i, HidNpadStyleSet_NpadStandard);
-        }
+        padInitialize(&this->padsState[i], (HidNpadIdType)i);
+        padUpdate(&this->padsState[i]);
+        padsStyleSet[i] = this->padsState[i].style_set;
+        reinitVibration(i);
     }
 
     hidInitializeMouse();
@@ -125,6 +125,14 @@ SwitchInputManager::~SwitchInputManager()
         nvgDeleteImage(vg, this->cursorTexture);
 }
 
+void SwitchInputManager::reinitVibration(int controller) 
+{
+    if (padsState[controller].style_set & HidNpadStyleSet_NpadFullCtrl)
+        hidInitializeVibrationDevices(m_vibration_device_handles[controller], 2, (HidNpadIdType)controller, HidNpadStyleSet_NpadFullCtrl);
+    else 
+        hidInitializeVibrationDevices(m_vibration_device_handles[controller], 1, (HidNpadIdType)controller, (HidNpadStyleTag)(HidNpadStyleTag_NpadJoyLeft | HidNpadStyleTag_NpadJoyRight));
+}
+
 void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
 {
     for (size_t i = 0; i < _BUTTON_MAX; i++)
@@ -133,7 +141,10 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    padUpdate(&this->padStateHendheld);
+    int extra = padStateHendheld.active_handheld ? 0 : 1;
+
+    for (int i = 0; i < GAMEPADS_MAX + extra; i++) {
         ControllerState localState;
         updateControllerState(&localState, i);
 
@@ -151,21 +162,41 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
 
 short SwitchInputManager::getControllersConnectedCount()
 {
-    int controllers = 1;
-    for (; controllers < GAMEPADS_MAX; controllers++) {
-        if (hidGetNpadDeviceType((HidNpadIdType)controllers) == 0)
+    padUpdate(&this->padStateHendheld);
+    int extra = padStateHendheld.active_handheld ? 1 : 0;
+    int controllers = extra;
+    for (int i = 0; i < GAMEPADS_MAX - extra; i++) {
+        if (padsState[i].style_set == 0)
             break;
+        controllers++;
     }
     return controllers;
 }
 
 void SwitchInputManager::updateControllerState(ControllerState* state, int controller)
 {
-    padUpdate(&this->padsState[controller]);
-    uint64_t keysDown = padGetButtons(&this->padsState[controller]);
+    padUpdate(&this->padStateHendheld);
+    if (controller == 0 && padStateHendheld.active_handheld) {
+        updateControllerStateInner(state, &padStateHendheld);
+        return;
+    }
 
-    u32 type = hidGetNpadDeviceType((HidNpadIdType)controller);
-    bool full = type != HidDeviceTypeBits_JoyLeft && type != HidDeviceTypeBits_JoyRight;
+    int localController = padStateHendheld.active_handheld ? controller - 1: controller;
+    PadState* pad = &this->padsState[localController];
+    updateControllerStateInner(state, pad);
+
+    if (padsStyleSet[localController] != padsState[localController].style_set) {
+        padsStyleSet[localController] = padsState[localController].style_set;
+        reinitVibration(localController);
+    }
+}
+
+void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadState* pad)
+{
+    padUpdate(pad);
+    uint64_t keysDown = padGetButtons(pad);
+
+    bool full = pad->style_set & HidNpadStyleSet_NpadFullCtrl;
 
     for (size_t i = 0; i < _BUTTON_MAX; i++)
     {
@@ -173,8 +204,8 @@ void SwitchInputManager::updateControllerState(ControllerState* state, int contr
         state->buttons[i]  = keysDown & switchKey;
     }
 
-    HidAnalogStickState analog_stick_l = padGetStickPos(&this->padsState[controller], 0);
-    HidAnalogStickState analog_stick_r = padGetStickPos(&this->padsState[controller], 1);
+    HidAnalogStickState analog_stick_l = padGetStickPos(pad, 0);
+    HidAnalogStickState analog_stick_r = padGetStickPos(pad, 1);
 
     if (full) {
         state->axes[LEFT_X]  = (float)analog_stick_l.x / (float)0x7FFF;
@@ -182,8 +213,8 @@ void SwitchInputManager::updateControllerState(ControllerState* state, int contr
         state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
         state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
     } else {
-        state->axes[LEFT_X]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f + (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
-        state->axes[LEFT_Y]  = (float)analog_stick_l.x / (float)0x7FFF + (float)analog_stick_r.x / (float)0x7FFF;
+        state->axes[LEFT_X]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f + (float)analog_stick_r.y / (float)0x7FFF;
+        state->axes[LEFT_Y]  = (float)analog_stick_l.x / (float)0x7FFF * -1.0f + (float)analog_stick_r.x / (float)0x7FFF;
         state->axes[RIGHT_X] = 0;
         state->axes[RIGHT_Y] = 0;
     }
@@ -239,7 +270,19 @@ void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lo
     m_vibration_values[1].amp_high  = high;
     m_vibration_values[1].freq_high = high * 100;
 
-    hidSendVibrationValues(m_vibration_device_handles[controller], m_vibration_values, 2);
+    padUpdate(&this->padStateHendheld);
+    if (controller == 0 && padStateHendheld.active_handheld) {
+        hidSendVibrationValues(m_vibration_device_hendheld, m_vibration_values, 2);
+        return;
+    }
+
+    int localController = padStateHendheld.active_handheld ? controller : controller - 1;
+    PadState* pad = &this->padsState[localController];
+
+    if (pad->style_set & HidNpadStyleSet_NpadFullCtrl)
+        hidSendVibrationValues(m_vibration_device_handles[localController], m_vibration_values, 2);
+    else 
+        hidSendVibrationValues(m_vibration_device_handles[localController], m_vibration_values, 1);
 }
 
 void SwitchInputManager::updateMouseStates(RawMouseState* state)
