@@ -102,8 +102,9 @@ SwitchInputManager::SwitchInputManager()
     hidSetNpadJoyHoldType(HidNpadJoyHoldType_Horizontal);
 
     padInitialize(&this->padStateHendheld, HidNpadIdType_Handheld);
-    hidInitializeVibrationDevices(m_vibration_device_hendheld, 2, HidNpadIdType_Handheld, HidNpadStyleSet_NpadStandard);
+    hidInitializeVibrationDevices(m_vibration_device_hendheld, 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
     padUpdate(&this->padStateHendheld);
+
     for (int i = 0; i < GAMEPADS_MAX; i++) {
         padInitialize(&this->padsState[i], (HidNpadIdType)i);
         padUpdate(&this->padsState[i]);
@@ -127,10 +128,9 @@ SwitchInputManager::~SwitchInputManager()
 
 void SwitchInputManager::reinitVibration(int controller) 
 {
-    if (padsState[controller].style_set & HidNpadStyleSet_NpadFullCtrl)
-        hidInitializeVibrationDevices(m_vibration_device_handles[controller], 2, (HidNpadIdType)controller, HidNpadStyleSet_NpadFullCtrl);
-    else 
-        hidInitializeVibrationDevices(m_vibration_device_handles[controller], 1, (HidNpadIdType)controller, (HidNpadStyleTag)(HidNpadStyleTag_NpadJoyLeft | HidNpadStyleTag_NpadJoyRight));
+    Logger::debug("Vibration reinit #{}", controller);
+    hidInitializeVibrationDevices(m_vibration_device_handles[controller], 2, (HidNpadIdType)controller, HidNpadStyleTag_NpadJoyDual);
+    sendRumbleInternal(m_vibration_device_handles[controller], m_vibration_values[controller], 0, 0);
 }
 
 void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
@@ -141,13 +141,9 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
-    padUpdate(&this->padStateHendheld);
-    int extra = padStateHendheld.active_handheld ? 0 : 1;
-
-    for (int i = 0; i < GAMEPADS_MAX + extra; i++) {
+    for (int i = 0; i < GAMEPADS_MAX; i++) {
         ControllerState localState;
         updateControllerState(&localState, i);
-
         for (size_t i = 0; i < _BUTTON_MAX; i++)
             state->buttons[i] |= localState.buttons[i];
 
@@ -185,8 +181,8 @@ void SwitchInputManager::updateControllerState(ControllerState* state, int contr
     PadState* pad = &this->padsState[localController];
     updateControllerStateInner(state, pad);
 
-    if (padsStyleSet[localController] != padsState[localController].style_set) {
-        padsStyleSet[localController] = padsState[localController].style_set;
+    if (padsStyleSet[localController] != pad->style_set) {
+        padsStyleSet[localController] = pad->style_set;
         reinitVibration(localController);
     }
 }
@@ -253,36 +249,39 @@ void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
     }
 }
 
+void SwitchInputManager::sendRumbleInternal(HidVibrationDeviceHandle vibration_device[2], HidVibrationValue vibration_values[2], unsigned short lowFreqMotor, unsigned short highFreqMotor)
+{
+    float low  = (float)lowFreqMotor / 0xFFFF;
+    float high = (float)highFreqMotor / 0xFFFF;
+
+    memset(vibration_values, 0, sizeof(vibration_values));
+
+    vibration_values[0].amp_low   = low;
+    vibration_values[0].freq_low  = low * 50;
+    vibration_values[0].amp_high  = high;
+    vibration_values[0].freq_high = high * 100;
+
+    vibration_values[1].amp_low   = low;
+    vibration_values[1].freq_low  = low * 50;
+    vibration_values[1].amp_high  = high;
+    vibration_values[1].freq_high = high * 100;
+
+    hidSendVibrationValues(vibration_device, vibration_values, 2);
+}
+
 void SwitchInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
     float low  = (float)lowFreqMotor / 0xFFFF;
     float high = (float)highFreqMotor / 0xFFFF;
 
-    memset(m_vibration_values, 0, sizeof(m_vibration_values));
-
-    m_vibration_values[0].amp_low   = low;
-    m_vibration_values[0].freq_low  = low * 50;
-    m_vibration_values[0].amp_high  = high;
-    m_vibration_values[0].freq_high = high * 100;
-
-    m_vibration_values[1].amp_low   = low;
-    m_vibration_values[1].freq_low  = low * 50;
-    m_vibration_values[1].amp_high  = high;
-    m_vibration_values[1].freq_high = high * 100;
-
     padUpdate(&this->padStateHendheld);
     if (controller == 0 && padStateHendheld.active_handheld) {
-        hidSendVibrationValues(m_vibration_device_hendheld, m_vibration_values, 2);
+        sendRumbleInternal(m_vibration_device_hendheld, m_vibration_values_hendheld, lowFreqMotor, highFreqMotor);
         return;
     }
 
-    int localController = padStateHendheld.active_handheld ? controller : controller - 1;
-    PadState* pad = &this->padsState[localController];
-
-    if (pad->style_set & HidNpadStyleSet_NpadFullCtrl)
-        hidSendVibrationValues(m_vibration_device_handles[localController], m_vibration_values, 2);
-    else 
-        hidSendVibrationValues(m_vibration_device_handles[localController], m_vibration_values, 1);
+    int localController = padStateHendheld.active_handheld ? controller - 1: controller;
+    sendRumbleInternal(m_vibration_device_handles[localController], m_vibration_values[localController], lowFreqMotor, highFreqMotor);
 }
 
 void SwitchInputManager::updateMouseStates(RawMouseState* state)

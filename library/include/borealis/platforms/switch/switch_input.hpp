@@ -62,10 +62,11 @@ class SwitchInputManager : public InputManager
     Point lastCoursorPosition;
     PadState padStateHendheld;
     HidVibrationDeviceHandle m_vibration_device_hendheld[2];
+    HidVibrationValue m_vibration_values_hendheld[2];
     PadState padsState[GAMEPADS_MAX];
-    u32 padsStyleSet[GAMEPADS_MAX];
     HidVibrationDeviceHandle m_vibration_device_handles[2][GAMEPADS_MAX];
-    HidVibrationValue m_vibration_values[2];
+    HidVibrationValue m_vibration_values[2][GAMEPADS_MAX];
+    u32 padsStyleSet[GAMEPADS_MAX];
     bool pointerLocked = false;
     HidMouseState currentMouseState;
 
@@ -78,6 +79,7 @@ class SwitchInputManager : public InputManager
     BrlsKeyboardScancode switchKeyToGlfwKey(int key);
     int glfwKeyToVKKey(BrlsKeyboardScancode key);
     void updateControllerStateInner(ControllerState* state, PadState* pad);
+    void sendRumbleInternal(HidVibrationDeviceHandle vibration_device[2], HidVibrationValue vibration_values[2], unsigned short lowFreqMotor, unsigned short highFreqMotor);
     void reinitVibration(int controller);
 };
 
