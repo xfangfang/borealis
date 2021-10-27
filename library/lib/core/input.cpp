@@ -43,7 +43,7 @@ TouchPhase getPhase(TouchPhase oldState, bool newState)
 TouchState InputManager::computeTouchState(RawTouchState currentTouch, TouchState lastFrameState)
 {
     TouchState state;
-    state.fingerId = currentTouch.fingerId;
+    state.fingerId = lastFrameState.fingerId;
     state.view     = lastFrameState.view;
     state.phase    = getPhase(lastFrameState.phase, currentTouch.pressed);
     if (state.phase == TouchPhase::END)
