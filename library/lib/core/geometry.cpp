@@ -73,6 +73,11 @@ void Point::operator-=(const Point& a)
     this->y -= a.y;
 }
 
+Point Point::lerp(const Point& end, const float& percent) const
+{
+    return (*this + ((end - *this) * percent));
+}
+
 // Size
 Size::Size()
     : Size(0.0f, 0.0f)
