@@ -33,12 +33,12 @@ Point::Point(float x, float y)
 
 Point Point::operator+(const Point& a) const
 {
-    return Point(a.x + x, a.y + y);
+    return Point(x + a.x, y + a.y);
 }
 
 Point Point::operator-(const Point& a) const
 {
-    return Point(a.x - x, a.y - y);
+    return Point(x - a.x, y - a.y);
 }
 
 Point Point::operator/(const float& a) const
