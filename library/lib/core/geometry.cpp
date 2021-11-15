@@ -33,12 +33,12 @@ Point::Point(float x, float y)
 
 Point Point::operator+(const Point& a) const
 {
-    return Point(a.x + x, a.y + y);
+    return Point(x + a.x, y + a.y);
 }
 
 Point Point::operator-(const Point& a) const
 {
-    return Point(a.x - x, a.y - y);
+    return Point(x - a.x, y - a.y);
 }
 
 Point Point::operator/(const float& a) const
@@ -71,6 +71,11 @@ void Point::operator-=(const Point& a)
 {
     this->x -= a.x;
     this->y -= a.y;
+}
+
+Point Point::lerp(const Point& end, const float& percent) const
+{
+    return (*this + ((end - *this) * percent));
 }
 
 // Size

@@ -41,6 +41,8 @@ struct Point
     bool operator!=(const Point& other) const;
     void operator+=(const Point& a);
     void operator-=(const Point& a);
+
+    Point lerp(const Point& other, const float& percent) const;
 };
 
 // A structure that contains width and height values.

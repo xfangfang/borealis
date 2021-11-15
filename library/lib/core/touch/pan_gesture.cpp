@@ -89,7 +89,7 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
                 return this->state;
             }
 
-            this->delta = position - this->position;
+            this->delta = this->position - position;
 
             this->position = position;
 
