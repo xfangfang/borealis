@@ -179,17 +179,17 @@ void Image::invalidateImageBounds()
     float width  = this->getWidth();
     float height = this->getHeight();
 
-    float viewAspectRatio  = width / height;
-    float imageAspectRatio = this->originalImageWidth / this->originalImageHeight;
+    float viewAspectRatio  = height / width;
+    float imageAspectRatio = this->originalImageHeight / this->originalImageWidth;
 
     switch (this->scalingType)
     {
         case ImageScalingType::FIT:
         {
-            if (viewAspectRatio >= imageAspectRatio)
+            if (viewAspectRatio <= imageAspectRatio)
             {
                 this->imageHeight = this->getHeight();
-                this->imageWidth  = this->imageHeight * imageAspectRatio;
+                this->imageWidth  = this->imageHeight / imageAspectRatio;
                 this->imageX      = (width - this->imageWidth) / 2.0F;
                 this->imageY      = 0;
             }
@@ -204,17 +204,17 @@ void Image::invalidateImageBounds()
         }
         case ImageScalingType::FILL:
         {
-            if (viewAspectRatio <= imageAspectRatio)
+            if (viewAspectRatio >= imageAspectRatio)
             {
                 this->imageHeight = this->getHeight();
-                this->imageWidth  = this->imageHeight * imageAspectRatio;
+                this->imageWidth  = this->imageHeight / imageAspectRatio;
                 this->imageX      = (width - this->imageWidth) / 2.0F;
                 this->imageY      = 0;
             }
             else
             {
                 this->imageWidth  = this->getWidth();
-                this->imageHeight = this->imageWidth / imageAspectRatio;
+                this->imageHeight = this->imageWidth * imageAspectRatio;
                 this->imageY      = (height - this->imageHeight) / 2.0F;
                 this->imageX      = 0;
             }
