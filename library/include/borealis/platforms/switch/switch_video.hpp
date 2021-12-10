@@ -44,6 +44,7 @@ class SwitchVideoContext : public VideoContext
     void resetState() override;
     void beginFrame() override;
     void endFrame() override;
+    void disableScreenDimming(bool disable) override;
     virtual NVGcontext* getNVGContext() override;
 
     void appletCallback(AppletHookType hookType);
