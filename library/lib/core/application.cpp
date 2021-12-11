@@ -1072,7 +1072,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
 
     // Widgets
-    Application::registerXMLView("brls:Account", VolumeWidget::create);
+    Application::registerXMLView("brls:Account", AccountWidget::create);
     Application::registerXMLView("brls:Battery", BatteryWidget::create);
     Application::registerXMLView("brls:Wireless", WirelessWidget::create);
 }
