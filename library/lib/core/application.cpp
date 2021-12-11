@@ -19,7 +19,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __SWITCH__
 #include <yoga/event/event.h>
+
+extern "C" {
+    #include <switch.h>
+}
+#endif
 
 #include <algorithm>
 #include <borealis/core/application.hpp>
