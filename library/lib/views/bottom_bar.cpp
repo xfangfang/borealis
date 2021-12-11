@@ -54,6 +54,11 @@ const std::string bottomBarXML = R"xml(
             axis="row"
             alignItems="center"
             direction="leftToRight" >
+
+            <brls:Account
+                id="brls/account"
+                marginRight="21"
+                marginBottom="5"/>
               
             <brls:Battery
                 id="brls/battery"
