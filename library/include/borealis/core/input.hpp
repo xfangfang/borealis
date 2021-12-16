@@ -22,7 +22,7 @@
 #include <borealis/core/event.hpp>
 #include <vector>
 
-#define GAMEPADS_MAX 2
+#define GAMEPADS_MAX 5
 
 namespace brls
 {
