@@ -74,6 +74,12 @@ static StyleValues styleValues = {
     { "brls/sidebar/item_font_size", 22.0f },
     { "brls/sidebar/separator_height", 30.0f },
 
+    // Tab Details
+    { "brls/tab_details/padding_top", 32.0f },
+    { "brls/tab_details/padding_bottom", 47.0f },
+    { "brls/tab_details/padding_left", 60.0f },
+    { "brls/tab_details/padding_right", 80.0f },
+
     // Label
     { "brls/label/default_font_size", 20.0f },
     { "brls/label/default_line_height", 1.65f },

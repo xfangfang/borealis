@@ -1845,7 +1845,16 @@ void View::registerCommonAttributes()
             { "spaceAround", AlignSelf::SPACE_AROUND },
         });
 
-    // Margins top
+    // Margins all
+    this->registerFloatXMLAttribute("margin", [this](float value) {
+        this->setMargins(value, value, value, value);
+    });
+
+    this->registerAutoXMLAttribute("margin", [this] {
+        this->setMargins(View::AUTO, View::AUTO, View::AUTO, View::AUTO);
+    });
+
+    // Margin top
     this->registerFloatXMLAttribute("marginTop", [this](float value) {
         this->setMarginTop(value);
     });
