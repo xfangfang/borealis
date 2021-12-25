@@ -167,6 +167,7 @@ GLFWVideoContext::~GLFWVideoContext()
     if (this->nvgContext)
         nvgDeleteGL3(this->nvgContext);
 
+    glfwDestroyWindow(this->window);
     glfwTerminate();
 }
 

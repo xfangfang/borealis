@@ -144,6 +144,7 @@ std::string GLFWPlatform::getLocale()
 
 GLFWPlatform::~GLFWPlatform()
 {
+    delete this->fontLoader;
     delete this->audioPlayer;
     delete this->videoContext;
     delete this->inputManager;
