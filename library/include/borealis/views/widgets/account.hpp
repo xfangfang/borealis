@@ -21,10 +21,6 @@
 #include <borealis/views/image.hpp>
 #include <borealis/core/assets.hpp>
 
-extern "C" {
-    #include <switch.h>
-}
-
 namespace brls
 {
 
@@ -32,15 +28,11 @@ class AccountWidget : public Box
 {
 public:
     AccountWidget();
-    void getIcon(AccountUid id);
     
-    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     static View* create();
     
 private:
     Image* acc;
-    AccountUid userID = {0};
-    Result rc = 0;
 };
 
 

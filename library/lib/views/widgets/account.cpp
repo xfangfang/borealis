@@ -16,37 +16,15 @@
 
 #include "borealis/views/widgets/account.hpp"
 
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
+
 namespace brls
 {
 
-AccountWidget::AccountWidget()
-{
-    setSize(Size(44, 44));
-
-    rc = accountInitialize(AccountServiceType_Application);
-    if (R_FAILED(rc)) {
-        brls::Logger::error("accountInitialize() failed: {}\n", rc);
-    }
-
-    if (R_SUCCEEDED(rc)) {
-        rc = accountGetPreselectedUser(&userID);
-
-        if (R_FAILED(rc)) {
-            brls::Logger::error("accountGetPreselectedUser() failed: {}\n", rc);
-        }
-    }
-
-    acc = new Image();
-    acc->setSize(Size(44, 44));
-    acc->setScalingType(ImageScalingType::FIT);
-    acc->detach();
-
-    getIcon(userID);
-
-    addView(acc);
-}
-
-void AccountWidget::getIcon(AccountUid id)
+#ifdef __SWITCH__
+void setIcon(AccountUid id, Image* image)
 {
     AccountProfile profile;
     AccountProfileBase profilebase;
@@ -61,7 +39,7 @@ void AccountWidget::getIcon(AccountUid id)
             u32 fakesize = 0;
 
             if(R_SUCCEEDED(accountProfileLoadImage(&profile, icon, iconsize, &fakesize))) {
-                acc->setImageFromMem(icon, iconsize);
+                image->setImageFromMem(icon, iconsize);
             }
 
             delete[] icon;
@@ -69,10 +47,38 @@ void AccountWidget::getIcon(AccountUid id)
         accountProfileClose(&profile);
     }
 }
+#endif
 
-void AccountWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) 
+AccountWidget::AccountWidget()
 {
-    Box::draw(vg, x, y, width, height, style, ctx);
+#ifdef __SWITCH__
+    setSize(Size(44, 44));
+
+    Result rc = accountInitialize(AccountServiceType_Application);
+    if (R_FAILED(rc)) {
+        brls::Logger::error("accountInitialize() failed: {}\n", rc);
+    }
+
+    AccountUid userID = {0};
+    if (R_SUCCEEDED(rc)) {
+        rc = accountGetPreselectedUser(&userID);
+
+        if (R_FAILED(rc)) {
+            brls::Logger::error("accountGetPreselectedUser() failed: {}\n", rc);
+        }
+    }
+
+    acc = new Image();
+    acc->setSize(Size(44, 44));
+    acc->setScalingType(ImageScalingType::FIT);
+    acc->detach();
+
+    setIcon(userID, acc);
+
+    addView(acc);
+#else
+    setVisibility(Visibility::GONE);
+#endif
 }
 
 View* AccountWidget::create()
