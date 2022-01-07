@@ -196,6 +196,11 @@ void SwitchVideoContext::resetState()
     // Unimplemented
 }
 
+void SwitchVideoContext::disableScreenDimming(bool disable)
+{
+    appletSetMediaPlaybackState(disable);
+}
+
 void SwitchVideoContext::resetFramebuffer()
 {
     this->destroyFramebufferResources();
