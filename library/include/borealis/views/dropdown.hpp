@@ -47,7 +47,6 @@ class Dropdown : public Box, private RecyclerDataSource
     BRLS_BIND(Label, title, "brls/dropdown/title_label");
     BRLS_BIND(Box, content, "brls/dropdown/content");
     BRLS_BIND(AppletFrame, applet, "brls/dropdown/applet");
-    BRLS_BIND(Hints, hints, "brls/dropdown/hints");
     ValueSelectedEvent::Callback cb;
     ValueSelectedEvent::Callback dismissCb;
     std::vector<std::string> values;

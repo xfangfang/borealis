@@ -65,32 +65,6 @@ View::View()
     Style style = Application::getStyle();
 
     this->highlightCornerRadius = style["brls/highlight/corner_radius"];
-
-    this->registerStringXMLAttribute("title", [this](std::string value) {
-        this->getAppletFrameItem()->title = value;
-    });
-
-    this->registerFilePathXMLAttribute("icon", [this](std::string value) {
-        this->getAppletFrameItem()->setIconFromFile(value);
-    });
-
-    this->registerFloatXMLAttribute("detachedX", [this](float value) {
-        this->detach();
-        this->setDetachedPositionX(value);
-    });
-
-    this->registerFloatXMLAttribute("detachedY", [this](float value) {
-        this->detach();
-        this->setDetachedPositionY(value);
-    });
-
-    this->registerFloatXMLAttribute("alpha", [this](float value) {
-        this->setAlpha(value);
-    });
-
-    this->registerBoolXMLAttribute("clipsToBounds", [this](float value) {
-        this->setClipsToBounds(value);
-    });
 }
 
 static int shakeAnimation(float t, float a) // a = amplitude
@@ -2109,6 +2083,33 @@ void View::registerCommonAttributes()
 
     this->registerFloatXMLAttribute("highlightCornerRadius", [this](float value) {
         this->setHighlightCornerRadius(value);
+    });
+
+    // Misc
+    this->registerStringXMLAttribute("title", [this](std::string value) {
+        this->getAppletFrameItem()->title = value;
+    });
+
+    this->registerFilePathXMLAttribute("icon", [this](std::string value) {
+        this->getAppletFrameItem()->setIconFromFile(value);
+    });
+
+    this->registerFloatXMLAttribute("detachedX", [this](float value) {
+        this->detach();
+        this->setDetachedPositionX(value);
+    });
+
+    this->registerFloatXMLAttribute("detachedY", [this](float value) {
+        this->detach();
+        this->setDetachedPositionY(value);
+    });
+
+    this->registerFloatXMLAttribute("alpha", [this](float value) {
+        this->setAlpha(value);
+    });
+
+    this->registerBoolXMLAttribute("clipsToBounds", [this](float value) {
+        this->setClipsToBounds(value);
     });
 }
 
