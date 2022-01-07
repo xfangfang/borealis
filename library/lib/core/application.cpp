@@ -43,6 +43,7 @@
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
 #include <borealis/views/tab_frame.hpp>
+#include <borealis/views/widgets/account.hpp>
 #include <borealis/views/widgets/battery.hpp>
 #include <borealis/views/widgets/wireless.hpp>
 #include <stdexcept>
@@ -1072,6 +1073,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
 
     // Widgets
+    Application::registerXMLView("brls:Account", AccountWidget::create);
     Application::registerXMLView("brls:Battery", BatteryWidget::create);
     Application::registerXMLView("brls:Wireless", WirelessWidget::create);
 }
