@@ -155,7 +155,11 @@ void Image::draw(NVGcontext* vg, float x, float y, float width, float height, St
     this->paint.xform[5] = coordY;
 
     nvgBeginPath(vg);
-    nvgRect(vg, coordX, coordY, this->imageWidth, this->imageHeight);
+    if (getClipsToBounds()) {
+        nvgRoundedRect(vg, x, y, width, height, getCornerRadius());
+    } else {
+        nvgRoundedRect(vg, coordX, coordY, this->imageWidth, this->imageHeight, getCornerRadius());
+    }
     nvgFillPaint(vg, a(this->paint));
     nvgFill(vg);
 }
