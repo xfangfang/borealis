@@ -445,6 +445,46 @@ class View
     void setHeightPercentage(float percentage);
 
     /**
+     * Sets the minimum width of the view, in pixels.
+     *
+     * This constraint is stronger than the grow factor: the view
+     * is guaranteed to never be less than the given min width.
+     *
+     * Use View::AUTO to disable the min width constraint.
+     */
+    void setMinWidth(float minWidth);
+
+    /**
+     * Sets the minimum height of the view, in pixels.
+     *
+     * This constraint is stronger than the grow factor: the view
+     * is guaranteed to never be less than the given max height.
+     *
+     * Use View::AUTO to disable the min height constraint.
+     */
+    void setMinHeight(float minHeight);
+
+    /**
+     * Sets the minimum width of the view, in parent width percentage.
+     *
+     * This constraint is stronger than the grow factor: the view
+     * is guaranteed to never be less than the given max width.
+     *
+     * Use View::AUTO to disable the min width constraint.
+     */
+    void setMinWidthPercentage(float percentage);
+
+    /**
+     * Sets the minimum height of the view, in parent height percentage.
+     *
+     * This constraint is stronger than the grow factor: the view
+     * is guaranteed to never be less than the given max height.
+     *
+     * Use View::AUTO to disable the min height constraint.
+     */
+    void setMinHeightPercentage(float percentage);
+
+    /**
      * Sets the maximum width of the view, in pixels.
      *
      * This constraint is stronger than the grow factor: the view

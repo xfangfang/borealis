@@ -860,6 +860,38 @@ void View::setHeightPercentage(float percentage)
     this->invalidate();
 }
 
+void View::setMinWidth(float minWidth)
+{
+    if (minWidth == View::AUTO)
+        YGNodeStyleSetMinWidth(this->ygNode, YGUndefined);
+    else
+        YGNodeStyleSetMinWidth(this->ygNode, minWidth);
+
+    this->invalidate();
+}
+
+void View::setMinWidthPercentage(float percentage)
+{
+    YGNodeStyleSetMinWidthPercent(this->ygNode, percentage);
+    this->invalidate();
+}
+
+void View::setMinHeight(float minHeight)
+{
+    if (minHeight == View::AUTO)
+        YGNodeStyleSetMinHeight(this->ygNode, YGUndefined);
+    else
+        YGNodeStyleSetMinHeight(this->ygNode, minHeight);
+
+    this->invalidate();
+}
+
+void View::setMinHeightPercentage(float percentage)
+{
+    YGNodeStyleSetMinHeightPercent(this->ygNode, percentage);
+    this->invalidate();
+}
+
 void View::setMaxWidth(float maxWidth)
 {
     if (maxWidth == View::AUTO)
@@ -1794,6 +1826,32 @@ void View::registerCommonAttributes()
 
     this->registerPercentageXMLAttribute("height", [this](float value) {
         this->setHeightPercentage(value);
+    });
+
+    // Min width
+    this->registerAutoXMLAttribute("minWidth", [this] {
+        this->setMinWidth(View::AUTO);
+    });
+
+    this->registerFloatXMLAttribute("minWidth", [this](float value) {
+        this->setMinWidth(value);
+    });
+
+    this->registerPercentageXMLAttribute("minWidth", [this](float percentage) {
+        this->setMinWidthPercentage(percentage);
+    });
+
+    // Min height
+    this->registerAutoXMLAttribute("minHeight", [this] {
+        this->setMinHeight(View::AUTO);
+    });
+
+    this->registerFloatXMLAttribute("minHeight", [this](float value) {
+        this->setMinHeight(value);
+    });
+
+    this->registerPercentageXMLAttribute("minHeight", [this](float percentage) {
+        this->setMinHeightPercentage(percentage);
     });
 
     // Max width
