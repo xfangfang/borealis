@@ -24,56 +24,62 @@ namespace brls
 {
 
 const std::string bottomBarXML = R"xml(
+
 <brls:Box
     width="auto"
     height="@style/brls/applet_frame/footer_height"
-    lineColor="@theme/brls/applet_frame/separator"
-    lineTop="1px"
-    marginLeft="@style/brls/hints/footer_margin_sides"
-    marginRight="@style/brls/hints/footer_margin_sides"
-    paddingLeft="@style/brls/hints/footer_padding_sides"
-    paddingRight="@style/brls/hints/footer_padding_sides"
-    alignItems="stretch">
+    axis="column">
     <brls:Box
         width="auto"
         height="@style/brls/applet_frame/footer_height"
-        axis="row"
-        grow="1"
-        direction="rightToLeft"
-        justifyContent="spaceBetween"
-        paddingTop="@style/brls/hints/footer_padding_top_bottom"
-        paddingBottom="@style/brls/hints/footer_padding_top_bottom" >
-
-        <brls:Hints
-            width="auto"
-            height="auto"/>
-
+        marginLeft="@style/brls/hints/footer_margin_sides"
+        marginRight="@style/brls/hints/footer_margin_sides"
+        paddingLeft="@style/brls/hints/footer_padding_sides"
+        paddingRight="@style/brls/hints/footer_padding_sides"
+        lineColor="@theme/brls/applet_frame/separator"
+        lineTop="1px"
+        alignItems="stretch">
         <brls:Box
             width="auto"
-            height="auto"
+            height="@style/brls/applet_frame/footer_height"
             axis="row"
-            alignItems="center"
-            direction="leftToRight" >
-              
-            <brls:Battery
-                id="brls/battery"
-                marginRight="21"
-                marginBottom="5"/>
+            grow="1"
+            direction="rightToLeft"
+            justifyContent="spaceBetween"
+            paddingTop="@style/brls/hints/footer_padding_top_bottom"
+            paddingBottom="@style/brls/hints/footer_padding_top_bottom" >
 
-            <brls:Wireless
-                id="brls/wireless"
-                marginRight="21"
-                marginBottom="5"/>
+            <brls:Hints
+                width="auto"
+                height="auto"/>
 
-            <brls:Label
-                id="brls/hints/time"
+            <brls:Box
                 width="auto"
                 height="auto"
-                verticalAlign="center"
-                fontSize="21.5" />
+                axis="row"
+                alignItems="center"
+                direction="leftToRight" >
+
+                <brls:Battery
+                    id="brls/battery"
+                    marginRight="21"
+                    marginBottom="5"/>
+
+                <brls:Wireless
+                    id="brls/wireless"
+                    marginRight="21"
+                    marginBottom="5"/>
+
+                <brls:Label
+                    id="brls/hints/time"
+                    width="auto"
+                    height="auto"
+                    verticalAlign="center"
+                    fontSize="21.5" />
+
+            </brls:Box>
 
         </brls:Box>
-
     </brls:Box>
 </brls:Box>
 )xml";

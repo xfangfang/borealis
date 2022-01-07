@@ -90,7 +90,6 @@ const std::string dropdownFrameXML = R"xml(
 
     </brls:AppletFrame>
     <brls:BottomBar
-        id="brls/dropdown/hints"
         backgroundColor="@theme/brls/background"/>
 </brls:Box>
 )xml";
