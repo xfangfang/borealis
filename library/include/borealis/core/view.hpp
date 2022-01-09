@@ -1430,6 +1430,8 @@ class View
 
     virtual float getAlpha(bool child = false);
 
+    float getClickAlpha() { return this->clickAlpha; }
+
     /**
       * Forces this view and its children to use
       * the specified theme.
