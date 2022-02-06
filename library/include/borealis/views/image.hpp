@@ -139,6 +139,7 @@ class Image : public View
     NVGpaint paint;
 
     void invalidateImageBounds();
+    void innerSetImate(int texture);
     int getImageFlags();
 
     float originalImageWidth  = 0;

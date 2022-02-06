@@ -267,26 +267,21 @@ void Image::setImageFromFile(std::string path)
 {
     NVGcontext* vg = Application::getNVGContext();
 
-    // Free the old texture if necessary
-    if (this->texture != 0)
-        nvgDeleteImage(vg, this->texture);
-
-    // Load the new texture
+    // Load texture
     int flags     = this->getImageFlags();
-    this->texture = nvgCreateImage(vg, path.c_str(), flags);
-
-    if (this->texture == 0)
-        fatal("Cannot load image from file \"" + path + "\"");
-
-    int width, height;
-    nvgImageSize(vg, this->texture, &width, &height);
-    this->originalImageWidth  = (float)width;
-    this->originalImageHeight = (float)height;
-
-    this->invalidate();
+    int texture = nvgCreateImage(vg, path.c_str(), flags);
+    innerSetImate(texture);
 }
 
 void Image::setImageFromMem(unsigned char* data, int size)
+{
+    NVGcontext* vg = Application::getNVGContext();
+
+    // Load texture
+    innerSetImate(nvgCreateImageMem(vg, 0, data, size));
+}
+
+void Image::innerSetImate(int texture)
 {
     NVGcontext* vg = Application::getNVGContext();
 
@@ -294,8 +289,8 @@ void Image::setImageFromMem(unsigned char* data, int size)
     if (this->texture != 0)
         nvgDeleteImage(vg, this->texture);
 
-    // Load the new texture
-    this->texture = nvgCreateImageMem(vg, 0, data, size);
+    // Set the new texture
+    this->texture = texture;
 
     if (this->texture == 0)
         fatal("Cannot load image from mem");
