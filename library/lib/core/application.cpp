@@ -39,6 +39,7 @@
 #include <borealis/views/image.hpp>
 #include <borealis/views/progress_spinner.hpp>
 #include <borealis/views/rectangle.hpp>
+#include <borealis/views/h_scrolling_frame.hpp>
 #include <borealis/views/recycler.hpp>
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
@@ -1054,6 +1055,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:Sidebar", Sidebar::create);
     Application::registerXMLView("brls:Header", Header::create);
     Application::registerXMLView("brls:ScrollingFrame", ScrollingFrame::create);
+    Application::registerXMLView("brls:HScrollingFrame", HScrollingFrame::create);
     Application::registerXMLView("brls:RecyclerFrame", RecyclerFrame::create);
     Application::registerXMLView("brls:Image", Image::create);
     Application::registerXMLView("brls:Padding", Padding::create);

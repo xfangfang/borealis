@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7C09602E26D6E91A00CF5061 /* bottom_bar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C09602D26D6E91A00CF5061 /* bottom_bar.cpp */; };
+		7C2280AF27C2B59000EB9B60 /* account.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2280AE27C2B59000EB9B60 /* account.cpp */; };
+		7C2280B227C2B5AC00EB9B60 /* h_scrolling_frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C2280B127C2B5AC00EB9B60 /* h_scrolling_frame.cpp */; };
 		7C33AB2A26A2FBFF0008B0A6 /* battery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB2726A2F5AE0008B0A6 /* battery.cpp */; };
 		7C33AB3326A34D240008B0A6 /* wireless.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C33AB3126A34D240008B0A6 /* wireless.cpp */; };
 		7C8AD2E7269C8B7500210332 /* pokemon_view.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C8AD2DA269C8B7500210332 /* pokemon_view.cpp */; };
@@ -102,6 +104,10 @@
 /* Begin PBXFileReference section */
 		7C09602C26D6E8A100CF5061 /* bottom_bar.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = bottom_bar.hpp; sourceTree = "<group>"; };
 		7C09602D26D6E91A00CF5061 /* bottom_bar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bottom_bar.cpp; sourceTree = "<group>"; };
+		7C2280AE27C2B59000EB9B60 /* account.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = account.cpp; sourceTree = "<group>"; };
+		7C2280B027C2B59A00EB9B60 /* account.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = account.hpp; sourceTree = "<group>"; };
+		7C2280B127C2B5AC00EB9B60 /* h_scrolling_frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = h_scrolling_frame.cpp; sourceTree = "<group>"; };
+		7C2280B327C2B5B600EB9B60 /* h_scrolling_frame.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = h_scrolling_frame.hpp; sourceTree = "<group>"; };
 		7C33AB2726A2F5AE0008B0A6 /* battery.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = battery.cpp; sourceTree = "<group>"; };
 		7C33AB2826A2F5AE0008B0A6 /* battery.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = battery.hpp; sourceTree = "<group>"; };
 		7C33AB3126A34D240008B0A6 /* wireless.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wireless.cpp; sourceTree = "<group>"; };
@@ -323,6 +329,7 @@
 		7C33AB2526A2F4990008B0A6 /* widgets */ = {
 			isa = PBXGroup;
 			children = (
+				7C2280AE27C2B59000EB9B60 /* account.cpp */,
 				7C33AB2726A2F5AE0008B0A6 /* battery.cpp */,
 				7C33AB3126A34D240008B0A6 /* wireless.cpp */,
 			);
@@ -332,6 +339,7 @@
 		7C33AB2626A2F4A50008B0A6 /* widgets */ = {
 			isa = PBXGroup;
 			children = (
+				7C2280B027C2B59A00EB9B60 /* account.hpp */,
 				7C33AB2826A2F5AE0008B0A6 /* battery.hpp */,
 				7C33AB3226A34D240008B0A6 /* wireless.hpp */,
 			);
@@ -608,6 +616,7 @@
 				7C8ADA7E269C8BA600210332 /* header.hpp */,
 				7C8ADA7F269C8BA600210332 /* dialog.hpp */,
 				7C8ADA80269C8BA600210332 /* scrolling_frame.hpp */,
+				7C2280B327C2B5B600EB9B60 /* h_scrolling_frame.hpp */,
 				7C8ADA81269C8BA600210332 /* dropdown.hpp */,
 				7C8ADA82269C8BA600210332 /* applet_frame.hpp */,
 				7C8ADA83269C8BA600210332 /* progress_spinner.hpp */,
@@ -900,6 +909,7 @@
 				7C8ADFB5269C8BA800210332 /* header.cpp */,
 				7C8ADFB6269C8BA800210332 /* dialog.cpp */,
 				7C8ADFB7269C8BA800210332 /* scrolling_frame.cpp */,
+				7C2280B127C2B5AC00EB9B60 /* h_scrolling_frame.cpp */,
 				7C8ADFB8269C8BA800210332 /* dropdown.cpp */,
 				7C8ADFB9269C8BA800210332 /* applet_frame.cpp */,
 				7C8ADFBA269C8BA800210332 /* label.cpp */,
@@ -1049,6 +1059,7 @@
 				7C8AE0D2269C8BA800210332 /* YGValue.cpp in Sources */,
 				7C8AE004269C8BA800210332 /* style.cpp in Sources */,
 				7C8AE12E269C8BA800210332 /* sidebar.cpp in Sources */,
+				7C2280B227C2B5AC00EB9B60 /* h_scrolling_frame.cpp in Sources */,
 				7C8AE0D5269C8BA800210332 /* event.cpp in Sources */,
 				7C8AE12C269C8BA800210332 /* button.cpp in Sources */,
 				7C09602E26D6E91A00CF5061 /* bottom_bar.cpp in Sources */,
@@ -1059,6 +1070,7 @@
 				7C8ADFFA269C8BA800210332 /* glfw_video.cpp in Sources */,
 				7C8AE130269C8BA800210332 /* header.cpp in Sources */,
 				7C8AE152269C8EAF00210332 /* swkbd.cpp in Sources */,
+				7C2280AF27C2B59000EB9B60 /* account.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
