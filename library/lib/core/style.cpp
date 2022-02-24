@@ -66,7 +66,7 @@ static StyleValues styleValues = {
     { "brls/sidebar/padding_top", 32.0f },
     { "brls/sidebar/padding_bottom", 47.0f },
     { "brls/sidebar/padding_left", 80.0f },
-    { "brls/sidebar/padding_right", 60.0f },
+    { "brls/sidebar/padding_right", 40.0f },
     { "brls/sidebar/item_height", 70.0f },
     { "brls/sidebar/item_accent_margin_top_bottom", 9.0f },
     { "brls/sidebar/item_accent_margin_sides", 8.0f },
