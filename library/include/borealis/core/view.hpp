@@ -157,7 +157,6 @@ enum class ShadowType
 struct AppletFrameItem {
     std::string title;
     std::string iconPath;
-    View* hintView = nullptr;
 
     void setIconFromRes(std::string name)
     {
@@ -169,7 +168,12 @@ struct AppletFrameItem {
         iconPath = path;
     }
 
+    void setHintView(View* hintView);
+    View* getHintView() { return hintView; }
+
     ~AppletFrameItem();
+private:
+    View* hintView = nullptr;
 };
 
 extern const NVGcolor transparent;

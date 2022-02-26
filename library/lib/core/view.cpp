@@ -43,6 +43,12 @@ static bool startsWith(const std::string& data, const std::string& prefix)
     return data.rfind(prefix, 0) == 0;
 }
 
+void AppletFrameItem::setHintView(View* hintView)
+{
+    this->hintView = hintView;
+    this->hintView->ptrLock();
+}
+
 AppletFrameItem::~AppletFrameItem()
 {
     if (hintView)
