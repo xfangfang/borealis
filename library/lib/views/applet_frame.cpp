@@ -222,8 +222,8 @@ void AppletFrame::updateAppletFrameItem()
     setTitle(contentView->getAppletFrameItem()->title);
     setIcon(contentView->getAppletFrameItem()->iconPath);
 
-    if (contentView->getAppletFrameItem()->hintView)
-        hintBox->addView(contentView->getAppletFrameItem()->hintView);
+    if (contentView->getAppletFrameItem()->getHintView())
+        hintBox->addView(contentView->getAppletFrameItem()->getHintView());
 }
 
 void AppletFrame::setHeaderStyle(HeaderStyle style)
