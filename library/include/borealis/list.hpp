@@ -30,6 +30,77 @@
 namespace brls
 {
 
+class BaseListItem : public View
+{
+  protected:
+    std::string label;
+    std::string subLabel;
+    std::string value;
+    bool valueFaint;
+
+    std::string oldValue;
+    bool oldValueFaint;
+    float valueAnimation = 0.0f;
+
+    bool checked = false; // check mark on the right
+
+    unsigned textSize;
+
+    bool drawTopSeparator = true;
+
+    Label* descriptionView = nullptr;
+    Image* thumbnailView   = nullptr;
+
+    bool reduceDescriptionSpacing = false;
+
+    GenericEvent clickEvent;
+
+    bool indented = false;
+
+    void resetValueAnimation();
+
+  public:
+    BaseListItem(std::string label, std::string description = "", std::string subLabel = "");
+
+    void draw(NVGcontext* vg, int x, int y, unsigned width, unsigned height, Style* style, FrameContext* ctx) override;
+    void layout(NVGcontext* vg, Style* style, FontStash* stash) override;
+    void getHighlightInsets(unsigned* top, unsigned* right, unsigned* bottom, unsigned* left) override;
+    virtual bool onClick();
+    View* getDefaultFocus() override;
+
+    void setThumbnail(Image* image);
+    void setThumbnail(std::string imagePath);
+    void setThumbnail(unsigned char* buffer, size_t bufferSize);
+
+    bool hasDescription();
+    void setDrawTopSeparator(bool draw);
+
+    bool getReduceDescriptionSpacing();
+    void setReduceDescriptionSpacing(bool value);
+
+    void setIndented(bool indented);
+
+    void setTextSize(unsigned textSize);
+
+    void setChecked(bool checked);
+
+    void setLabel(std::string label);
+    std::string getLabel();
+
+    /**
+     * Sets the value of this list item
+     * (the text on the right)
+     * Set faint to true to have the new value
+     * use a darker color (typically "OFF" labels)
+     */
+    void setValue(std::string value, bool faint = false, bool animate = true);
+    std::string getValue();
+
+    GenericEvent* getClickEvent();
+
+    ~BaseListItem();
+};
+
 // A list item
 // TODO: Use a Label with integrated ticker
 class ListItem : public View

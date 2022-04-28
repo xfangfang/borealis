@@ -77,7 +77,7 @@ class Image : public View
 
     unsigned char* copyImgBuf() const;
 
-  private:
+  protected:
     std::string imagePath;
     unsigned char* imageBuffer = nullptr;
     size_t imageBufferSize     = 0;

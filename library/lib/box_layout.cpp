@@ -76,6 +76,12 @@ void BoxLayout::setMarginBottom(unsigned bottom)
     this->invalidate();
 }
 
+void BoxLayout::setFocusedIndex(unsigned index)
+{
+    if (index < 0 || index >= this->children.size()) index = this->children.size() - 1;
+    brls::Application::giveFocus(this->children[index]->view);
+}
+
 size_t BoxLayout::getViewsCount()
 {
     return this->children.size();

@@ -22,6 +22,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <nanovg/nanovg.h>
+#include <glad/glad.h>
 
 #include <borealis/animations.hpp>
 #include <borealis/background.hpp>
@@ -151,6 +152,8 @@ class Application
      * So that we can draw regular stuff over it
      */
     static void cleanupNvgGlState();
+
+    static int createImageFromTexture(GLuint texture,int width,int height, int flag);
 
   private:
     inline static GLFWwindow* window;

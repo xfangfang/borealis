@@ -231,24 +231,24 @@ bool Application::init(std::string title, Style* style, LibraryViewsThemeVariant
         PlFontData font;
 
         // Standard font
-        Result rc = plGetSharedFontByType(&font, PlSharedFontType_Standard);
-        if (R_SUCCEEDED(rc))
-        {
-            Logger::info("Using Switch shared font");
-            Application::fontStash.regular = Application::loadFontFromMemory("regular", font.address, font.size, false);
-        }
+        // Result rc = plGetSharedFontByType(&font, PlSharedFontType_Standard);
+        // if (R_SUCCEEDED(rc))
+        // {
+        //     Logger::info("Using Switch shared font");
+        //     Application::fontStash.regular = Application::loadFontFromMemory("regular", font.address, font.size, false);
+        // }
 
         // Korean font
-        rc = plGetSharedFontByType(&font, PlSharedFontType_KO);
-        if (R_SUCCEEDED(rc))
-        {
-            Logger::info("Adding Switch shared Korean font");
-            Application::fontStash.korean = Application::loadFontFromMemory("korean", font.address, font.size, false);
-            nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, Application::fontStash.korean);
-        }
+        // rc = plGetSharedFontByType(&font, PlSharedFontType_KO);
+        // if (R_SUCCEEDED(rc))
+        // {
+        //     Logger::info("Adding Switch shared Korean font");
+        //     Application::fontStash.korean = Application::loadFontFromMemory("korean", font.address, font.size, false);
+        //     nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, Application::fontStash.korean);
+        // }
 
         // Chinese Simplified font
-        rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
+        Result rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
         if (R_SUCCEEDED(rc))
         {
             Logger::info("Adding Switch shared Chinese Simplified");
@@ -382,6 +382,8 @@ bool Application::mainLoop()
         Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_BACK]         = glfwGetKey(window, GLFW_KEY_F1);
         Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_A]            = glfwGetKey(window, GLFW_KEY_ENTER);
         Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_B]            = glfwGetKey(window, GLFW_KEY_BACKSPACE);
+        Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_X]            = glfwGetKey(window, GLFW_KEY_X);
+        Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_Y]            = glfwGetKey(window, GLFW_KEY_Y);
         Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]  = glfwGetKey(window, GLFW_KEY_L);
         Application::gamepad.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] = glfwGetKey(window, GLFW_KEY_R);
     }
@@ -721,6 +723,8 @@ void Application::giveFocus(View* view)
         {
             newFocus->onFocusGained();
             Logger::debug("Giving focus to {}", newFocus->describe());
+        } else {
+            Logger::error("Error giving focus"); 
         }
     }
 }
@@ -1052,4 +1056,19 @@ void Application::cleanupNvgGlState()
     glDisable(GL_STENCIL_TEST);
 }
 
+int Application::createImageFromTexture(GLuint textureId, int w, int h, int imageFlags)
+{
+    GLNVGcontext* gl = (GLNVGcontext*)nvgInternalParams(Application::vg)->userPtr;
+	GLNVGtexture* tex = glnvg__allocTexture(gl);
+
+	if (tex == NULL) return 0;
+
+	tex->type = NVG_TEXTURE_RGBA;
+	tex->tex = textureId;
+	tex->flags = imageFlags;
+	tex->width = w;
+	tex->height = h;
+
+	return tex->id;
+}
 } // namespace brls

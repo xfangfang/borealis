@@ -152,6 +152,7 @@ class BoxLayout : public View
     bool isChildFocused();
 
     void setFocusedIndex(unsigned index);
+
     size_t getViewsCount();
 
     View* getChild(size_t i);
