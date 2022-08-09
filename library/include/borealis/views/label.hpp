@@ -91,6 +91,7 @@ class Label : public View
     int getFont();
     float getFontSize();
     float getLineHeight();
+    NVGcolor getTextColor();
 
     std::string getFullText();
 

@@ -25,6 +25,50 @@ namespace brls
 
 #define ELLIPSIS "\u2026"
 
+static size_t strLen(const std::string& str){
+    size_t res = 0, inc = 0;
+    while(inc < str.length()){
+        if(str[inc] & 0x80)
+            if(str[inc] & 0x20)
+                if(str[inc] & 0x10)
+                    inc += 4;
+                else
+                    inc += 3;
+            else
+                inc += 2;
+        else
+            inc += 1;
+        res++;
+    }
+    return res;
+}
+
+static std::string slice(const std::string& str, size_t start, size_t end){
+    if(start > end || end > str.length())
+        return "";
+    size_t index = 0, s_index = 0, e_index = 0, inc = 0;
+    while(inc < str.length()){
+        if(index == start){
+            s_index = inc;
+        }else if(index == end){
+            e_index = inc;
+            break;
+        }
+        if(str[inc] & 0x80)
+            if(str[inc] & 0x20)
+                if(str[inc] & 0x10)
+                    inc += 4;
+                else
+                    inc += 3;
+            else
+                inc += 2;
+        else
+            inc += 1;
+        index++;
+    }
+    return str.substr(s_index, e_index);
+}
+
 static void computeLabelHeight(Label* label, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode, YGSize* size, float* originalBounds)
 {
     label->setIsWrapping(false);
@@ -523,11 +567,15 @@ void Label::onLayout()
         // Compute the position of the ellipsis (in chars), should the string be truncated
         // Use an approximation based on the text width and ellipsis width
         // Cannot do it in the measure function because the margins are not applied yet there
-        float toRemove      = std::min(this->requiredWidth, this->requiredWidth - width + this->ellipsisWidth * 1.5f); // little bit more than ellipsis width to make sure it doesn't overflow
+        float toRemove      = std::min(this->requiredWidth, this->requiredWidth - width + this->ellipsisWidth); // little bit more than ellipsis width to make sure it doesn't overflow
         float toRemoveRatio = toRemove / requiredWidth;
 
-        size_t ellipsisPosition = this->fullText.size() - roundf((float)this->fullText.size() * toRemoveRatio);
-        this->truncatedText     = trim(this->fullText.substr(0, ellipsisPosition)) + ELLIPSIS;
+        size_t len = strLen(this->fullText);
+        size_t ellipsisPosition = len - roundf((float)len * toRemoveRatio);
+        this->truncatedText     = trim(slice(this->fullText, 0, ellipsisPosition)) + ELLIPSIS;
+
+        brls::Logger::error("truncatedText: {}, ellipsisWidth: {}, toRemoveRatio: {}, ellipsisPosition: {} len: {}",
+                            this->truncatedText, this->ellipsisWidth, toRemoveRatio, ellipsisWidth, len);
     }
     else
     {
@@ -549,7 +597,16 @@ float Label::getFontSize()
 
 float Label::getLineHeight()
 {
+#ifdef __SWITCH__
     return this->lineHeight;
+#else
+    return this->lineHeight * 2 / 3;
+#endif
+}
+
+NVGcolor Label::getTextColor()
+{
+    return this->textColor;
 }
 
 std::string Label::getFullText()
