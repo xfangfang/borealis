@@ -213,12 +213,13 @@ class Box : public View
 
     View* getView(std::string id) override;
 
-    void setLastFocusedView(View* view)
-    {
-        this->lastFocusedView = view;
-    }
+    void setLastFocusedView(View* view);
 
-  private:
+    void setDefaultFocusedIndex(int index);
+
+    size_t getDefaultFocusedIndex();
+
+private:
     Axis axis;
 
     std::vector<View*> children;

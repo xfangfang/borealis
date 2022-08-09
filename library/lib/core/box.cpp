@@ -643,6 +643,20 @@ void Box::onChildFocusLost(View* directChild, View* focusedView)
         this->getParent()->onChildFocusLost(this, focusedView);
 }
 
+void Box::setLastFocusedView(View* view)
+{
+    this->lastFocusedView = view;
+}
+
+void Box::setDefaultFocusedIndex(int index){
+    if(index < 0) return;
+    this->defaultFocusedIndex = index;
+}
+
+size_t Box::getDefaultFocusedIndex(){
+    return this->defaultFocusedIndex;
+}
+
 View* Box::create()
 {
     return new Box();
