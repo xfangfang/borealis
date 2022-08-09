@@ -167,6 +167,12 @@ GLFWVideoContext::~GLFWVideoContext()
     if (this->nvgContext)
         nvgDeleteGL3(this->nvgContext);
 
+    try {
+        if (this->nvgContext)
+            nvgDeleteGL3(this->nvgContext);
+    } catch (...) {
+        Logger::error("Cannot delete nvg Context");
+    }
     glfwDestroyWindow(this->window);
     glfwTerminate();
 }
