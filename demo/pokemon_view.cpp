@@ -52,7 +52,7 @@ PokemonView::PokemonView(Pokemon pokemon)
 
     getAppletFrameItem()->title = pokemon.name;
     getAppletFrameItem()->setIconFromRes("img/pokemon/" + pokemon.id + ".png");
-    getAppletFrameItem()->hintView = holder;
+//    getAppletFrameItem()->hintView = holder;
     image->setImageFromRes("img/pokemon/" + pokemon.id + ".png");
 
     description->setText("It's a pokemon with name: " + pokemon.name + "\nCollect them all to became a Shaman king!");
