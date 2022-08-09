@@ -385,7 +385,7 @@ class View
     * Only methods that change yoga nodes properties should
     * call this method.
     */
-    void invalidate();
+    virtual void invalidate();
 
     /**
      * Called when a layout pass ends on that view.
