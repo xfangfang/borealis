@@ -19,6 +19,7 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/image.hpp>
+#include "borealis/core/thread.hpp"
 
 namespace brls
 {
@@ -94,6 +95,8 @@ static YGSize imageMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
         {
             size.width  = measureWidth(node, width, widthMode, height, heightMode, originalWidth, scalingType);
             size.height = measureHeight(node, width, widthMode, height, heightMode, size.width * imageAspectRatio, scalingType);
+//          size.height = measureHeight(node, width, widthMode, height, heightMode, size.width / imageAspectRatio, scalingType);
+
         }
     }
     // Crop (and fallback) method: grow as much as possible in both directions
@@ -269,8 +272,8 @@ void Image::setImageFromFile(std::string path)
 
     // Load texture
     int flags     = this->getImageFlags();
-    int texture = nvgCreateImage(vg, path.c_str(), flags);
-    innerSetImate(texture);
+    int tex = nvgCreateImage(vg, path.c_str(), flags);
+    innerSetImage(tex);
 }
 
 void Image::setImageFromMem(unsigned char* data, int size)
@@ -278,11 +281,27 @@ void Image::setImageFromMem(unsigned char* data, int size)
     NVGcontext* vg = Application::getNVGContext();
 
     // Load texture
-    innerSetImate(nvgCreateImageMem(vg, 0, data, size));
+    innerSetImage(nvgCreateImageMem(vg, 0, data, size));
 }
 
-void Image::innerSetImate(int texture)
+void Image::setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb){
+    ASYNC_RETAIN
+    cb([ASYNC_TOKEN](const std::string& data, size_t length){
+        brls::sync([ASYNC_TOKEN, data, length](){
+            ASYNC_RELEASE
+            brls::Logger::debug("load pic to image2 {}", (size_t)this);
+            this->setImageFromMem((unsigned char *) data.c_str(),(int) length);
+        });
+    });
+}
+
+void Image::innerSetImage(int tex)
 {
+    if(tex == 0){
+        Logger::error("Cannot set texture: 0");
+        return;
+    }
+
     NVGcontext* vg = Application::getNVGContext();
 
     // Free the old texture if necessary
@@ -290,10 +309,7 @@ void Image::innerSetImate(int texture)
         nvgDeleteImage(vg, this->texture);
 
     // Set the new texture
-    this->texture = texture;
-
-    if (this->texture == 0)
-        fatal("Cannot load image from mem");
+    this->texture = tex;
 
     int width, height;
     nvgImageSize(vg, this->texture, &width, &height);
@@ -301,6 +317,14 @@ void Image::innerSetImate(int texture)
     this->originalImageHeight = (float)height;
 
     this->invalidate();
+}
+
+void Image::clear(){
+    if (this->texture == 0)
+        return;
+    NVGcontext* vg = Application::getNVGContext();
+    nvgDeleteImage(vg, this->texture);
+    this->texture = 0;
 }
 
 void Image::setScalingType(ImageScalingType scalingType)
