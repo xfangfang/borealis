@@ -18,6 +18,7 @@
 #pragma once
 
 #include <fmt/core.h>
+#include <chrono>
 
 #include <borealis/core/event.hpp>
 #include <string>
