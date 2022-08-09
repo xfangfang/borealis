@@ -2127,6 +2127,14 @@ void View::registerCommonAttributes()
     this->registerBoolXMLAttribute("clipsToBounds", [this](float value) {
         this->setClipsToBounds(value);
     });
+
+    this->registerBoolXMLAttribute("culled", [this](float value) {
+        this->setCulled(value);
+    });
+
+    this->registerFloatXMLAttribute("aspectRatio", [this](float value) {
+        this->setAspectRatio(value);
+    });
 }
 
 void View::setTranslationY(float translationY)

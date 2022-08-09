@@ -268,6 +268,8 @@ class View
 
     bool culled = true; // will be culled by the parent Box, if any
 
+    float aspectRatio = 0;
+
     std::vector<tinyxml2::XMLDocument*> boundDocuments;
 
     std::unordered_map<std::string, AutoAttributeHandler> autoAttributes;
@@ -1457,6 +1459,18 @@ class View
     bool isCulled()
     {
         return this->culled;
+    }
+
+    void setAspectRatio(float value)
+    {
+        if(value <= 0) return;
+        this->aspectRatio = value;
+        YGNodeStyleSetAspectRatio(this->ygNode, value);
+        this->invalidate();
+    }
+
+    float getAspectRatio(){
+        return this->aspectRatio;
     }
 
     /**
