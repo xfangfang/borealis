@@ -164,9 +164,6 @@ void GLFWVideoContext::disableScreenDimming(bool disable)
 
 GLFWVideoContext::~GLFWVideoContext()
 {
-    if (this->nvgContext)
-        nvgDeleteGL3(this->nvgContext);
-
     try {
         if (this->nvgContext)
             nvgDeleteGL3(this->nvgContext);
