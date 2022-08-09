@@ -37,11 +37,22 @@ void SwitchFontLoader::loadFonts()
         Logger::error("switch: could not load Standard shared font: {:#x}", rc);
 
     // Korean
-    rc = plGetSharedFontByType(&font, PlSharedFontType_KO);
-    if (R_SUCCEEDED(rc))
-        Application::loadFontFromMemory(FONT_KOREAN_REGULAR, font.address, font.size, false);
+//    rc = plGetSharedFontByType(&font, PlSharedFontType_KO);
+//    if (R_SUCCEEDED(rc))
+//        Application::loadFontFromMemory(FONT_KOREAN_REGULAR, font.address, font.size, false);
+//    else
+//        Logger::error("switch: could not load Korean shared font: {:#x}", rc);
+
+    // Chinese Simplified font
+    rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
+    if (R_SUCCEEDED(rc)){
+        if(Application::loadFontFromMemory(FONT_CHINESE_SIMPLIFIED, font.address, font.size, false))
+            nvgAddFallbackFontId(Application::getNVGContext(),
+                                 Application::getFont(FONT_REGULAR), Application::getFont(FONT_CHINESE_SIMPLIFIED));
+    }
+
     else
-        Logger::error("switch: could not load Korean shared font: {:#x}", rc);
+        Logger::error("switch: could not load Chinese Simplified shared font: {:#x}", rc);
 
     // Extented (symbols)
     rc = plGetSharedFontByType(&font, PlSharedFontType_NintendoExt);

@@ -26,6 +26,7 @@ static constexpr const int FONT_INVALID = -1;
 
 static const std::string FONT_REGULAR        = "regular"; // regular Latin font
 static const std::string FONT_KOREAN_REGULAR = "korean"; // regular Korean font
+static const std::string FONT_CHINESE_SIMPLIFIED = "chineseSimplified";
 static const std::string FONT_MATERIAL_ICONS = "material"; // Material icons font
 static const std::string FONT_SWITCH_ICONS   = "switch"; // Switch icons font (see the HOS shared symbols font for an example)
 

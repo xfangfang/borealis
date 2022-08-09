@@ -103,7 +103,7 @@ bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerTe
 #ifdef __SWITCH__
     SwkbdConfig config = createSwkbdBaseConfig(headerText, subText, maxStringLength, initialText);
 
-    swkbdConfigSetType(&config, SwkbdType_Normal);
+    swkbdConfigSetType(&config, SwkbdType_ZhHans);
     swkbdConfigSetKeySetDisableBitmask(&config, getSwkbdKeyDisableBitmask(kbdDisableBitmask));
 
     char buffer[0x100];
