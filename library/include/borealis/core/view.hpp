@@ -107,6 +107,7 @@ enum class ViewBackground
     SIDEBAR,
     BACKDROP,
     SHAPE_COLOR,
+    VERTICAL_LINEAR,
 };
 
 enum class AlignSelf

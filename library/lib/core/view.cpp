@@ -648,6 +648,15 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
             nvgFill(vg);
             break;
         }
+        case ViewBackground::VERTICAL_LINEAR:
+        {
+            NVGpaint gradient = nvgLinearGradient(vg, x, y, x, y + height, TRANSPARENT, a(RGBA(0, 0, 0, 200)));
+            nvgBeginPath(vg);
+            nvgFillPaint(vg, gradient);
+            nvgRect(vg, x, y, width, height);
+            nvgFill(vg);
+            break;
+        }
         case ViewBackground::BACKDROP:
         {
             nvgFillColor(vg, a(theme["brls/backdrop"]));
@@ -2058,6 +2067,7 @@ void View::registerCommonAttributes()
         {
             { "sidebar", ViewBackground::SIDEBAR },
             { "backdrop", ViewBackground::BACKDROP },
+            { "vertical_linear", ViewBackground::VERTICAL_LINEAR },
         });
 
     this->registerBoolXMLAttribute("focusable", [this](bool value) {
