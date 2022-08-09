@@ -105,6 +105,11 @@ class Image : public View
      */
     void setImageFromMem(unsigned char* data, int size);
 
+
+    void setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb);
+
+    void clear();
+
     /**
      * Sets the scaling type for this image.
      *
@@ -129,7 +134,7 @@ class Image : public View
 
     static View* create();
 
-  private:
+  protected:
     ImageScalingType scalingType     = ImageScalingType::FIT;
     ImageAlignment align             = ImageAlignment::CENTER;
     ImageInterpolation interpolation = ImageInterpolation::LINEAR;
@@ -139,7 +144,7 @@ class Image : public View
     NVGpaint paint;
 
     void invalidateImageBounds();
-    void innerSetImate(int texture);
+    virtual void innerSetImage(int texture);
     int getImageFlags();
 
     float originalImageWidth  = 0;
