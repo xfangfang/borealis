@@ -154,7 +154,7 @@ void ThemeValues::addColor(std::string name, NVGcolor color)
 NVGcolor ThemeValues::getColor(std::string name)
 {
     if (this->values.count(name) == 0)
-        fatal("Unknown theme value \"" + name + "\"");
+        fatal("Unknown theme value \"" + name + "\" in size: " + std::to_string(this->values.size()));
 
     return this->values[name];
 }
