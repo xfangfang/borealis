@@ -68,6 +68,9 @@ class Application
      */
     static bool mainLoop();
 
+    // micro second per frame
+    inline static int MSPF = 16000;
+
     static Platform* getPlatform();
     static AudioPlayer* getAudioPlayer();
 

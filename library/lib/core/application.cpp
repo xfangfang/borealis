@@ -166,6 +166,9 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
+    static auto frame_start = getCPUTimeUsec();
+    static auto frame_end = frame_start;
+
     static ControllerState oldControllerState = {};
 
     // Main loop callback
@@ -356,6 +359,13 @@ bool Application::mainLoop()
             undeletedViews.insert(view);
     }
     Application::deletionPool = undeletedViews;
+
+    // Limit: 60 fps
+    frame_end = getCPUTimeUsec();
+    if(frame_end - frame_start < MSPF){
+        std::this_thread::sleep_for(std::chrono::microseconds(MSPF - frame_end + frame_start));
+    }
+    frame_start = getCPUTimeUsec();
 
     return true;
 }

@@ -97,8 +97,20 @@ void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height
     auto timeNow   = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(timeNow);
 
+    static uint start = getCPUTimeUsec();
+    static uint index = 0;
+    static uint fps = 0;    
+
+    if(index == INTERNAL){
+        uint end = getCPUTimeUsec();
+        fps = INTERNAL_M / (end - start);
+        start = end;
+        index = -1;
+    }
+    index++;
+
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
+    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "\t|\tFPS:" << std::to_string(fps);
 
     time->setText(ss.str());
     Box::draw(vg, x, y, width, height, style, ctx);
