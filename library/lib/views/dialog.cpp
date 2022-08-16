@@ -166,7 +166,16 @@ Dialog::Dialog(std::string text)
     box->setJustifyContent(JustifyContent::CENTER);
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
 
-    new (this) Dialog(box);
+    this->inflateFromXMLString(dialogXML);
+    container->addView(box);
+
+    appletFrame->registerAction(
+        "hints/back"_i18n, BUTTON_B, [this](View* view) {
+            if (cancelable)
+                this->dismiss();
+            return cancelable;
+        },
+        false, false, SOUND_BACK);
 }
 
 void Dialog::addButton(std::string label, VoidEvent::Callback cb)
@@ -250,6 +259,9 @@ AppletFrame* Dialog::getAppletFrame()
 
 Dialog::~Dialog()
 {
+    for(auto& i: this->buttons){
+        delete i;
+    }
 }
 
 } // namespace brls

@@ -141,8 +141,8 @@ class Label : public View
 
     NVGcolor textColor;
 
-    float requiredWidth;
-    unsigned ellipsisWidth;
+    float requiredWidth = 0;
+    unsigned ellipsisWidth = 0;
 
     bool singleLine = false;
     bool isWrapping = false;

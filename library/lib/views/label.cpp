@@ -573,9 +573,6 @@ void Label::onLayout()
         size_t len = strLen(this->fullText);
         size_t ellipsisPosition = len - roundf((float)len * toRemoveRatio);
         this->truncatedText     = trim(slice(this->fullText, 0, ellipsisPosition)) + ELLIPSIS;
-
-        brls::Logger::error("truncatedText: {}, ellipsisWidth: {}, toRemoveRatio: {}, ellipsisPosition: {} len: {}",
-                            this->truncatedText, this->ellipsisWidth, toRemoveRatio, ellipsisWidth, len);
     }
     else
     {

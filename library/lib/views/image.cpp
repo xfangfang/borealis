@@ -289,7 +289,8 @@ void Image::setImageAsync(std::function<void(std::function<void(const std::strin
     cb([ASYNC_TOKEN](const std::string& data, size_t length){
         brls::sync([ASYNC_TOKEN, data, length](){
             ASYNC_RELEASE
-            brls::Logger::debug("load pic to image2 {}", (size_t)this);
+            if(length == 0)
+                return;
             this->setImageFromMem((unsigned char *) data.c_str(),(int) length);
         });
     });
