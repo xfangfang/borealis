@@ -650,7 +650,7 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
         }
         case ViewBackground::VERTICAL_LINEAR:
         {
-            NVGpaint gradient = nvgLinearGradient(vg, x, y, x, y + height, TRANSPARENT, a(RGBA(0, 0, 0, 200)));
+            NVGpaint gradient = nvgLinearGradient(vg, x, y, x, y + height, a(backgroundStartColor), a(backgroundEndColor));
             nvgBeginPath(vg);
             nvgFillPaint(vg, gradient);
             nvgRect(vg, x, y, width, height);
@@ -2069,6 +2069,14 @@ void View::registerCommonAttributes()
             { "backdrop", ViewBackground::BACKDROP },
             { "vertical_linear", ViewBackground::VERTICAL_LINEAR },
         });
+
+    this->registerColorXMLAttribute("backgroundStartColor", [this](NVGcolor value) {
+        this->backgroundStartColor = value;
+    });
+
+    this->registerColorXMLAttribute("backgroundEndColor", [this](NVGcolor value) {
+        this->backgroundEndColor = value;
+    });
 
     this->registerBoolXMLAttribute("focusable", [this](bool value) {
         this->setFocusable(value);

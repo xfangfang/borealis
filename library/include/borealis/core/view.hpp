@@ -297,6 +297,9 @@ class View
 
     NVGcolor backgroundColor = TRANSPARENT;
 
+    NVGcolor backgroundStartColor = TRANSPARENT;
+    NVGcolor backgroundEndColor = nvgRGBA(0, 0, 0, 200);
+
     NVGcolor borderColor  = TRANSPARENT;
     float borderThickness = 0.0f;
     float cornerRadius    = 0.0f;
