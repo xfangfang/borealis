@@ -110,7 +110,7 @@ void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height
     index++;
 
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "\t|\tFPS:" << std::to_string(fps);
+    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << " | FPS:" << std::to_string(fps);
 
     time->setText(ss.str());
     Box::draw(vg, x, y, width, height, style, ctx);
