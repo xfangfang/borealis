@@ -77,6 +77,8 @@ class Application
     static NVGcontext* getNVGContext();
     inline static float contentWidth, contentHeight;
 
+    inline static unsigned windowWidth, windowHeight;
+
     /**
      * Called by the video context when the content window is resized
      * and when the context is ready (to setup the initial content scaling).
@@ -260,8 +262,6 @@ class Application
     inline static std::vector<Activity*> activitiesStack;
     inline static std::vector<View*> focusStack;
     inline static std::set<View*> deletionPool;
-
-    inline static unsigned windowWidth, windowHeight;
 
     inline static View* currentFocus = nullptr;
     inline static std::vector<TouchState> currentTouchState;
