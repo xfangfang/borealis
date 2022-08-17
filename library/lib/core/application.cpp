@@ -836,9 +836,11 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
 
     activity->resizeToFitWindow();
 
-    activity->hide([] {}, false, NULL);
-    if (!fadeOut)
-        activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
+    if(wait){
+        activity->hide([] {}, false, NULL);
+        if (!fadeOut)
+            activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
+    }
 
     // Focus
     if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)

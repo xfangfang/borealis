@@ -145,6 +145,8 @@ enum class TransitionAnimation
     FADE, // the old activity fades away and the new one fades in
     SLIDE_LEFT, // the old activity slides out to the left and the new one slides in from the right
     SLIDE_RIGHT, // inverted SLIDE_LEFT
+    NONE,
+    LINEAR,
 };
 
 // A View shape's shadow type
