@@ -15,7 +15,7 @@ namespace brls
 
 const std::string dropdownFrameXML = R"xml(
 <brls:Box
-    width="auto"
+    width="1280"
     height="auto"
     axis="column">
 
