@@ -41,6 +41,7 @@ SwitchPlatform::SwitchPlatform()
 
     // Init platform impls
     this->audioPlayer  = new SwitchAudioPlayer();
+    this->inputManager = new SwitchInputManager();
     this->fontLoader   = new SwitchFontLoader();
 
     // Get locale
@@ -65,7 +66,9 @@ void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth,
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
     
     // Fixme: Dirty fix to reinitialise controllers with settings from borealis, not by GLFW
-    this->inputManager = new SwitchInputManager();
+//    brls::Logger::info("create SwitchInputManager");
+//    this->inputManager = new SwitchInputManager();
+//    brls::Logger::info("create SwitchInputManager done");
 }
 
 bool SwitchPlatform::canShowBatteryLevel()

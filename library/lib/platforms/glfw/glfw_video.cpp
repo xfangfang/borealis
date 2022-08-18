@@ -109,25 +109,25 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwGetFramebufferSize(window, &width, &height);
     glfwWindowFramebufferSizeCallback(window, width, height);
     
-#ifdef __SWITCH__
-    monitor = glfwGetPrimaryMonitor();
-#endif
+//#ifdef __SWITCH__
+//    monitor = glfwGetPrimaryMonitor();
+//#endif
 }
 
 void GLFWVideoContext::beginFrame()
 {
-#ifdef __SWITCH__
-    const GLFWvidmode* return_struct = glfwGetVideoMode(monitor);
-    int width = return_struct->width;
-    int height = return_struct->height;
-    
-    if (oldWidth != width || oldHeight != height) {
-        oldWidth = width;
-        oldHeight = height;
-        
-        glfwSetWindowSize(window, width, height);
-    }
-#endif
+//#ifdef __SWITCH__
+//    const GLFWvidmode* return_struct = glfwGetVideoMode(monitor);
+//    int width = return_struct->width;
+//    int height = return_struct->height;
+//
+//    if (oldWidth != width || oldHeight != height) {
+//        oldWidth = width;
+//        oldHeight = height;
+//
+//        glfwSetWindowSize(window, width, height);
+//    }
+//#endif
 }
 
 void GLFWVideoContext::endFrame()
