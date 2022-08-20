@@ -48,7 +48,7 @@ void SwitchFontLoader::loadFonts()
     if (R_SUCCEEDED(rc)){
         if(Application::loadFontFromMemory(FONT_CHINESE_SIMPLIFIED, font.address, font.size, false))
             nvgAddFallbackFontId(Application::getNVGContext(),
-                                 Application::getFont(FONT_REGULAR), Application::getFont(FONT_CHINESE_SIMPLIFIED));
+                                 Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont(FONT_REGULAR));
     }
 
     else

@@ -136,7 +136,7 @@ void Application::createWindow(std::string windowTitle)
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
 
-    int regular = Application::getFont(FONT_REGULAR);
+    int regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
     if (regular != FONT_INVALID)
     {
         NVGcontext* vg = Application::getNVGContext();
