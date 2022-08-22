@@ -48,6 +48,7 @@ class SwitchPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    bool isApplicationMode() override;
 
     void appletCallback(AppletHookType hookType);
 

@@ -87,6 +87,11 @@ int GLFWPlatform::getWirelessLevel()
     return battery / 20;
 }
 
+bool GLFWPlatform::isApplicationMode()
+{
+    return true;
+}
+
 std::string GLFWPlatform::getName()
 {
     return "GLFW";

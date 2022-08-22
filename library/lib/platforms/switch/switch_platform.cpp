@@ -106,6 +106,12 @@ int SwitchPlatform::getWirelessLevel()
     return wifiSignal;
 }
 
+bool SwitchPlatform::isApplicationMode()
+{
+    AppletType at = appletGetAppletType();
+    return at == AppletType_Application || at == AppletType_SystemApplication;
+}
+
 std::string SwitchPlatform::getName()
 {
     return "Switch";

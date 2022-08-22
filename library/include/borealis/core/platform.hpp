@@ -123,6 +123,11 @@ class Platform
     virtual FontLoader* getFontLoader() = 0;
 
     /**
+     * Returns if non applet.
+     */
+    virtual bool isApplicationMode() = 0;
+
+    /**
      * Selects and returns the best platform.
      */
     static Platform* createPlatform();

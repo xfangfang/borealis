@@ -46,6 +46,7 @@ class GLFWPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    bool isApplicationMode() override;
 
   private:
     NullAudioPlayer* audioPlayer   = nullptr;
