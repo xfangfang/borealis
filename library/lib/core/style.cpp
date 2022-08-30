@@ -36,7 +36,7 @@ static StyleValues styleValues = {
 
     // Highlight
     { "brls/highlight/stroke_width", 5.0f },
-    { "brls/highlight/corner_radius", 0.5f },
+    { "brls/highlight/corner_radius", 6.0f },
     { "brls/highlight/shadow_width", 2.0f },
     { "brls/highlight/shadow_offset", 10.0f },
     { "brls/highlight/shadow_feather", 10.0f },
