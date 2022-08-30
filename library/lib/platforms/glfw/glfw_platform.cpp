@@ -92,6 +92,16 @@ bool GLFWPlatform::isApplicationMode()
     return true;
 }
 
+void GLFWPlatform::exitToHomeMode(bool value)
+{
+    return;
+}
+
+void GLFWPlatform::forceEnableGamePlayRecording()
+{
+    return;
+}
+
 std::string GLFWPlatform::getName()
 {
     return "GLFW";

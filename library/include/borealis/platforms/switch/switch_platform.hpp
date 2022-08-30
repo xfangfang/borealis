@@ -49,6 +49,8 @@ class SwitchPlatform : public Platform
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
     bool isApplicationMode() override;
+    void exitToHomeMode(bool value) override;
+    void forceEnableGamePlayRecording() override;
 
     void appletCallback(AppletHookType hookType);
 

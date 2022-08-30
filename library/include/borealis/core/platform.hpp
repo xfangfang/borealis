@@ -128,6 +128,16 @@ class Platform
     virtual bool isApplicationMode() = 0;
 
     /**
+     * When the program exits, exit directly to the home menu
+     */
+    virtual void exitToHomeMode(bool value) = 0;
+
+    /**
+     * When the program exits, exit directly to the home menu
+     */
+    virtual void forceEnableGamePlayRecording() = 0;
+
+    /**
      * Selects and returns the best platform.
      */
     static Platform* createPlatform();

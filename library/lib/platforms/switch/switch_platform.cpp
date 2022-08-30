@@ -20,6 +20,8 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/switch/switch_platform.hpp>
 
+extern "C" u32 __nx_applet_exit_mode;
+
 namespace brls
 {
 
@@ -110,6 +112,16 @@ bool SwitchPlatform::isApplicationMode()
 {
     AppletType at = appletGetAppletType();
     return at == AppletType_Application || at == AppletType_SystemApplication;
+}
+
+void SwitchPlatform::exitToHomeMode(bool value)
+{
+    __nx_applet_exit_mode = value;
+}
+
+void SwitchPlatform::forceEnableGamePlayRecording()
+{
+    appletInitializeGamePlayRecording();
 }
 
 std::string SwitchPlatform::getName()
