@@ -90,7 +90,7 @@ static StyleValues styleValues = {
     { "brls/header/padding_top_bottom", 11.0f },
     { "brls/header/padding_right", 11.0f },
     { "brls/header/rectangle_width", 5.0f },
-    { "brls/header/rectangle_height", 22.0f },
+    { "brls/header/rectangle_height", 33.0f },
     { "brls/header/rectangle_margin", 10.0f },
     { "brls/header/font_size", 18.0f },
 
@@ -161,8 +161,10 @@ void StyleValues::addMetric(std::string name, float metric)
 
 float StyleValues::getMetric(std::string name)
 {
-    if (this->values.count(name) == 0)
-        fatal("Unknown style metric \"" + name + "\" in size: " + std::to_string(this->values.size()));
+    if (this->values.count(name) == 0) {
+        brls::Logger::error("Unknown style metric \"" + name + "\" in size: " + std::to_string(this->values.size()));
+        return 0;
+    }
 
     return this->values[name];
 }

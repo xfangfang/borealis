@@ -32,7 +32,7 @@ const std::string headerXML = R"xml(
 
         <brls:Rectangle
             width="@style/brls/header/rectangle_width"
-            height="@style/brls/header/rectangle_height"
+            height="auto"
             color="@theme/brls/header/rectangle"
             marginRight="@style/brls/header/rectangle_margin" />
 
