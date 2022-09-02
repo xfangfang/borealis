@@ -124,6 +124,19 @@ void SwitchPlatform::forceEnableGamePlayRecording()
     appletInitializeGamePlayRecording();
 }
 
+void SwitchPlatform::openBrowser(std::string url)
+{
+    WebCommonConfig config;
+
+    Result rc = webPageCreate(&config, url.c_str());
+    if (R_SUCCEEDED(rc)) {
+        rc = webConfigSetWhitelist(&config, "^http*");
+        if (R_SUCCEEDED(rc)) {
+            rc = webConfigShow(&config, NULL);
+        }
+    }
+}
+
 std::string SwitchPlatform::getName()
 {
     return "Switch";

@@ -138,6 +138,12 @@ class Platform
     virtual void forceEnableGamePlayRecording() = 0;
 
     /**
+     * Open a link in browser
+     * @param url the link which will be opened
+     */
+    virtual void openBrowser(std::string url) = 0;
+
+    /**
      * Selects and returns the best platform.
      */
     static Platform* createPlatform();

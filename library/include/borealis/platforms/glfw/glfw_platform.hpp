@@ -49,6 +49,7 @@ class GLFWPlatform : public Platform
     bool isApplicationMode() override;
     void exitToHomeMode(bool value) override;
     void forceEnableGamePlayRecording() override;
+    void openBrowser(std::string url) override;
 
   private:
     NullAudioPlayer* audioPlayer   = nullptr;

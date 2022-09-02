@@ -102,6 +102,24 @@ void GLFWPlatform::forceEnableGamePlayRecording()
     return;
 }
 
+void GLFWPlatform::openBrowser(std::string url)
+{
+    brls::Logger::debug("open url: {}", url);
+#ifdef __APPLE__
+    std::string cmd = "open " + url;
+    system(cmd.c_str());
+#endif
+#ifdef __linux__
+    std::string cmd = "xdg-open " + url;
+    system(cmd.c_str());
+#endif
+#ifdef _WIN32
+    std::string cmd = "explorer " + url;
+    system(cmd.c_str());
+#endif
+    return;
+}
+
 std::string GLFWPlatform::getName()
 {
     return "GLFW";
