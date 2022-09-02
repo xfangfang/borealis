@@ -51,6 +51,10 @@ const std::string detailCellXML = R"xml(
 DetailCell::DetailCell()
 {
     this->inflateFromXMLString(detailCellXML);
+
+    this->registerStringXMLAttribute("title", [this](std::string value){
+        this->title->setText(value);
+    });
 }
 
 void DetailCell::setText(std::string title)
