@@ -790,9 +790,17 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
 {
     Application::blockInputs();
 
+    // Focus
+    if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
+    {
+        Logger::debug("Pushing {} to the focus stack", Application::currentFocus->describe());
+        Application::focusStack.push_back(Application::currentFocus);
+    }
+
     // Create the activity content view
     activity->setContentView(activity->createContentView());
     activity->onContentAvailable();
+    activity->resizeToFitWindow();
 
     // Call hide() on the previous activity in the stack if no
     // activities are translucent, then call show() once the animation ends
@@ -801,7 +809,9 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
         last = Application::activitiesStack[Application::activitiesStack.size() - 1];
 
     bool fadeOut = last && !last->isTranslucent() && !activity->isTranslucent(); // play the fade out animation?
-    bool wait    = animation == TransitionAnimation::FADE; // wait for the old activity animation to be done before showing the new one?
+    bool wait    = animation == TransitionAnimation::FADE || \
+                   animation == TransitionAnimation::SLIDE_LEFT || \
+                   animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
 
     if (Application::globalQuitEnabled)
         Application::gloablQuitIdentifier = activity->registerExitAction();
@@ -809,44 +819,29 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     if (Application::globalFPSToggleEnabled)
         Application::gloablFPSToggleIdentifier = Application::registerFPSToggleAction(activity);
 
-    // Fade out animation
-    if (fadeOut)
+    // No animations
+    if(!wait){
+        Application::unblockInputs();
+    } else if (fadeOut) // Fade out animation
     {
         activity->setInFadeAnimation(true); // set the new activity translucent until the fade out animation is done playing
 
-        // Animate the new activity directly
-        if (!wait)
-        {
-            activity->show([] {
-                Application::unblockInputs();
-            },
-                true, activity->getShowAnimationDuration(animation));
-        }
-
-        last->hide([animation, wait, activity] {
+        last->hide([animation, activity] {
             activity->setInFadeAnimation(false);
 
             // Animate the new activity once the old one
             // has ended its animation
-            if (wait)
-                activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
+            activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
         },
             true, last->getShowAnimationDuration(animation));
-    }
-
-    activity->resizeToFitWindow();
-
-    if(wait){
-        activity->hide([] {}, false, NULL);
-        if (!fadeOut)
-            activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
-    }
-
-    // Focus
-    if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
+    } else
     {
-        Logger::debug("Pushing {} to the focus stack", Application::currentFocus->describe());
-        Application::focusStack.push_back(Application::currentFocus);
+        // Animate the new activity directly
+        activity->hide([] {}, false, 0);
+        activity->show([] {
+                           Application::unblockInputs();
+                       },
+                       true, activity->getShowAnimationDuration(animation));
     }
 
     // Layout and prepare activity
