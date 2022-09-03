@@ -19,6 +19,7 @@
 #include <borealis/core/font.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/label.hpp>
+#include "borealis/core/i18n.hpp"
 
 namespace brls
 {
@@ -213,8 +214,14 @@ Label::Label()
     Style style = Application::getStyle();
     Theme theme = Application::getTheme();
 
+    static std::string locale = brls::Application::getPlatform()->getLocale();
+    static bool isChinese = locale == brls::LOCALE_ZH_CN || locale == brls::LOCALE_ZH_HANS || locale == brls::LOCALE_ZH_HANT || locale == brls::LOCALE_ZH_TW;
+    if(isChinese)
+        this->font       = Application::getFont(FONT_CHINESE_SIMPLIFIED);
+    else
+        this->font       = Application::getFont(FONT_REGULAR);
+
     // Default attributes
-    this->font       = Application::getFont(FONT_REGULAR);
     this->fontSize   = style["brls/label/default_font_size"];
     this->lineHeight = style["brls/label/default_line_height"];
     this->textColor  = theme["brls/text"];
