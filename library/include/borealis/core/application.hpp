@@ -140,6 +140,8 @@ class Application
      */
     static int getFont(std::string fontName);
 
+    static int getDefaultFont();
+
     static void notify(std::string text);
 
     static void onControllerButtonPressed(enum ControllerButton button, bool repeating);

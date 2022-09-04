@@ -136,13 +136,7 @@ void Application::createWindow(std::string windowTitle)
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
 
-    int regular = 0;
-
-    std::string locale = brls::Application::getPlatform()->getLocale();
-    if(locale == brls::LOCALE_ZH_CN || locale == brls::LOCALE_ZH_HANS || locale == brls::LOCALE_ZH_HANT || locale == brls::LOCALE_ZH_TW)
-        regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
-    else
-        regular = Application::getFont(FONT_REGULAR);
+    int regular = Application::getDefaultFont();
 
     if (regular != FONT_INVALID)
     {
@@ -1047,6 +1041,21 @@ int Application::getFont(std::string fontName)
         return FONT_INVALID;
 
     return Application::fontStash[fontName];
+}
+
+int Application::getDefaultFont()
+{
+    static int regular = -1;
+    if(regular < 0){
+        std::string locale = brls::Application::getPlatform()->getLocale();
+        if(locale == brls::LOCALE_ZH_CN || locale == brls::LOCALE_ZH_HANS)
+            regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
+        else if(locale == brls::LOCALE_ZH_HANT || locale == brls::LOCALE_ZH_TW)
+            regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
+        else
+            regular = Application::getFont(FONT_REGULAR);
+    }
+    return regular;
 }
 
 bool Application::XMLViewsRegisterContains(std::string name)
