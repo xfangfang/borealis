@@ -190,6 +190,7 @@ class Application
     static VoidEvent* getGlobalHintsUpdateEvent();
     static Event<InputType>* getGlobalInputTypeChangeEvent();
     static VoidEvent* getRunLoopEvent();
+    static VoidEvent* getExitEvent();
 
     static View* getCurrentFocus();
 
@@ -290,6 +291,7 @@ class Application
     inline static VoidEvent globalHintsUpdateEvent;
     inline static Event<InputType> globalInputTypeChangeEvent;
     inline static VoidEvent runLoopEvent;
+    inline static VoidEvent exitEvent;
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;
 

@@ -630,6 +630,8 @@ void Application::frame()
 
 void Application::exit()
 {
+
+    exitEvent.fire();
     Logger::info("Exiting...");
 
     Application::clear();
@@ -1033,6 +1035,11 @@ Event<InputType>* Application::getGlobalInputTypeChangeEvent()
 VoidEvent* Application::getRunLoopEvent()
 {
     return &Application::runLoopEvent;
+}
+
+VoidEvent* Application::getExitEvent()
+{
+    return &Application::exitEvent;
 }
 
 int Application::getFont(std::string fontName)
