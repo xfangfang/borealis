@@ -37,6 +37,10 @@
 #include <switch.h>
 #endif
 
+#ifdef _WIN32
+#include "nanovg-gl/stb_image.h"
+#endif
+
 namespace brls
 {
 
@@ -74,6 +78,12 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 #endif
 
     this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+
+#ifdef _WIN32
+    GLFWimage images[1];
+    images[0].pixels = stbi_load("resources/icon/bilibili.png", &images[0].width, &images[0].height, 0, 4);
+    glfwSetWindowIcon(this->window, 1, images);
+#endif
 
     if (!this->window)
     {

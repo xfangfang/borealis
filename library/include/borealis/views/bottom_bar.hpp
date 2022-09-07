@@ -38,8 +38,8 @@ class BottomBar : public Box
     BRLS_BIND(View, battery, "brls/battery");
     BRLS_BIND(View, wireless, "brls/wireless");
 
-    inline static uint INTERNAL = 30;
-    inline static uint INTERNAL_M = INTERNAL * 1000000;
+    inline static unsigned int INTERNAL = 30;
+    inline static unsigned int INTERNAL_M = INTERNAL * 1000000;
 };
 
 } // namespace brls

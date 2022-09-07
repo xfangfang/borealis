@@ -97,12 +97,12 @@ void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height
     auto timeNow   = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(timeNow);
 
-    static uint start = getCPUTimeUsec();
-    static uint index = 0;
-    static uint fps = 0;    
+    static unsigned int start = getCPUTimeUsec();
+    static unsigned int index = 0;
+    static unsigned int fps = 0;    
 
     if(index == INTERNAL){
-        uint end = getCPUTimeUsec();
+        unsigned int end = getCPUTimeUsec();
         fps = INTERNAL_M / (end - start);
         start = end;
         index = -1;

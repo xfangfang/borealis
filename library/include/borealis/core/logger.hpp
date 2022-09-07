@@ -28,10 +28,10 @@ namespace brls
 
 enum class LogLevel
 {
-    ERROR = 0,
-    WARNING,
-    INFO,
-    DEBUGING
+    LOG_ERROR = 0,
+    LOG_WARNING,
+    LOG_INFO,
+    LOG_DEBUG
 };
 
 class Logger
@@ -76,25 +76,25 @@ class Logger
     template <typename... Args>
     inline static void error(std::string format, Args&&... args)
     {
-        Logger::log(LogLevel::ERROR, "ERROR", "[0;31m", format, args...);
+        Logger::log(LogLevel::LOG_ERROR, "ERROR", "[0;31m", format, args...);
     }
 
     template <typename... Args>
     inline static void warning(std::string format, Args&&... args)
     {
-        Logger::log(LogLevel::WARNING, "WARNING", "[0;33m", format, args...);
+        Logger::log(LogLevel::LOG_WARNING, "WARNING", "[0;33m", format, args...);
     }
 
     template <typename... Args>
     inline static void info(std::string format, Args&&... args)
     {
-        Logger::log(LogLevel::INFO, "INFO", "[0;34m", format, args...);
+        Logger::log(LogLevel::LOG_INFO, "INFO", "[0;34m", format, args...);
     }
 
     template <typename... Args>
     inline static void debug(std::string format, Args&&... args)
     {
-        Logger::log(LogLevel::DEBUGING, "DEBUG", "[0;32m", format, args...);
+        Logger::log(LogLevel::LOG_DEBUG, "DEBUG", "[0;32m", format, args...);
     }
 
     static Event<std::string>* getLogEvent()
@@ -103,7 +103,7 @@ class Logger
     }
 
   private:
-    inline static LogLevel logLevel = LogLevel::INFO;
+    inline static LogLevel logLevel = LogLevel::LOG_INFO;
     inline static Event<std::string> logEvent;
 };
 
