@@ -353,9 +353,9 @@ View* Box::hitTest(Point point)
     if (this->getFrame().pointInside(point))
     {
         //        Logger::debug(describe() + ": --- X: " + std::to_string((int)getX()) + ", Y: " + std::to_string((int)getY()) + ", W: " + std::to_string((int)getWidth()) + ", H: " + std::to_string((int)getHeight()));
-        for (View* child : this->children)
+        for(auto child = this->children.rbegin(); child!= this->children.rend(); child++)
         {
-            View* result = child->hitTest(point);
+            View* result = (*child)->hitTest(point);
 
             if (result)
                 return result;
@@ -680,8 +680,12 @@ Box::~Box()
 {
     for (auto it : getChildren())
     {
-        if (!it->isPtrLocked())
+        it->setParent(nullptr);
+        if (!it->isPtrLocked()){
             delete it;
+        } else {
+            it->freeView();
+        }
     }
 }
 
