@@ -105,10 +105,11 @@ class Image : public View
      */
     void setImageFromMem(unsigned char* data, int size);
 
+    virtual void innerSetImage(int texture);
 
     void setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb);
 
-    void clear();
+    int clear(bool deleteTexture = true);
 
     /**
      * Sets the scaling type for this image.
@@ -128,6 +129,8 @@ class Image : public View
      */
     void setImageAlign(ImageAlignment align);
 
+    void setFreeTexture(bool value);
+
     int getTexture();
     float getOriginalImageWidth();
     float getOriginalImageHeight();
@@ -144,7 +147,6 @@ class Image : public View
     NVGpaint paint;
 
     void invalidateImageBounds();
-    virtual void innerSetImage(int texture);
     int getImageFlags();
 
     float originalImageWidth  = 0;
@@ -154,6 +156,8 @@ class Image : public View
     float imageY      = 0;
     float imageHeight = 0;
     float imageWidth  = 0;
+
+    bool freeTexture = true;
 };
 
 } // namespace brls

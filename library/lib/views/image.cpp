@@ -320,12 +320,20 @@ void Image::innerSetImage(int tex)
     this->invalidate();
 }
 
-void Image::clear(){
+int Image::clear(bool deleteTexture){
     if (this->texture == 0)
-        return;
+        return 0;
     NVGcontext* vg = Application::getNVGContext();
-    nvgDeleteImage(vg, this->texture);
+
+    if(deleteTexture){
+        nvgDeleteImage(vg, this->texture);
+        this->texture = 0;
+        return 0;
+    }
+
+    int tex = this->texture;
     this->texture = 0;
+    return tex;
 }
 
 void Image::setScalingType(ImageScalingType scalingType)
@@ -350,6 +358,11 @@ int Image::getTexture()
     return this->texture;
 }
 
+void Image::setFreeTexture(bool value)
+{
+    this->freeTexture = value;
+}
+
 float Image::getOriginalImageHeight()
 {
     return this->originalImageHeight;
@@ -357,9 +370,11 @@ float Image::getOriginalImageHeight()
 
 Image::~Image()
 {
+    brls::Logger::debug("delete Image {}", this->describe());
+
     NVGcontext* vg = Application::getNVGContext();
 
-    if (this->texture != 0)
+    if (this->freeTexture && this->texture != 0)
         nvgDeleteImage(vg, this->texture);
 }
 
