@@ -41,6 +41,10 @@ class AppletFrame : public Box
     AppletFrame();
     AppletFrame(View* contentView);
 
+    ~AppletFrame(){
+        brls::Logger::error("delete AppletFrame {}", this->describe());
+    }
+
     void handleXMLElement(tinyxml2::XMLElement* element) override;
 
     void pushContentView(View* view);
@@ -71,6 +75,8 @@ class AppletFrame : public Box
     }
 
     static View* create();
+
+    inline static bool HIDE_BOTTOM_BAR = false;
 
   private:
     BRLS_BIND(Box, header, "brls/applet_frame/header");

@@ -110,7 +110,10 @@ AppletFrame::AppletFrame()
     });
 
     this->registerBoolXMLAttribute("footerHidden", [this](bool value) {
-        this->setFooterVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
+        if(HIDE_BOTTOM_BAR)
+            this->setFooterVisibility(Visibility::GONE);
+        else
+            this->setFooterVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
     });
 
     this->registerAction(
