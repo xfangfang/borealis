@@ -64,8 +64,8 @@ class SwitchInputManager : public InputManager
     HidVibrationDeviceHandle m_vibration_device_hendheld[2];
     HidVibrationValue m_vibration_values_hendheld[2];
     PadState padsState[GAMEPADS_MAX];
-    HidVibrationDeviceHandle m_vibration_device_handles[2][GAMEPADS_MAX];
-    HidVibrationValue m_vibration_values[2][GAMEPADS_MAX];
+    HidVibrationDeviceHandle m_vibration_device_handles[GAMEPADS_MAX][2];
+    HidVibrationValue m_vibration_values[GAMEPADS_MAX][2];
     u32 padsStyleSet[GAMEPADS_MAX];
     bool pointerLocked = false;
     HidMouseState currentMouseState;

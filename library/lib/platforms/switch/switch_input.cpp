@@ -254,8 +254,6 @@ void SwitchInputManager::sendRumbleInternal(HidVibrationDeviceHandle vibration_d
     float low  = (float)lowFreqMotor / 0xFFFF;
     float high = (float)highFreqMotor / 0xFFFF;
 
-    memset(vibration_values, 0, sizeof(vibration_values));
-
     vibration_values[0].amp_low   = low;
     vibration_values[0].freq_low  = low * 50;
     vibration_values[0].amp_high  = high;

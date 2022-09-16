@@ -42,7 +42,7 @@ class AppletFrame : public Box
     AppletFrame(View* contentView);
 
     ~AppletFrame(){
-        brls::Logger::error("delete AppletFrame {}", this->describe());
+        brls::Logger::debug("delete AppletFrame {}", this->describe());
     }
 
     void handleXMLElement(tinyxml2::XMLElement* element) override;
