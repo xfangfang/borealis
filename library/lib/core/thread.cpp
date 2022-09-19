@@ -14,11 +14,11 @@
     limitations under the License.
 */
 
-#include <exception>
 #include <libretro-common/retro_timers.h>
 
-#include <borealis/core/thread.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/thread.hpp>
+#include <exception>
 
 namespace brls
 {
@@ -74,14 +74,17 @@ void Threading::performSyncTasks()
     m_sync_functions.clear();
     m_sync_mutex.unlock();
 
-    for (auto& f : local){
-        try {
+    for (auto& f : local)
+    {
+        try
+        {
             f();
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e)
+        {
             brls::Logger::error("error: performSyncTasks: {}", e.what());
         }
     }
-        
 
     m_delay_mutex.lock();
     auto delay_local = m_delay_tasks;
@@ -94,7 +97,16 @@ void Threading::performSyncTasks()
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
 
         if (duration >= d.delayMilliseconds)
-            d.func();
+        {
+            try
+            {
+                d.func();
+            }
+            catch (std::exception& e)
+            {
+                brls::Logger::error("error: performSyncTasks(delay): {}", e.what());
+            }
+        }
         else
         {
             m_delay_mutex.lock();
