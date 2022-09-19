@@ -18,9 +18,9 @@
 #pragma once
 
 #include <fmt/core.h>
-#include <chrono>
 
 #include <borealis/core/event.hpp>
+#include <chrono>
 #include <string>
 
 namespace brls
@@ -31,7 +31,8 @@ enum class LogLevel
     LOG_ERROR = 0,
     LOG_WARNING,
     LOG_INFO,
-    LOG_DEBUG
+    LOG_DEBUG,
+    LOG_VERBOSE
 };
 
 class Logger
@@ -45,11 +46,11 @@ class Logger
         if (Logger::logLevel < logLevel)
             return;
 
-        auto now = std::chrono::system_clock::now();
+        auto now    = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
-                                   - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
-        time_t tt = std::chrono::system_clock::to_time_t(now);
-        auto time_tm = localtime(&tt);
+            - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
+        time_t tt        = std::chrono::system_clock::to_time_t(now);
+        auto time_tm     = localtime(&tt);
         char strTime[13] = { 0 };
         sprintf(strTime, "%02d:%02d:%02d.%03d", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms);
 
@@ -95,6 +96,12 @@ class Logger
     inline static void debug(std::string format, Args&&... args)
     {
         Logger::log(LogLevel::LOG_DEBUG, "DEBUG", "[0;32m", format, args...);
+    }
+
+    template <typename... Args>
+    inline static void verbose(std::string format, Args&&... args)
+    {
+        Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", "[0;37m", format, args...);
     }
 
     static Event<std::string>* getLogEvent()
