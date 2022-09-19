@@ -137,9 +137,6 @@ static ThemeValues darkThemeValues = {
     { "brls/spinner/bar_color", nvgRGBA(192, 192, 192, 80) }, // TODO: get this right
 };
 
-static Theme lightTheme(&lightThemeValues);
-static Theme darkTheme(&darkThemeValues);
-
 ThemeValues::ThemeValues(std::initializer_list<std::pair<std::string, NVGcolor>> list)
 {
     for (std::pair<std::string, NVGcolor> color : list)
@@ -179,13 +176,15 @@ NVGcolor Theme::operator[](std::string name)
     return this->getColor(name);
 }
 
-Theme getLightTheme()
+Theme& Theme::getLightTheme()
 {
+    static Theme lightTheme(&lightThemeValues);
     return lightTheme;
 }
 
-Theme getDarkTheme()
+Theme& Theme::getDarkTheme()
 {
+    static Theme darkTheme(&darkThemeValues);
     return darkTheme;
 }
 

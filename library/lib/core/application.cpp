@@ -869,9 +869,9 @@ void Application::clear()
 Theme Application::getTheme()
 {
     if (Application::getThemeVariant() == ThemeVariant::LIGHT)
-        return getLightTheme();
+        return Theme::getLightTheme();
     else
-        return getDarkTheme();
+        return Theme::getDarkTheme();
 }
 
 ThemeVariant Application::getThemeVariant()

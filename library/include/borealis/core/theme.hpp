@@ -54,11 +54,11 @@ class Theme
     void addColor(std::string name, NVGcolor color);
     NVGcolor getColor(std::string name);
 
+    static Theme& getLightTheme();
+    static Theme& getDarkTheme();
+
   private:
     ThemeValues* values;
 };
-
-Theme getLightTheme();
-Theme getDarkTheme();
 
 } // namespace brls
