@@ -434,11 +434,6 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
     nvgFontSize(vg, this->fontSize);
     nvgTextAlign(vg, horizAlign | vertAlign);
     nvgFontFaceId(vg, this->font);
-#ifdef __SWITCH__
-    nvgTextLineHeight(vg, this->lineHeight);
-#else
-    nvgTextLineHeight(vg, this->lineHeight * 2 / 3);
-#endif
     nvgTextLineHeight(vg, this->lineHeight);
     nvgFillColor(vg, a(this->textColor));
 
@@ -600,11 +595,7 @@ float Label::getFontSize()
 
 float Label::getLineHeight()
 {
-//#ifdef __SWITCH__
     return this->lineHeight;
-//#else
-//    return this->lineHeight * 2 / 3;
-//#endif
 }
 
 NVGcolor Label::getTextColor()
