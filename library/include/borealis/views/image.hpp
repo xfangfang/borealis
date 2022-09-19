@@ -109,7 +109,7 @@ class Image : public View
 
     void setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb);
 
-    int clear(bool deleteTexture = true);
+    int clear();
 
     /**
      * Sets the scaling type for this image.

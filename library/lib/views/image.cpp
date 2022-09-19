@@ -306,7 +306,7 @@ void Image::innerSetImage(int tex)
     NVGcontext* vg = Application::getNVGContext();
 
     // Free the old texture if necessary
-    if (this->texture != 0)
+    if (this->texture != 0 && this->freeTexture)
         nvgDeleteImage(vg, this->texture);
 
     // Set the new texture
@@ -320,18 +320,20 @@ void Image::innerSetImage(int tex)
     this->invalidate();
 }
 
-int Image::clear(bool deleteTexture){
+int Image::clear()
+{
     if (this->texture == 0)
         return 0;
     NVGcontext* vg = Application::getNVGContext();
 
-    if(deleteTexture){
+    if (this->freeTexture)
+    {
         nvgDeleteImage(vg, this->texture);
         this->texture = 0;
         return 0;
     }
 
-    int tex = this->texture;
+    int tex       = this->texture;
     this->texture = 0;
     return tex;
 }
@@ -372,10 +374,8 @@ Image::~Image()
 {
     brls::Logger::debug("delete Image {}", this->describe());
 
-    NVGcontext* vg = Application::getNVGContext();
-
     if (this->freeTexture && this->texture != 0)
-        nvgDeleteImage(vg, this->texture);
+        nvgDeleteImage(Application::getNVGContext(), this->texture);
 }
 
 View* Image::create()
