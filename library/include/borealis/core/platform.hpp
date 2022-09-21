@@ -55,6 +55,16 @@ class Platform
     virtual int getWirelessLevel() = 0;
 
     /**
+     * Returns ip address.
+     */
+    virtual std::string getIpAddress() = 0;
+
+    /**
+     * Returns dns server address.
+     */
+    virtual std::string getDnsServer() = 0;
+
+    /**
      * Returns if battery level supports.
      */
     virtual bool canShowBatteryLevel() = 0;
@@ -85,6 +95,11 @@ class Platform
      * As such, the result should be cached by the platform code.
      */
     virtual ThemeVariant getThemeVariant() = 0;
+
+    /**
+     * Overwrite current theme settings
+     */
+    virtual void setThemeVariant(ThemeVariant theme) = 0;
 
     /**
      * Can be called at anytime to get the current locale

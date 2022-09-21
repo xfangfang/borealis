@@ -35,6 +35,7 @@ class GLFWPlatform : public Platform
 
     bool mainLoopIteration() override;
     ThemeVariant getThemeVariant() override;
+    void setThemeVariant(ThemeVariant theme) override;
     std::string getLocale() override;
 
     AudioPlayer* getAudioPlayer() override;
@@ -46,6 +47,8 @@ class GLFWPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    std::string getIpAddress() override;
+    std::string getDnsServer() override;
     bool isApplicationMode() override;
     void exitToHomeMode(bool value) override;
     void forceEnableGamePlayRecording() override;
@@ -56,6 +59,7 @@ class GLFWPlatform : public Platform
     GLFWVideoContext* videoContext = nullptr;
     GLFWInputManager* inputManager = nullptr;
     GLFWFontLoader* fontLoader     = nullptr;
+    ThemeVariant themeVariant      = ThemeVariant::LIGHT;
 };
 
 } // namespace brls

@@ -17,10 +17,10 @@
 #pragma once
 
 #include <borealis/platforms/glfw/glfw_platform.hpp>
+#include <borealis/platforms/glfw/glfw_video.hpp>
 #include <borealis/platforms/switch/switch_audio.hpp>
 #include <borealis/platforms/switch/switch_font.hpp>
 #include <borealis/platforms/switch/switch_input.hpp>
-#include <borealis/platforms/glfw/glfw_video.hpp>
 
 namespace brls
 {
@@ -37,6 +37,7 @@ class SwitchPlatform : public Platform
 
     bool mainLoopIteration() override;
     ThemeVariant getThemeVariant() override;
+    void setThemeVariant(ThemeVariant theme) override;
     std::string getLocale() override;
 
     VideoContext* getVideoContext() override;
@@ -48,6 +49,8 @@ class SwitchPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    std::string getIpAddress() override;
+    std::string getDnsServer() override;
     bool isApplicationMode() override;
     void exitToHomeMode(bool value) override;
     void forceEnableGamePlayRecording() override;
@@ -56,7 +59,6 @@ class SwitchPlatform : public Platform
     void appletCallback(AppletHookType hookType);
 
   private:
-
     ThemeVariant themeVariant;
     std::string locale;
 

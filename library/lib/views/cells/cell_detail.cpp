@@ -40,7 +40,8 @@ const std::string detailCellXML = R"xml(
 
         <brls:Label
             id="brls/rediocell/detail"
-            width="auto"
+            horizontalAlign="right"
+            maxWidth="300"
             height="auto"
             fontSize="@style/brls/sidebar/item_font_size"
             textColor="@theme/brls/list/listItem_value_color"/>
@@ -52,9 +53,8 @@ DetailCell::DetailCell()
 {
     this->inflateFromXMLString(detailCellXML);
 
-    this->registerStringXMLAttribute("title", [this](std::string value){
-        this->title->setText(value);
-    });
+    this->registerStringXMLAttribute("title", [this](std::string value)
+        { this->title->setText(value); });
 }
 
 void DetailCell::setText(std::string title)

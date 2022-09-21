@@ -45,6 +45,11 @@ GLFWPlatform::GLFWPlatform()
         return;
     }
 
+    // Theme
+    char* themeEnv = getenv("BOREALIS_THEME");
+    if (themeEnv != nullptr && !strcasecmp(themeEnv, "DARK"))
+        this->themeVariant = ThemeVariant::DARK;
+
     // Misc
     glfwSetTime(0.0);
 
@@ -85,6 +90,16 @@ bool GLFWPlatform::hasWirelessConnection()
 int GLFWPlatform::getWirelessLevel()
 {
     return battery / 20;
+}
+
+std::string GLFWPlatform::getIpAddress()
+{
+    return "0.0.0.0";
+}
+
+std::string GLFWPlatform::getDnsServer()
+{
+    return "0.0.0.0";
 }
 
 bool GLFWPlatform::isApplicationMode()
@@ -163,11 +178,12 @@ FontLoader* GLFWPlatform::getFontLoader()
 
 ThemeVariant GLFWPlatform::getThemeVariant()
 {
-    char* themeEnv = getenv("BOREALIS_THEME");
-    if (themeEnv != nullptr && !strcasecmp(themeEnv, "DARK"))
-        return ThemeVariant::DARK;
-    else
-        return ThemeVariant::LIGHT;
+    return this->themeVariant;
+}
+
+void GLFWPlatform::setThemeVariant(ThemeVariant theme)
+{
+    this->themeVariant = theme;
 }
 
 std::string GLFWPlatform::getLocale()

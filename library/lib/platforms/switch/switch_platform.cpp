@@ -20,6 +20,8 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/switch/switch_platform.hpp>
 
+#include "fmt/format.h"
+
 extern "C" u32 __nx_applet_exit_mode;
 
 namespace brls
@@ -66,11 +68,11 @@ SwitchPlatform::SwitchPlatform()
 void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
 {
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
-    
+
     // Fixme: Dirty fix to reinitialise controllers with settings from borealis, not by GLFW
-//    brls::Logger::info("create SwitchInputManager");
-//    this->inputManager = new SwitchInputManager();
-//    brls::Logger::info("create SwitchInputManager done");
+    //    brls::Logger::info("create SwitchInputManager");
+    //    this->inputManager = new SwitchInputManager();
+    //    brls::Logger::info("create SwitchInputManager done");
 }
 
 bool SwitchPlatform::canShowBatteryLevel()
@@ -108,6 +110,22 @@ int SwitchPlatform::getWirelessLevel()
     return wifiSignal;
 }
 
+std::string SwitchPlatform::getIpAddress()
+{
+    u32 ip;
+    nifmGetCurrentIpAddress(&ip);
+    return fmt::format("{}.{}.{}.{}", ip & 0xff, (ip & 0xff00) >> 8, (ip & 0xff0000) >> 16, (ip & 0xff000000) >> 24);
+}
+
+std::string SwitchPlatform::getDnsServer()
+{
+    u32 ip, mask, gateway, dns1, dns2;
+    nifmGetCurrentIpConfigInfo(&ip, &mask, &gateway, &dns1, &dns2);
+    std::string dns1_str = fmt::format("{}.{}.{}.{}", dns1 & 0xff, (dns1 & 0xff00) >> 8, (dns1 & 0xff0000) >> 16, (dns1 & 0xff000000) >> 24);
+    std::string dns2_str = fmt::format("{}.{}.{}.{}", dns2 & 0xff, (dns2 & 0xff00) >> 8, (dns2 & 0xff0000) >> 16, (dns2 & 0xff000000) >> 24);
+    return dns1_str + "\n" + dns2_str;
+}
+
 bool SwitchPlatform::isApplicationMode()
 {
     AppletType at = appletGetAppletType();
@@ -129,9 +147,11 @@ void SwitchPlatform::openBrowser(std::string url)
     WebCommonConfig config;
 
     Result rc = webPageCreate(&config, url.c_str());
-    if (R_SUCCEEDED(rc)) {
+    if (R_SUCCEEDED(rc))
+    {
         rc = webConfigSetWhitelist(&config, "^http*");
-        if (R_SUCCEEDED(rc)) {
+        if (R_SUCCEEDED(rc))
+        {
             rc = webConfigShow(&config, NULL);
         }
     }
@@ -175,6 +195,11 @@ FontLoader* SwitchPlatform::getFontLoader()
 ThemeVariant SwitchPlatform::getThemeVariant()
 {
     return this->themeVariant;
+}
+
+void SwitchPlatform::setThemeVariant(ThemeVariant theme)
+{
+    this->themeVariant = theme;
 }
 
 SwitchPlatform::~SwitchPlatform()
