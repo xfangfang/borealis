@@ -20,6 +20,9 @@
 #include <borealis/core/animation.hpp>
 #include <borealis/core/timer.hpp>
 #include <borealis/core/view.hpp>
+#ifdef OPENCC
+#include "opencc.h"
+#endif
 
 namespace brls
 {
@@ -131,6 +134,13 @@ class Label : public View
      */
     void setIsWrapping(bool isWrapping);
 
+    /**
+     * Simplified Chinese to Traditional Chinese
+     */
+    static inline std::string STConverter(const std::string& text);
+
+    static inline bool OPENCC_ON = true;
+
   private:
     std::string truncatedText = "";
     std::string fullText      = "";
@@ -141,7 +151,7 @@ class Label : public View
 
     NVGcolor textColor;
 
-    float requiredWidth = 0;
+    float requiredWidth    = 0;
     unsigned ellipsisWidth = 0;
 
     bool singleLine = false;

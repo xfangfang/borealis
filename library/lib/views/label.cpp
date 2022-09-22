@@ -17,21 +17,23 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/font.hpp>
+#include <borealis/core/i18n.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/label.hpp>
-#include "borealis/core/i18n.hpp"
 
 namespace brls
 {
 
 #define ELLIPSIS "\u2026"
 
-static size_t strLen(const std::string& str){
+static size_t strLen(const std::string& str)
+{
     size_t res = 0, inc = 0;
-    while(inc < str.length()){
-        if(str[inc] & 0x80)
-            if(str[inc] & 0x20)
-                if(str[inc] & 0x10)
+    while (inc < str.length())
+    {
+        if (str[inc] & 0x80)
+            if (str[inc] & 0x20)
+                if (str[inc] & 0x10)
                     inc += 4;
                 else
                     inc += 3;
@@ -44,20 +46,25 @@ static size_t strLen(const std::string& str){
     return res;
 }
 
-static std::string slice(const std::string& str, size_t start, size_t end){
-    if(start > end || end > str.length())
+static std::string slice(const std::string& str, size_t start, size_t end)
+{
+    if (start > end || end > str.length())
         return "";
     size_t index = 0, s_index = 0, e_index = 0, inc = 0;
-    while(inc < str.length()){
-        if(index == start){
+    while (inc < str.length())
+    {
+        if (index == start)
+        {
             s_index = inc;
-        }else if(index == end){
+        }
+        else if (index == end)
+        {
             e_index = inc;
             break;
         }
-        if(str[inc] & 0x80)
-            if(str[inc] & 0x20)
-                if(str[inc] & 0x10)
+        if (str[inc] & 0x80)
+            if (str[inc] & 0x20)
+                if (str[inc] & 0x10)
                     inc += 4;
                 else
                     inc += 3;
@@ -231,33 +238,26 @@ Label::Label()
     YGNodeStyleSetMaxHeightPercent(this->ygNode, 100);
 
     // Register XML attributes
-    this->registerStringXMLAttribute("text", [this](std::string value) {
-        this->setText(value);
-    });
+    this->registerStringXMLAttribute("text", [this](std::string value)
+        { this->setText(value); });
 
-    this->registerFloatXMLAttribute("fontSize", [this](float value) {
-        this->setFontSize(value);
-    });
+    this->registerFloatXMLAttribute("fontSize", [this](float value)
+        { this->setFontSize(value); });
 
-    this->registerColorXMLAttribute("textColor", [this](NVGcolor color) {
-        this->setTextColor(color);
-    });
+    this->registerColorXMLAttribute("textColor", [this](NVGcolor color)
+        { this->setTextColor(color); });
 
-    this->registerFloatXMLAttribute("lineHeight", [this](float value) {
-        this->setLineHeight(value);
-    });
+    this->registerFloatXMLAttribute("lineHeight", [this](float value)
+        { this->setLineHeight(value); });
 
-    this->registerBoolXMLAttribute("animated", [this](bool value) {
-        this->setAnimated(value);
-    });
+    this->registerBoolXMLAttribute("animated", [this](bool value)
+        { this->setAnimated(value); });
 
-    this->registerBoolXMLAttribute("autoAnimate", [this](bool value) {
-        this->setAutoAnimate(value);
-    });
+    this->registerBoolXMLAttribute("autoAnimate", [this](bool value)
+        { this->setAutoAnimate(value); });
 
-    this->registerBoolXMLAttribute("singleLine", [this](bool value) {
-        this->setSingleLine(value);
-    });
+    this->registerBoolXMLAttribute("singleLine", [this](bool value)
+        { this->setSingleLine(value); });
 
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
         "horizontalAlign", HorizontalAlign, this->setHorizontalAlign,
@@ -339,8 +339,23 @@ void Label::setTextColor(NVGcolor color)
     this->textColor = color;
 }
 
+std::string Label::STConverter(const std::string& text)
+{
+#ifdef OPENCC
+    static bool skip = Application::getLocale() == LOCALE_ZH_HANS || Application::getLocale() == LOCALE_ZH_CN;
+    if (skip || !OPENCC_ON)
+        return text;
+    static opencc::SimpleConverter converter = opencc::SimpleConverter(View::getFilePathXMLAttributeValue("@res/opencc/s2t.json"));
+    return converter.Convert(text);
+#endif
+    return text;
+}
+
 void Label::setText(std::string text)
 {
+#ifdef OPENCC
+    text = Label::STConverter(text);
+#endif
     this->truncatedText = text;
     this->fullText      = text;
 
@@ -506,11 +521,11 @@ void Label::onScrollTimerFinished()
 
     this->scrollingAnimation.addStep(target, duration, EasingFunction::linear);
 
-    this->scrollingAnimation.setEndCallback([this](bool finished) {
+    this->scrollingAnimation.setEndCallback([this](bool finished)
+        {
         // Start over if the scrolling animation ended naturally
         if (finished)
-            this->startScrollTimer();
-    });
+            this->startScrollTimer(); });
 
     this->scrollingAnimation.start();
 
@@ -528,9 +543,8 @@ void Label::startScrollTimer()
 
     this->scrollingTimer.setDuration(style["brls/animations/label_scrolling_timer"]);
 
-    this->scrollingTimer.setEndCallback([this](bool finished) {
-        this->onScrollTimerFinished();
-    });
+    this->scrollingTimer.setEndCallback([this](bool finished)
+        { this->onScrollTimerFinished(); });
 
     this->scrollingTimer.start();
 
@@ -571,7 +585,7 @@ void Label::onLayout()
         float toRemove      = std::min(this->requiredWidth, this->requiredWidth - width + this->ellipsisWidth); // little bit more than ellipsis width to make sure it doesn't overflow
         float toRemoveRatio = toRemove / requiredWidth;
 
-        size_t len = strLen(this->fullText);
+        size_t len              = strLen(this->fullText);
         size_t ellipsisPosition = len - roundf((float)len * toRemoveRatio);
         this->truncatedText     = trim(slice(this->fullText, 0, ellipsisPosition)) + ELLIPSIS;
     }

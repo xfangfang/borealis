@@ -188,7 +188,10 @@ void GLFWPlatform::setThemeVariant(ThemeVariant theme)
 
 std::string GLFWPlatform::getLocale()
 {
-    return LOCALE_DEFAULT;
+    char* langEnv = getenv("BOREALIS_LANG");
+    if (langEnv == nullptr)
+        return LOCALE_DEFAULT;
+    return std::string(langEnv);
 }
 
 GLFWPlatform::~GLFWPlatform()

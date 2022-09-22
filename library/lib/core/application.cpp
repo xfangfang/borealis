@@ -1052,16 +1052,11 @@ int Application::getFont(std::string fontName)
 
 int Application::getDefaultFont()
 {
-    static int regular = -1;
-    if(regular < 0){
-        std::string locale = brls::Application::getPlatform()->getLocale();
-        if(locale == brls::LOCALE_ZH_CN || locale == brls::LOCALE_ZH_HANS)
-            regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
-        else if(locale == brls::LOCALE_ZH_HANT || locale == brls::LOCALE_ZH_TW)
-            regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
-        else
-            regular = Application::getFont(FONT_REGULAR);
-    }
+#ifdef __SWITCH__
+    static int regular = Application::getFont(FONT_CHINESE_SIMPLIFIED);
+#else
+    static int regular = Application::getFont(FONT_REGULAR);
+#endif
     return regular;
 }
 
