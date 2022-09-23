@@ -88,11 +88,7 @@ static void loadLocale(std::string locale, nlohmann::json* target)
 
 void loadTranslations()
 {
-#ifdef __SWITCH__
     loadLocale(LOCALE_DEFAULT, &defaultLocale);
-#else
-    loadLocale(LOCALE_ZH_HANS, &defaultLocale);
-#endif
 
     std::string currentLocaleName = Application::getLocale();
     if (currentLocaleName != LOCALE_DEFAULT)

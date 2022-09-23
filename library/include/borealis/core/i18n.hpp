@@ -43,7 +43,11 @@ const std::string LOCALE_PT_BR   = "pt-BR";
 const std::string LOCALE_RU      = "ru";
 const std::string LOCALE_ES_419  = "es-419";
 
+#ifdef __SWITCH__
 const std::string LOCALE_DEFAULT = LOCALE_EN_US;
+#else
+const std::string LOCALE_DEFAULT = LOCALE_ZH_HANS;
+#endif
 
 namespace internal
 {

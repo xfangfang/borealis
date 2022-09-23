@@ -342,7 +342,7 @@ void Label::setTextColor(NVGcolor color)
 std::string Label::STConverter(const std::string& text)
 {
 #ifdef OPENCC
-    static bool skip = Application::getLocale() == LOCALE_ZH_HANS || Application::getLocale() == LOCALE_ZH_CN;
+    static bool skip = Application::getLocale() != LOCALE_ZH_HANT && Application::getLocale() != LOCALE_ZH_TW;
     if (skip || !OPENCC_ON)
         return text;
     static opencc::SimpleConverter converter = opencc::SimpleConverter(View::getFilePathXMLAttributeValue("@res/opencc/s2t.json"));
