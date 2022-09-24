@@ -714,7 +714,7 @@ void Application::giveFocus(View* view)
     }
 }
 
-bool Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb)
+bool Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb, bool free)
 {
     if (Application::activitiesStack.size() <= 1) // never pop the first activity
         return false;
@@ -726,50 +726,27 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
 
     last->setInFadeAnimation(true);
 
-    bool wait = animation == TransitionAnimation::FADE; // wait for the new activity animation to be done before showing the old one?
-
-    // Hide animation (and show previous activity, if any)
-    last->hide([last, animation, wait, cb] {
-        last->setInFadeAnimation(false);
-        Application::activitiesStack.pop_back();
-
-        // Animate the old activity once the new one
-        // has ended its animation
-        if (Application::activitiesStack.size() > 0 && wait)
-        {
-            Activity* newLast = Application::activitiesStack[Application::activitiesStack.size() - 1];
-
-            if (newLast->isHidden())
-            {
-                newLast->willAppear(false);
-                newLast->show([cb] {
-                    cb();
-                    Application::unblockInputs();
-                },
-                    true, newLast->getShowAnimationDuration(animation));
-            }
-            else
-            {
-                cb();
-                Application::unblockInputs();
-            }
-        }
-        else
-        {
-            Application::unblockInputs();
-        }
-
-        delete last;
-    },
-        true, last->getShowAnimationDuration(animation));
+    bool fade = animation == TransitionAnimation::FADE;
 
     // Animate the old activity immediately
-    if (!wait && Application::activitiesStack.size() > 1)
+    if (Application::activitiesStack.size() > 1)
     {
         Activity* toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
         toShow->willAppear(false);
         toShow->show(cb, true, toShow->getShowAnimationDuration(animation));
     }
+
+    // Hide animation (and show previous activity, if any)
+    last->hide([last, cb, free]()
+        {
+        Application::activitiesStack.pop_back();
+
+        brls::Logger::debug("Start delete top activity");
+        if(free) delete last;
+        brls::Logger::debug("Top activity deleted");
+
+        Application::unblockInputs(); },
+        fade, last->getShowAnimationDuration(animation));
 
     // Focus
     if (Application::focusStack.size() > 0)

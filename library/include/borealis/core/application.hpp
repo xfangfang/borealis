@@ -106,7 +106,7 @@ class Application
       * return false if no actifity to pop.
       */
     static bool popActivity(
-        TransitionAnimation animation = TransitionAnimation::FADE, std::function<void(void)> cb = [] {});
+        TransitionAnimation animation = TransitionAnimation::FADE, std::function<void(void)> cb = [] {}, bool free = true);
 
     /**
      * Gives the focus to the given view
