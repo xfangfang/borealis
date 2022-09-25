@@ -34,12 +34,12 @@
 #include <borealis/views/cells/cell_input.hpp>
 #include <borealis/views/cells/cell_radio.hpp>
 #include <borealis/views/cells/cell_selector.hpp>
+#include <borealis/views/h_scrolling_frame.hpp>
 #include <borealis/views/header.hpp>
 #include <borealis/views/hint.hpp>
 #include <borealis/views/image.hpp>
 #include <borealis/views/progress_spinner.hpp>
 #include <borealis/views/rectangle.hpp>
-#include <borealis/views/h_scrolling_frame.hpp>
 #include <borealis/views/recycler.hpp>
 #include <borealis/views/sidebar.hpp>
 #include <borealis/views/slider.hpp>
@@ -123,15 +123,15 @@ void Application::createWindow(std::string windowTitle)
     YGConfig* defaultConfig       = YGConfigGetDefault();
     defaultConfig->useWebDefaults = true;
 
-    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData) {
+    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData)
+        {
         View* view = (View*)node.getContext();
 
         if (!view)
             return;
 
         if (eventType == yoga::Event::NodeLayout)
-            view->onLayout();
-    });
+            view->onLayout(); });
 
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
@@ -167,8 +167,8 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
-    static auto frame_start = getCPUTimeUsec();
-    static auto frame_end = frame_start;
+    //    static auto frame_start = getCPUTimeUsec();
+    //    static auto frame_end = frame_start;
 
     static ControllerState oldControllerState = {};
 
@@ -203,9 +203,8 @@ bool Application::mainLoop()
     std::vector<TouchState> touchState;
     for (int i = 0; i < rawTouch.size(); i++)
     {
-        auto old = std::find_if(std::begin(currentTouchState), std::end(currentTouchState), [rawTouch, i](TouchState touch) {
-            return touch.fingerId == rawTouch[i].fingerId;
-        });
+        auto old = std::find_if(std::begin(currentTouchState), std::end(currentTouchState), [rawTouch, i](TouchState touch)
+            { return touch.fingerId == rawTouch[i].fingerId; });
 
         if (old != std::end(currentTouchState))
         {
@@ -224,9 +223,8 @@ bool Application::mainLoop()
         if (currentTouchState[i].phase == TouchPhase::NONE)
             continue;
 
-        auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [i](RawTouchState touch) {
-            return touch.fingerId == currentTouchState[i].fingerId;
-        });
+        auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [i](RawTouchState touch)
+            { return touch.fingerId == currentTouchState[i].fingerId; });
 
         if (old == std::end(rawTouch))
         {
@@ -270,11 +268,7 @@ bool Application::mainLoop()
 
     MouseState mouseState = InputManager::computeMouseState(rawMouse, currentMouseState);
 
-    if (mouseState.offset.x != 0 || mouseState.offset.y != 0 ||
-        mouseState.scroll.x != 0 || mouseState.scroll.y != 0 ||
-        mouseState.leftButton != TouchPhase::NONE ||
-        mouseState.middleButton != TouchPhase::NONE ||
-        mouseState.rightButton != TouchPhase::NONE)
+    if (mouseState.offset.x != 0 || mouseState.offset.y != 0 || mouseState.scroll.x != 0 || mouseState.scroll.y != 0 || mouseState.leftButton != TouchPhase::NONE || mouseState.middleButton != TouchPhase::NONE || mouseState.rightButton != TouchPhase::NONE)
     {
         Application::setInputType(InputType::TOUCH);
         Application::setDrawCoursor(true);
@@ -312,8 +306,8 @@ bool Application::mainLoop()
     static Time buttonPressTime     = 0;
     static int repeatingButtonTimer = 0;
 
-    controllerState.buttons[BUTTON_A]  |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
-    controllerState.buttons[BUTTON_B]  |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
+    controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
+    controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
 
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
@@ -344,29 +338,35 @@ bool Application::mainLoop()
 
     // Render
     Application::frame();
-    
+
     // Run sync functions
     Threading::performSyncTasks();
-    
+
     // Trigger RunLoop subscribers
     runLoopEvent.fire();
 
     // Free views deletion pool
     std::set<View*> undeletedViews;
-    for (auto view : Application::deletionPool) {
+    for (auto view : Application::deletionPool)
+    {
         if (!view->isPtrLocked())
+        {
             delete view;
+        }
         else
+        {
             undeletedViews.insert(view);
+            brls::Logger::verbose("Application: will delete view: {}", view->describe());
+        }
     }
     Application::deletionPool = undeletedViews;
 
     // Limit: 60 fps
-    frame_end = getCPUTimeUsec();
-    if(frame_end - frame_start < MSPF){
-        std::this_thread::sleep_for(std::chrono::microseconds(MSPF - frame_end + frame_start));
-    }
-    frame_start = getCPUTimeUsec();
+    //    frame_end = getCPUTimeUsec();
+    //    if(frame_end - frame_start < MSPF){
+    //        std::this_thread::sleep_for(std::chrono::microseconds(MSPF - frame_end + frame_start));
+    //    }
+    //    frame_start = getCPUTimeUsec();
 
     return true;
 }
@@ -496,7 +496,8 @@ bool Application::setInputType(InputType type)
     Application::inputType = type;
     globalInputTypeChangeEvent.fire(type);
 
-    if (type == InputType::GAMEPAD) {
+    if (type == InputType::GAMEPAD)
+    {
         Application::setDrawCoursor(false);
         Application::currentFocus->onFocusGained();
     }
@@ -659,7 +660,9 @@ void Application::toggleFramerateDisplay()
 ActionIdentifier Application::registerFPSToggleAction(Activity* activity)
 {
     return activity->registerAction(
-        "FPS", BUTTON_BACK, [](View* view) { Application::toggleFramerateDisplay(); return true; }, true);
+        "FPS", BUTTON_BACK, [](View* view)
+        { Application::toggleFramerateDisplay(); return true; },
+        true);
 }
 
 void Application::setGlobalQuit(bool enabled)
@@ -789,9 +792,7 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
         last = Application::activitiesStack[Application::activitiesStack.size() - 1];
 
     bool fadeOut = last && !last->isTranslucent() && !activity->isTranslucent(); // play the fade out animation?
-    bool wait    = animation == TransitionAnimation::FADE || \
-                   animation == TransitionAnimation::SLIDE_LEFT || \
-                   animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
+    bool fadeIn  = animation == TransitionAnimation::FADE || animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
 
     if (Application::globalQuitEnabled)
         Application::gloablQuitIdentifier = activity->registerExitAction();
@@ -799,37 +800,30 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     if (Application::globalFPSToggleEnabled)
         Application::gloablFPSToggleIdentifier = Application::registerFPSToggleAction(activity);
 
-    // No animations
-    if(!wait){
-        Application::unblockInputs();
-    } else if (fadeOut) // Fade out animation
-    {
-        activity->setInFadeAnimation(true); // set the new activity translucent until the fade out animation is done playing
-
-        last->hide([animation, activity] {
-            activity->setInFadeAnimation(false);
-
-            // Animate the new activity once the old one
-            // has ended its animation
-            activity->show([] { Application::unblockInputs(); }, true, activity->getShowAnimationDuration(animation));
-        },
-            true, last->getShowAnimationDuration(animation));
-    } else
-    {
-        // Animate the new activity directly
-        activity->hide([] {}, false, 0);
-        activity->show([] {
-                           Application::unblockInputs();
-                       },
-                       true, activity->getShowAnimationDuration(animation));
-    }
-
     // Layout and prepare activity
     activity->willAppear(true);
     Application::giveFocus(activity->getDefaultFocus());
 
-    // And push it
-    Application::activitiesStack.push_back(activity);
+    if (!fadeIn) // No animations
+    {
+        Application::activitiesStack.push_back(activity);
+        Application::unblockInputs();
+    }
+    else if (fadeOut) // Fade out animation
+    {
+        last->hide([]() {}, false, 0);
+        Application::activitiesStack.push_back(activity);
+        activity->hide([]() {}, false, 0);
+        activity->show([]()
+            { Application::unblockInputs(); },
+            true,
+            activity->getShowAnimationDuration(animation));
+    }
+    else
+    {
+        Application::activitiesStack.push_back(activity);
+        Application::unblockInputs();
+    }
 }
 
 void Application::clear()
@@ -863,6 +857,7 @@ std::string Application::getLocale()
 
 void Application::addToFreeQueue(View* view)
 {
+    brls::Logger::verbose("Application::addToFreeQueue {}", view->describe());
     deletionPool.insert(view);
 }
 
