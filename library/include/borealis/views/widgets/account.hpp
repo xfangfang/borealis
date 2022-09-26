@@ -28,9 +28,9 @@ class AccountWidget : public Box
 {
 public:
     AccountWidget();
-    
+
     static View* create();
-    
+
 private:
     Image* acc;
 };

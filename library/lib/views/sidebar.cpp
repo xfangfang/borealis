@@ -61,20 +61,20 @@ SidebarItem::SidebarItem()
 {
     this->inflateFromXMLString(sidebarItemXML);
 
-    this->registerStringXMLAttribute("label", [this](std::string value) {
-        this->setLabel(value);
-    });
+    this->registerStringXMLAttribute("label", [this](std::string value)
+        { this->setLabel(value); });
 
     this->setFocusSound(SOUND_FOCUS_SIDEBAR);
 
     this->registerAction(
-        "hints/ok"_i18n, BUTTON_A, [](View* view) {
+        "hints/ok"_i18n, BUTTON_A, [](View* view)
+        {
             Application::onControllerButtonPressed(BUTTON_NAV_RIGHT, false);
-            return true;
-        },
+            return true; },
         false, false, SOUND_CLICK_SIDEBAR);
 
-    this->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* soundToPlay) {
+    this->addGestureRecognizer(new TapGestureRecognizer([this](TapGestureStatus status, Sound* soundToPlay)
+        {
         if (this->active)
             return;
 
@@ -93,8 +93,9 @@ SidebarItem::SidebarItem()
                 *soundToPlay = SOUND_CLICK_SIDEBAR;
                 Application::giveFocus(this);
                 break;
-        }
-    }));
+            default:
+                break;
+        } }));
 }
 
 void SidebarItem::setActive(bool active)

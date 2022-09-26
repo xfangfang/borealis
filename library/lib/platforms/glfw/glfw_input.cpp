@@ -81,7 +81,8 @@ static void glfwJoystickCallback(int jid, int event)
     {
         Logger::info("glfw: joystick {} connected", jid);
 
-        if (glfwJoystickIsGamepad(jid)) {
+        if (glfwJoystickIsGamepad(jid))
+        {
             Logger::info("glfw: joystick {} is gamepad: \"{}\"", jid, glfwGetGamepadName(jid));
         }
 
@@ -99,9 +100,9 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
     KeyState state;
-    state.key = (BrlsKeyboardScancode)key;
-    state.mods = mods;
-    state.pressed = action != GLFW_RELEASE;
+    state.key            = (BrlsKeyboardScancode)key;
+    state.mods           = mods;
+    state.pressed        = action != GLFW_RELEASE;
     const char* key_name = glfwGetKeyName(key, scancode);
     if (key_name != NULL)
         Logger::debug("Key: {} / Code: {}", key_name, key);
@@ -121,21 +122,22 @@ void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double
 void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
-    if (self->pointerLocked) {
+    if (self->pointerLocked)
+    {
         int width, height;
         glfwGetWindowSize(self->window, &width, &height);
-        
-        int hWidth = width / 2;
+
+        int hWidth  = width / 2;
         int hHeight = height / 2;
-        
+
         Point localPointerOffset;
-        
-        localPointerOffset.x = (x - hWidth);// / Application::windowScale;
-        localPointerOffset.y = (y - hHeight);// / Application::windowScale;
-        
-        self->pointerOffsetBuffer.x += (x - hWidth);// / Application::windowScale;
-        self->pointerOffsetBuffer.y += (y - hHeight);// / Application::windowScale;
-        
+
+        localPointerOffset.x = (x - hWidth); // / Application::windowScale;
+        localPointerOffset.y = (y - hHeight); // / Application::windowScale;
+
+        self->pointerOffsetBuffer.x += (x - hWidth); // / Application::windowScale;
+        self->pointerOffsetBuffer.y += (y - hHeight); // / Application::windowScale;
+
         self->getMouseCusorOffsetChanged()->fire(localPointerOffset);
         glfwSetCursorPos(self->window, hWidth, hHeight);
     }
@@ -149,20 +151,21 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     glfwSetCursorPosCallback(window, cursorCallback);
     glfwSetKeyCallback(window, keyboardCallback);
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    for (int i = 0; i < GAMEPADS_MAX; i++)
+    {
         if (glfwJoystickIsGamepad(i))
         {
             Logger::info("glfw: joystick {} connected", i);
             Logger::info("glfw: joystick {} is gamepad: \"{}\"", i, glfwGetGamepadName(i));
         }
     }
-    
-    Application::getRunLoopEvent()->subscribe([this, window]() {
+
+    Application::getRunLoopEvent()->subscribe([this]()
+        {
         scrollOffset.x  = 0;
         scrollOffset.y  = 0;
         pointerOffset.x = 0;
-        pointerOffset.y = 0;
-    });
+        pointerOffset.y = 0; });
 }
 
 short GLFWInputManager::getControllersConnectedCount()
@@ -178,18 +181,22 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    for (int i = 0; i < GAMEPADS_MAX; i++)
+    {
         ControllerState localState;
         updateControllerState(&localState, i);
 
         for (size_t i = 0; i < _BUTTON_MAX; i++)
             state->buttons[i] |= localState.buttons[i];
 
-        for (size_t i = 0; i < _AXES_MAX; i++) {
+        for (size_t i = 0; i < _AXES_MAX; i++)
+        {
             state->axes[i] += localState.axes[i];
 
-            if (state->axes[i] < -1) state->axes[i] = -1;
-            else if (state->axes[i] > 1) state->axes[i] = 1;
+            if (state->axes[i] < -1)
+                state->axes[i] = -1;
+            else if (state->axes[i] > 1)
+                state->axes[i] = 1;
         }
     }
 }
@@ -203,10 +210,10 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
     for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
     {
         // Add keyboard keys on top of gamepad buttons
-//        size_t key;// = GLFW_GAMEPAD_TO_KEYBOARD[i];
+        //        size_t key;// = GLFW_GAMEPAD_TO_KEYBOARD[i];
 
-//        if (key != GLFW_GAMEPAD_BUTTON_NONE)
-//            glfwState.buttons[i] |= glfwGetKey(this->window, key);
+        //        if (key != GLFW_GAMEPAD_BUTTON_NONE)
+        //            glfwState.buttons[i] |= glfwGetKey(this->window, key);
 
         // Translate GLFW gamepad to borealis controller
         size_t brlsButton          = GLFW_BUTTONS_MAPPING[i];
@@ -221,10 +228,10 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
     state->buttons[BUTTON_NAV_DOWN]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f || state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.5f || state->buttons[BUTTON_LEFT];
 
-    state->buttons[BUTTON_NAV_UP]    |= glfwGetKey(this->window, GLFW_KEY_UP);
+    state->buttons[BUTTON_NAV_UP] |= glfwGetKey(this->window, GLFW_KEY_UP);
     state->buttons[BUTTON_NAV_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_RIGHT);
-    state->buttons[BUTTON_NAV_DOWN]  |= glfwGetKey(this->window, GLFW_KEY_DOWN);
-    state->buttons[BUTTON_NAV_LEFT]  |= glfwGetKey(this->window, GLFW_KEY_LEFT);
+    state->buttons[BUTTON_NAV_DOWN] |= glfwGetKey(this->window, GLFW_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT] |= glfwGetKey(this->window, GLFW_KEY_LEFT);
 
     for (size_t i = 0; i < GLFW_GAMEPAD_AXIS_MAX; i++)
     {
@@ -273,22 +280,23 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     state->position.y   = y / Application::windowScale;
     state->offset       = pointerOffset;
     state->scroll       = scrollOffset;
-    
+
 #ifdef __APPLE__
     state->position = state->position * 2;
 #endif
 }
 
-void GLFWInputManager::setPointerLock(bool lock) {
+void GLFWInputManager::setPointerLock(bool lock)
+{
     pointerLocked = lock;
-    
+
     int state = lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
     glfwSetInputMode(window, GLFW_CURSOR, state);
 }
 
 void GLFWInputManager::runloopStart()
 {
-    pointerOffset = pointerOffsetBuffer;
+    pointerOffset         = pointerOffsetBuffer;
     pointerOffsetBuffer.x = 0;
     pointerOffsetBuffer.y = 0;
 }

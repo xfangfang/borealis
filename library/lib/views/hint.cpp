@@ -65,9 +65,8 @@ Hint::Hint(Action action)
 
     if (action.button != BUTTON_A && action.available && !Application::isInputBlocks())
     {
-        this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]() {
-            action.actionListener(this);
-        }));
+        this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]()
+            { action.actionListener(this); }));
     }
 
     if (!action.available || Application::isInputBlocks())
@@ -127,13 +126,11 @@ Hints::Hints()
     setAxis(Axis::ROW);
     setDirection(Direction::LEFT_TO_RIGHT);
 
-    hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]() {
-        refillHints(Application::getCurrentFocus());
-    });
+    hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]()
+        { refillHints(Application::getCurrentFocus()); });
 
-    this->registerBoolXMLAttribute("addBaseAction", [this](bool value) {
-        this->setAddUnabledAButtonAction(value);
-    });
+    this->registerBoolXMLAttribute("addBaseAction", [this](bool value)
+        { this->setAddUnabledAButtonAction(value); });
 }
 
 Hints::~Hints()
@@ -170,7 +167,7 @@ void Hints::refillHints(View* focusView)
 
     if (addUnabledAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
     {
-        actions.push_back(Action { BUTTON_A, NULL, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
+        actions.push_back(Action { BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
     }
 
     // Sort the actions

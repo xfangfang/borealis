@@ -137,7 +137,7 @@ class Label : public View
     /**
      * Simplified Chinese to Traditional Chinese
      */
-    static inline std::string STConverter(const std::string& text);
+    static std::string STConverter(const std::string& text);
 
     static inline bool OPENCC_ON = true;
 

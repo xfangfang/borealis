@@ -21,7 +21,8 @@ namespace brls
 
 TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
 {
-    this->tapEvent.subscribe([view, config](TapGestureStatus status, Sound* soundToPlay) {
+    this->tapEvent.subscribe([view, config](TapGestureStatus status, Sound* soundToPlay)
+        {
         Application::giveFocus(view);
         for (auto& action : view->getActions())
         {
@@ -46,15 +47,17 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
                         if (action.actionListener(view))
                             *soundToPlay = action.sound;
                         break;
+                    default:
+                        break;
                 }
             }
-        }
-    });
+        } });
 }
 
 TapGestureRecognizer::TapGestureRecognizer(View* view, std::function<void()> respond, TapGestureConfig config)
 {
-    this->tapEvent.subscribe([view, respond, config](TapGestureStatus status, Sound* soundToPlay) {
+    this->tapEvent.subscribe([view, respond, config](TapGestureStatus status, Sound* soundToPlay)
+        {
         Application::giveFocus(view);
         if (config.highlightOnSelect)
             view->playClickAnimation(status.state != GestureState::UNSURE);
@@ -72,8 +75,9 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, std::function<void()> res
                 *soundToPlay = config.endSound;
                 respond();
                 break;
-        }
-    });
+            default:
+                break;
+        } });
 }
 
 TapGestureRecognizer::TapGestureRecognizer(TapGestureEvent::Callback respond)

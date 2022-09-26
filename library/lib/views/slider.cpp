@@ -63,24 +63,22 @@ Slider::Slider()
     lineEmpty->setColor(theme["brls/slider/line_empty"]);
 
     pointer->registerAction(
-        "Right Click Blocker", BUTTON_NAV_RIGHT, [this](View* view) {
-            return true;
-        },
+        "Right Click Blocker", BUTTON_NAV_RIGHT, [](View* view)
+        { return true; },
         true, true, SOUND_NONE);
 
     pointer->registerAction(
-        "Right Click Blocker", BUTTON_NAV_LEFT, [this](View* view) {
-            return true;
-        },
+        "Right Click Blocker", BUTTON_NAV_LEFT, [](View* view)
+        { return true; },
         true, true, SOUND_NONE);
 
     pointer->registerAction(
-        "A Button Click Blocker", BUTTON_A, [this](View* view) {
-            return true;
-        },
+        "A Button Click Blocker", BUTTON_A, [](View* view)
+        { return true; },
         true, false, SOUND_NONE);
 
-    pointer->addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* soundToPlay) {
+    pointer->addGestureRecognizer(new PanGestureRecognizer([this](PanGestureStatus status, Sound* soundToPlay)
+        {
         Application::giveFocus(pointer);
 
         static float lastProgress = progress;
@@ -108,8 +106,7 @@ Slider::Slider()
         setProgress(lastProgress + delta / paddingWidth);
 
         if (status.state == GestureState::END)
-            Application::getPlatform()->getAudioPlayer()->play(SOUND_SLIDER_RELEASE);
-    },
+            Application::getPlatform()->getAudioPlayer()->play(SOUND_SLIDER_RELEASE); },
         PanAxis::HORIZONTAL));
 
     progress = 0.33f;

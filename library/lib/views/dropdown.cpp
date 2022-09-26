@@ -102,21 +102,21 @@ float min(float a, float b)
 }
 
 Dropdown::Dropdown(std::string title, std::vector<std::string> values, ValueSelectedEvent::Callback cb, int selected, ValueSelectedEvent::Callback dismissCb)
-    : values(values)
-    , cb(cb)
-    , selected(selected)
+    : cb(cb)
     , dismissCb(dismissCb)
+    , values(values)
+    , selected(selected)
 {
     this->inflateFromXMLString(dropdownFrameXML);
     this->title->setText(title);
 
     recycler->estimatedRowHeight = Application::getStyle()["brls/dropdown/listItemHeight"];
-    recycler->registerCell("Cell", []() {
+    recycler->registerCell("Cell", []()
+        {
         RadioCell* cell = new RadioCell();
         cell->setHeight(Application::getStyle()["brls/dropdown/listItemHeight"]);
         cell->title->setFontSize(Application::getStyle()["brls/dropdown/listItemTextSize"]);
-        return cell;
-    });
+        return cell; });
     recycler->setDefaultCellFocus(IndexPath(0, selected));
     recycler->setDataSource(this);
 
@@ -147,9 +147,8 @@ RecyclerCell* Dropdown::cellForRow(RecyclerFrame* recycler, IndexPath index)
 void Dropdown::didSelectRowAt(RecyclerFrame* recycler, IndexPath index)
 {
     this->cb(index.row);
-    Application::popActivity(TransitionAnimation::FADE, [this, index] {
-        this->dismissCb(index.row);
-    });
+    Application::popActivity(TransitionAnimation::FADE, [this, index]
+        { this->dismissCb(index.row); });
 }
 
 AppletFrame* Dropdown::getAppletFrame()
@@ -166,9 +165,8 @@ void Dropdown::show(std::function<void(void)> cb, bool animate, float animationD
         showOffset.stop();
         showOffset.reset(30.0f);
         showOffset.addStep(0, animationDuration, EasingFunction::quadraticOut);
-        showOffset.setTickCallback([this] {
-            this->offsetTick();
-        });
+        showOffset.setTickCallback([this]
+            { this->offsetTick(); });
         showOffset.start();
     }
 
@@ -208,7 +206,8 @@ View* Dropdown::getParentNavigationDecision(View* from, View* newFocus, FocusDir
     View* result = Box::getParentNavigationDecision(from, newFocus, direction);
 
     RecyclerCell* cell = dynamic_cast<RecyclerCell*>(result);
-    if (cell && cell != from) {
+    if (cell && cell != from)
+    {
         cellFocusDidChangeEvent.fire(cell);
     }
 

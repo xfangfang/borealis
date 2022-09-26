@@ -354,7 +354,9 @@ std::string Label::STConverter(const std::string& text)
 void Label::setText(std::string text)
 {
 #ifdef OPENCC
-    text = Label::STConverter(text);
+    static bool trans = Application::getLocale() == LOCALE_ZH_HANT || Application::getLocale() == LOCALE_ZH_TW;
+    if (trans && OPENCC_ON)
+        text = Label::STConverter(text);
 #endif
     this->truncatedText = text;
     this->fullText      = text;
