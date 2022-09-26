@@ -21,7 +21,8 @@
 #include <borealis/core/timer.hpp>
 #include <borealis/core/view.hpp>
 #ifdef OPENCC
-#include "opencc.h"
+#define Opencc_BUILT_AS_STATIC
+#include <opencc.h>
 #endif
 
 namespace brls
