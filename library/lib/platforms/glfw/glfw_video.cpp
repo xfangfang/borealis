@@ -119,25 +119,26 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwGetFramebufferSize(window, &width, &height);
     glfwWindowFramebufferSizeCallback(window, width, height);
 
-//#ifdef __SWITCH__
-//    monitor = glfwGetPrimaryMonitor();
-//#endif
+#ifdef __SWITCH__
+    monitor          = glfwGetPrimaryMonitor();
+    const char* name = glfwGetMonitorName(monitor);
+    brls::Logger::info("glfw: Monitor: {}", name);
+#endif
 }
 
 void GLFWVideoContext::beginFrame()
 {
-//#ifdef __SWITCH__
-//    const GLFWvidmode* return_struct = glfwGetVideoMode(monitor);
-//    int width = return_struct->width;
-//    int height = return_struct->height;
-//
-//    if (oldWidth != width || oldHeight != height) {
-//        oldWidth = width;
-//        oldHeight = height;
-//
-//        glfwSetWindowSize(window, width, height);
-//    }
-//#endif
+#ifdef __SWITCH__
+    const GLFWvidmode* r = glfwGetVideoMode(monitor);
+
+    if (oldWidth != r->width || oldHeight != r->height)
+    {
+        oldWidth  = r->width;
+        oldHeight = r->height;
+
+        glfwSetWindowSize(window, r->width, r->height);
+    }
+#endif
 }
 
 void GLFWVideoContext::endFrame()
@@ -174,10 +175,13 @@ void GLFWVideoContext::disableScreenDimming(bool disable)
 
 GLFWVideoContext::~GLFWVideoContext()
 {
-    try {
+    try
+    {
         if (this->nvgContext)
             nvgDeleteGL3(this->nvgContext);
-    } catch (...) {
+    }
+    catch (...)
+    {
         Logger::error("Cannot delete nvg Context");
     }
     glfwDestroyWindow(this->window);
