@@ -735,15 +735,15 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     if (Application::activitiesStack.size() > 1)
     {
         Activity* toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
-        toShow->willAppear(false);
-        toShow->show(cb, true, toShow->getShowAnimationDuration(animation));
+        toShow->hide([]() {}, false, 0);
+        toShow->show([]() {}, true, toShow->getShowAnimationDuration(animation));
     }
 
     // Hide animation (and show previous activity, if any)
     last->hide([last, cb, free]()
         {
         Application::activitiesStack.pop_back();
-
+        cb();
         brls::Logger::debug("Start delete top activity");
         if(free) delete last;
         brls::Logger::debug("Top activity deleted");
@@ -813,11 +813,9 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     {
         last->hide([]() {}, false, 0);
         Application::activitiesStack.push_back(activity);
-        activity->hide([]() {}, false, 0);
         activity->show([]()
             { Application::unblockInputs(); },
-            true,
-            activity->getShowAnimationDuration(animation));
+            false, 0);
     }
     else
     {
