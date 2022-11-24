@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
     // Set log level
     // We recommend to use INFO for real apps
-    brls::Logger::setLogLevel(brls::LogLevel::DEBUGING);
+    brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
 
     // Init the app and i18n
     if (!brls::Application::init())
@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
     brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
 
     // Add custom values to the theme
-    brls::getLightTheme().addColor("captioned_image/caption", nvgRGB(2, 176, 183));
-    brls::getDarkTheme().addColor("captioned_image/caption", nvgRGB(51, 186, 227));
+    brls::Theme::getLightTheme().addColor("captioned_image/caption", nvgRGB(2, 176, 183));
+    brls::Theme::getDarkTheme().addColor("captioned_image/caption", nvgRGB(51, 186, 227));
 
     // Add custom values to the style
     brls::getStyle().addMetric("about/padding_top_bottom", 50);

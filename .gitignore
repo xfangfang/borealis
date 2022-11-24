@@ -1,6 +1,5 @@
 .*/
-build/
-build.nx/
+build*/
 *~
 *.bak
 *.nro
