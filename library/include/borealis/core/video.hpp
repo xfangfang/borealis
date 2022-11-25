@@ -52,5 +52,10 @@ class VideoContext
      */
     virtual void resetState() = 0;
 
+    /*
+     * scale factor between window size and drawable size
+     */
+    virtual double getScaleFactor() = 0;
+
     virtual NVGcontext* getNVGContext() = 0;
 };

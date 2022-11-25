@@ -44,12 +44,22 @@
 namespace brls
 {
 
+static double scaleFactor = 1.0;
+
 static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     if (!width || !height)
         return;
 
     glViewport(0, 0, width, height);
+
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    scaleFactor = width * 1.0 / wWidth;
+
+    brls::Logger::info("windows size changed: {} height: {}", wWidth, wHeight);
+    brls::Logger::info("framebuffer size changed: fwidth: {} fheight: {}", width, height);
+    brls::Logger::info("scale factor: {}", scaleFactor);
 
     Application::onWindowResized(width, height);
 }
@@ -169,6 +179,11 @@ void GLFWVideoContext::disableScreenDimming(bool disable)
 #ifdef __SWITCH__
     appletSetMediaPlaybackState(disable);
 #endif
+}
+
+double GLFWVideoContext::getScaleFactor()
+{
+    return scaleFactor;
 }
 
 GLFWVideoContext::~GLFWVideoContext()

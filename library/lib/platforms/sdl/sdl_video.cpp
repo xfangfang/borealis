@@ -14,11 +14,11 @@
     limitations under the License.
 */
 
+#include <glad/glad.h>
+
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
-
-#include <glad/glad.h>
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg-gl/nanovg_gl.h>
 
@@ -29,30 +29,34 @@
 namespace brls
 {
 
+static double scaleFactor = 1.0;
+
 static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int height)
 {
     if (!width || !height)
         return;
 
-//    glViewport(0, 0, width, height);
-
-    int wWidth, wHeight;
     int fWidth, fHeight;
 
-    SDL_GetWindowSize(window, &wWidth, &wHeight);
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
+    scaleFactor = fWidth * 1.0 / width;
 
-    Application::onWindowResized(width, height);
+    brls::Logger::info("windows size changed: {} height: {}", width, height);
+    brls::Logger::info("framebuffer size changed: fwidth: {} fheight: {}", fWidth, fHeight);
+    brls::Logger::info("scale factor: {}", scaleFactor);
+
+    Application::onWindowResized(fWidth, fHeight);
 }
 
-static int resizingEventWatcher(void* data, SDL_Event* event) {
-    if (event->type == SDL_WINDOWEVENT &&
-        event->window.event == SDL_WINDOWEVENT_RESIZED) {
+static int resizingEventWatcher(void* data, SDL_Event* event)
+{
+    if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
+    {
         SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
-        if (win == (SDL_Window*)data) {
+        if (win == (SDL_Window*)data)
+        {
             int width, height;
             SDL_GetWindowSize(win, &width, &height);
-            printf("resizing..... %d, %d\n", width, height);
             sdlWindowFramebufferSizeCallback(win, width, height);
         }
     }
@@ -61,7 +65,7 @@ static int resizingEventWatcher(void* data, SDL_Event* event) {
 
 SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         Logger::error("sdl: failed to initialize");
         return;
@@ -72,26 +76,25 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,     SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #else
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE,         8);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,     SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,         1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,         1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,         8);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    //    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    //    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
 
@@ -130,12 +133,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
     sdlWindowFramebufferSizeCallback(window, width, height);
-
 }
 
 void SDLVideoContext::beginFrame()
 {
-
 }
 
 void SDLVideoContext::endFrame()
@@ -170,6 +171,11 @@ void SDLVideoContext::disableScreenDimming(bool disable)
 #endif
 }
 
+double SDLVideoContext::getScaleFactor()
+{
+    return scaleFactor;
+}
+
 SDLVideoContext::~SDLVideoContext()
 {
     try
@@ -181,7 +187,7 @@ SDLVideoContext::~SDLVideoContext()
     {
         Logger::error("Cannot delete nvg Context");
     }
-    SDL_DestroyWindow(this->window );
+    SDL_DestroyWindow(this->window);
     SDL_Quit();
 }
 

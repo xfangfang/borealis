@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <borealis/core/video.hpp>
-
 #include <SDL2/SDL.h>
+
+#include <borealis/core/video.hpp>
 
 namespace brls
 {
@@ -40,10 +40,11 @@ class SDLVideoContext : public VideoContext
 
     SDL_Window* getSDLWindow();
 
+    double getScaleFactor() override;
+
   private:
     SDL_Window* window     = nullptr;
     NVGcontext* nvgContext = nullptr;
-
 };
 
 } // namespace brls

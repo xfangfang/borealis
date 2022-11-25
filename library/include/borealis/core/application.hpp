@@ -88,23 +88,23 @@ class Application
     static std::vector<Activity*> getActivitiesStack();
 
     /**
-      * Pushes a view on this applications's view stack.
-      *
-      * The view will automatically be resized to take
-      * the whole screen.
-      *
-      * The view will gain focus if applicable.
-      *
-      * The first activity to be pushed cannot be popped.
-      */
+     * Pushes a view on this applications's view stack.
+     *
+     * The view will automatically be resized to take
+     * the whole screen.
+     *
+     * The view will gain focus if applicable.
+     *
+     * The first activity to be pushed cannot be popped.
+     */
     static void pushActivity(Activity* view, TransitionAnimation animation = TransitionAnimation::FADE);
 
     /**
-      * Pops the last pushed activity from the stack
-      * and gives focus back where it was before.
-      *
-      * return false if no actifity to pop.
-      */
+     * Pops the last pushed activity from the stack
+     * and gives focus back where it was before.
+     *
+     * return false if no actifity to pop.
+     */
     static bool popActivity(
         TransitionAnimation animation = TransitionAnimation::FADE, std::function<void(void)> cb = [] {}, bool free = true);
 
@@ -147,21 +147,21 @@ class Application
     static void onControllerButtonPressed(enum ControllerButton button, bool repeating);
 
     /**
-      * "Crashes" the app (displays a fullscreen CrashFrame)
-      */
+     * "Crashes" the app (displays a fullscreen CrashFrame)
+     */
     static void crash(std::string text);
 
     static void quit();
 
     /**
-      * Blocks any and all user inputs
-      */
+     * Blocks any and all user inputs
+     */
     static void blockInputs(bool muteSounds = false);
 
     /**
-      * Unblocks inputs after a call to
-      * blockInputs()
-      */
+     * Unblocks inputs after a call to
+     * blockInputs()
+     */
     static void unblockInputs();
 
     static bool isInputBlocks();
@@ -191,6 +191,7 @@ class Application
     static Event<InputType>* getGlobalInputTypeChangeEvent();
     static VoidEvent* getRunLoopEvent();
     static VoidEvent* getExitEvent();
+    static VoidEvent* getWindowSizeChangedEvent();
 
     static View* getCurrentFocus();
 
@@ -292,6 +293,7 @@ class Application
     inline static Event<InputType> globalInputTypeChangeEvent;
     inline static VoidEvent runLoopEvent;
     inline static VoidEvent exitEvent;
+    inline static VoidEvent windowSizeChangedEvent;
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;
 

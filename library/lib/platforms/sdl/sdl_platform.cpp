@@ -36,7 +36,7 @@ SDLPlatform::SDLPlatform()
     // Init sdl
     //    glfwSetErrorCallback(glfwErrorCallback);
     //    glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_TRUE);
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0)
     {
         Logger::error("sdl: failed to initialize");
         return;
@@ -148,12 +148,15 @@ bool SDLPlatform::mainLoopIteration()
 
     SDL_Event event;
     bool running = true;
-    while(SDL_PollEvent(&event)) {
-        if(event.type == SDL_QUIT){
+    while (SDL_PollEvent(&event))
+    {
+        if (event.type == SDL_QUIT)
+        {
             running = false;
         }
-        else if(event.type == SDL_MOUSEWHEEL){
-            if(this->inputManager)
+        else if (event.type == SDL_MOUSEWHEEL)
+        {
+            if (this->inputManager)
                 this->inputManager->updateMouseWheel(event.wheel);
         }
     }

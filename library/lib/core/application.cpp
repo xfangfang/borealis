@@ -978,6 +978,8 @@ void Application::onWindowResized(int width, int height)
     // Trigger a layout
     Logger::debug("Layout triggered");
 
+    Application::getWindowSizeChangedEvent()->fire();
+
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
 }
@@ -1010,6 +1012,10 @@ VoidEvent* Application::getRunLoopEvent()
 VoidEvent* Application::getExitEvent()
 {
     return &Application::exitEvent;
+}
+
+VoidEvent* Application::getWindowSizeChangedEvent(){
+    return &Application::windowSizeChangedEvent;
 }
 
 int Application::getFont(std::string fontName)

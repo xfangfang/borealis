@@ -38,6 +38,7 @@ class GLFWVideoContext : public VideoContext
     void endFrame() override;
     void resetState() override;
     void disableScreenDimming(bool disable) override;
+    double getScaleFactor() override;
 
     GLFWwindow* getGLFWWindow();
 
@@ -47,7 +48,7 @@ class GLFWVideoContext : public VideoContext
 
 #ifdef __SWITCH__
     int oldWidth, oldHeight;
-    GLFWmonitor* monitor   = nullptr;
+    GLFWmonitor* monitor = nullptr;
 #endif
 };
 

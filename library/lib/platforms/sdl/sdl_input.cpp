@@ -19,14 +19,12 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_input.hpp>
 
-
 namespace brls
 {
 
 #define SDL_GAMEPAD_BUTTON_NONE SIZE_MAX
 #define SDL_GAMEPAD_BUTTON_MAX 15
 #define SDL_GAMEPAD_AXIS_MAX 4
-
 
 // LT and RT do not exist here because they are axes
 static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
@@ -35,7 +33,7 @@ static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
     BUTTON_X, // SDL_CONTROLLER_BUTTON_X
     BUTTON_Y, // SDL_CONTROLLER_BUTTON_Y
     BUTTON_BACK, // SDL_CONTROLLER_BUTTON_BACK
-    BUTTON_GUIDE, //SDL_CONTROLLER_BUTTON_GUIDE
+    BUTTON_GUIDE, // SDL_CONTROLLER_BUTTON_GUIDE
     BUTTON_START, // SDL_CONTROLLER_BUTTON_START
     BUTTON_LSB, //    SDL_CONTROLLER_BUTTON_LEFTSTICK
     BUTTON_RSB, //    SDL_CONTROLLER_BUTTON_RIGHTSTICK
@@ -76,7 +74,8 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
     : window(window)
 {
 
-    if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
+    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
+    {
         brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
     }
 
@@ -91,17 +90,21 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
 
     Application::getRunLoopEvent()->subscribe([this]()
         {
-        if(fabs(scrollOffset.y) < 0.1) scrollOffset.y = 0;
-        else scrollOffset.y /= 1.4;
-        if(fabs(scrollOffset.x) < 0.1) scrollOffset.x = 0;
-        else scrollOffset.x /= 1.4;
+        if(fabs(scrollOffset.y) < 1) scrollOffset.y = 0;
+        else scrollOffset.y *= 0.8;
+        if(fabs(scrollOffset.x) < 1) scrollOffset.x = 0;
+        else scrollOffset.x *= 0.8;
+// disable smooth scroll
+//        scrollOffset.x = 0;
+//        scrollOffset.y = 0;
         pointerOffset.x = 0;
         pointerOffset.y = 0; });
-
 }
 
-SDLInputManager::~SDLInputManager(){
-    for(auto i : controllers){
+SDLInputManager::~SDLInputManager()
+{
+    for (auto i : controllers)
+    {
         SDL_GameControllerClose(i);
     }
 }
@@ -113,15 +116,15 @@ short SDLInputManager::getControllersConnectedCount()
 
 void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
 {
-    for (bool & button : state->buttons)
+    for (bool& button : state->buttons)
         button = false;
 
-    for (float & axe : state->axes)
+    for (float& axe : state->axes)
         axe = 0;
 
     for (int j = 0; j < controllerNum; j++)
     {
-        ControllerState localState{};
+        ControllerState localState {};
         updateControllerState(&localState, j);
 
         for (size_t i = 0; i < _BUTTON_MAX; i++)
@@ -137,11 +140,18 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
                 state->axes[i] = 1;
         }
     }
+
+    const Uint8* keyboard = SDL_GetKeyboardState(nullptr);
+    state->buttons[BUTTON_NAV_UP] |= keyboard[SDL_SCANCODE_UP];
+    state->buttons[BUTTON_NAV_RIGHT] |= keyboard[SDL_SCANCODE_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN] |= keyboard[SDL_SCANCODE_DOWN];
+    state->buttons[BUTTON_NAV_LEFT] |= keyboard[SDL_SCANCODE_LEFT];
 }
 
 void SDLInputManager::updateControllerState(ControllerState* state, int controller)
 {
-    if(controller >= controllers.size() || controller < 0) return;
+    if (controller >= controllers.size() || controller < 0)
+        return;
     SDL_GameController* c = controllers[controller];
 
     for (size_t i = 0; i < SDL_GAMEPAD_BUTTON_MAX; i++)
@@ -159,26 +169,21 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
     state->buttons[BUTTON_NAV_DOWN]  = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_LEFTY) / 32767.0 > 0.5f || state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT]  = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_LEFTX) / 32767.0 < -0.5f || state->buttons[BUTTON_LEFT];
 
-    const Uint8 *keyboard = SDL_GetKeyboardState(nullptr);
-    state->buttons[BUTTON_NAV_UP] |= keyboard[SDL_SCANCODE_UP];
-    state->buttons[BUTTON_NAV_RIGHT] |= keyboard[SDL_SCANCODE_RIGHT];
-    state->buttons[BUTTON_NAV_DOWN] |= keyboard[SDL_SCANCODE_DOWN];
-    state->buttons[BUTTON_NAV_LEFT] |= keyboard[SDL_SCANCODE_LEFT];
-
     for (size_t i = 0; i < SDL_GAMEPAD_AXIS_MAX; i++)
     {
         state->axes[SDL_AXIS_MAPPING[i]] = SDL_GameControllerGetAxis(c, (SDL_GameControllerAxis)i) / 32767.0;
     }
-
 }
 
 bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    //todo: 完整映射
-    if(key == BRLS_KBD_KEY_ESCAPE){
+    // todo: 完整映射
+    if (key == BRLS_KBD_KEY_ESCAPE)
+    {
         return SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE];
     }
-    if(key == BRLS_KBD_KEY_ENTER){
+    if (key == BRLS_KBD_KEY_ENTER)
+    {
         return SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN];
     }
     return false;
@@ -206,25 +211,25 @@ void SDLInputManager::updateMouseStates(RawMouseState* state)
     int x, y;
     Uint32 buttons = SDL_GetMouseState(&x, &y);
 
-    state->leftButton = buttons & SDL_BUTTON_LEFT;
+    state->leftButton   = buttons & SDL_BUTTON_LEFT;
     state->middleButton = buttons & SDL_BUTTON_MIDDLE;
-    state->rightButton = buttons & SDL_BUTTON_RIGHT;
+    state->rightButton  = buttons & SDL_BUTTON_RIGHT;
 
-    state->position.x = x / Application::windowScale;
-    state->position.y = y / Application::windowScale;
+    double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
+    state->position.x  = x * scaleFactor / Application::windowScale;
+    state->position.y  = y * scaleFactor / Application::windowScale;
 
     state->offset = pointerOffset;
 
     state->scroll = scrollOffset;
-
 }
 
 void SDLInputManager::setPointerLock(bool lock)
 {
-//    pointerLocked = lock;
-//
-//    int state = lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
-//    glfwSetInputMode(window, GLFW_CURSOR, state);
+    //    pointerLocked = lock;
+    //
+    //    int state = lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
+    //    glfwSetInputMode(window, GLFW_CURSOR, state);
 }
 
 void SDLInputManager::runloopStart()
@@ -238,7 +243,8 @@ void SDLInputManager::sendRumble(unsigned short controller, unsigned short lowFr
 {
 }
 
-void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event){
+void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
+{
 #ifdef _Win32
     self->scrollOffset.x += event.preciseX * 100;
     self->scrollOffset.y += event.preciseY * 100;

@@ -114,8 +114,13 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
 void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
+#ifdef _Win32
+    self->scrollOffset.x += xoffset * 100;
+    self->scrollOffset.y += yoffset * 100;
+#else
     self->scrollOffset.x += xoffset * 10;
     self->scrollOffset.y += yoffset * 10;
+#endif
     self->getMouseScrollOffsetChanged()->fire(Point(xoffset, yoffset));
 }
 
@@ -276,14 +281,12 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     state->leftButton   = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     state->middleButton = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
     state->rightButton  = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-    state->position.x   = x / Application::windowScale;
-    state->position.y   = y / Application::windowScale;
-    state->offset       = pointerOffset;
-    state->scroll       = scrollOffset;
 
-#ifdef __APPLE__
-    state->position = state->position * 2;
-#endif
+    double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
+    state->position.x  = x * scaleFactor / Application::windowScale;
+    state->position.y  = y * scaleFactor / Application::windowScale;
+    state->offset = pointerOffset;
+    state->scroll = scrollOffset;
 }
 
 void GLFWInputManager::setPointerLock(bool lock)
