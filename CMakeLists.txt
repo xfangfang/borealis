@@ -3,6 +3,17 @@ cmake_minimum_required(VERSION 3.15)
 # build options
 option(PLATFORM_DESKTOP "build for linux macos or windows" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
+option(USE_GLFW "using glfw for input and create window" ON)
+option(USE_SDL2 "using sdl2 for input and create window" OFF)
+
+if(USE_SDL2)
+    message("SDL2")
+    set(USE_GLFW OFF)
+elseif(USE_GLFW)
+    message("GLFW")
+    set(USE_SDL2 OFF)
+endif()
+
 
 # toolchain
 if (PLATFORM_DESKTOP)

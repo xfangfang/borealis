@@ -14,34 +14,18 @@
     limitations under the License.
 */
 
-#include <borealis/core/platform.hpp>
+#pragma once
 
-#ifdef __SWITCH__
-#include <borealis/platforms/switch/switch_platform.hpp>
-#endif
-
-#ifdef __GLFW__
-#include <borealis/platforms/glfw/glfw_platform.hpp>
-#endif
-
-#ifdef __SDL2__
-#include <borealis/platforms/sdl/sdl_platform.hpp>
-#endif
+#include <borealis/core/font.hpp>
 
 namespace brls
 {
 
-Platform* Platform::createPlatform()
+// Font loader that reads everything from resources
+class GLFWFontLoader : public FontLoader
 {
-#if defined(__SWITCH__)
-    return new SwitchPlatform();
-#elif defined(__SDL2__)
-    return new SDLPlatform();
-#elif defined(__GLFW__)
-    return new GLFWPlatform();
-#endif
-
-    return nullptr;
-}
+  public:
+    void loadFonts() override;
+};
 
 } // namespace brls

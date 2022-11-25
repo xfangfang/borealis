@@ -16,37 +16,32 @@
 
 #pragma once
 
-#ifdef __SDL2__
-#include <borealis/platforms/sdl/sdl_video.hpp>
-#else
-#include <borealis/platforms/glfw/glfw_video.hpp>
-#endif
-#include <borealis/platforms/switch/switch_audio.hpp>
-#include <borealis/platforms/switch/switch_font.hpp>
-#include <borealis/platforms/switch/switch_input.hpp>
 #include <borealis/core/platform.hpp>
-#include <borealis/core/theme.hpp>
+#include <borealis/platforms/sdl/sdl_font.hpp>
+#include <borealis/platforms/sdl/sdl_input.hpp>
+#include <borealis/platforms/sdl/sdl_video.hpp>
+
+#include <SDL2/SDL.h>
 
 namespace brls
 {
 
-class SwitchPlatform : public Platform
+class SDLPlatform : public Platform
 {
   public:
-    SwitchPlatform();
-    ~SwitchPlatform();
-
-    void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight) override;
+    SDLPlatform();
+    ~SDLPlatform();
 
     std::string getName() override;
+    void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight) override;
 
     bool mainLoopIteration() override;
     ThemeVariant getThemeVariant() override;
     void setThemeVariant(ThemeVariant theme) override;
     std::string getLocale() override;
 
-    VideoContext* getVideoContext() override;
     AudioPlayer* getAudioPlayer() override;
+    VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
     FontLoader* getFontLoader() override;
     bool canShowBatteryLevel() override;
@@ -61,20 +56,12 @@ class SwitchPlatform : public Platform
     void forceEnableGamePlayRecording() override;
     void openBrowser(std::string url) override;
 
-    void appletCallback(AppletHookType hookType);
-
   private:
-    ThemeVariant themeVariant;
-    std::string locale;
-
-    SwitchAudioPlayer* audioPlayer;
-    SwitchInputManager* inputManager;
-#ifdef __SDL2__
-    SDLVideoContext* videoContext;
-#else
-    GLFWVideoContext* videoContext;
-#endif
-    SwitchFontLoader* fontLoader;
+    NullAudioPlayer* audioPlayer   = nullptr;
+    SDLVideoContext* videoContext = nullptr;
+    SDLInputManager* inputManager = nullptr;
+    GLFWFontLoader* fontLoader     = nullptr;
+    ThemeVariant themeVariant      = ThemeVariant::LIGHT;
 };
 
 } // namespace brls

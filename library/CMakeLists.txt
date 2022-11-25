@@ -30,18 +30,25 @@ set(BOREALIS_SOURCE
 
 set(BOREALIS_SRC)
 if (PLATFORM_DESKTOP)
-    find_package(glfw3 REQUIRED)
-    find_package(glm REQUIRED)
-    list(APPEND BOREALIS_SOURCE
-            ${BOREALIS_PATH}/lib/platforms/glfw
-            ${BOREALIS_PATH}/lib/extern/fmt/src/
-            )
-    list(APPEND BOREALIS_SRC
-            ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp
-            )
+    list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/fmt/src/)
+    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
+    if (USE_SDL2)
+        message("using SDL2")
+        find_package(SDL2 REQUIRED)
+        find_package(glm REQUIRED)
+        message("=====> ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARIES}")
+        list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/sdl)
+        set(BRLS_PLATFORM_LIBS ${SDL2_LIBRARIES})
+        set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__SDL2__ -I/usr/local/include -I${SDL2_INCLUDE_DIR})
+    else ()
+        message("using GLFW3")
+        find_package(glfw3 REQUIRED)
+        find_package(glm REQUIRED)
+        list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/glfw)
+        set(BRLS_PLATFORM_LIBS glfw)
+        set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__)
+    endif ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"./resources/\"")
-    set(BRLS_PLATFORM_LIBS glfw)
-    set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__)
 else ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/switch
@@ -57,10 +64,16 @@ else ()
     list(APPEND BOREALIS_INCLUDE
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/include
             )
-    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/glfw/glfw_video.cpp)
+    if (USE_SDL2)
+        list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/sdl/sdl_video.cpp)
+        set(BRLS_PLATFORM_LIBS sdl2 EGL glapi drm_nouveau nx m)
+        set(BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -D__SWITCH__ -D__SDL2__)
+    else ()
+        list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/glfw/glfw_video.cpp)
+        set(BRLS_PLATFORM_LIBS glfw3 EGL glapi drm_nouveau nx m)
+        set(BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -D__SWITCH__ -D__GLFW__)
+    endif ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"romfs:/\"")
-    set(BRLS_PLATFORM_LIBS glfw3 EGL glapi drm_nouveau nx m)
-    set(BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -D__SWITCH__)
 endif ()
 foreach (lib ${BOREALIS_SOURCE})
     aux_source_directory(${lib} TEMP_SRC)

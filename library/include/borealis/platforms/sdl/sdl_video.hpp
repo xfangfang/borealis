@@ -14,34 +14,36 @@
     limitations under the License.
 */
 
-#include <borealis/core/platform.hpp>
+#pragma once
 
-#ifdef __SWITCH__
-#include <borealis/platforms/switch/switch_platform.hpp>
-#endif
+#include <borealis/core/video.hpp>
 
-#ifdef __GLFW__
-#include <borealis/platforms/glfw/glfw_platform.hpp>
-#endif
-
-#ifdef __SDL2__
-#include <borealis/platforms/sdl/sdl_platform.hpp>
-#endif
+#include <SDL2/SDL.h>
 
 namespace brls
 {
 
-Platform* Platform::createPlatform()
+// SDL Video Context
+class SDLVideoContext : public VideoContext
 {
-#if defined(__SWITCH__)
-    return new SwitchPlatform();
-#elif defined(__SDL2__)
-    return new SDLPlatform();
-#elif defined(__GLFW__)
-    return new GLFWPlatform();
-#endif
+  public:
+    SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight);
+    ~SDLVideoContext();
 
-    return nullptr;
-}
+    NVGcontext* getNVGContext() override;
+
+    void clear(NVGcolor color) override;
+    void beginFrame() override;
+    void endFrame() override;
+    void resetState() override;
+    void disableScreenDimming(bool disable) override;
+
+    SDL_Window* getSDLWindow();
+
+  private:
+    SDL_Window* window     = nullptr;
+    NVGcontext* nvgContext = nullptr;
+
+};
 
 } // namespace brls

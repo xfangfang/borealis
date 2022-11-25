@@ -67,7 +67,11 @@ SwitchPlatform::SwitchPlatform()
 
 void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
 {
+#ifdef __SDL2__
+    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight);
+#else
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
+#endif
 
     // Fixme: Dirty fix to reinitialise controllers with settings from borealis, not by GLFW
     //    brls::Logger::info("create SwitchInputManager");
