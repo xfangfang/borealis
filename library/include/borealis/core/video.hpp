@@ -57,5 +57,12 @@ class VideoContext
      */
     virtual double getScaleFactor() = 0;
 
+    /*
+     * Full screen window at primary monitor
+     */
+    virtual void fullScreen(bool fs) {}
+
     virtual NVGcontext* getNVGContext() = 0;
+
+    static inline bool FULLSCREEN = true;
 };

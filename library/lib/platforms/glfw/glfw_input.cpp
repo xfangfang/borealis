@@ -254,6 +254,9 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
 
 bool GLFWInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
+    if ( key == BRLS_KBD_KEY_ESCAPE) {
+        return glfwGetKey(this->window, key) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+    }
     return glfwGetKey(this->window, key);
 }
 
