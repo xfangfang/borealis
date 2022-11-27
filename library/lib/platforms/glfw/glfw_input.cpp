@@ -114,9 +114,9 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
 void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
-#ifdef _Win32
-    self->scrollOffset.x += xoffset * 100;
-    self->scrollOffset.y += yoffset * 100;
+#ifdef _WIN32
+    self->scrollOffset.x += xoffset * 30;
+    self->scrollOffset.y += yoffset * 30;
 #else
     self->scrollOffset.x += xoffset * 10;
     self->scrollOffset.y += yoffset * 10;
@@ -167,8 +167,16 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
 
     Application::getRunLoopEvent()->subscribe([this]()
         {
+#ifdef _WIN32
+        // smooth scroll
+        if(fabs(scrollOffset.y) < 1) scrollOffset.y = 0;
+        else scrollOffset.y *= 0.8;
+        if(fabs(scrollOffset.x) < 1) scrollOffset.x = 0;
+        else scrollOffset.x *= 0.8;
+#else
         scrollOffset.x  = 0;
         scrollOffset.y  = 0;
+#endif
         pointerOffset.x = 0;
         pointerOffset.y = 0; });
 }
@@ -285,8 +293,8 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
     state->position.x  = x * scaleFactor / Application::windowScale;
     state->position.y  = y * scaleFactor / Application::windowScale;
-    state->offset = pointerOffset;
-    state->scroll = scrollOffset;
+    state->offset      = pointerOffset;
+    state->scroll      = scrollOffset;
 }
 
 void GLFWInputManager::setPointerLock(bool lock)
