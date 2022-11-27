@@ -168,6 +168,8 @@ void Application::createWindow(std::string windowTitle)
 
     // Register built-in XML views
     Application::registerBuiltInXMLViews();
+
+    Application::getWindowCreationDoneEvent()->fire();
 }
 
 bool Application::mainLoop()
@@ -1022,6 +1024,11 @@ VoidEvent* Application::getExitEvent()
 VoidEvent* Application::getWindowSizeChangedEvent()
 {
     return &Application::windowSizeChangedEvent;
+}
+
+VoidEvent* Application::getWindowCreationDoneEvent()
+{
+    return &Application::windowCreationDoneEvent;
 }
 
 int Application::getFont(std::string fontName)
