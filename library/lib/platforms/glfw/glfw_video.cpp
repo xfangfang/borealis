@@ -18,20 +18,15 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/glfw/glfw_video.hpp>
 
-#define GLM_FORCE_PURE
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glad/glad.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-
 // nanovg implementation
+#ifdef __PSV__
+#define NANOVG_GLES2_IMPLEMENTATION
+#include <nanovg-gl/nanovg_gl.h>
+#else
+#include <glad/glad.h>
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg-gl/nanovg_gl.h>
+#endif
 
 #ifdef __SWITCH__
 #include <switch.h>
@@ -68,12 +63,15 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 {
     if (!glfwInit())
     {
-        Logger::error("glfw: failed to initialize");
-        return;
+        fatal("glfw: failed to initialize");
     }
 
     // Create window
-#ifdef __SWITCH__
+#if defined(__PSV__)
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#elif defined(__SWITCH__)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -105,8 +103,10 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
 
+#ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+#endif
     glfwSwapInterval(1);
 
     Logger::info("glfw: GL Vendor: {}", glGetString(GL_VENDOR));
@@ -114,7 +114,11 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     Logger::info("glfw: GL Version: {}", glGetString(GL_VERSION));
 
     // Initialize nanovg
+#ifdef __PSV__
+    this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#endif
     if (!this->nvgContext)
     {
         Logger::error("glfw: unable to init nanovg");
@@ -191,7 +195,11 @@ GLFWVideoContext::~GLFWVideoContext()
     try
     {
         if (this->nvgContext)
+#ifdef __PSV__
+            nvgDeleteGLES2(this->nvgContext);
+#else
             nvgDeleteGL3(this->nvgContext);
+#endif
     }
     catch (...)
     {

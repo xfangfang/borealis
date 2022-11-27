@@ -26,11 +26,11 @@ set(BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/yoga/src/yoga
         ${BOREALIS_PATH}/lib/extern/yoga/src/yoga/event
         ${BOREALIS_PATH}/lib/extern/nanovg-gl
+        ${BOREALIS_PATH}/lib/extern/fmt/src
         )
 
 set(BOREALIS_SRC)
 if (PLATFORM_DESKTOP)
-    list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/fmt/src/)
     list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
     if (USE_SDL2)
         message("using SDL2")
@@ -49,10 +49,18 @@ if (PLATFORM_DESKTOP)
         set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__)
     endif ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"./resources/\"")
+elseif(PLATFORM_PSV)
+    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
+    list(APPEND BOREALIS_SOURCE
+            ${BOREALIS_PATH}/lib/platforms/psv
+            ${BOREALIS_PATH}/lib/platforms/glfw)
+    list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
+    set(BRLS_PLATFORM_LIBS )
+    set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__ -D__PSV__)
+    set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
 else ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/switch
-            ${BOREALIS_PATH}/lib/extern/nxfmtwrapper
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/archive
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfgrp
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfsar

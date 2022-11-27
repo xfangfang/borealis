@@ -103,7 +103,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 
     if (!this->window)
     {
-        fatal("glfw: failed to create window");
+        fatal("sdl: failed to create window");
         return;
     }
 

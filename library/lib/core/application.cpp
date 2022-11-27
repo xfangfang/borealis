@@ -60,8 +60,13 @@
 
 // Constants used for scaling as well as
 // creating a window of the right size on PC
+#ifdef __PSV__
+constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 960;
+constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 544;
+#else
 constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
 constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 720;
+#endif
 
 #define BUTTON_REPEAT_DELAY 15
 #define BUTTON_REPEAT_CADENCY 5
@@ -1014,7 +1019,8 @@ VoidEvent* Application::getExitEvent()
     return &Application::exitEvent;
 }
 
-VoidEvent* Application::getWindowSizeChangedEvent(){
+VoidEvent* Application::getWindowSizeChangedEvent()
+{
     return &Application::windowSizeChangedEvent;
 }
 

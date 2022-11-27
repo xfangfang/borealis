@@ -18,7 +18,11 @@
 
 #include <borealis/core/video.hpp>
 
+#ifdef __PSV__
+#define GLFW_INCLUDE_ES2
+#else
 #define GLFW_INCLUDE_NONE
+#endif
 #include <GLFW/glfw3.h>
 
 namespace brls

@@ -48,6 +48,23 @@ make -C build_pc -j$(nproc)
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
+
+## Building the demo for PSV
+
+- install [VITASDK](https://github.com/vitasdk/vdpm)
+- install [glfw-vita](https://github.com/xfangfang/glfw-vita/tree/borealis)
+- put `*.suprx` files ([PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2)) to `psv/module`
+- put `sce_sys` files to `psv/sce_sys`
+
+> We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`
+>
+> PSV support is experimental at present, and it is very slow to run.
+
+```bash
+cmake -B build_psv -DPLATFORM_PSV=ON
+make -C build_psv borealis_demo.vpk -j$(nproc)
+```
+
 ### Including in your project (TL;DR: see the CMakeLists.txt in this repo)
 0. Your project must be built as C++17 (`-std=c++1z`). You also need to remove `-fno-rtti` and `-fno-exceptions` if you have them
 1. Use a submodule (or even better, a [subrepo](https://github.com/ingydotnet/git-subrepo)) to clone this repository in your project
