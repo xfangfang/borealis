@@ -94,9 +94,7 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
         else scrollOffset.y *= 0.8;
         if(fabs(scrollOffset.x) < 1) scrollOffset.x = 0;
         else scrollOffset.x *= 0.8;
-// disable smooth scroll
-//        scrollOffset.x = 0;
-//        scrollOffset.y = 0;
+
         pointerOffset.x = 0;
         pointerOffset.y = 0; });
 }
@@ -245,9 +243,9 @@ void SDLInputManager::sendRumble(unsigned short controller, unsigned short lowFr
 
 void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
 {
-#ifdef _Win32
-    self->scrollOffset.x += event.preciseX * 100;
-    self->scrollOffset.y += event.preciseY * 100;
+#if defined(_WIN32) || defined(__linux__)
+    self->scrollOffset.x += event.preciseX * 30;
+    self->scrollOffset.y += event.preciseY * 30;
 #else
     this->scrollOffset.x += event.preciseX * 10;
     this->scrollOffset.y += event.preciseY * 10;

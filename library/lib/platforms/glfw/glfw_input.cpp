@@ -114,7 +114,7 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
 void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
     self->scrollOffset.x += xoffset * 30;
     self->scrollOffset.y += yoffset * 30;
 #else
@@ -167,7 +167,7 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
 
     Application::getRunLoopEvent()->subscribe([this]()
         {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
         // smooth scroll
         if(fabs(scrollOffset.y) < 1) scrollOffset.y = 0;
         else scrollOffset.y *= 0.8;
@@ -254,7 +254,8 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
 
 bool GLFWInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    if ( key == BRLS_KBD_KEY_ESCAPE) {
+    if (key == BRLS_KBD_KEY_ESCAPE)
+    {
         return glfwGetKey(this->window, key) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
     }
     return glfwGetKey(this->window, key);

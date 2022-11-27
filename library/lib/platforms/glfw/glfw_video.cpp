@@ -82,13 +82,20 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-    if (VideoContext::FULLSCREEN){
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode * mode = glfwGetVideoMode(monitor);
-        this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
-    } else {
+#if defined(__linux__) || defined(_WIN32)
+    if (VideoContext::FULLSCREEN)
+    {
+        GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        this->window            = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
+    }
+    else
+    {
         this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
     }
+#else
+    this->window     = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+#endif
 
 #ifdef _WIN32
     // Set window icon
@@ -226,20 +233,26 @@ void GLFWVideoContext::fullScreen(bool fs)
 
     static int posX = -1, posY = -1, sizeW = -1, sizeH = -1;
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
     brls::Logger::info("Set fullscreen: {} refreshRate: {}", fs, mode->refreshRate);
 
-    if(fs){
+    if (fs)
+    {
         glfwGetWindowPos(this->window, &posX, &posY);
         glfwGetWindowSize(this->window, &sizeW, &sizeH);
         glfwSetWindowMonitor(this->window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-    } else {
-        if( sizeW < 0 || sizeH < 0){
-            glfwSetWindowMonitor(this->window, nullptr,  abs(mode->width - 1280) / 2,
+    }
+    else
+    {
+        if (sizeW < 0 || sizeH < 0)
+        {
+            glfwSetWindowMonitor(this->window, nullptr, abs(mode->width - 1280) / 2,
                 abs(mode->height - 720) / 2, 1280, 720, GLFW_DONT_CARE);
-        } else {
-            glfwSetWindowMonitor(this->window, nullptr,  posX, posY, sizeW, sizeH, mode->refreshRate);
+        }
+        else
+        {
+            glfwSetWindowMonitor(this->window, nullptr, posX, posY, sizeW, sizeH, mode->refreshRate);
         }
     }
     glfwSwapInterval(1);
