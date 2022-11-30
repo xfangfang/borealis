@@ -50,7 +50,7 @@ class Dropdown : public Box, private RecyclerDataSource
     ValueSelectedEvent::Callback cb;
     ValueSelectedEvent::Callback dismissCb;
     std::vector<std::string> values;
-    size_t selected;
+    int selected;
     Animatable showOffset = 0;
     Event<RecyclerCell*> cellFocusDidChangeEvent;
 

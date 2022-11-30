@@ -306,10 +306,10 @@ RecyclerCell* RecyclerFrame::dequeueReusableCell(std::string identifier)
 // TODO: Implement it normally
 void RecyclerFrame::selectRowAt(IndexPath indexPath, bool animated)
 {
-    int count    = 0;
+    size_t count    = 0;
     float offset = 0;
 
-    for (int j = 0; j < indexPath.section; j++)
+    for (size_t j = 0; j < indexPath.section; j++)
         for (int i = -1; i < (dataSource->numberOfRows(this, j)); i++)
         {
             offset += this->cacheFramesData[count++].height;
@@ -438,7 +438,7 @@ void RecyclerFrame::cellsRecyclingLoop()
     }
 }
 
-void RecyclerFrame::addCellAt(int index, int downSide)
+void RecyclerFrame::addCellAt(size_t index, size_t downSide)
 {
     IndexPath indexPath = cacheIndexPathData[index];
 

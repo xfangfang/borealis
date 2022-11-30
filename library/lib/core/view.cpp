@@ -723,7 +723,7 @@ void View::setActionAvailable(enum ControllerButton button, bool available)
 
 void View::setActionsAvailable(bool available)
 {
-    for (int i = 0; i < this->actions.size(); i++)
+    for (size_t i = 0; i < this->actions.size(); i++)
         this->actions[i].available = available;
 
     Application::getGlobalHintsUpdateEvent()->fire();

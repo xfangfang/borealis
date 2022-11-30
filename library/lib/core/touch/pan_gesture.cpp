@@ -129,8 +129,8 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
             {
                 float time = posHistory.size() / FPS;
 
-                float distanceX = posHistory[posHistory.size()].x - posHistory[0].x;
-                float distanceY = posHistory[posHistory.size()].y - posHistory[0].y;
+                float distanceX = posHistory[posHistory.size()-1].x - posHistory[0].x;
+                float distanceY = posHistory[posHistory.size()-1].y - posHistory[0].y;
 
                 float velocityX = distanceX / time;
                 float velocityY = distanceY / time;

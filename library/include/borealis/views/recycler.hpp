@@ -31,23 +31,23 @@ namespace brls
 
 struct IndexPath
 {
-    int section;
+    size_t section;
     int row;
-    int item;
+    size_t item;
 
     IndexPath()
         : IndexPath(0, 0, 0)
     {
     }
 
-    IndexPath(int section, int row, int item)
+    IndexPath(size_t section, size_t row, size_t item)
     {
         this->section = section;
         this->row     = row;
         this->item    = item;
     }
 
-    IndexPath(int section, int row)
+    IndexPath(size_t section, size_t row)
         : IndexPath(section, row, row)
     {
     }
@@ -259,7 +259,7 @@ class RecyclerFrame : public ScrollingFrame
     void cellsRecyclingLoop();
     void queueReusableCell(RecyclerCell* cell);
 
-    void addCellAt(int index, int downSide);
+    void addCellAt(size_t index, size_t downSide);
 };
 
 } // namespace brls
