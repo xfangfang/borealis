@@ -246,6 +246,8 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
     state->buttons[BUTTON_NAV_DOWN] |= glfwGetKey(this->window, GLFW_KEY_DOWN);
     state->buttons[BUTTON_NAV_LEFT] |= glfwGetKey(this->window, GLFW_KEY_LEFT);
 
+    state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+
     for (size_t i = 0; i < GLFW_GAMEPAD_AXIS_MAX; i++)
     {
         state->axes[GLFW_AXIS_MAPPING[i]] = glfwState.axes[i];
