@@ -21,6 +21,7 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/applet_frame.hpp>
+#include <borealis/views/dialog.hpp>
 #include <borealis/views/hint.hpp>
 
 using namespace brls::literals;
@@ -105,22 +106,21 @@ AppletFrame::AppletFrame()
             { "popup", HeaderStyle::POPUP },
         });
 
-    this->registerBoolXMLAttribute("headerHidden", [this](bool value) {
-        this->setHeaderVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
-    });
+    this->registerBoolXMLAttribute("headerHidden", [this](bool value)
+        { this->setHeaderVisibility(value ? Visibility::GONE : Visibility::VISIBLE); });
 
-    this->registerBoolXMLAttribute("footerHidden", [this](bool value) {
+    this->registerBoolXMLAttribute("footerHidden", [this](bool value)
+        {
         if(HIDE_BOTTOM_BAR)
             this->setFooterVisibility(Visibility::GONE);
         else
-            this->setFooterVisibility(value ? Visibility::GONE : Visibility::VISIBLE);
-    });
+            this->setFooterVisibility(value ? Visibility::GONE : Visibility::VISIBLE); });
 
     this->registerAction(
-        "hints/back"_i18n, BUTTON_B, [this](View* view) {
+        "hints/back"_i18n, BUTTON_B, [this](View* view)
+        {
             this->contentViewStack.back()->dismiss();
-            return true;
-        },
+            return true; },
         false, false, SOUND_BACK);
 }
 
@@ -171,7 +171,13 @@ void AppletFrame::popContentView(std::function<void(void)> cb)
     if (contentViewStack.size() <= 1)
     {
         if (!Application::popActivity(TransitionAnimation::FADE, cb))
-            Application::quit();
+        {
+            auto dialog = new brls::Dialog("hints/exit_hint"_i18n);
+            dialog->addButton("hints/cancel"_i18n, []() {});
+            dialog->addButton("hints/ok"_i18n, []()
+                { Application::quit(); });
+            dialog->open();
+        }
         return;
     }
 

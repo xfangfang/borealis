@@ -23,7 +23,8 @@
 #include <strings.h>
 
 #ifdef __PSV__
-extern "C" {
+extern "C"
+{
     unsigned int sceLibcHeapSize = 64 * 1024 * 1024;
 };
 #endif
@@ -53,8 +54,35 @@ GLFWPlatform::GLFWPlatform()
 
     // Theme
     char* themeEnv = getenv("BOREALIS_THEME");
-    if (themeEnv != nullptr && !strcasecmp(themeEnv, "DARK"))
+    if (themeEnv == nullptr)
+    {
+#ifdef __APPLE__
+        char buffer[10];
+        memset(buffer, 0, sizeof buffer);
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("defaults read -g AppleInterfaceStyle", "r"), pclose);
+        if (pipe)
+        {
+            fgets(buffer, sizeof buffer, pipe.get());
+            if (strncmp(buffer, "Dark", 4) == 0)
+            {
+                this->themeVariant = ThemeVariant::DARK;
+                brls::Logger::info("Set app theme: Dark");
+            }
+            else
+            {
+                brls::Logger::info("Set app theme: Light");
+            }
+        }
+        else
+        {
+            brls::Logger::error("cannot get system theme");
+        }
+#endif
+    }
+    else if (!strcasecmp(themeEnv, "DARK"))
+    {
         this->themeVariant = ThemeVariant::DARK;
+    }
 
     // Misc
     glfwSetTime(0.0);

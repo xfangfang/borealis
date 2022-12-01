@@ -31,7 +31,7 @@ set(BOREALIS_SOURCE
 
 if (NOT BRLS_RESOURCES_DIR)
     set(BRLS_RESOURCES_DIR ".")
-endif()
+endif ()
 
 set(BOREALIS_SRC)
 if (PLATFORM_DESKTOP)
@@ -51,13 +51,13 @@ if (PLATFORM_DESKTOP)
         set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__)
     endif ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"${BRLS_RESOURCES_DIR}/resources/\"")
-elseif(PLATFORM_PSV)
+elseif (PLATFORM_PSV)
     list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/psv
             ${BOREALIS_PATH}/lib/platforms/glfw)
     list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
-    set(BRLS_PLATFORM_LIBS )
+    set(BRLS_PLATFORM_LIBS)
     set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__ -D__PSV__)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
 else ()
