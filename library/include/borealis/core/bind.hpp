@@ -103,7 +103,7 @@ class BoundView
         // Resolve by owner activity first
         if (this->ownerView)
         {
-            this->view = (T*)this->ownerView->getView(this->id);
+            this->view = dynamic_cast<T*>(this->ownerView->getView(this->id));
 
             if (!this->view)
                 throw ViewNotFoundException(this->ownerView, this->id);
