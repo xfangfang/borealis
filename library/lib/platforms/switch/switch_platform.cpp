@@ -41,12 +41,7 @@ SwitchPlatform::SwitchPlatform()
     else
         this->themeVariant = ThemeVariant::LIGHT;
 
-    Logger::info("switch: system has color set {}, using borealis theme {}", colorSetId, this->themeVariant);
-
-    // Init platform impls
-    this->audioPlayer  = new SwitchAudioPlayer();
-    this->inputManager = new SwitchInputManager();
-    this->fontLoader   = new SwitchFontLoader();
+    Logger::info("switch system theme: {}", colorSetId ? "Dark" : "Light");
 
     // Get locale
     uint64_t languageCode = 0;
@@ -63,6 +58,11 @@ SwitchPlatform::SwitchPlatform()
         Logger::error("switch: unable to get system language (error {:#x}), using the default one: {1}", rc, LOCALE_DEFAULT);
         this->locale = LOCALE_DEFAULT;
     }
+
+    // Init platform impls
+    this->audioPlayer  = new SwitchAudioPlayer();
+    this->inputManager = new SwitchInputManager();
+    this->fontLoader   = new SwitchFontLoader();
 }
 
 void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)

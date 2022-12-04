@@ -141,31 +141,6 @@ void Application::createWindow(std::string windowTitle)
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
 
-    int regular = Application::getDefaultFont();
-
-    if (regular != FONT_INVALID)
-    {
-        NVGcontext* vg = Application::getNVGContext();
-
-        // Switch icons
-        int switchIcons = Application::getFont(FONT_SWITCH_ICONS);
-        if (switchIcons != FONT_INVALID)
-            nvgAddFallbackFontId(vg, regular, switchIcons);
-        else
-            Logger::warning("Switch icons font was not loaded, icons will not be displayed");
-
-        // Material icons
-        int materialIcons = Application::getFont(FONT_MATERIAL_ICONS);
-        if (materialIcons != FONT_INVALID)
-            nvgAddFallbackFontId(vg, regular, materialIcons);
-        else
-            Logger::warning("Material icons font was not loaded, icons will not be displayed");
-    }
-    else
-    {
-        Logger::warning("Regular font was not loaded, there will be no text displayed in the app");
-    }
-
     // Register built-in XML views
     Application::registerBuiltInXMLViews();
 

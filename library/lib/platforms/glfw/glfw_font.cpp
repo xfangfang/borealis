@@ -20,31 +20,55 @@
 #include <borealis/core/assets.hpp>
 #include <borealis/platforms/glfw/glfw_font.hpp>
 
-#define USER_REGULAR_PATH BRLS_ASSET("User-Regular.ttf")
 #define INTER_FONT_PATH BRLS_ASSET("font/switch_font.ttf")
-
-#define USER_SWITCH_ICONS_PATH BRLS_ASSET("font/switch_icons.ttf")
 
 namespace brls
 {
 
 void GLFWFontLoader::loadFonts()
 {
+    NVGcontext* vg = brls::Application::getNVGContext();
+
     // Regular
     // Try to use user-provided font first, fallback to Inter
-    if (access(USER_REGULAR_PATH, F_OK) != -1)
-        this->loadFontFromFile(FONT_REGULAR, USER_REGULAR_PATH);
-    else
-        this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
+    if (access(USER_FONT_PATH.c_str(), F_OK) != -1)
+    {
+        brls::Logger::info("Load custom font: {}", USER_FONT_PATH);
+        this->loadFontFromFile(FONT_REGULAR, USER_FONT_PATH);
 
-    // Korean unimplemented
+        // Add internal font as fallback
+        this->loadFontFromFile("default", INTER_FONT_PATH);
+        nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("default"));
+    }
+    else
+    {
+        brls::Logger::warning("Cannot find user custom font: {}", USER_FONT_PATH);
+        brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
+        this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
+    }
 
     // Switch icons
     // Only supports user-provided font
-    this->loadFontFromFile(FONT_SWITCH_ICONS, USER_SWITCH_ICONS_PATH);
+    if (access(USER_ICON_PATH.c_str(), F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, USER_ICON_PATH))
+    {
+        brls::Logger::info("Load custom icon: {}", USER_ICON_PATH);
+        nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
+    }
+    else
+    {
+        Logger::warning("Icons may not be displayed if no custom font is set.");
+        Logger::warning("For more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
+    }
 
     // Material icons
-    this->loadMaterialFromResources();
+    if (this->loadMaterialFromResources())
+    {
+        nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_MATERIAL_ICONS));
+    }
+    else
+    {
+        Logger::error("switch: could not load Material icons font from resources");
+    }
 }
 
 } // namespace brls

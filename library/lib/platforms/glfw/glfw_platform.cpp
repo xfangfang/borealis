@@ -184,7 +184,6 @@ std::string GLFWPlatform::exec(const char* cmd)
     {
         throw std::runtime_error("popen() failed!");
     }
-    int count = 0;
     while (fgets(buffer, sizeof buffer, pipe.get()) != nullptr)
     {
         result += buffer;

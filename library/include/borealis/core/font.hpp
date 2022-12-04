@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <borealis/core/assets.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -24,11 +25,13 @@ namespace brls
 
 static constexpr const int FONT_INVALID = -1;
 
-static const std::string FONT_REGULAR        = "regular"; // regular Latin font
-static const std::string FONT_KOREAN_REGULAR = "korean"; // regular Korean font
-static const std::string FONT_CHINESE_SIMPLIFIED = "chineseSimplified";
-static const std::string FONT_MATERIAL_ICONS = "material"; // Material icons font
-static const std::string FONT_SWITCH_ICONS   = "switch"; // Switch icons font (see the HOS shared symbols font for an example)
+static const std::string FONT_REGULAR                = "regular"; // regular Latin font
+static const std::string FONT_KOREAN_REGULAR         = "korean"; // regular Korean font
+static const std::string FONT_CHINESE_SIMPLIFIED     = "zh-Hans"; // Simplified Chinese
+static const std::string FONT_CHINESE_SIMPLIFIED_EXT = "zh-Hans-ext"; // Simplified Chinese Extended
+static const std::string FONT_CHINESE_TRADITIONAL    = "zh-Hant"; // Traditional Chinese
+static const std::string FONT_MATERIAL_ICONS         = "material"; // Material icons font
+static const std::string FONT_SWITCH_ICONS           = "switch"; // Switch icons font (see the HOS shared symbols font for an example)
 
 typedef std::unordered_map<std::string, int> FontStash;
 
@@ -36,6 +39,9 @@ typedef std::unordered_map<std::string, int> FontStash;
 class FontLoader
 {
   public:
+    inline static std::string USER_FONT_PATH = BRLS_ASSET("font/font.ttf");
+    inline static std::string USER_ICON_PATH = BRLS_ASSET("font/icon.ttf");
+
     virtual ~FontLoader() { }
     /**
      * Called once on init to load every font in the font stash.
