@@ -42,7 +42,7 @@ void GLFWFontLoader::loadFonts()
     }
     else
     {
-        brls::Logger::warning("Cannot find user custom font: {}", USER_FONT_PATH);
+        brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
         brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
         this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
     }
@@ -56,8 +56,8 @@ void GLFWFontLoader::loadFonts()
     }
     else
     {
-        Logger::warning("Icons may not be displayed if no custom font is set.");
-        Logger::warning("For more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
+        Logger::warning("Cannot find custom icon, (Searched at: {})", USER_ICON_PATH);
+        Logger::warning("Icons may not be displayed, for more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
     }
 
     // Material icons
