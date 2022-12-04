@@ -16,11 +16,17 @@
 
 #include "borealis/views/widgets/wireless.hpp"
 
+#include "borealis/core/thread.hpp"
+
 namespace brls
 {
 
 WirelessWidget::WirelessWidget()
 {
+    platform = Application::getPlatform();
+    if (!platform->canShowWirelessLevel())
+        return;
+
     setSize(Size(44, 44));
 
     _0 = new Image();
@@ -50,6 +56,8 @@ WirelessWidget::WirelessWidget()
     addView(_1);
     addView(_2);
     addView(_3);
+
+    updateState();
 }
 
 void WirelessWidget::applyTheme(ThemeVariant theme)
@@ -71,9 +79,19 @@ void WirelessWidget::applyTheme(ThemeVariant theme)
     }
 }
 
+void WirelessWidget::updateState()
+{
+    hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
+    wifiLevel             = Application::getPlatform()->getWirelessLevel();
+    brls::Logger::verbose("hasWirelessConnection: {}; wifiLevel: {}", hasWirelessConnection, wifiLevel);
+    // todo: change to async delay or something periodic run
+    brls::Threading::delay(5000, []()
+        { brls::WirelessWidget::updateState(); });
+}
+
 void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
-    if (!platform->hasWirelessConnection())
+    if (!hasWirelessConnection)
     {
         _0->setVisibility(Visibility::VISIBLE);
         _1->setVisibility(Visibility::GONE);
@@ -87,7 +105,6 @@ void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float h
         _2->setVisibility(Visibility::VISIBLE);
         _3->setVisibility(Visibility::VISIBLE);
 
-        int wifiLevel = platform->getWirelessLevel();
         switch (wifiLevel)
         {
             case 0:

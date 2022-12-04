@@ -100,40 +100,100 @@ void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, u
 
 bool GLFWPlatform::canShowBatteryLevel()
 {
+#if defined(__APPLE__)
     return true;
+#else
+    return false;
+#endif
 }
 
-int battery = 50;
+bool GLFWPlatform::canShowWirelessLevel()
+{
+#if defined(__APPLE__)
+    return true;
+#else
+    return false;
+#endif
+}
+
 int GLFWPlatform::getBatteryLevel()
 {
-    battery %= 100;
-    battery++;
-    return battery;
+#if defined(__APPLE__)
+    std::string b = exec("pmset -g batt | grep -Eo '[0-9]+%'");
+    if (!b.empty() && b[b.size() - 1] == '%')
+    {
+        b = b.substr(0, b.size() - 1);
+    }
+    return stoi(b);
+#else
+    return 100;
+#endif
 }
 
 bool GLFWPlatform::isBatteryCharging()
 {
-    return true;
+#if defined(__APPLE__)
+    std::string res = exec("pmset -g batt | grep -o 'AC Power'");
+    return !res.empty();
+#else
+    return false;
+#endif
 }
 
 bool GLFWPlatform::hasWirelessConnection()
 {
+#if defined(__APPLE__)
+    std::string res = exec("networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportpower | grep -o On");
+    return !res.empty();
+#else
     return true;
+#endif
 }
 
 int GLFWPlatform::getWirelessLevel()
 {
-    return battery / 20;
+    return 3;
 }
 
 std::string GLFWPlatform::getIpAddress()
 {
-    return "0.0.0.0";
+#if defined(__APPLE__) || defined(__linux__)
+    return exec("ifconfig | grep \"inet \" | grep -Fv 127.0.0.1 | awk '{print $2}' ");
+#else
+    return "-";
+#endif
 }
 
 std::string GLFWPlatform::getDnsServer()
 {
-    return "0.0.0.0";
+#if defined(__APPLE__)
+    return exec("scutil --dns | grep nameserver | awk '{print $3}' | sort -u | paste -s -d',' -");
+#else
+    return "-";
+#endif
+}
+
+std::string GLFWPlatform::exec(const char* cmd)
+{
+    std::string result = "";
+#if defined(__APPLE__) || defined(__linux__)
+    char buffer[128];
+    memset(buffer, 0, sizeof buffer);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe)
+    {
+        throw std::runtime_error("popen() failed!");
+    }
+    int count = 0;
+    while (fgets(buffer, sizeof buffer, pipe.get()) != nullptr)
+    {
+        result += buffer;
+    }
+#endif
+
+    if (!result.empty() && result[result.size() - 1] == '\n')
+        result = result.substr(0, result.size() - 1);
+    return result;
 }
 
 bool GLFWPlatform::isApplicationMode()

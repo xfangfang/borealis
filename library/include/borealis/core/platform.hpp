@@ -67,7 +67,12 @@ class Platform
     /**
      * Returns if battery level supports.
      */
-    virtual bool canShowBatteryLevel() = 0;
+    virtual bool canShowBatteryLevel(){return true;}
+
+    /**
+     * Returns if Wireless level supports.
+     */
+    virtual bool canShowWirelessLevel(){return true;}
 
     /**
      * Returns the battery level from 0 to 100.

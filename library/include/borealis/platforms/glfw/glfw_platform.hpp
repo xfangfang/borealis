@@ -43,12 +43,14 @@ class GLFWPlatform : public Platform
     InputManager* getInputManager() override;
     FontLoader* getFontLoader() override;
     bool canShowBatteryLevel() override;
+    bool canShowWirelessLevel() override;
     int getBatteryLevel() override;
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
+    std::string exec(const char* cmd);
     bool isApplicationMode() override;
     void exitToHomeMode(bool value) override;
     void forceEnableGamePlayRecording() override;

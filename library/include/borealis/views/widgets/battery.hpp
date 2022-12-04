@@ -39,6 +39,10 @@ class BatteryWidget : public Box
 
     void applyBackTheme(ThemeVariant theme);
     void applyLevelTheme(ThemeVariant theme);
+
+    static void updateState();
+    inline static bool isBatteryCharging = false;
+    inline static float batteryLevel     = 1;
 };
 
 } // namespace brls

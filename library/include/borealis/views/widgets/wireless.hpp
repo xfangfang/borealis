@@ -40,6 +40,10 @@ class WirelessWidget : public Box
     Platform* platform;
 
     void applyTheme(ThemeVariant theme);
+
+    static void updateState();
+    inline static bool hasWirelessConnection = false;
+    inline static int wifiLevel              = 3;
 };
 
 } // namespace brls

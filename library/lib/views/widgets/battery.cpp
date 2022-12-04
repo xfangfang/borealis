@@ -16,6 +16,8 @@
 
 #include "borealis/views/widgets/battery.hpp"
 
+#include "borealis/core/thread.hpp"
+
 #define BATTERY_MAX_WIDTH 23.0f
 
 namespace brls
@@ -23,6 +25,10 @@ namespace brls
 
 BatteryWidget::BatteryWidget()
 {
+    platform = Application::getPlatform();
+    if (!platform->canShowBatteryLevel())
+        return;
+
     setSize(Size(44, 44));
 
     back = new Image();
@@ -35,12 +41,23 @@ BatteryWidget::BatteryWidget()
     level->setSize(Size(BATTERY_MAX_WIDTH, 10));
     level->detach();
 
-    platform = Application::getPlatform();
     applyBackTheme(platform->getThemeVariant());
     applyLevelTheme(platform->getThemeVariant());
 
     addView(level);
     addView(back);
+
+    BatteryWidget::updateState();
+}
+
+void BatteryWidget::updateState()
+{
+    isBatteryCharging = Application::getPlatform()->isBatteryCharging();
+    batteryLevel      = Application::getPlatform()->getBatteryLevel() / 100.0f;
+    brls::Logger::verbose("isBatteryCharging: {}; batteryLevel: {}", isBatteryCharging, batteryLevel);
+    // todo: change to async delay or something periodic run
+    brls::Threading::delay(5000, []()
+        { brls::BatteryWidget::updateState(); });
 }
 
 void BatteryWidget::applyBackTheme(ThemeVariant theme)
@@ -71,12 +88,12 @@ void BatteryWidget::applyLevelTheme(ThemeVariant theme)
 
 void BatteryWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
-    if (platform->isBatteryCharging())
+    if (isBatteryCharging)
         level->setColor(RGB(140, 251, 79));
     else
         applyLevelTheme(platform->getThemeVariant());
 
-    level->setWidth(BATTERY_MAX_WIDTH * platform->getBatteryLevel() / 100.0f);
+    level->setWidth(BATTERY_MAX_WIDTH * batteryLevel);
     Box::draw(vg, x, y, width, height, style, ctx);
 }
 
