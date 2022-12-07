@@ -1006,6 +1006,11 @@ VoidEvent* Application::getWindowCreationDoneEvent()
     return &Application::windowCreationDoneEvent;
 }
 
+Event<bool>* Application::getWindowFocusChangedEvent()
+{
+    return &Application::windowFocusChangedEvent;
+}
+
 int Application::getFont(std::string fontName)
 {
     if (Application::fontStash.count(fontName) == 0)

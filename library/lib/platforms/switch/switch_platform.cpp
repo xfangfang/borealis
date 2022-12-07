@@ -16,6 +16,7 @@
 
 #include <switch.h>
 
+#include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/switch/switch_platform.hpp>
@@ -26,6 +27,37 @@ extern "C" u32 __nx_applet_exit_mode;
 
 namespace brls
 {
+
+static AppletHookCookie applet_hook_cookie;
+static void on_applet_hook(AppletHookType hook, void* arg)
+{
+    SwitchPlatform* platform = (SwitchPlatform*)arg;
+    switch (hook)
+    {
+        case AppletHookType_OnExitRequest:
+            brls::Logger::info("AppletHookType_OnExitRequest");
+            brls::Application::quit();
+            break;
+        case AppletHookType_OnFocusState:
+            switch (appletGetFocusState())
+            {
+                case AppletFocusState_InFocus:
+                    brls::Logger::info("AppletFocusState_InFocus");
+                    brls::Application::getWindowFocusChangedEvent()->fire(true);
+                    break;
+                case AppletFocusState_OutOfFocus:
+                case AppletFocusState_Background:
+                    brls::Logger::info("AppletFocusState_OutOfFocus");
+                    brls::Application::getWindowFocusChangedEvent()->fire(false);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+}
 
 SwitchPlatform::SwitchPlatform()
 {
@@ -63,6 +95,9 @@ SwitchPlatform::SwitchPlatform()
     this->audioPlayer  = new SwitchAudioPlayer();
     this->inputManager = new SwitchInputManager();
     this->fontLoader   = new SwitchFontLoader();
+
+    appletHook(&applet_hook_cookie, on_applet_hook, this);
+    appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
 }
 
 void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
@@ -211,6 +246,8 @@ SwitchPlatform::~SwitchPlatform()
     delete this->audioPlayer;
     delete this->inputManager;
     delete this->videoContext;
+
+    appletUnhook(&applet_hook_cookie);
 }
 
 } // namespace brls

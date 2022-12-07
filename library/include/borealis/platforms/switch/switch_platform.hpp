@@ -75,6 +75,7 @@ class SwitchPlatform : public Platform
     GLFWVideoContext* videoContext;
 #endif
     SwitchFontLoader* fontLoader;
+    AppletHookCookie applet_hook_cookie;
 };
 
 } // namespace brls

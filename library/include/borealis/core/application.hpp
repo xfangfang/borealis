@@ -193,6 +193,7 @@ class Application
     static VoidEvent* getExitEvent();
     static VoidEvent* getWindowSizeChangedEvent();
     static VoidEvent* getWindowCreationDoneEvent();
+    static Event<bool>* getWindowFocusChangedEvent();
 
     static View* getCurrentFocus();
 
@@ -296,6 +297,7 @@ class Application
     inline static VoidEvent exitEvent;
     inline static VoidEvent windowSizeChangedEvent;
     inline static VoidEvent windowCreationDoneEvent;
+    inline static Event<bool> windowFocusChangedEvent;
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;
 
