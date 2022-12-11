@@ -265,7 +265,7 @@ void View::drawClickAnimation(NVGcontext* vg, FrameContext* ctx, Rect frame)
     if (this->cornerRadius > 0.0f)
         nvgRoundedRect(vg, frame.getMinX(), frame.getMinY(), frame.getWidth(), frame.getHeight(), this->cornerRadius);
     else
-        nvgRect(ctx->vg, frame.getMinX(), frame.getMinY(), frame.getWidth(), frame.getHeight());
+        nvgRoundedRect(vg, frame.getMinX(), frame.getMinY(), frame.getWidth(), frame.getHeight(), 4);
 
     nvgFill(vg);
 }
