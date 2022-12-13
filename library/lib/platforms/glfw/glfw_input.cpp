@@ -51,15 +51,15 @@ static const size_t GLFW_BUTTONS_MAPPING[GLFW_GAMEPAD_BUTTON_MAX] = {
 static const size_t GLFW_GAMEPAD_TO_KEYBOARD[GLFW_GAMEPAD_BUTTON_MAX] = {
     GLFW_KEY_ENTER, // GLFW_GAMEPAD_BUTTON_A
     GLFW_KEY_BACKSPACE, // GLFW_GAMEPAD_BUTTON_B
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_X
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_Y
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_LEFT_BUMPER
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER
+    GLFW_KEY_X, // GLFW_GAMEPAD_BUTTON_X
+    GLFW_KEY_Y, // GLFW_GAMEPAD_BUTTON_Y
+    GLFW_KEY_L, // GLFW_GAMEPAD_BUTTON_LEFT_BUMPER
+    GLFW_KEY_R, // GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER
     GLFW_KEY_F1, // GLFW_GAMEPAD_BUTTON_BACK
-    GLFW_KEY_ESCAPE, // GLFW_GAMEPAD_BUTTON_START
+    GLFW_KEY_F2, // GLFW_GAMEPAD_BUTTON_START
     GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_GUIDE
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_LEFT_THUMB
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_RIGHT_THUMB
+    GLFW_KEY_Q, // GLFW_GAMEPAD_BUTTON_LEFT_THUMB
+    GLFW_KEY_P, // GLFW_GAMEPAD_BUTTON_RIGHT_THUMB
     GLFW_KEY_UP, // GLFW_GAMEPAD_BUTTON_DPAD_UP
     GLFW_KEY_RIGHT, // GLFW_GAMEPAD_BUTTON_DPAD_RIGHT
     GLFW_KEY_DOWN, // GLFW_GAMEPAD_BUTTON_DPAD_DOWN
@@ -212,6 +212,20 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
                 state->axes[i] = 1;
         }
     }
+
+    // Add keyboard keys on top of gamepad buttons
+    for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
+    {
+        size_t brlsButton = GLFW_BUTTONS_MAPPING[i];
+        size_t key        = GLFW_GAMEPAD_TO_KEYBOARD[i];
+        if (key != GLFW_GAMEPAD_BUTTON_NONE)
+            state->buttons[brlsButton] |= glfwGetKey(this->window, key);
+    }
+
+    state->buttons[BUTTON_NAV_UP] |= glfwGetKey(this->window, GLFW_KEY_W) || state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_D) || state->buttons[BUTTON_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN] |= glfwGetKey(this->window, GLFW_KEY_S) || state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT] |= glfwGetKey(this->window, GLFW_KEY_A) || state->buttons[BUTTON_LEFT];
 }
 
 void GLFWInputManager::updateControllerState(ControllerState* state, int controller)
@@ -222,12 +236,6 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
 
     for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
     {
-        // Add keyboard keys on top of gamepad buttons
-        //        size_t key;// = GLFW_GAMEPAD_TO_KEYBOARD[i];
-
-        //        if (key != GLFW_GAMEPAD_BUTTON_NONE)
-        //            glfwState.buttons[i] |= glfwGetKey(this->window, key);
-
         // Translate GLFW gamepad to borealis controller
         size_t brlsButton          = GLFW_BUTTONS_MAPPING[i];
         state->buttons[brlsButton] = (bool)glfwState.buttons[i];
@@ -240,11 +248,6 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
     state->buttons[BUTTON_NAV_RIGHT] = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] > 0.5f || state->buttons[BUTTON_RIGHT];
     state->buttons[BUTTON_NAV_DOWN]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f || state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT]  = glfwState.axes[GLFW_GAMEPAD_AXIS_LEFT_X] < -0.5f || state->buttons[BUTTON_LEFT];
-
-    state->buttons[BUTTON_NAV_UP] |= glfwGetKey(this->window, GLFW_KEY_UP);
-    state->buttons[BUTTON_NAV_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_RIGHT);
-    state->buttons[BUTTON_NAV_DOWN] |= glfwGetKey(this->window, GLFW_KEY_DOWN);
-    state->buttons[BUTTON_NAV_LEFT] |= glfwGetKey(this->window, GLFW_KEY_LEFT);
 
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
 

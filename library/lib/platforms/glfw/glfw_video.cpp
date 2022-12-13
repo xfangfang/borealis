@@ -131,7 +131,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 
     // Initialize nanovg
 #ifdef __PSV__
-    this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+    this->nvgContext = nvgCreateGLES2(0);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif

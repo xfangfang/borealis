@@ -26,11 +26,6 @@
 namespace brls
 {
 
-static void glfwErrorCallback(int errorCode, const char* description)
-{
-    Logger::error("glfw: error {}: {}", errorCode, description);
-}
-
 SDLPlatform::SDLPlatform()
 {
     // Init sdl
