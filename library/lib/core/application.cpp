@@ -947,23 +947,23 @@ void Application::onWindowResized(int width, int height)
     Application::windowHeight = height;
 
     // Rescale UI
-    Application::windowScale = (float)width / (float)ORIGINAL_WINDOW_WIDTH;
-
-    float contentHeight = ((float)height / (Application::windowScale * (float)ORIGINAL_WINDOW_HEIGHT)) * (float)ORIGINAL_WINDOW_HEIGHT;
-
+    Application::windowScale   = (float)width / (float)ORIGINAL_WINDOW_WIDTH;
     Application::contentWidth  = ORIGINAL_WINDOW_WIDTH;
-    Application::contentHeight = (unsigned)roundf(contentHeight);
+    Application::contentHeight = (unsigned)roundf((float)height / Application::windowScale);
 
-    Logger::info("Window size changed to {}x{}", width, height);
-    Logger::info("New scale factor is {}", Application::windowScale);
-
-    // Trigger a layout
-    Logger::debug("Layout triggered");
-
-    Application::getWindowSizeChangedEvent()->fire();
+    Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
+        width, height, contentWidth, contentHeight, Application::windowScale);
 
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
+
+    // Trigger event when Window size is stable
+    static size_t iter = 0;
+    brls::cancelDelay(iter);
+    iter = brls::delay(100, []()
+        {
+            brls::Logger::info("WindowSizeChangedEvent trigger");
+            Application::getWindowSizeChangedEvent()->fire(); });
 }
 
 std::string Application::getTitle()

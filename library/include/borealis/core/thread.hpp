@@ -22,10 +22,21 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace brls
 {
+
+struct DelayOperation
+{
+    std::chrono::high_resolution_clock::time_point startPoint;
+    long delayMilliseconds;
+    bool cancel;
+    std::function<void()> func;
+};
+
+typedef std::vector<DelayOperation>::iterator DelayOperationIterator;
 
 /**
  * Enqueue a function to be executed before
@@ -46,14 +57,9 @@ extern void sync(const std::function<void()>& func);
  */
 extern void async(const std::function<void()>& func);
 
-extern void delay(long milliseconds, const std::function<void()>& func);
+extern size_t delay(long milliseconds, const std::function<void()>& func);
 
-struct DelayOperation
-{
-    std::chrono::high_resolution_clock::time_point startPoint;
-    long delayMilliseconds;
-    std::function<void()> func;
-};
+extern void cancelDelay(size_t iter);
 
 class Threading
 {
@@ -75,7 +81,9 @@ class Threading
      */
     static void async(const std::function<void()>& func);
 
-    static void delay(long milliseconds, const std::function<void()>& func);
+    static size_t delay(long milliseconds, const std::function<void()>& func);
+
+    static void cancelDelay(size_t iter);
 
     static void start();
 
@@ -102,6 +110,8 @@ class Threading
 
     inline static std::mutex m_delay_mutex;
     inline static std::vector<DelayOperation> m_delay_tasks;
+    inline static std::unordered_map<size_t, DelayOperationIterator> m_delay_map;
+    inline static size_t m_delay_index = 0;
 
     inline static volatile bool task_loop_active = true;
 

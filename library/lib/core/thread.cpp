@@ -40,9 +40,14 @@ void async(const std::function<void()>& task)
     Threading::async(task);
 }
 
-void delay(long milliseconds, const std::function<void()>& func)
+size_t delay(long milliseconds, const std::function<void()>& func)
 {
-    Threading::delay(milliseconds, func);
+    return Threading::delay(milliseconds, func);
+}
+
+void cancelDelay(size_t iter)
+{
+    Threading::cancelDelay(iter);
 }
 
 void Threading::sync(const std::function<void()>& func)
@@ -57,14 +62,24 @@ void Threading::async(const std::function<void()>& task)
     m_async_tasks.push_back(task);
 }
 
-void Threading::delay(long milliseconds, const std::function<void()>& func)
+size_t Threading::delay(long milliseconds, const std::function<void()>& func)
 {
     std::lock_guard<std::mutex> guard(m_delay_mutex);
     DelayOperation operation;
     operation.startPoint        = std::chrono::high_resolution_clock::now();
     operation.delayMilliseconds = milliseconds;
     operation.func              = func;
+    operation.cancel            = false;
     m_delay_tasks.push_back(operation);
+    m_delay_map[++m_delay_index] = m_delay_tasks.end() - 1;
+    return m_delay_index;
+}
+
+void Threading::cancelDelay(size_t iter)
+{
+    std::lock_guard<std::mutex> guard(m_delay_mutex);
+    if (m_delay_map.find(iter) != m_delay_map.end())
+        m_delay_map[iter]->cancel = true;
 }
 
 void Threading::performSyncTasks()
@@ -89,10 +104,13 @@ void Threading::performSyncTasks()
     m_delay_mutex.lock();
     auto delay_local = m_delay_tasks;
     m_delay_tasks.clear();
+    m_delay_map.clear();
     m_delay_mutex.unlock();
 
     for (auto& d : delay_local)
     {
+        if (d.cancel)
+            continue;
         auto timeNow  = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
 

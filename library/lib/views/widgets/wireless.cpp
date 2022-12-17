@@ -56,8 +56,6 @@ WirelessWidget::WirelessWidget()
     addView(_1);
     addView(_2);
     addView(_3);
-
-    updateState();
 }
 
 void WirelessWidget::applyTheme(ThemeVariant theme)
@@ -81,16 +79,25 @@ void WirelessWidget::applyTheme(ThemeVariant theme)
 
 void WirelessWidget::updateState()
 {
-    hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
-    wifiLevel             = Application::getPlatform()->getWirelessLevel();
-    brls::Logger::verbose("hasWirelessConnection: {}; wifiLevel: {}", hasWirelessConnection, wifiLevel);
-    // todo: change to async delay or something periodic run
-    brls::Threading::delay(5000, []()
-        { brls::WirelessWidget::updateState(); });
+    static Time time = 0;
+    Time now         = getCPUTimeUsec();
+    if ((now - time) > 5000000)
+    {
+        brls::Logger::verbose("hasWirelessConnection: {}; wifiLevel: {}", hasWirelessConnection, wifiLevel);
+        ASYNC_RETAIN
+        brls::async([ASYNC_TOKEN]()
+            {
+                ASYNC_RELEASE
+                hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
+                wifiLevel             = Application::getPlatform()->getWirelessLevel(); });
+        time = now;
+    }
 }
 
 void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
+    updateState();
+    
     if (!hasWirelessConnection)
     {
         _0->setVisibility(Visibility::VISIBLE);

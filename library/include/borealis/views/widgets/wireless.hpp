@@ -41,7 +41,7 @@ class WirelessWidget : public Box
 
     void applyTheme(ThemeVariant theme);
 
-    static void updateState();
+    void updateState();
     inline static bool hasWirelessConnection = false;
     inline static int wifiLevel              = 3;
 };

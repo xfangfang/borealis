@@ -372,8 +372,6 @@ float Image::getOriginalImageHeight()
 
 Image::~Image()
 {
-    brls::Logger::debug("delete Image {}", this->describe());
-
     if (this->freeTexture && this->texture != 0)
         nvgDeleteImage(Application::getNVGContext(), this->texture);
 }

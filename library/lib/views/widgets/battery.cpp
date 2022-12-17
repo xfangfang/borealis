@@ -46,18 +46,23 @@ BatteryWidget::BatteryWidget()
 
     addView(level);
     addView(back);
-
-    BatteryWidget::updateState();
 }
 
 void BatteryWidget::updateState()
 {
-    isBatteryCharging = Application::getPlatform()->isBatteryCharging();
-    batteryLevel      = Application::getPlatform()->getBatteryLevel() / 100.0f;
-    brls::Logger::verbose("isBatteryCharging: {}; batteryLevel: {}", isBatteryCharging, batteryLevel);
-    // todo: change to async delay or something periodic run
-    brls::Threading::delay(5000, []()
-        { brls::BatteryWidget::updateState(); });
+    static Time time = 0;
+    Time now         = getCPUTimeUsec();
+    if ((now - time) > 5000000)
+    {
+        brls::Logger::verbose("isBatteryCharging: {}; batteryLevel: {}", isBatteryCharging, batteryLevel);
+        ASYNC_RETAIN
+        brls::async([ASYNC_TOKEN]()
+            {
+                ASYNC_RELEASE
+                isBatteryCharging = Application::getPlatform()->isBatteryCharging();
+                batteryLevel      = Application::getPlatform()->getBatteryLevel() / 100.0f; });
+        time = now;
+    }
 }
 
 void BatteryWidget::applyBackTheme(ThemeVariant theme)
@@ -88,6 +93,7 @@ void BatteryWidget::applyLevelTheme(ThemeVariant theme)
 
 void BatteryWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
+    this->updateState();
     if (isBatteryCharging)
         level->setColor(RGB(140, 251, 79));
     else
