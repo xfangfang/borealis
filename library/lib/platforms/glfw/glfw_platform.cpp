@@ -37,7 +37,17 @@ namespace brls
 
 static void glfwErrorCallback(int errorCode, const char* description)
 {
-    Logger::error("glfw: error {}: {}", errorCode, description);
+    switch (errorCode)
+    {
+        case GLFW_API_UNAVAILABLE:
+            Logger::error("OpenGL is unavailable: {}", description);
+            break;
+        case GLFW_VERSION_UNAVAILABLE:
+            Logger::error("OpenGL 3.2 (the minimum requirement) is not available: {}", description);
+            break;
+        default:
+            Logger::error("GLFW {}: {}", errorCode, description);
+    }
 }
 
 GLFWPlatform::GLFWPlatform()

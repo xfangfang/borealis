@@ -108,14 +108,16 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 
     if (!this->window)
     {
-        Logger::error("glfw: failed to create window");
         glfwTerminate();
+        fatal("glfw: Failed to create window");
         return;
     }
 
     // Configure window
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+#ifdef __APPLE__
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
+#endif
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
 
