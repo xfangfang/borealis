@@ -109,7 +109,7 @@ class Image : public View
 
     void setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb);
 
-    int clear();
+    void clear();
 
     /**
      * Sets the scaling type for this image.
@@ -129,7 +129,11 @@ class Image : public View
      */
     void setImageAlign(ImageAlignment align);
 
+    /**
+     * Whether to destroy the current texture before updating the image texture
+     */
     void setFreeTexture(bool value);
+    bool getFreeTexture();
 
     int getTexture();
     float getOriginalImageWidth();

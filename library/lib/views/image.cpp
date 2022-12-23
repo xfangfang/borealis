@@ -19,6 +19,8 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/util.hpp>
 #include <borealis/views/image.hpp>
+
+#include "borealis/core/cache_helper.hpp"
 #include "borealis/core/thread.hpp"
 
 namespace brls
@@ -139,9 +141,8 @@ Image::Image()
             { "nearest", ImageInterpolation::NEAREST },
         });
 
-    this->registerFilePathXMLAttribute("image", [this](std::string value) {
-        this->setImageFromFile(value);
-    });
+    this->registerFilePathXMLAttribute("image", [this](std::string value)
+        { this->setImageFromFile(value); });
 
     setClipsToBounds(true);
 }
@@ -158,9 +159,12 @@ void Image::draw(NVGcontext* vg, float x, float y, float width, float height, St
     this->paint.xform[5] = coordY;
 
     nvgBeginPath(vg);
-    if (getClipsToBounds()) {
+    if (getClipsToBounds())
+    {
         nvgRoundedRect(vg, x, y, width, height, getCornerRadius());
-    } else {
+    }
+    else
+    {
         nvgRoundedRect(vg, coordX, coordY, this->imageWidth, this->imageHeight, getCornerRadius());
     }
     nvgFillPaint(vg, a(this->paint));
@@ -268,12 +272,23 @@ int Image::getImageFlags()
 
 void Image::setImageFromFile(std::string path)
 {
-    NVGcontext* vg = Application::getNVGContext();
+    // Let TextureCache to manage when to delete texture
+    this->setFreeTexture(false);
+
+    int tex = TextureCache::instance().getCache(path);
+    if (tex > 0)
+    {
+        // Load texture from cache
+        innerSetImage(tex);
+        return;
+    }
 
     // Load texture
-    int flags     = this->getImageFlags();
-    int tex = nvgCreateImage(vg, path.c_str(), flags);
+    tex = nvgCreateImage(Application::getNVGContext(), path.c_str(), this->getImageFlags());
     innerSetImage(tex);
+
+    // Save cache
+    TextureCache::instance().addCache(path, tex);
 }
 
 void Image::setImageFromMem(unsigned char* data, int size)
@@ -284,21 +299,22 @@ void Image::setImageFromMem(unsigned char* data, int size)
     innerSetImage(nvgCreateImageMem(vg, 0, data, size));
 }
 
-void Image::setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb){
+void Image::setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb)
+{
     ASYNC_RETAIN
-    cb([ASYNC_TOKEN](const std::string& data, size_t length){
-        brls::sync([ASYNC_TOKEN, data, length](){
+    cb([ASYNC_TOKEN](const std::string& data, size_t length)
+        { brls::sync([ASYNC_TOKEN, data, length]()
+              {
             ASYNC_RELEASE
             if(length == 0)
                 return;
-            this->setImageFromMem((unsigned char *) data.c_str(),(int) length);
-        });
-    });
+            this->setImageFromMem((unsigned char *) data.c_str(),(int) length); }); });
 }
 
 void Image::innerSetImage(int tex)
 {
-    if(tex == 0){
+    if (tex == 0)
+    {
         Logger::error("Cannot set texture: 0");
         return;
     }
@@ -320,22 +336,15 @@ void Image::innerSetImage(int tex)
     this->invalidate();
 }
 
-int Image::clear()
+void Image::clear()
 {
     if (this->texture == 0)
-        return 0;
-    NVGcontext* vg = Application::getNVGContext();
+        return;
 
     if (this->freeTexture)
-    {
-        nvgDeleteImage(vg, this->texture);
-        this->texture = 0;
-        return 0;
-    }
+        nvgDeleteImage(Application::getNVGContext(), this->texture);
 
-    int tex       = this->texture;
     this->texture = 0;
-    return tex;
 }
 
 void Image::setScalingType(ImageScalingType scalingType)
@@ -365,6 +374,11 @@ void Image::setFreeTexture(bool value)
     this->freeTexture = value;
 }
 
+bool Image::getFreeTexture()
+{
+    return this->freeTexture;
+}
+
 float Image::getOriginalImageHeight()
 {
     return this->originalImageHeight;
@@ -374,6 +388,8 @@ Image::~Image()
 {
     if (this->freeTexture && this->texture != 0)
         nvgDeleteImage(Application::getNVGContext(), this->texture);
+    else
+        TextureCache::instance().removeCache(this->texture);
 }
 
 View* Image::create()
