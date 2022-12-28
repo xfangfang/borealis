@@ -591,9 +591,9 @@ void Application::frame()
         currentFocus->frameHighlight(&frameContext);
     }
 
-    if (isDrawCoursor())
+    if (isDrawCursor())
     {
-        getPlatform()->getInputManager()->drawCoursor(frameContext.vg);
+        getPlatform()->getInputManager()->drawCursor(frameContext.vg);
     }
 
     if (debuggingViewEnabled)

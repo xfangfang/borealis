@@ -84,9 +84,9 @@ static const uint64_t SWITCH_BUTTONS_HALF_MAPPING[_BUTTON_MAX] = {
     HidNpadButton_None, // BUTTON_RT
 
     HidNpadButton_StickLRight | HidNpadButton_StickRLeft, // BUTTON_NAV_UP
-    HidNpadButton_StickLDown  | HidNpadButton_StickRUp, // BUTTON_NAV_RIGHT
-    HidNpadButton_StickLLeft  | HidNpadButton_StickRRight, // BUTTON_NAV_DOWN
-    HidNpadButton_StickLUp    | HidNpadButton_StickRDown, // BUTTON_NAV_LEFT
+    HidNpadButton_StickLDown | HidNpadButton_StickRUp, // BUTTON_NAV_RIGHT
+    HidNpadButton_StickLLeft | HidNpadButton_StickRRight, // BUTTON_NAV_DOWN
+    HidNpadButton_StickLUp | HidNpadButton_StickRDown, // BUTTON_NAV_LEFT
 };
 
 static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {
@@ -118,7 +118,7 @@ SwitchInputManager::SwitchInputManager()
     m_hid_keyboard_state.assign(256, false);
 }
 
-SwitchInputManager::~SwitchInputManager() 
+SwitchInputManager::~SwitchInputManager()
 {
     NVGcontext* vg = Application::getNVGContext();
 
@@ -141,27 +141,32 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
-    for (int i = 0; i < GAMEPADS_MAX; i++) {
+    for (int i = 0; i < GAMEPADS_MAX; i++)
+    {
         ControllerState localState;
         updateControllerState(&localState, i);
         for (size_t i = 0; i < _BUTTON_MAX; i++)
             state->buttons[i] |= localState.buttons[i];
 
-        for (size_t i = 0; i < _AXES_MAX; i++) {
+        for (size_t i = 0; i < _AXES_MAX; i++)
+        {
             state->axes[i] += localState.axes[i];
 
-            if (state->axes[i] < -1) state->axes[i] = -1;
-            else if (state->axes[i] > 1) state->axes[i] = 1;
+            if (state->axes[i] < -1)
+                state->axes[i] = -1;
+            else if (state->axes[i] > 1)
+                state->axes[i] = 1;
         }
-    } 
+    }
 }
 
 short SwitchInputManager::getControllersConnectedCount()
 {
-    padUpdate(&this->padStateHendheld);
-    int extra = padStateHendheld.active_handheld ? 1 : 0;
+    padUpdate(&this->padStateHandheld);
+    int extra       = padStateHandheld.active_handheld ? 1 : 0;
     int controllers = extra;
-    for (int i = 0; i < GAMEPADS_MAX - extra; i++) {
+    for (int i = 0; i < GAMEPADS_MAX - extra; i++)
+    {
         if (padsState[i].style_set == 0)
             break;
         controllers++;
@@ -171,19 +176,21 @@ short SwitchInputManager::getControllersConnectedCount()
 
 void SwitchInputManager::updateControllerState(ControllerState* state, int controller)
 {
-    padUpdate(&this->padStateHendheld);
-    if (controller == 0 && padStateHendheld.active_handheld) {
-        updateControllerStateInner(state, &padStateHendheld);
+    padUpdate(&this->padStateHandheld);
+    if (controller == 0 && padStateHandheld.active_handheld)
+    {
+        updateControllerStateInner(state, &padStateHandheld);
         return;
     }
 
-    int localController = padStateHendheld.active_handheld ? controller - 1: controller;
-    PadState* pad = &this->padsState[localController];
+    int localController = padStateHandheld.active_handheld ? controller - 1 : controller;
+    PadState* pad       = &this->padsState[localController];
     updateControllerStateInner(state, pad);
 
-    if (padsStyleSet[localController] != pad->style_set) {
+    if (padsStyleSet[localController] != pad->style_set)
+    {
         padsStyleSet[localController] = pad->style_set;
-        reinitVibration(localController);
+        clearVibration(localController);
     }
 }
 
@@ -203,27 +210,31 @@ void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadS
     HidAnalogStickState analog_stick_l = padGetStickPos(pad, 0);
     HidAnalogStickState analog_stick_r = padGetStickPos(pad, 1);
 
-    if (full) {
+    if (full)
+    {
         state->axes[LEFT_X]  = (float)analog_stick_l.x / (float)0x7FFF;
         state->axes[LEFT_Y]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f;
         state->axes[RIGHT_X] = (float)analog_stick_r.x / (float)0x7FFF;
         state->axes[RIGHT_Y] = (float)analog_stick_r.y / (float)0x7FFF * -1.0f;
-    } else {
+    }
+    else
+    {
         state->axes[LEFT_X]  = (float)analog_stick_l.y / (float)0x7FFF * -1.0f + (float)analog_stick_r.y / (float)0x7FFF;
         state->axes[LEFT_Y]  = (float)analog_stick_l.x / (float)0x7FFF * -1.0f + (float)analog_stick_r.x / (float)0x7FFF;
         state->axes[RIGHT_X] = 0;
         state->axes[RIGHT_Y] = 0;
     }
 
-    state->buttons[BUTTON_NAV_UP]    |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
+    state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
     state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
-    state->buttons[BUTTON_NAV_DOWN]  |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
-    state->buttons[BUTTON_NAV_LEFT]  |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
+    state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT] |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
 }
 
 bool SwitchInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < 256; ++i)
+    {
         if (key == switchKeyToGlfwKey(i))
             return m_hid_keyboard_state[i];
     }
@@ -302,14 +313,15 @@ void SwitchInputManager::runloopStart()
     handleKeyboard();
 }
 
-void SwitchInputManager::upToDateMouseState() 
+void SwitchInputManager::upToDateMouseState()
 {
     hidGetMouseStates(&currentMouseState, 1);
 }
 
 void SwitchInputManager::handleMouse()
 {
-    if (currentMouseState.attributes & HidMouseAttribute_IsConnected) {
+    if (currentMouseState.attributes & HidMouseAttribute_IsConnected)
+    {
         getMouseCusorOffsetChanged()->fire(Point(currentMouseState.delta_x, currentMouseState.delta_y));
         getMouseScrollOffsetChanged()->fire(Point(currentMouseState.wheel_delta_y, currentMouseState.wheel_delta_x));
     }
@@ -318,35 +330,39 @@ void SwitchInputManager::handleMouse()
 void SwitchInputManager::handleKeyboard()
 {
     HidKeyboardState state;
-    
-    if (hidGetKeyboardStates(&state, 1)) {
-        for (int i = 0; i < 256; ++i) {
+
+    if (hidGetKeyboardStates(&state, 1))
+    {
+        for (int i = 0; i < 256; ++i)
+        {
             auto is_pressed = (state.keys[i / 64] & (1ul << (i % 64))) != 0;
-            if (m_hid_keyboard_state[i] != is_pressed) 
+            if (m_hid_keyboard_state[i] != is_pressed)
             {
-                m_hid_keyboard_state[i] = is_pressed;
+                m_hid_keyboard_state[i]      = is_pressed;
                 BrlsKeyboardScancode glfwKey = switchKeyToGlfwKey(i);
 
                 KeyState keyState;
-                keyState.key = glfwKey;
+                keyState.key     = glfwKey;
                 keyState.pressed = is_pressed;
-                
+
                 if (state.modifiers & HidKeyboardModifier_LeftAlt)
                     keyState.mods |= BRLS_KBD_MODIFIER_ALT;
-                
+
                 if (state.modifiers & HidKeyboardModifier_Control)
                     keyState.mods |= BRLS_KBD_MODIFIER_CTRL;
-                
+
                 if (state.modifiers & HidKeyboardModifier_Shift)
                     keyState.mods |= BRLS_KBD_MODIFIER_SHIFT;
-                
+
                 if (state.modifiers & HidKeyboardModifier_Gui)
                     keyState.mods |= BRLS_KBD_MODIFIER_META;
-                
+
                 getKeyboardKeyStateChanged()->fire(keyState);
             }
         }
-    } else {
+    }
+    else
+    {
         Logger::debug("Keyboard failed!");
     }
 }
@@ -356,103 +372,162 @@ void SwitchInputManager::setPointerLock(bool lock)
     pointerLocked = lock;
 }
 
-void SwitchInputManager::drawCoursor(NVGcontext* vg)
+void SwitchInputManager::drawCursor(NVGcontext* vg)
 {
     initCursor(vg);
-    if (!pointerLocked) {
-        this->paint.xform[4] = lastCoursorPosition.x;
-        this->paint.xform[5] = lastCoursorPosition.y;
+    if (!pointerLocked)
+    {
+        this->paint.xform[4] = lastCursorPosition.x;
+        this->paint.xform[5] = lastCursorPosition.y;
 
         nvgBeginPath(vg);
-        nvgRect(vg, lastCoursorPosition.x, lastCoursorPosition.y, this->cursorWidth, this->cursorHeight);
+        nvgRect(vg, lastCursorPosition.x, lastCursorPosition.y, this->cursorWidth, this->cursorHeight);
         nvgFillPaint(vg, this->paint);
         nvgFill(vg);
     }
 }
 
-void SwitchInputManager::initCursor(NVGcontext* vg) 
+void SwitchInputManager::initCursor(NVGcontext* vg)
 {
-    if (cursorInited) return; 
-    if (vg) {
-        this->pointerIcon = std::string(BRLS_RESOURCES) + "img/sys/cursor.png";
+    if (cursorInited)
+        return;
+    if (vg)
+    {
+        this->pointerIcon   = std::string(BRLS_RESOURCES) + "img/sys/cursor.png";
         this->cursorTexture = nvgCreateImage(vg, pointerIcon.c_str(), NVG_IMAGE_NEAREST);
 
         int width, height;
         nvgImageSize(vg, cursorTexture, &width, &height);
-        float aspect = (float)height / (float)width;
+        float aspect       = (float)height / (float)width;
         this->cursorWidth  = 18;
         this->cursorHeight = 18 * aspect;
 
-        this->paint   = nvgImagePattern(vg, 0, 0, this->cursorWidth, this->cursorHeight, 0, this->cursorTexture, 1.0f);
+        this->paint        = nvgImagePattern(vg, 0, 0, this->cursorWidth, this->cursorHeight, 0, this->cursorTexture, 1.0f);
         this->cursorInited = true;
     }
 }
 
 BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
 {
-    if (KBD_A <= key && key <= KBD_Z) {
+    if (KBD_A <= key && key <= KBD_Z)
+    {
         return (BrlsKeyboardScancode)(key - KBD_A + BRLS_KBD_KEY_A);
-    } else if (KBD_1 <= key && key <= KBD_9) {
+    }
+    else if (KBD_1 <= key && key <= KBD_9)
+    {
         return (BrlsKeyboardScancode)(key - KBD_1 + BRLS_KBD_KEY_1);
-    } else if (KBD_F1 <= key && key <= KBD_F12) {
+    }
+    else if (KBD_F1 <= key && key <= KBD_F12)
+    {
         return (BrlsKeyboardScancode)(key - KBD_F1 + BRLS_KBD_KEY_F1);
-    } else if (KBD_KP1 <= key && key <= KBD_KP9) {
+    }
+    else if (KBD_KP1 <= key && key <= KBD_KP9)
+    {
         return (BrlsKeyboardScancode)(key - KBD_KP1 + BRLS_KBD_KEY_KP_1);
     }
-    
-    switch (key) {
-        case KBD_0: return BRLS_KBD_KEY_0;
-        case KBD_SPACE: return BRLS_KBD_KEY_SPACE;
-        case KBD_APOSTROPHE: return BRLS_KBD_KEY_APOSTROPHE;
-        case KBD_COMMA: return BRLS_KBD_KEY_COMMA;
-        case KBD_MINUS: return BRLS_KBD_KEY_MINUS;
-        case KBD_DOT: return BRLS_KBD_KEY_PERIOD;
-        case KBD_SLASH: return BRLS_KBD_KEY_SLASH;
-        case KBD_SEMICOLON: return BRLS_KBD_KEY_SEMICOLON;
-        case KBD_EQUAL: return BRLS_KBD_KEY_EQUAL;
-        case KBD_LEFTBRACE: return BRLS_KBD_KEY_LEFT_BRACKET;
-        case KBD_RIGHTBRACE: return BRLS_KBD_KEY_RIGHT_BRACKET;
-        case KBD_BACKSLASH: return BRLS_KBD_KEY_BACKSLASH;
-        case KBD_GRAVE: return BRLS_KBD_KEY_GRAVE_ACCENT;
-        case KBD_ESC: return BRLS_KBD_KEY_ESCAPE;
-        case KBD_ENTER: return BRLS_KBD_KEY_ENTER;
-        case KBD_TAB: return BRLS_KBD_KEY_TAB;
-        case KBD_BACKSPACE: return BRLS_KBD_KEY_BACKSPACE;
-        case KBD_CAPSLOCK: return BRLS_KBD_KEY_CAPS_LOCK;
-        case KBD_LEFTSHIFT: return BRLS_KBD_KEY_LEFT_SHIFT;
-        case KBD_LEFTCTRL: return BRLS_KBD_KEY_LEFT_CONTROL;
-        case KBD_LEFTALT: return BRLS_KBD_KEY_LEFT_ALT;
-        case KBD_LEFTMETA: return BRLS_KBD_KEY_LEFT_SUPER;
-        case KBD_RIGHTSHIFT: return BRLS_KBD_KEY_RIGHT_SHIFT;
-        case KBD_RIGHTCTRL: return BRLS_KBD_KEY_RIGHT_CONTROL;
-        case KBD_RIGHTALT: return BRLS_KBD_KEY_RIGHT_ALT;
-        case KBD_RIGHTMETA: return BRLS_KBD_KEY_RIGHT_SUPER;
-        case KBD_LEFT: return BRLS_KBD_KEY_LEFT;
-        case KBD_RIGHT: return BRLS_KBD_KEY_RIGHT;
-        case KBD_UP: return BRLS_KBD_KEY_UP;
-        case KBD_DOWN: return BRLS_KBD_KEY_DOWN;
-        
-        case KBD_SYSRQ: return BRLS_KBD_KEY_PRINT_SCREEN;
-        case KBD_SCROLLLOCK: return BRLS_KBD_KEY_SCROLL_LOCK;
-        case KBD_PAUSE: return BRLS_KBD_KEY_PAUSE;
-        case KBD_INSERT: return BRLS_KBD_KEY_INSERT;
-        case KBD_HOME: return BRLS_KBD_KEY_HOME;
-        case KBD_PAGEUP: return BRLS_KBD_KEY_PAGE_UP;
-        case KBD_DELETE: return BRLS_KBD_KEY_DELETE;
-        case KBD_END: return BRLS_KBD_KEY_END;
-        case KBD_PAGEDOWN: return BRLS_KBD_KEY_PAGE_DOWN;
 
-        case KBD_NUMLOCK: return BRLS_KBD_KEY_NUM_LOCK;
-        case KBD_KPSLASH: return BRLS_KBD_KEY_KP_DIVIDE;
-        case KBD_KPASTERISK: return BRLS_KBD_KEY_KP_MULTIPLY;
-        case KBD_KPMINUS: return BRLS_KBD_KEY_KP_SUBTRACT;
-        case KBD_KPPLUS: return BRLS_KBD_KEY_KP_ADD;
-        case KBD_KPENTER: return BRLS_KBD_KEY_KP_ENTER;
-        case KBD_KPDOT: return BRLS_KBD_KEY_KP_DECIMAL;
-        case KBD_KP0: return BRLS_KBD_KEY_KP_0;
+    switch (key)
+    {
+        case KBD_0:
+            return BRLS_KBD_KEY_0;
+        case KBD_SPACE:
+            return BRLS_KBD_KEY_SPACE;
+        case KBD_APOSTROPHE:
+            return BRLS_KBD_KEY_APOSTROPHE;
+        case KBD_COMMA:
+            return BRLS_KBD_KEY_COMMA;
+        case KBD_MINUS:
+            return BRLS_KBD_KEY_MINUS;
+        case KBD_DOT:
+            return BRLS_KBD_KEY_PERIOD;
+        case KBD_SLASH:
+            return BRLS_KBD_KEY_SLASH;
+        case KBD_SEMICOLON:
+            return BRLS_KBD_KEY_SEMICOLON;
+        case KBD_EQUAL:
+            return BRLS_KBD_KEY_EQUAL;
+        case KBD_LEFTBRACE:
+            return BRLS_KBD_KEY_LEFT_BRACKET;
+        case KBD_RIGHTBRACE:
+            return BRLS_KBD_KEY_RIGHT_BRACKET;
+        case KBD_BACKSLASH:
+            return BRLS_KBD_KEY_BACKSLASH;
+        case KBD_GRAVE:
+            return BRLS_KBD_KEY_GRAVE_ACCENT;
+        case KBD_ESC:
+            return BRLS_KBD_KEY_ESCAPE;
+        case KBD_ENTER:
+            return BRLS_KBD_KEY_ENTER;
+        case KBD_TAB:
+            return BRLS_KBD_KEY_TAB;
+        case KBD_BACKSPACE:
+            return BRLS_KBD_KEY_BACKSPACE;
+        case KBD_CAPSLOCK:
+            return BRLS_KBD_KEY_CAPS_LOCK;
+        case KBD_LEFTSHIFT:
+            return BRLS_KBD_KEY_LEFT_SHIFT;
+        case KBD_LEFTCTRL:
+            return BRLS_KBD_KEY_LEFT_CONTROL;
+        case KBD_LEFTALT:
+            return BRLS_KBD_KEY_LEFT_ALT;
+        case KBD_LEFTMETA:
+            return BRLS_KBD_KEY_LEFT_SUPER;
+        case KBD_RIGHTSHIFT:
+            return BRLS_KBD_KEY_RIGHT_SHIFT;
+        case KBD_RIGHTCTRL:
+            return BRLS_KBD_KEY_RIGHT_CONTROL;
+        case KBD_RIGHTALT:
+            return BRLS_KBD_KEY_RIGHT_ALT;
+        case KBD_RIGHTMETA:
+            return BRLS_KBD_KEY_RIGHT_SUPER;
+        case KBD_LEFT:
+            return BRLS_KBD_KEY_LEFT;
+        case KBD_RIGHT:
+            return BRLS_KBD_KEY_RIGHT;
+        case KBD_UP:
+            return BRLS_KBD_KEY_UP;
+        case KBD_DOWN:
+            return BRLS_KBD_KEY_DOWN;
+
+        case KBD_SYSRQ:
+            return BRLS_KBD_KEY_PRINT_SCREEN;
+        case KBD_SCROLLLOCK:
+            return BRLS_KBD_KEY_SCROLL_LOCK;
+        case KBD_PAUSE:
+            return BRLS_KBD_KEY_PAUSE;
+        case KBD_INSERT:
+            return BRLS_KBD_KEY_INSERT;
+        case KBD_HOME:
+            return BRLS_KBD_KEY_HOME;
+        case KBD_PAGEUP:
+            return BRLS_KBD_KEY_PAGE_UP;
+        case KBD_DELETE:
+            return BRLS_KBD_KEY_DELETE;
+        case KBD_END:
+            return BRLS_KBD_KEY_END;
+        case KBD_PAGEDOWN:
+            return BRLS_KBD_KEY_PAGE_DOWN;
+
+        case KBD_NUMLOCK:
+            return BRLS_KBD_KEY_NUM_LOCK;
+        case KBD_KPSLASH:
+            return BRLS_KBD_KEY_KP_DIVIDE;
+        case KBD_KPASTERISK:
+            return BRLS_KBD_KEY_KP_MULTIPLY;
+        case KBD_KPMINUS:
+            return BRLS_KBD_KEY_KP_SUBTRACT;
+        case KBD_KPPLUS:
+            return BRLS_KBD_KEY_KP_ADD;
+        case KBD_KPENTER:
+            return BRLS_KBD_KEY_KP_ENTER;
+        case KBD_KPDOT:
+            return BRLS_KBD_KEY_KP_DECIMAL;
+        case KBD_KP0:
+            return BRLS_KBD_KEY_KP_0;
 
         // case KBD_HASHTILDE: return GLFW_HASHTILDE;
-        default: return BRLS_KBD_KEY_UNKNOWN;
+        default:
+            return BRLS_KBD_KEY_UNKNOWN;
     }
 }
 

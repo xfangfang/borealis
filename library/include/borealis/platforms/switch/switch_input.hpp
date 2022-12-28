@@ -51,7 +51,7 @@ class SwitchInputManager : public InputManager
     
     void setPointerLock(bool lock) override;
 
-    void drawCoursor(NVGcontext* vg) override;
+    void drawCursor(NVGcontext* vg) override;
 
   private:
     bool cursorInited = false;
@@ -59,10 +59,10 @@ class SwitchInputManager : public InputManager
     int cursorTexture = 0;
     NVGpaint paint;
     std::string pointerIcon;
-    Point lastCoursorPosition;
     PadState padStateHendheld;
     HidVibrationDeviceHandle m_vibration_device_hendheld[2];
     HidVibrationValue m_vibration_values_hendheld[2];
+    Point lastCursorPosition;
     PadState padsState[GAMEPADS_MAX];
     HidVibrationDeviceHandle m_vibration_device_handles[GAMEPADS_MAX][2];
     HidVibrationValue m_vibration_values[GAMEPADS_MAX][2];

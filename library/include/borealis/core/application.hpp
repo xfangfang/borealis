@@ -245,7 +245,7 @@ class Application
         drawCoursor = draw;
     }
 
-    inline static bool isDrawCoursor()
+    inline static bool isDrawCursor()
     {
         return drawCoursor;
     }
