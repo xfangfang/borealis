@@ -50,6 +50,8 @@ class DesktopPlatform : public Platform
     void forceEnableGamePlayRecording() override;
     void openBrowser(std::string url) override;
 
+    inline static bool RESTART_APP = false;
+
   protected:
     DesktopFontLoader* fontLoader = nullptr;
     ThemeVariant themeVariant     = ThemeVariant::LIGHT;

@@ -178,7 +178,7 @@ bool DesktopPlatform::isApplicationMode()
 
 void DesktopPlatform::exitToHomeMode(bool value)
 {
-    return;
+    DesktopPlatform::RESTART_APP = !value;
 }
 
 void DesktopPlatform::forceEnableGamePlayRecording()
