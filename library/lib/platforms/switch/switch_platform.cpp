@@ -76,19 +76,24 @@ SwitchPlatform::SwitchPlatform()
     Logger::info("switch system theme: {}", colorSetId ? "Dark" : "Light");
 
     // Get locale
-    uint64_t languageCode = 0;
-
-    Result rc = setGetSystemLanguage(&languageCode);
-
-    if (R_SUCCEEDED(rc))
+    if (Platform::APP_LOCALE_DEFAULT == LOCALE_AUTO)
     {
-        char* languageName = (char*)&languageCode;
-        this->locale       = std::string(languageName);
+        uint64_t languageCode = 0;
+        Result rc             = setGetSystemLanguage(&languageCode);
+        if (R_SUCCEEDED(rc))
+        {
+            char* languageName = (char*)&languageCode;
+            this->locale       = std::string(languageName);
+        }
+        else
+        {
+            Logger::error("switch: unable to get system language (error {:#x}), using the default one: {}", rc, LOCALE_DEFAULT);
+            this->locale = LOCALE_DEFAULT;
+        }
     }
     else
     {
-        Logger::error("switch: unable to get system language (error {:#x}), using the default one: {1}", rc, LOCALE_DEFAULT);
-        this->locale = LOCALE_DEFAULT;
+        this->locale = Platform::APP_LOCALE_DEFAULT;
     }
 
     // Init platform impls

@@ -17,23 +17,24 @@
 #pragma once
 
 #include <borealis/core/application.hpp>
+#include <borealis/core/assets.hpp>
 #include <borealis/core/box.hpp>
 #include <borealis/views/image.hpp>
-#include <borealis/core/assets.hpp>
 
 namespace brls
 {
 
 class AccountWidget : public Box
 {
-public:
+  public:
     AccountWidget();
 
     static View* create();
 
-private:
+  private:
+#ifdef __SWITCH__
     Image* acc;
+#endif
 };
-
 
 } // namespace brls

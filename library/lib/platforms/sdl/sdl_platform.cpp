@@ -1,5 +1,5 @@
 /*
-    Copyright 2021 natinusala
+    Copyright 2023 xfangfang
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,33 +20,19 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
 
-// glfw video and input code inspired from the glfw hybrid app by fincs
-// https://github.com/fincs/hybrid_app
-
 namespace brls
 {
 
 SDLPlatform::SDLPlatform()
 {
     // Init sdl
-    //    glfwSetErrorCallback(glfwErrorCallback);
-    //    glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_TRUE);
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0)
     {
         Logger::error("sdl: failed to initialize");
         return;
     }
 
-    // Theme
-    char* themeEnv = getenv("BOREALIS_THEME");
-    if (themeEnv != nullptr && !strcasecmp(themeEnv, "DARK"))
-        this->themeVariant = ThemeVariant::DARK;
-
-    // Misc
-    //    glfwSetTime(0.0);
-
     // Platform impls
-    this->fontLoader  = new GLFWFontLoader();
     this->audioPlayer = new NullAudioPlayer();
 }
 
@@ -54,77 +40,6 @@ void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, ui
 {
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight);
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
-}
-
-bool SDLPlatform::canShowBatteryLevel()
-{
-    return true;
-}
-
-int battery = 50;
-int SDLPlatform::getBatteryLevel()
-{
-    battery %= 100;
-    battery++;
-    return battery;
-}
-
-bool SDLPlatform::isBatteryCharging()
-{
-    return true;
-}
-
-bool SDLPlatform::hasWirelessConnection()
-{
-    return true;
-}
-
-int SDLPlatform::getWirelessLevel()
-{
-    return battery / 20;
-}
-
-std::string SDLPlatform::getIpAddress()
-{
-    return "0.0.0.0";
-}
-
-std::string SDLPlatform::getDnsServer()
-{
-    return "0.0.0.0";
-}
-
-bool SDLPlatform::isApplicationMode()
-{
-    return true;
-}
-
-void SDLPlatform::exitToHomeMode(bool value)
-{
-    return;
-}
-
-void SDLPlatform::forceEnableGamePlayRecording()
-{
-    return;
-}
-
-void SDLPlatform::openBrowser(std::string url)
-{
-    brls::Logger::debug("open url: {}", url);
-#ifdef __APPLE__
-    std::string cmd = "open " + url;
-    system(cmd.c_str());
-#endif
-#ifdef __linux__
-    std::string cmd = "xdg-open " + url;
-    system(cmd.c_str());
-#endif
-#ifdef _WIN32
-    std::string cmd = "explorer " + url;
-    system(cmd.c_str());
-#endif
-    return;
 }
 
 std::string SDLPlatform::getName()
@@ -174,32 +89,8 @@ InputManager* SDLPlatform::getInputManager()
     return this->inputManager;
 }
 
-FontLoader* SDLPlatform::getFontLoader()
-{
-    return this->fontLoader;
-}
-
-ThemeVariant SDLPlatform::getThemeVariant()
-{
-    return this->themeVariant;
-}
-
-void SDLPlatform::setThemeVariant(ThemeVariant theme)
-{
-    this->themeVariant = theme;
-}
-
-std::string SDLPlatform::getLocale()
-{
-    char* langEnv = getenv("BOREALIS_LANG");
-    if (langEnv == nullptr)
-        return LOCALE_DEFAULT;
-    return std::string(langEnv);
-}
-
 SDLPlatform::~SDLPlatform()
 {
-    delete this->fontLoader;
     delete this->audioPlayer;
     delete this->videoContext;
     delete this->inputManager;

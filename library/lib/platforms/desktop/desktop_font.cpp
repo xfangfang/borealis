@@ -1,5 +1,6 @@
 /*
     Copyright 2021 natinusala
+    Copyright 2023 xfangfang
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,14 +19,14 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/assets.hpp>
-#include <borealis/platforms/glfw/glfw_font.hpp>
+#include <borealis/platforms/desktop/desktop_font.hpp>
 
 #define INTER_FONT_PATH BRLS_ASSET("font/switch_font.ttf")
 
 namespace brls
 {
 
-void GLFWFontLoader::loadFonts()
+void DesktopFontLoader::loadFonts()
 {
     NVGcontext* vg = brls::Application::getNVGContext();
 

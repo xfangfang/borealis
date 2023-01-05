@@ -16,17 +16,16 @@
 
 #pragma once
 
-#include <borealis/core/platform.hpp>
-#include <borealis/platforms/sdl/sdl_font.hpp>
+#include <SDL2/SDL.h>
+
+#include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <borealis/platforms/sdl/sdl_input.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
-
-#include <SDL2/SDL.h>
 
 namespace brls
 {
 
-class SDLPlatform : public Platform
+class SDLPlatform : public DesktopPlatform
 {
   public:
     SDLPlatform();
@@ -36,32 +35,15 @@ class SDLPlatform : public Platform
     void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight) override;
 
     bool mainLoopIteration() override;
-    ThemeVariant getThemeVariant() override;
-    void setThemeVariant(ThemeVariant theme) override;
-    std::string getLocale() override;
 
     AudioPlayer* getAudioPlayer() override;
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
-    FontLoader* getFontLoader() override;
-    bool canShowBatteryLevel() override;
-    int getBatteryLevel() override;
-    bool isBatteryCharging() override;
-    bool hasWirelessConnection() override;
-    int getWirelessLevel() override;
-    std::string getIpAddress() override;
-    std::string getDnsServer() override;
-    bool isApplicationMode() override;
-    void exitToHomeMode(bool value) override;
-    void forceEnableGamePlayRecording() override;
-    void openBrowser(std::string url) override;
 
   private:
-    NullAudioPlayer* audioPlayer   = nullptr;
+    NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;
-    GLFWFontLoader* fontLoader     = nullptr;
-    ThemeVariant themeVariant      = ThemeVariant::LIGHT;
 };
 
 } // namespace brls

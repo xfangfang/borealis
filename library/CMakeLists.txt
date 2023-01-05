@@ -40,13 +40,17 @@ if (PLATFORM_DESKTOP)
         message("using SDL2")
         find_package(SDL2 REQUIRED)
         message("=====> ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARIES}")
-        list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/sdl)
+        list(APPEND BOREALIS_SOURCE
+                ${BOREALIS_PATH}/lib/platforms/sdl
+                ${BOREALIS_PATH}/lib/platforms/desktop)
         set(BRLS_PLATFORM_LIBS ${SDL2_LIBRARIES})
         set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__SDL2__ -I/usr/local/include -I${SDL2_INCLUDE_DIR})
     else ()
         message("using GLFW3")
         find_package(glfw3 REQUIRED)
-        list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/glfw)
+        list(APPEND BOREALIS_SOURCE
+                ${BOREALIS_PATH}/lib/platforms/glfw
+                ${BOREALIS_PATH}/lib/platforms/desktop)
         set(BRLS_PLATFORM_LIBS glfw)
         set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__)
     endif ()
@@ -55,7 +59,8 @@ elseif (PLATFORM_PSV)
     list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/psv
-            ${BOREALIS_PATH}/lib/platforms/glfw)
+            ${BOREALIS_PATH}/lib/platforms/glfw
+            ${BOREALIS_PATH}/lib/platforms/desktop)
     list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
     set(BRLS_PLATFORM_LIBS)
     set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__GLFW__ -D__PSV__)

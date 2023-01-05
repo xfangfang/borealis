@@ -18,6 +18,7 @@
 
 #include <borealis/core/audio.hpp>
 #include <borealis/core/font.hpp>
+#include <borealis/core/i18n.hpp>
 #include <borealis/core/input.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/video.hpp>
@@ -67,12 +68,12 @@ class Platform
     /**
      * Returns if battery level supports.
      */
-    virtual bool canShowBatteryLevel(){return true;}
+    virtual bool canShowBatteryLevel() { return true; }
 
     /**
      * Returns if Wireless level supports.
      */
-    virtual bool canShowWirelessLevel(){return true;}
+    virtual bool canShowWirelessLevel() { return true; }
 
     /**
      * Returns the battery level from 0 to 100.
@@ -167,6 +168,11 @@ class Platform
      * Selects and returns the best platform.
      */
     static Platform* createPlatform();
+
+    /**
+     * App locale, empty for default
+     */
+    static inline std::string APP_LOCALE_DEFAULT = LOCALE_AUTO;
 };
 
 } // namespace brls
