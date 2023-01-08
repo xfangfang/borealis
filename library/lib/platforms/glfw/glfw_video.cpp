@@ -130,6 +130,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     Logger::info("glfw: GL Vendor: {}", glGetString(GL_VENDOR));
     Logger::info("glfw: GL Renderer: {}", glGetString(GL_RENDERER));
     Logger::info("glfw: GL Version: {}", glGetString(GL_VERSION));
+    Logger::info("glfw: GLFW Version: {}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
     // Initialize nanovg
 #ifdef __PSV__

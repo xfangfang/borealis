@@ -831,6 +831,11 @@ ThemeVariant Application::getThemeVariant()
     return Application::platform->getThemeVariant();
 }
 
+ImeManager* Application::getImeManager()
+{
+    return Application::platform->getImeManager();
+}
+
 std::string Application::getLocale()
 {
     return Application::getPlatform()->getLocale();

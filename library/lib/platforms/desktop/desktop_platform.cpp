@@ -72,6 +72,7 @@ DesktopPlatform::DesktopPlatform()
 
     // Platform impls
     this->fontLoader = new DesktopFontLoader();
+    this->imeManager = new DesktopImeManager();
 }
 
 bool DesktopPlatform::canShowBatteryLevel()
@@ -214,6 +215,11 @@ FontLoader* DesktopPlatform::getFontLoader()
     return this->fontLoader;
 }
 
+ImeManager* DesktopPlatform::getImeManager()
+{
+    return this->imeManager;
+}
+
 ThemeVariant DesktopPlatform::getThemeVariant()
 {
     return this->themeVariant;
@@ -232,6 +238,7 @@ std::string DesktopPlatform::getLocale()
 DesktopPlatform::~DesktopPlatform()
 {
     delete this->fontLoader;
+    delete this->imeManager;
 }
 
 } // namespace brls

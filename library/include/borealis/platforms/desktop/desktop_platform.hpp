@@ -19,6 +19,7 @@
 
 #include <borealis/core/platform.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
+#include <borealis/platforms/desktop/desktop_ime.hpp>
 
 namespace brls
 {
@@ -34,6 +35,7 @@ class DesktopPlatform : public Platform
     ThemeVariant getThemeVariant() override;
     void setThemeVariant(ThemeVariant theme) override;
     std::string getLocale() override;
+    ImeManager* getImeManager() override;
 
     FontLoader* getFontLoader() override;
     bool canShowBatteryLevel() override;
@@ -55,6 +57,7 @@ class DesktopPlatform : public Platform
   protected:
     DesktopFontLoader* fontLoader = nullptr;
     ThemeVariant themeVariant     = ThemeVariant::LIGHT;
+    DesktopImeManager* imeManager = nullptr;
     std::string locale;
 };
 

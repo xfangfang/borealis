@@ -122,6 +122,8 @@ class Application
     static Theme getTheme();
     static ThemeVariant getThemeVariant();
 
+    static ImeManager* getImeManager();
+
     /**
      * Loads a font from a given file and stores it in the font stash.
      * Returns true if the operation succeeded.

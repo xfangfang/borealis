@@ -1,5 +1,6 @@
 /*
     Copyright 2021 natinusala
+    Copyright 2023 xfangfang
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -22,6 +23,7 @@
 #include <borealis/core/input.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/video.hpp>
+#include <borealis/core/ime.hpp>
 #include <string>
 
 namespace brls
@@ -136,6 +138,12 @@ class Platform
      * Cannot return nullptr.
      */
     virtual InputManager* getInputManager() = 0;
+
+    /**
+     * Returns the ImeManager for the platform.
+     * Cannot return nullptr.
+     */
+    virtual ImeManager* getImeManager() = 0;
 
     /**
      * Returns the FontLoader for the platform.

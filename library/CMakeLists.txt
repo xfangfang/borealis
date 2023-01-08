@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+# using custom glfw
+if ((NOT USE_SDL2) AND PLATFORM_DESKTOP)
+    add_subdirectory(lib/extern/glfw)
+endif ()
 
 set(BOREALIS_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -35,7 +39,6 @@ endif ()
 
 set(BOREALIS_SRC)
 if (PLATFORM_DESKTOP)
-    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
     if (USE_SDL2)
         message("using SDL2")
         find_package(SDL2 REQUIRED)
@@ -56,7 +59,6 @@ if (PLATFORM_DESKTOP)
     endif ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"${BRLS_RESOURCES_DIR}/resources/\"")
 elseif (PLATFORM_PSV)
-    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/swkbd.cpp)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/psv
             ${BOREALIS_PATH}/lib/platforms/glfw

@@ -74,6 +74,7 @@ void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, u
 {
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
     this->inputManager = new GLFWInputManager(this->videoContext->getGLFWWindow());
+    this->imeManager   = new GLFWImeManager(this->videoContext->getGLFWWindow());
 }
 
 std::string GLFWPlatform::getName()
@@ -112,11 +113,17 @@ InputManager* GLFWPlatform::getInputManager()
     return this->inputManager;
 }
 
+ImeManager* GLFWPlatform::getImeManager()
+{
+    return this->imeManager;
+}
+
 GLFWPlatform::~GLFWPlatform()
 {
     delete this->audioPlayer;
     delete this->videoContext;
     delete this->inputManager;
+    delete this->imeManager;
 }
 
 } // namespace brls

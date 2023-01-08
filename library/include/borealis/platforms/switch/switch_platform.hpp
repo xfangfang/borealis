@@ -21,11 +21,12 @@
 #else
 #include <borealis/platforms/glfw/glfw_video.hpp>
 #endif
-#include <borealis/platforms/switch/switch_audio.hpp>
-#include <borealis/platforms/switch/switch_font.hpp>
-#include <borealis/platforms/switch/switch_input.hpp>
 #include <borealis/core/platform.hpp>
 #include <borealis/core/theme.hpp>
+#include <borealis/platforms/switch/switch_audio.hpp>
+#include <borealis/platforms/switch/switch_font.hpp>
+#include <borealis/platforms/switch/switch_ime.hpp>
+#include <borealis/platforms/switch/switch_input.hpp>
 
 namespace brls
 {
@@ -44,6 +45,7 @@ class SwitchPlatform : public Platform
     ThemeVariant getThemeVariant() override;
     void setThemeVariant(ThemeVariant theme) override;
     std::string getLocale() override;
+    ImeManager* getImeManager() override;
 
     VideoContext* getVideoContext() override;
     AudioPlayer* getAudioPlayer() override;
@@ -69,6 +71,8 @@ class SwitchPlatform : public Platform
 
     SwitchAudioPlayer* audioPlayer;
     SwitchInputManager* inputManager;
+    SwitchImeManager* imeManager;
+
 #ifdef __SDL2__
     SDLVideoContext* videoContext;
 #else

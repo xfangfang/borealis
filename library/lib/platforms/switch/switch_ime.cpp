@@ -1,35 +1,29 @@
 /*
-    Borealis, a Nintendo Switch UI Library
-    Copyright (C) 2019  WerWolv
-    Copyright (C) 2019  p-sam
+    Copyright 2019  WerWolv
+    Copyright 2019  p-sam
+    Copyright 2023 xfangfang
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
-#include <borealis/core/logger.hpp>
-#include <borealis/platforms/switch/swkbd.hpp>
+#include <switch.h>
+
+#include <borealis/platforms/switch/switch_ime.hpp>
 #include <cstring>
 #include <iostream>
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 namespace brls
 {
-
-#ifdef __SWITCH__
 
 static SwkbdConfig createSwkbdBaseConfig(std::string headerText, std::string subText, int maxStringLength, std::string initialText)
 {
@@ -88,19 +82,11 @@ int getSwkbdKeyDisableBitmask(int borealis_key)
 
     return ret;
 }
-#else
-static std::string terminalInput(std::string text)
-{
-    printf("\033[0;94m[INPUT] \033[0;36m%s\033[0m: ", text.c_str());
-    std::string line;
-    std::getline(std::cin, line);
-    return line;
-}
-#endif
 
-bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText, int kbdDisableBitmask)
+bool SwitchImeManager::openForText(std::function<void(std::string)> f, std::string headerText,
+    std::string subText, int maxStringLength, std::string initialText,
+    int kbdDisableBitmask)
 {
-#ifdef __SWITCH__
     SwkbdConfig config = createSwkbdBaseConfig(headerText, subText, maxStringLength, initialText);
 
     swkbdConfigSetType(&config, SwkbdType_All);
@@ -119,16 +105,13 @@ bool Swkbd::openForText(std::function<void(std::string)> f, std::string headerTe
     swkbdClose(&config);
 
     return false;
-#else
-    std::string line = terminalInput(headerText);
-    f(line);
-    return true;
-#endif
 }
 
-bool Swkbd::openForNumber(std::function<void(long)> f, std::string headerText, std::string subText, int maxStringLength, std::string initialText, std::string leftButton, std::string rightButton, int kbdDisableBitmask)
+bool SwitchImeManager::openForNumber(std::function<void(long)> f, std::string headerText,
+    std::string subText, int maxStringLength, std::string initialText,
+    std::string leftButton, std::string rightButton,
+    int kbdDisableBitmask)
 {
-#ifdef __SWITCH__
     SwkbdConfig config = createSwkbdBaseConfig(headerText, subText, maxStringLength, initialText);
 
     swkbdConfigSetType(&config, SwkbdType_NumPad);
@@ -149,20 +132,6 @@ bool Swkbd::openForNumber(std::function<void(long)> f, std::string headerText, s
     swkbdClose(&config);
 
     return false;
-#else
-    std::string line = terminalInput(headerText);
-
-    try
-    {
-        f(stoll(line));
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        Logger::error("Could not parse input, did you enter a valid integer?");
-        return false;
-    }
-#endif
 }
 
-} // namespace brls
+};

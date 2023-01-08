@@ -1,6 +1,6 @@
 /*
     Copyright 2021 natinusala
-	Copyright 2021 XITRIX
+    Copyright 2021 XITRIX
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -105,9 +105,9 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
     state.pressed        = action != GLFW_RELEASE;
     const char* key_name = glfwGetKeyName(key, scancode);
     if (key_name != NULL)
-        Logger::debug("Key: {} / Code: {}", key_name, key);
+        Logger::debug("Key: {} / Code: {} / Action: {}", key_name, key, action);
     else
-        Logger::debug("Key: NULL / Code: {}", key);
+        Logger::debug("Key: NULL / Code: {} / Action: {}", key, action);
     self->getKeyboardKeyStateChanged()->fire(state);
 }
 

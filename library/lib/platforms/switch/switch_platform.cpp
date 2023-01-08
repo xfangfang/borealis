@@ -100,6 +100,7 @@ SwitchPlatform::SwitchPlatform()
     this->audioPlayer  = new SwitchAudioPlayer();
     this->inputManager = new SwitchInputManager();
     this->fontLoader   = new SwitchFontLoader();
+    this->imeManager   = new SwitchImeManager();
 
     appletHook(&applet_hook_cookie, on_applet_hook, this);
     appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
@@ -236,6 +237,11 @@ FontLoader* SwitchPlatform::getFontLoader()
     return this->fontLoader;
 }
 
+ImeManager* SwitchPlatform::getImeManager()
+{
+    return this->imeManager;
+}
+
 ThemeVariant SwitchPlatform::getThemeVariant()
 {
     return this->themeVariant;
@@ -251,6 +257,7 @@ SwitchPlatform::~SwitchPlatform()
     delete this->audioPlayer;
     delete this->inputManager;
     delete this->videoContext;
+    delete this->imeManager;
 
     appletUnhook(&applet_hook_cookie);
 }

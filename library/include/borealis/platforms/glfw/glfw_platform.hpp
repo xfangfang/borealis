@@ -18,6 +18,7 @@
 #pragma once
 
 #include <borealis/platforms/desktop/desktop_platform.hpp>
+#include <borealis/platforms/glfw/glfw_ime.hpp>
 #include <borealis/platforms/glfw/glfw_input.hpp>
 #include <borealis/platforms/glfw/glfw_video.hpp>
 
@@ -38,11 +39,13 @@ class GLFWPlatform : public DesktopPlatform
     AudioPlayer* getAudioPlayer() override;
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
+    ImeManager* getImeManager() override;
 
   private:
     NullAudioPlayer* audioPlayer   = nullptr;
     GLFWVideoContext* videoContext = nullptr;
     GLFWInputManager* inputManager = nullptr;
+    GLFWImeManager* imeManager     = nullptr;
 };
 
 } // namespace brls

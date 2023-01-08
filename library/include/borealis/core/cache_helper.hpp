@@ -178,7 +178,7 @@ class LRUCache
      */
     size_t deleteCache(size_t num)
     {
-        // todo: The current data structure will increase the complexity of each \
+        // todo: The current data structure will increase the complexity of each
         //  new cache from O(1) to O(N) after the cache is full.
         if (num <= 0)
             return 0;
