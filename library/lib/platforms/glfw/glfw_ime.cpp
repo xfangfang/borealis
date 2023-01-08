@@ -328,7 +328,7 @@ GLFWImeManager::GLFWImeManager(GLFWwindow* window)
 }
 
 void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::string headerText,
-    std::string subText, int maxStringLength, std::string initialText)
+    std::string subText, size_t maxStringLength, std::string initialText)
 {
     preeditTextBuffer.clear();
     showIME                = true;
@@ -338,8 +338,9 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
     dialog->setText(initialText);
     dialog->setHeaderText(headerText);
     dialog->setCountText("0/" + std::to_string(maxStringLength));
-    dialog->getLayoutEvent()->subscribe([this](Point p)
-        { glfwSetPreeditCursorRectangle(window, p.x, p.y, 1, 1); });
+    float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
+    dialog->getLayoutEvent()->subscribe([this, scale](Point p)
+        { glfwSetPreeditCursorRectangle(window, p.x * scale, p.y * scale, 1, 1); });
 
     // update
     auto eventID = Application::getRunLoopEvent()->subscribe([dialog, maxStringLength]()

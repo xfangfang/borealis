@@ -39,7 +39,7 @@ class GLFWImeManager : public ImeManager
         int kbdDisableBitmask = KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_NONE) override;
 
     void openInputDialog(std::function<void(std::string)> cb, std::string headerText,
-        std::string subText, int maxStringLength = 50, std::string initialText = "");
+        std::string subText, size_t maxStringLength = 50, std::string initialText = "");
 
   private:
     GLFWwindow* window;
