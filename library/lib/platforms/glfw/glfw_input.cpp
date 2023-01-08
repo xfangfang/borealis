@@ -222,10 +222,10 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
             state->buttons[brlsButton] |= glfwGetKey(this->window, key);
     }
 
-    state->buttons[BUTTON_NAV_UP] |= glfwGetKey(this->window, GLFW_KEY_W) || state->buttons[BUTTON_UP];
-    state->buttons[BUTTON_NAV_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_D) || state->buttons[BUTTON_RIGHT];
-    state->buttons[BUTTON_NAV_DOWN] |= glfwGetKey(this->window, GLFW_KEY_S) || state->buttons[BUTTON_DOWN];
-    state->buttons[BUTTON_NAV_LEFT] |= glfwGetKey(this->window, GLFW_KEY_A) || state->buttons[BUTTON_LEFT];
+    state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN] |= state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT] |= state->buttons[BUTTON_LEFT];
 }
 
 void GLFWInputManager::updateControllerState(ControllerState* state, int controller)

@@ -53,7 +53,7 @@ const std::string hintXML = R"xml(
     </brls:Box>
 )xml";
 
-Hint::Hint(Action action)
+Hint::Hint(Action action, bool allowAButtonTouch)
     : Box(Axis::ROW)
     , action(action)
 {
@@ -63,7 +63,7 @@ Hint::Hint(Action action)
     icon->setText(getKeyIcon(action.button));
     hint->setText(action.hintText);
 
-    if (action.button != BUTTON_A && action.available && !Application::isInputBlocks())
+    if ((action.button != BUTTON_A || allowAButtonTouch) && action.available && !Application::isInputBlocks())
     {
         this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]()
             { action.actionListener(this); }));
@@ -130,7 +130,10 @@ Hints::Hints()
         { refillHints(Application::getCurrentFocus()); });
 
     this->registerBoolXMLAttribute("addBaseAction", [this](bool value)
-        { this->setAddUnabledAButtonAction(value); });
+        { this->setAddUnableAButtonAction(value); });
+
+    this->registerBoolXMLAttribute("allowAButtonTouch", [this](bool value)
+        { this->setAllowAButtonTouch(value); });
 }
 
 Hints::~Hints()
@@ -165,7 +168,7 @@ void Hints::refillHints(View* focusView)
         focusView = focusView->getParent();
     }
 
-    if (addUnabledAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
+    if (addUnableAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
     {
         actions.push_back(Action { BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
     }
@@ -175,7 +178,7 @@ void Hints::refillHints(View* focusView)
 
     for (Action action : actions)
     {
-        Hint* hint = new Hint(action);
+        Hint* hint = new Hint(action, allowAButtonTouch);
         addView(hint);
     }
 }

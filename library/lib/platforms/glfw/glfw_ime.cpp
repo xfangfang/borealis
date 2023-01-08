@@ -29,7 +29,188 @@ limitations under the License.
 namespace brls
 {
 
-// https://github.com/glfw/glfw/pull/2130
+const std::string editTextDialogXML = R"xml(
+    <brls:Box
+        id="brls/container"
+        width="auto"
+        height="auto"
+        axis="column"
+        justifyContent="flexStart"
+        alignItems="center"
+        focusable="true"
+        hideHighlight="true"
+        backgroundColor="@theme/brls/backdrop">
+
+        <brls:Label
+            id="brls/dialog/header"
+            fontSize="24"
+            marginTop="50"
+            marginBottom="30"
+            textColor="#FFFFFF"/>
+
+        <brls:Box
+            id="brls/dialog/applet"
+            width="720"
+            cornerRadius="4"
+            alignItems="flexEnd"
+            axis="column"
+            backgroundColor="@theme/brls/background">
+
+            <brls:Label
+                id="brls/dialog/label"
+                grow="1"
+                width="680"
+                margin="20"
+                autoAnimate="false"
+                verticalAlign="top"/>
+
+            <brls:Label
+                id="brls/dialog/count"
+                width="680"
+                horizontalAlign="right"
+                fontSize="18"
+                textColor="@theme/brls/text_disabled"
+                marginRight="30"
+                marginBottom="10"/>
+
+            <brls:Hints
+                allowAButtonTouch="true"
+                addBaseAction="false"
+                marginBottom="20"
+                marginRight="10"
+                width="auto"
+                height="auto"/>
+
+        </brls:Box>
+
+    </brls:Box>
+)xml";
+
+class EditTextDialog : public Box
+{
+  public:
+    EditTextDialog()
+    {
+        this->inflateFromXMLString(editTextDialogXML);
+
+        // submit text
+        this->registerAction(
+            "hints/submit"_i18n, BUTTON_START, [this](...)
+            {
+                Application::popActivity(TransitionAnimation::NONE, [this](){
+                        this->summitEvent.fire();
+                    });
+                return true; });
+        this->registerAction(
+            "hints/ok"_i18n, BUTTON_A, [this](...)
+            {
+                Application::popActivity(TransitionAnimation::NONE, [this](){
+                        this->summitEvent.fire();
+                });
+                return true; },
+            true);
+
+        // cancel input
+        this->registerAction(
+            "hints/back"_i18n, BUTTON_BACK, [this](...)
+            {
+                Application::popActivity(TransitionAnimation::NONE, [this](){
+                        this->cancelEvent.fire();
+                    });
+
+                return true; });
+
+        this->init = true;
+    }
+
+    void open()
+    {
+        Application::pushActivity(new Activity(this));
+    }
+
+    void setText(const std::string& value)
+    {
+        this->content = value;
+        this->updateUI();
+    }
+
+    void setHeaderText(const std::string& value)
+    {
+        this->header->setText(value);
+    }
+
+    void setHintText(const std::string& value)
+    {
+        if (value.empty())
+        {
+            this->hint = "hints/input"_i18n;
+        }
+        else
+        {
+            this->hint = value;
+        }
+        this->updateUI();
+    }
+
+    void setCountText(const std::string& value)
+    {
+        this->count->setText(value);
+    }
+
+    bool isTranslucent() override
+    {
+        return true;
+    }
+
+    void onLayout() override
+    {
+        if (!init)
+            return;
+        this->layoutEvent.fire(Point { this->label->getX(),
+            this->label->getY() + this->label->getHeight() });
+    }
+
+    Event<Point>* getLayoutEvent()
+    {
+        return &this->layoutEvent;
+    }
+
+    Event<>* getCancelEvent()
+    {
+        return &this->cancelEvent;
+    }
+
+    Event<>* getSubmitEvent()
+    {
+        return &this->summitEvent;
+    }
+
+    void updateUI()
+    {
+        if (content.empty())
+        {
+            label->setTextColor(Application::getTheme().getColor("brls/text_disabled"));
+            label->setText(hint);
+        }
+        else
+        {
+            label->setTextColor(Application::getTheme().getColor("brls/text"));
+            label->setText(content);
+        }
+    }
+
+  private:
+    std::string content;
+    std::string hint;
+    Event<Point> layoutEvent;
+    Event<> cancelEvent, summitEvent;
+    bool init = false;
+
+    BRLS_BIND(brls::Label, header, "brls/dialog/header");
+    BRLS_BIND(brls::Label, label, "brls/dialog/label");
+    BRLS_BIND(brls::Label, count, "brls/dialog/count");
+    BRLS_BIND(brls::Box, container, "brls/container");
+};
 
 static int currentIMEStatus = GLFW_FALSE;
 #define MAX_PREEDIT_LEN 128
@@ -77,6 +258,7 @@ void GLFWImeManager::preedit_callback(GLFWwindow* window, int preeditCount,
     if (preeditCount == 0 || blockCount == 0)
     {
         strcpy(preeditBuf, "(empty)");
+        preeditTextBuffer = "|";
         return;
     }
 
@@ -124,7 +306,7 @@ void GLFWImeManager::preedit_callback(GLFWwindow* window, int preeditCount,
             strcat(preeditBuf, "|");
     }
 
-    brls::Logger::debug("preeditBuf: {}", preeditBuf);
+    preeditTextBuffer = std::string { preeditBuf };
 }
 
 void GLFWImeManager::char_callback(GLFWwindow* window, unsigned int codepoint)
@@ -145,50 +327,73 @@ GLFWImeManager::GLFWImeManager(GLFWwindow* window)
     glfwSetCharCallback(window, char_callback);
 }
 
-void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb)
+void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::string headerText,
+    std::string subText, int maxStringLength, std::string initialText)
 {
-    showIME = true;
-    textBuffer.clear();
-    glfwSetPreeditCursorRectangle(window, 310, 270, 1, 1);
-    Box* container = new Box();
-    container->setHeight(200);
-    Label* content = new Label();
-    content->setMargins(20, 20, 20, 20);
-    container->addView(content);
-    Dialog* dialog = new Dialog(container);
-    content->setVerticalAlign(VerticalAlign::TOP);
+    preeditTextBuffer.clear();
+    showIME                = true;
+    textBuffer             = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(initialText);
+    EditTextDialog* dialog = new EditTextDialog();
+    dialog->setHintText(subText);
+    dialog->setText(initialText);
+    dialog->setHeaderText(headerText);
+    dialog->setCountText("0/" + std::to_string(maxStringLength));
+    dialog->getLayoutEvent()->subscribe([this](Point p)
+        { glfwSetPreeditCursorRectangle(window, p.x, p.y, 1, 1); });
 
-    auto eventID = Application::getRunLoopEvent()->subscribe([content]()
+    // update
+    auto eventID = Application::getRunLoopEvent()->subscribe([dialog, maxStringLength]()
         {
             static std::wstring lastText = textBuffer;
+            static std::string lastPreeditText = preeditTextBuffer;
             if(lastText != textBuffer){
+                if(textBuffer.size() > maxStringLength)
+                    textBuffer.erase(maxStringLength, textBuffer.size() - maxStringLength);
                 lastText = textBuffer;
-                content->setText(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer));
+                if(textBuffer.empty()){
+                    dialog->setText("");
+                } else{
+                    dialog->setText(getInputText() + "|");
+                }
+                dialog->setCountText(std::to_string(textBuffer.size()) + "/" + std::to_string(maxStringLength));
+                lastPreeditText.clear();
+                preeditTextBuffer.clear();
+            } else if(lastPreeditText != preeditTextBuffer){
+                dialog->setText(getInputText() + preeditTextBuffer);
             } });
 
-    // 删除文字
+    // delete text
     dialog->registerAction(
-        "Delete", BUTTON_B, [content](...)
+        "hints/delete"_i18n, BUTTON_B, [dialog](...)
         {
             if(textBuffer.empty()) return true;
             textBuffer.erase(textBuffer.size()-1, 1);
-            content->setText(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer));
+            dialog->setText(getInputText());
             return true; },
         true, true);
 
-    dialog->setCancelable(false);
-    dialog->addButton("hints/cancel"_i18n, [this, eventID]
+    // cancel
+    dialog->getCancelEvent()->subscribe([this, eventID]()
         {
             glfwSetInputMode(window, GLFW_IME, GLFW_FALSE);
             Application::getRunLoopEvent()->unsubscribe(eventID);
             showIME = false; });
-    dialog->addButton("hints/ok"_i18n, [this, cb, eventID]()
+
+    // submit
+    dialog->getSubmitEvent()->subscribe([this, eventID, cb]()
         {
-            cb(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer));
             glfwSetInputMode(window, GLFW_IME, GLFW_FALSE);
             Application::getRunLoopEvent()->unsubscribe(eventID);
-            showIME = false; });
+            showIME = false;
+            cb(getInputText());
+            return true; });
+
     dialog->open();
+}
+
+std::string GLFWImeManager::getInputText()
+{
+    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer);
 }
 
 bool GLFWImeManager::openForText(std::function<void(std::string)> f, std::string headerText,
@@ -196,7 +401,8 @@ bool GLFWImeManager::openForText(std::function<void(std::string)> f, std::string
     int kbdDisableBitmask)
 {
     this->openInputDialog([f](const std::string& text)
-        {if(!text.empty()) f(text); });
+        {if(!text.empty()) f(text); },
+        headerText, subText, maxStringLength, initialText);
     return true;
 }
 
@@ -215,7 +421,8 @@ bool GLFWImeManager::openForNumber(std::function<void(long)> f, std::string head
             catch (const std::exception& e)
             {
                 Logger::error("Could not parse input, did you enter a valid integer?");
-            } });
+            } },
+        headerText, subText, maxStringLength, initialText);
     return true;
 }
 

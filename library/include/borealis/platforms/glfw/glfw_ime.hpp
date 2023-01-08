@@ -38,17 +38,19 @@ class GLFWImeManager : public ImeManager
         std::string leftButton = "", std::string rightButton = "",
         int kbdDisableBitmask = KeyboardKeyDisableBitmask::KEYBOARD_DISABLE_NONE) override;
 
-    void openInputDialog(std::function<void(std::string)> cb);
+    void openInputDialog(std::function<void(std::string)> cb, std::string headerText,
+        std::string subText, int maxStringLength = 50, std::string initialText = "");
 
   private:
     GLFWwindow* window;
     inline static bool showIME;
     inline static std::wstring textBuffer;
-    ;
+    inline static std::string preeditTextBuffer;
     static void ime_callback(GLFWwindow* window);
     static void preedit_callback(GLFWwindow* window, int preeditCount, unsigned int* preeditString,
         int blockCount, int* blockSizes, int focusedBlock, int caret);
     static void char_callback(GLFWwindow* window, unsigned int codepoint);
+    static std::string getInputText();
 };
 
 };

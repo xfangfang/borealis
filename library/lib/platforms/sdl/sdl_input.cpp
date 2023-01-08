@@ -148,10 +148,10 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
         if (key != SDL_SCANCODE_UNKNOWN)
             state->buttons[brlsButton] |= keyboard[key];
     }
-    state->buttons[BUTTON_NAV_UP] |= keyboard[SDL_SCANCODE_W] || state->buttons[BUTTON_UP];
-    state->buttons[BUTTON_NAV_RIGHT] |= keyboard[SDL_SCANCODE_D] || state->buttons[BUTTON_RIGHT];
-    state->buttons[BUTTON_NAV_DOWN] |= keyboard[SDL_SCANCODE_S] || state->buttons[BUTTON_DOWN];
-    state->buttons[BUTTON_NAV_LEFT] |= keyboard[SDL_SCANCODE_A] || state->buttons[BUTTON_LEFT];
+    state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN] |= state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT] |= state->buttons[BUTTON_LEFT];
 }
 
 void SDLInputManager::updateControllerState(ControllerState* state, int controller)

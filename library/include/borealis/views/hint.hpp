@@ -28,7 +28,7 @@ namespace brls
 class Hint : public Box
 {
   public:
-    Hint(Action action);
+    Hint(Action action, bool allowAButtonTouch = false);
     static std::string getKeyIcon(ControllerButton button, bool ignoreKeysSwap = false);
 
   private:
@@ -44,21 +44,32 @@ class Hints : public Box
     Hints();
     ~Hints();
 
-    void setAddUnabledAButtonAction(bool value)
+    void setAddUnableAButtonAction(bool value)
     {
-        addUnabledAButtonAction = value;
+        addUnableAButtonAction = value;
     }
 
-    bool getAddUnabledAButtonAction() const
+    bool getAddUnableAButtonAction() const
     {
-        return addUnabledAButtonAction;
+        return addUnableAButtonAction;
+    }
+
+    void setAllowAButtonTouch(bool value)
+    {
+        allowAButtonTouch = value;
+    }
+
+    bool getAllowAButtonTouch() const
+    {
+        return allowAButtonTouch;
     }
 
     static View* create();
 
   private:
     void refillHints(View* focusView);
-    bool addUnabledAButtonAction = true;
+    bool addUnableAButtonAction = true;
+    bool allowAButtonTouch      = false;
 
     VoidEvent::Subscription hintSubscription;
     static bool actionsSortFunc(Action a, Action b);

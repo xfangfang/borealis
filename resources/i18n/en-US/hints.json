@@ -1,17 +1,11 @@
 {
-    "hints": {
-        "ok": "OK",
-        "back": "Back",
-        "exit": "Exit",
-        "on": "On",
-        "off": "Off"
-    },
-
-    "crash_frame": {
-        "button": "OK"
-    },
-
-    "thumbnail_sidebar": {
-        "save": "Save"
-    }
+  "ok": "OK",
+  "back": "Back",
+  "exit": "Exit",
+  "on": "On",
+  "off": "Off",
+  "delete": "Delete",
+  "save": "Save",
+  "input": "Please input...",
+  "submit": "Submit"
 }
