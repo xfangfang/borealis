@@ -50,7 +50,6 @@ if (PLATFORM_DESKTOP)
         set(BRLS_PLATFORM_OPTION -DNO_TOUCH_SCROLLING=true -D__SDL2__ -I/usr/local/include -I${SDL2_INCLUDE_DIR})
     else ()
         message("using GLFW3")
-        find_package(glfw3 REQUIRED)
         list(APPEND BOREALIS_SOURCE
                 ${BOREALIS_PATH}/lib/platforms/glfw
                 ${BOREALIS_PATH}/lib/platforms/desktop)
