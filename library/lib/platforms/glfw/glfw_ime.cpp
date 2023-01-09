@@ -331,6 +331,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
     std::string subText, size_t maxStringLength, std::string initialText)
 {
     preeditTextBuffer.clear();
+    glfwSetInputMode(window, GLFW_IME, GLFW_TRUE);
     showIME                = true;
     textBuffer             = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(initialText);
     EditTextDialog* dialog = new EditTextDialog();
