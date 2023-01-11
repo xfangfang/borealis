@@ -718,7 +718,7 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     {
         Activity* toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
         toShow->hide([]() {}, false, 0);
-        toShow->show([]() {}, fade, toShow->getShowAnimationDuration(animation));
+        toShow->show([]() {}, false, 0);
     }
 
     // Focus

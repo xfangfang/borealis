@@ -2097,6 +2097,11 @@ void View::registerCommonAttributes()
     });
 
     // Highlight
+    this->registerBoolXMLAttribute("hideClickAnimation", [this](bool value) {
+        this->setHideClickAnimation(value);
+    });
+
+    // Highlight
     this->registerBoolXMLAttribute("hideHighlight", [this](bool value) {
         this->setHideHighlight(value);
     });

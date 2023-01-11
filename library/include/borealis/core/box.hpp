@@ -219,6 +219,8 @@ class Box : public View
 
     size_t getDefaultFocusedIndex();
 
+    virtual bool isChildFocused();
+
 private:
     Axis axis;
 

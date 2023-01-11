@@ -657,6 +657,21 @@ size_t Box::getDefaultFocusedIndex(){
     return this->defaultFocusedIndex;
 }
 
+bool Box::isChildFocused() {
+    for (auto &child : getChildren()) {
+        Box *box = dynamic_cast<Box *>(child);
+        if (box) {
+            if (box->isFocused())
+                return true;
+            if (box->isChildFocused())
+                return true;
+        } else if (child->isFocused()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 View* Box::create()
 {
     return new Box();
