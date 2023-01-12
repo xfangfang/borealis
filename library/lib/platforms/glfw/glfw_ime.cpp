@@ -97,14 +97,14 @@ class EditTextDialog : public Box
         this->registerAction(
             "hints/submit"_i18n, BUTTON_START, [this](...)
             {
-                Application::popActivity(TransitionAnimation::NONE, [this](){
+                Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->summitEvent.fire();
                     });
                 return true; });
         this->registerAction(
             "hints/ok"_i18n, BUTTON_A, [this](...)
             {
-                Application::popActivity(TransitionAnimation::NONE, [this](){
+                Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->summitEvent.fire();
                 });
                 return true; },
@@ -114,7 +114,7 @@ class EditTextDialog : public Box
         this->registerAction(
             "hints/back"_i18n, BUTTON_BACK, [this](...)
             {
-                Application::popActivity(TransitionAnimation::NONE, [this](){
+                Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->cancelEvent.fire();
                     });
 

@@ -221,7 +221,7 @@ class Box : public View
 
     virtual bool isChildFocused();
 
-private:
+  private:
     Axis axis;
 
     std::vector<View*> children;

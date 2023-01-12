@@ -22,14 +22,14 @@
 
 // Delta from touch starting point to current, when
 // touch will be recognized as pan movement
-#define MAX_DELTA_MOVEMENT 10
+#define MAX_DELTA_MOVEMENT 6
 
 // Touch history limit which uses to calculate current pan speed
-#define HISTORY_LIMIT 2
+#define HISTORY_LIMIT 5
 
 // Negative acceleration to calculate
 // time to play acceleration animation
-#define PAN_SCROLL_ACCELERATION -5000
+#define PAN_SCROLL_ACCELERATION -3000
 
 namespace brls
 {
