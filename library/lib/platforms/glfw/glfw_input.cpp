@@ -17,10 +17,12 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <borealis/platforms/glfw/glfw_input.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <unistd.h>
 
 namespace brls
 {
@@ -151,9 +153,17 @@ void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)
 GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     : window(window)
 {
-    const std::string mappings = loadFileContents(BRLS_ASSET("gamepad/gamecontrollerdb.txt"));
-    if (!mappings.empty())
+    if (access(DesktopPlatform::GAMEPAD_DB.c_str(), F_OK) == -1)
+    {
+        brls::Logger::warning("Cannot find custom gamepad db, (Searched at: {})",
+            DesktopPlatform::GAMEPAD_DB);
+    }
+    else
+    {
+        const std::string mappings = loadFileContents(DesktopPlatform::GAMEPAD_DB);
+        brls::Logger::info("Load custom gamepad db: {}", DesktopPlatform::GAMEPAD_DB);
         glfwUpdateGamepadMappings(mappings.c_str());
+    }
 
     glfwSetJoystickCallback(glfwJoystickCallback);
     glfwSetScrollCallback(window, scrollCallback);

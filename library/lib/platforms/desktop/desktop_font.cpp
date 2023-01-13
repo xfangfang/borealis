@@ -48,16 +48,37 @@ void DesktopFontLoader::loadFonts()
         this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
     }
 
+    // Using system font as fallback
+    std::string systemFont;
+#if defined(__APPLE__)
+    systemFont = "/Library/Fonts/Arial Unicode.ttf";
+#elif defined(_WIN32)
+    systemFont = "C:\\Windows\\Fonts\\Yumin.ttf";
+#endif
+    if (!systemFont.empty())
+    {
+        if (access(systemFont.c_str(), F_OK) != -1)
+        {
+            brls::Logger::info("Load system font: {}", systemFont);
+            this->loadFontFromFile("system", systemFont);
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("system"));
+        }
+        else
+        {
+            brls::Logger::warning("Cannot find system font, (Searched at: {})", systemFont);
+        }
+    }
+
     // Switch icons
     // Only supports user-provided font
     if (access(USER_ICON_PATH.c_str(), F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, USER_ICON_PATH))
     {
-        brls::Logger::info("Load custom icon: {}", USER_ICON_PATH);
+        brls::Logger::info("Load keymap icon: {}", USER_ICON_PATH);
         nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
     }
     else
     {
-        Logger::warning("Cannot find custom icon, (Searched at: {})", USER_ICON_PATH);
+        Logger::warning("Cannot find keymap icon, (Searched at: {})", USER_ICON_PATH);
         Logger::warning("Icons may not be displayed, for more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
     }
 

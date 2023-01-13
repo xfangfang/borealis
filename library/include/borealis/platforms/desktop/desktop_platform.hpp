@@ -52,7 +52,8 @@ class DesktopPlatform : public Platform
     void forceEnableGamePlayRecording() override;
     void openBrowser(std::string url) override;
 
-    inline static bool RESTART_APP = false;
+    inline static bool RESTART_APP       = false;
+    inline static std::string GAMEPAD_DB = BRLS_ASSET("gamepad/gamecontrollerdb.txt");
 
   protected:
     DesktopFontLoader* fontLoader = nullptr;
