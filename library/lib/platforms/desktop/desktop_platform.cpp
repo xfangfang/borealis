@@ -21,8 +21,43 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 namespace brls
 {
+
+#ifdef _WIN32
+int windows_system(const char *command) {
+    PROCESS_INFORMATION p_info;
+    STARTUPINFO s_info;
+    DWORD ReturnValue;
+    char *tmp_command, *cmd_exe_path;
+    size_t len = strlen(command);
+
+    tmp_command = (char *)malloc(len + 4);
+    tmp_command[0] = 0x2F; // '/'
+    tmp_command[1] = 0x63; // 'c'
+    tmp_command[2] = 0x20; // <space>;
+    memcpy(tmp_command + 3, command, len + 1);
+    cmd_exe_path = getenv("COMSPEC");
+
+    memset(&s_info, 0, sizeof(s_info));
+    memset(&p_info, 0, sizeof(p_info));
+    s_info.cb = sizeof(s_info);
+
+    if (CreateProcess(cmd_exe_path, tmp_command, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &s_info, &p_info)) {
+      WaitForSingleObject(p_info.hProcess, INFINITE);
+      GetExitCodeProcess(p_info.hProcess, &ReturnValue);
+      CloseHandle(p_info.hProcess);
+      CloseHandle(p_info.hThread);
+    }
+
+    free(tmp_command);
+    return ReturnValue;
+}
+#endif
 
 DesktopPlatform::DesktopPlatform()
 {
@@ -199,8 +234,8 @@ void DesktopPlatform::openBrowser(std::string url)
     system(cmd.c_str());
 #endif
 #ifdef _WIN32
-    std::string cmd = "explorer " + url;
-    system(cmd.c_str());
+    std::string cmd = "start " + url;
+    windows_system(cmd.c_str());
 #endif
     return;
 }
