@@ -53,7 +53,11 @@ void DesktopFontLoader::loadFonts()
 #if defined(__APPLE__)
     systemFont = "/Library/Fonts/Arial Unicode.ttf";
 #elif defined(_WIN32)
-    systemFont = "C:\\Windows\\Fonts\\Yumin.ttf";
+    char* winDir = getenv("systemroot");
+    if (winDir)
+        systemFont = std::string{winDir} + "\\Fonts\\malgun.ttf";
+    else
+        systemFont = "C:\\Windows\\Fonts\\malgun.ttf";
 #endif
     if (!systemFont.empty())
     {

@@ -85,6 +85,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 
 // create window
 #if defined(__linux__) || defined(_WIN32)
+    glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
     if (VideoContext::FULLSCREEN)
     {
         GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
