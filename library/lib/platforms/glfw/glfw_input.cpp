@@ -151,6 +151,10 @@ void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)
 GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     : window(window)
 {
+    const std::string mappings = loadFileContents(BRLS_ASSET("gamepad/gamecontrollerdb.txt"));
+    if (!mappings.empty())
+        glfwUpdateGamepadMappings(mappings.c_str());
+
     glfwSetJoystickCallback(glfwJoystickCallback);
     glfwSetScrollCallback(window, scrollCallback);
     glfwSetCursorPosCallback(window, cursorCallback);
@@ -158,6 +162,9 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
 
     for (int i = 0; i < GAMEPADS_MAX; i++)
     {
+        const char* guid = glfwGetJoystickGUID(i);
+        if (guid)
+            Logger::info("glfw: joystick {} GUID {}", i, guid);
         if (glfwJoystickIsGamepad(i))
         {
             Logger::info("glfw: joystick {} connected", i);

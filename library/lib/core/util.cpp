@@ -15,6 +15,7 @@
 */
 
 #include <borealis/core/util.hpp>
+#include <fstream>
 
 namespace brls
 {
@@ -23,6 +24,23 @@ namespace brls
 {
     brls::Logger::error("Fatal error: {}", message);
     throw std::logic_error(message);
+}
+
+std::string loadFileContents(const std::string &path) {
+    std::ifstream fin;
+    fin.open(path, std::ios::in);
+    if (!fin.is_open()) {
+      brls::Logger::error("cannot open file: {}", path);
+      return "";
+    }
+
+    std::string res, buff;
+    while (getline(fin, buff)) {
+        res += buff + "\n";
+    }
+    fin.close();
+
+    return res;
 }
 
 } // namespace brls

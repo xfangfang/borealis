@@ -27,4 +27,6 @@ namespace brls
  */
 [[noreturn]] void fatal(std::string message);
 
+std::string loadFileContents(const std::string& path);
+
 } // namespace brls
