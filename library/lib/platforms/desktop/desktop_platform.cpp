@@ -29,14 +29,15 @@ namespace brls
 {
 
 #ifdef _WIN32
-int windows_system(const char *command) {
+int windows_system(const char* command)
+{
     PROCESS_INFORMATION p_info;
     STARTUPINFO s_info;
     DWORD ReturnValue;
     char *tmp_command, *cmd_exe_path;
     size_t len = strlen(command);
 
-    tmp_command = (char *)malloc(len + 4);
+    tmp_command    = (char*)malloc(len + 4);
     tmp_command[0] = 0x2F; // '/'
     tmp_command[1] = 0x63; // 'c'
     tmp_command[2] = 0x20; // <space>;
@@ -47,11 +48,12 @@ int windows_system(const char *command) {
     memset(&p_info, 0, sizeof(p_info));
     s_info.cb = sizeof(s_info);
 
-    if (CreateProcess(cmd_exe_path, tmp_command, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &s_info, &p_info)) {
-      WaitForSingleObject(p_info.hProcess, INFINITE);
-      GetExitCodeProcess(p_info.hProcess, &ReturnValue);
-      CloseHandle(p_info.hProcess);
-      CloseHandle(p_info.hThread);
+    if (CreateProcess(cmd_exe_path, tmp_command, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &s_info, &p_info))
+    {
+        WaitForSingleObject(p_info.hProcess, INFINITE);
+        GetExitCodeProcess(p_info.hProcess, &ReturnValue);
+        CloseHandle(p_info.hProcess);
+        CloseHandle(p_info.hThread);
     }
 
     free(tmp_command);
@@ -187,7 +189,7 @@ std::string DesktopPlatform::getDnsServer()
 
 std::string DesktopPlatform::exec(const char* cmd)
 {
-    std::string result = "";
+    std::string result;
 #if defined(__APPLE__) || defined(__linux__)
     char buffer[128];
     memset(buffer, 0, sizeof buffer);
@@ -219,25 +221,23 @@ void DesktopPlatform::exitToHomeMode(bool value)
 
 void DesktopPlatform::forceEnableGamePlayRecording()
 {
-    return;
 }
 
 void DesktopPlatform::openBrowser(std::string url)
 {
     brls::Logger::debug("open url: {}", url);
 #ifdef __APPLE__
-    std::string cmd = "open " + url;
+    std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
 #endif
 #ifdef __linux__
-    std::string cmd = "xdg-open " + url;
+    std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
 #endif
 #ifdef _WIN32
     std::string cmd = "start " + url;
     windows_system(cmd.c_str());
 #endif
-    return;
 }
 
 std::string DesktopPlatform::getName()
