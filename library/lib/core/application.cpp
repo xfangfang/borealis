@@ -149,17 +149,78 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
-    //    static auto frame_start = getCPUTimeUsec();
-    //    static auto frame_end = frame_start;
-
-    static ControllerState oldControllerState = {};
-
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
     {
         Application::exit();
         return false;
     }
+
+    // Mouse and touch
+    if (Application::blockInputsTokens == 0)
+    {
+        Application::processInput();
+    }
+    else
+    {
+        Logger::debug("input blocked (tokens={})", Application::blockInputsTokens);
+        if (!muteSounds)
+            Application::getAudioPlayer()->play(Sound::SOUND_CLICK_ERROR);
+    }
+
+    // Animations
+    updateHighlightAnimation();
+    Ticking::updateTickings();
+
+    // Render
+    Application::frame();
+
+    // Run sync functions
+    Threading::performSyncTasks();
+
+    // Trigger RunLoop subscribers
+    runLoopEvent.fire();
+
+    // Free views deletion pool
+    std::set<View*> undeletedViews;
+    for (auto view : Application::deletionPool)
+    {
+        if (!view->isPtrLocked())
+        {
+            delete view;
+        }
+        else
+        {
+            undeletedViews.insert(view);
+            brls::Logger::verbose("Application: will delete view: {}", view->describe());
+        }
+    }
+    Application::deletionPool = undeletedViews;
+
+    // Calculate FPS
+    if (Application::globalFPSToggleEnabled)
+        Application::updateFPS();
+
+    return true;
+}
+
+void Application::updateFPS()
+{
+    static unsigned int start = getCPUTimeUsec();
+    static unsigned int index = 0;
+
+    if (index++ == FPS_INTERNAL)
+    {
+        unsigned int end       = getCPUTimeUsec();
+        Application::globalFPS = FPS_INTERNAL_TIME / (end - start);
+        start                  = end;
+        index                  = 0;
+    }
+}
+
+void Application::processInput()
+{
+    static ControllerState oldControllerState = {};
 
     // Input
     ControllerState controllerState = {};
@@ -183,60 +244,60 @@ bool Application::mainLoop()
     }
 
     std::vector<TouchState> touchState;
-    for (size_t i = 0; i < rawTouch.size(); i++)
+    for (auto& i : rawTouch)
     {
-        auto old = std::find_if(std::begin(currentTouchState), std::end(currentTouchState), [rawTouch, i](TouchState touch)
-            { return touch.fingerId == rawTouch[i].fingerId; });
+        auto old = std::find_if(std::begin(currentTouchState), std::end(currentTouchState), [rawTouch, &i](TouchState touch)
+            { return touch.fingerId == i.fingerId; });
 
         if (old != std::end(currentTouchState))
         {
-            touchState.push_back(InputManager::computeTouchState(rawTouch[i], *old));
+            touchState.push_back(InputManager::computeTouchState(i, *old));
         }
         else
         {
             TouchState state;
-            state.fingerId = rawTouch[i].fingerId;
-            touchState.push_back(InputManager::computeTouchState(rawTouch[i], state));
+            state.fingerId = i.fingerId;
+            touchState.push_back(InputManager::computeTouchState(i, state));
         }
     }
 
-    for (size_t i = 0; i < currentTouchState.size(); i++)
+    for (auto& i : currentTouchState)
     {
-        if (currentTouchState[i].phase == TouchPhase::NONE)
+        if (i.phase == TouchPhase::NONE)
             continue;
 
-        auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [i](RawTouchState touch)
-            { return touch.fingerId == currentTouchState[i].fingerId; });
+        auto old = std::find_if(std::begin(rawTouch), std::end(rawTouch), [&i](RawTouchState touch)
+            { return touch.fingerId == i.fingerId; });
 
         if (old == std::end(rawTouch))
         {
-            touchState.push_back(InputManager::computeTouchState(RawTouchState(), currentTouchState[i]));
+            touchState.push_back(InputManager::computeTouchState(RawTouchState(), i));
         }
     }
 
-    for (size_t i = 0; i < touchState.size(); i++)
+    for (auto& i : touchState)
     {
-        if (touchState[i].phase == TouchPhase::NONE)
+        if (i.phase == TouchPhase::NONE)
         {
-            touchState[i].view = nullptr;
+            i.view = nullptr;
             break;
         }
-        else if (!touchState[i].view || touchState[i].phase == TouchPhase::START)
+        else if (!i.view || i.phase == TouchPhase::START)
         {
-            Point position = touchState[i].position;
+            Point position = i.position;
             Application::setInputType(InputType::TOUCH);
             Application::setDrawCoursor(false);
 
             // Search for first responder, which will be the root of recognition tree
-            if (Application::activitiesStack.size() > 0)
-                touchState[i].view = Application::activitiesStack[Application::activitiesStack.size() - 1]
-                                         ->getContentView()
-                                         ->hitTest(position);
+            if (!Application::activitiesStack.empty())
+                i.view = Application::activitiesStack[Application::activitiesStack.size() - 1]
+                             ->getContentView()
+                             ->hitTest(position);
         }
 
-        if (touchState[i].view && touchState[i].phase != TouchPhase::NONE)
+        if (i.view && i.phase != TouchPhase::NONE)
         {
-            Sound sound = touchState[i].view->gestureRecognizerRequest(touchState[i], MouseState(), touchState[i].view);
+            Sound sound = i.view->gestureRecognizerRequest(i, MouseState(), i.view);
             float pitch = 1;
             if (sound == SOUND_TOUCH)
             {
@@ -263,7 +324,7 @@ bool Application::mainLoop()
         Point position = mouseState.position;
 
         // Search for first responder, which will be the root of recognition tree
-        if (Application::activitiesStack.size() > 0)
+        if (!Application::activitiesStack.empty())
             mouseState.view = Application::activitiesStack[Application::activitiesStack.size() - 1]
                                   ->getContentView()
                                   ->hitTest(position);
@@ -313,44 +374,6 @@ bool Application::mainLoop()
     }
 
     oldControllerState = controllerState;
-
-    // Animations
-    updateHighlightAnimation();
-    Ticking::updateTickings();
-
-    // Render
-    Application::frame();
-
-    // Run sync functions
-    Threading::performSyncTasks();
-
-    // Trigger RunLoop subscribers
-    runLoopEvent.fire();
-
-    // Free views deletion pool
-    std::set<View*> undeletedViews;
-    for (auto view : Application::deletionPool)
-    {
-        if (!view->isPtrLocked())
-        {
-            delete view;
-        }
-        else
-        {
-            undeletedViews.insert(view);
-            brls::Logger::verbose("Application: will delete view: {}", view->describe());
-        }
-    }
-    Application::deletionPool = undeletedViews;
-
-    // Limit: 60 fps
-    //    frame_end = getCPUTimeUsec();
-    //    if(frame_end - frame_start < MSPF){
-    //        std::this_thread::sleep_for(std::chrono::microseconds(MSPF - frame_end + frame_start));
-    //    }
-    //    frame_start = getCPUTimeUsec();
-
-    return true;
 }
 
 Platform* Application::getPlatform()
@@ -433,13 +456,6 @@ void Application::navigate(FocusDirection direction, bool repeating)
 
 void Application::onControllerButtonPressed(enum ControllerButton button, bool repeating)
 {
-    if (Application::blockInputsTokens != 0)
-    {
-        Logger::debug("{} button press blocked (tokens={})", button, Application::blockInputsTokens);
-        if (!muteSounds)
-            Application::getAudioPlayer()->play(Sound::SOUND_CLICK_ERROR);
-        return;
-    }
 
     // Actions
     if (Application::handleAction(button, repeating))
@@ -629,24 +645,6 @@ void Application::exit()
     delete Application::platform;
 }
 
-void Application::setDisplayFramerate(bool enabled)
-{
-    // To be implemented
-}
-
-void Application::toggleFramerateDisplay()
-{
-    // To be implemented (call setDisplayFramerate)
-}
-
-ActionIdentifier Application::registerFPSToggleAction(Activity* activity)
-{
-    return activity->registerAction(
-        "FPS", BUTTON_BACK, [](View* view)
-        { Application::toggleFramerateDisplay(); return true; },
-        true);
-}
-
 void Application::setGlobalQuit(bool enabled)
 {
     Application::globalQuitEnabled = enabled;
@@ -659,16 +657,21 @@ void Application::setGlobalQuit(bool enabled)
     }
 }
 
-void Application::setGlobalFPSToggle(bool enabled)
+void Application::setFPSStatus(bool enabled)
 {
     Application::globalFPSToggleEnabled = enabled;
-    for (auto it = Application::activitiesStack.begin(); it != Application::activitiesStack.end(); ++it)
-    {
-        if (enabled)
-            Application::gloablFPSToggleIdentifier = Application::registerFPSToggleAction(*it);
-        else
-            (*it)->unregisterAction(Application::gloablFPSToggleIdentifier);
-    }
+    if (!enabled)
+        Application::globalFPS = 60;
+}
+
+bool Application::getFPSStatus()
+{
+    return Application::globalFPSToggleEnabled;
+}
+
+size_t Application::getFPS()
+{
+    return Application::globalFPS;
 }
 
 void Application::notify(std::string text)
@@ -779,9 +782,6 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
 
     if (Application::globalQuitEnabled)
         Application::gloablQuitIdentifier = activity->registerExitAction();
-
-    if (Application::globalFPSToggleEnabled)
-        Application::gloablFPSToggleIdentifier = Application::registerFPSToggleAction(activity);
 
     // Layout and prepare activity
     activity->willAppear(true);

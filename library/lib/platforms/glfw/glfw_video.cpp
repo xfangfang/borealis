@@ -103,7 +103,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 #ifdef _WIN32
     // Set window icon
     GLFWimage images[1];
-    images[0].pixels = stbi_load("resources/icon/bilibili.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load("resources/icon/icon.png", &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(this->window, 1, images);
 #endif
 

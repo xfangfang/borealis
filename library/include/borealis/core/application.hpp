@@ -68,9 +68,6 @@ class Application
      */
     static bool mainLoop();
 
-    // micro second per frame
-    inline static int MSPF = 16000;
-
     static Platform* getPlatform();
     static AudioPlayer* getAudioPlayer();
 
@@ -171,11 +168,6 @@ class Application
     static void setCommonFooter(std::string footer);
     static std::string* getCommonFooter();
 
-    static void setDisplayFramerate(bool enabled);
-    static void toggleFramerateDisplay();
-
-    static void setMaximumFPS(unsigned fps);
-
     inline static float windowScale;
 
     /**
@@ -183,10 +175,9 @@ class Application
      */
     static void setGlobalQuit(bool enabled);
 
-    /**
-     * Sets whether BUTTON_BACK will globally be used to toggle an FPS display.
-     */
-    static void setGlobalFPSToggle(bool enabled);
+    static void setFPSStatus(bool enabled);
+    static bool getFPSStatus();
+    static size_t getFPS();
 
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
@@ -280,15 +271,21 @@ class Application
 
     inline static InputType inputType = InputType::GAMEPAD;
 
+    inline static void processInput();
+
+    inline static void updateFPS();
+
     inline static unsigned blockInputsTokens = 0; // any value > 0 means inputs are blocked
     inline static bool muteSounds            = false;
 
     inline static std::string commonFooter = "";
 
-    inline static bool globalQuitEnabled                     = false;
-    inline static ActionIdentifier gloablQuitIdentifier      = ACTION_NONE;
-    inline static bool globalFPSToggleEnabled                = false;
-    inline static ActionIdentifier gloablFPSToggleIdentifier = ACTION_NONE;
+    inline static bool globalQuitEnabled                = false;
+    inline static ActionIdentifier gloablQuitIdentifier = ACTION_NONE;
+    inline static bool globalFPSToggleEnabled           = false;
+    inline static size_t globalFPS                      = 60;
+    inline static unsigned int FPS_INTERNAL             = 30;
+    inline static unsigned int FPS_INTERNAL_TIME        = FPS_INTERNAL * 1000000;
 
     inline static View* repetitionOldFocus = nullptr;
 
@@ -319,8 +316,6 @@ class Application
     static bool handleAction(char button, bool repeating);
 
     static void registerBuiltInXMLViews();
-
-    static ActionIdentifier registerFPSToggleAction(Activity* activity);
 
     inline static DebugLayer* debugLayer = nullptr;
 };
