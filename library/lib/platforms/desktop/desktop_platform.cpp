@@ -235,7 +235,7 @@ void DesktopPlatform::openBrowser(std::string url)
     system(cmd.c_str());
 #endif
 #ifdef _WIN32
-    std::string cmd = "start " + url;
+    std::string cmd = "start \"\" \"" + url + "\"";
     windows_system(cmd.c_str());
 #endif
 }
