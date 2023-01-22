@@ -252,8 +252,8 @@ void SDLInputManager::sendRumble(unsigned short controller, unsigned short lowFr
 void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
 {
 #if defined(_WIN32) || defined(__linux__)
-    self->scrollOffset.x += event.preciseX * 30;
-    self->scrollOffset.y += event.preciseY * 30;
+    this->scrollOffset.x += event.preciseX * 30;
+    this->scrollOffset.y += event.preciseY * 30;
 #else
     this->scrollOffset.x += event.preciseX * 10;
     this->scrollOffset.y += event.preciseY * 10;
