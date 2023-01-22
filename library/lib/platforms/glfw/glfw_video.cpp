@@ -59,6 +59,11 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     Application::onWindowResized(width, height);
 }
 
+static void glfwWindowPositionCallback(GLFWwindow* window, int windowXPos, int windowYPos)
+{
+    Application::onWindowReposition(windowXPos, windowYPos);
+}
+
 GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
 {
     if (!glfwInit())
@@ -121,6 +126,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
 #endif
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
+    glfwSetWindowPosCallback(window, glfwWindowPositionCallback);
 
 #ifndef __PSV__
     // Load OpenGL routines using glad
@@ -150,6 +156,9 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glfwWindowFramebufferSizeCallback(window, width, height);
+    int xPos, yPos;
+    glfwGetWindowPos(window, &xPos, &yPos);
+    glfwWindowPositionCallback(window, xPos, yPos);
 
 #ifdef __SWITCH__
     monitor          = glfwGetPrimaryMonitor();

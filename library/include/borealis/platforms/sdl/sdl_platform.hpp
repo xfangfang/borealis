@@ -32,7 +32,13 @@ class SDLPlatform : public DesktopPlatform
     ~SDLPlatform();
 
     std::string getName() override;
-    void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight) override;
+    void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) override;
+
+    virtual void restoreWindow() override;
+    virtual void setWindowSize(uint32_t windowWidth, uint32_t windowHeight) override;
+    virtual void setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight) override;
+    virtual void setWindowPosition(int windowXPos, int windowYPos) override;
+    virtual void setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) override;
 
     bool mainLoopIteration() override;
 

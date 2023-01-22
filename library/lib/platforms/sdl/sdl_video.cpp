@@ -48,22 +48,40 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
     Application::onWindowResized(fWidth, fHeight);
 }
 
-static int resizingEventWatcher(void* data, SDL_Event* event)
+static void sdlWindowPositionCallback(SDL_Window* window, int windowXPos, int windowYPos)
 {
-    if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
-    {
+    Application::onWindowReposition(windowXPos, windowYPos);
+}
+
+static int sdlEventWatcher(void* data, SDL_Event* event)
+{
+    if (event->type == SDL_WINDOWEVENT) {
         SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
-        if (win == (SDL_Window*)data)
-        {
-            int width, height;
-            SDL_GetWindowSize(win, &width, &height);
-            sdlWindowFramebufferSizeCallback(win, width, height);
+        switch (event->window.event) {
+            case SDL_WINDOWEVENT_RESIZED:
+                if (win == (SDL_Window*)data)
+                {
+                    sdlWindowFramebufferSizeCallback(win,
+                        event->window.data1,
+                        event->window.data2
+                    );
+                }
+                break;
+            case SDL_WINDOWEVENT_MOVED:
+                if (win == (SDL_Window*)data)
+                {
+                    sdlWindowPositionCallback(win,
+                        event->window.data1,
+                        event->window.data2
+                    );
+                }
+                break;
         }
     }
     return 0;
 }
 
-SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
+SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -98,7 +116,16 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
 
-    this->window = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight,
+    this->window = SDL_CreateWindow(windowTitle.c_str(),
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+        windowXPos > 0 ? windowXPos : SDL_WINDOWPOS_UNDEFINED,
+        windowYPos > 0 ? windowYPos : SDL_WINDOWPOS_UNDEFINED,
+#else
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+#endif
+        windowWidth,
+        windowHeight,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 
     if (!this->window)
@@ -111,7 +138,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
 
-    SDL_AddEventWatch(resizingEventWatcher, window);
+    SDL_AddEventWatch(sdlEventWatcher, window);
 
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
@@ -133,6 +160,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
     sdlWindowFramebufferSizeCallback(window, width, height);
+    int xPos, yPos;
+    SDL_GetWindowPosition(window, &xPos, &yPos);
+    sdlWindowPositionCallback(window, xPos, yPos);
 }
 
 void SDLVideoContext::beginFrame()
