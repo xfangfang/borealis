@@ -40,7 +40,45 @@ class Platform
      * Called on startup, right after instanciation, to create and open a window
      * with the given title and size.
      */
-    virtual void createWindow(std::string title, uint32_t width, uint32_t height) = 0;
+    virtual void createWindow(std::string title, uint32_t width, uint32_t height, int windowXPos, int windowYPos) = 0;
+
+    /**
+     *
+     * This function also restores windows from maximization.
+     *
+    */
+    virtual void restoreWindow() = 0;
+
+    /**
+     *
+     * Set window size
+     *
+    */
+    virtual void setWindowSize(uint32_t windowWidth, uint32_t windowHeight) = 0;
+
+    /**
+     *
+     * Set window size limits
+     *
+    */
+    virtual void setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight) = 0;
+
+    /**
+     *
+     * Set window position
+     *
+    */
+    virtual void setWindowPosition(int windowXPos, int windowYPos) = 0;
+
+    
+    /**
+     *
+     * 1.restoreWindow
+     * 2.Set window size
+     * 3.Set window position
+     *
+    */
+    virtual void setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) = 0;
 
     /**
      * Returns the human-readable name of the platform.

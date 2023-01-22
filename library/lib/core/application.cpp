@@ -105,8 +105,18 @@ void Application::createWindow(std::string windowTitle)
         return;
     }
 
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+    int width = Application::windowWidth;
+    int height = Application::windowHeight;
+    int XPos = Application::windowXPos;
+    int YPos = Application::windowYPos;
+    width = width > 0 ? width : ORIGINAL_WINDOW_WIDTH;
+    height = height > 0 ? height : ORIGINAL_WINDOW_HEIGHT;
+    Application::getPlatform()->createWindow(windowTitle, width, height, XPos, YPos);
+#else
     // Create the actual window
-    Application::getPlatform()->createWindow(windowTitle, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT);
+    Application::getPlatform()->createWindow(windowTitle, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, 0, 0);
+#endif
 
     // Load most commonly used sounds
     AudioPlayer* audioPlayer = Application::getAudioPlayer();
@@ -152,6 +162,7 @@ bool Application::mainLoop()
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
     {
+        Application::getWindowShouldCloseEvent()->fire();
         Application::exit();
         return false;
     }
@@ -972,6 +983,13 @@ void Application::onWindowResized(int width, int height)
             Application::getWindowSizeChangedEvent()->fire(); });
 }
 
+void Application::onWindowReposition(int windowXPos, int windowYPos)
+{    
+    Application::windowXPos  = windowXPos;
+    Application::windowYPos = windowYPos;
+    Logger::info("Window position changed to {}x{}", windowXPos, windowYPos);
+}
+
 std::string Application::getTitle()
 {
     return Application::title;
@@ -1010,6 +1028,11 @@ VoidEvent* Application::getWindowSizeChangedEvent()
 VoidEvent* Application::getWindowCreationDoneEvent()
 {
     return &Application::windowCreationDoneEvent;
+}
+
+VoidEvent* Application::getWindowShouldCloseEvent()
+{
+    return &Application::windowShouldCloseEvent;
 }
 
 Event<bool>* Application::getWindowFocusChangedEvent()

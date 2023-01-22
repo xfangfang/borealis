@@ -50,6 +50,17 @@ typedef std::function<View*(void)> XMLViewCreator;
 class Application
 {
   public:
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+    struct WindowState
+    {
+        uint32_t width;
+        uint32_t height;
+        int xPos;
+        int yPos;
+        bool initFullscreen;
+    };
+#endif
+
     /**
      * Inits the borealis application.
      * Returns true if it succeeded, false otherwise.
@@ -76,11 +87,15 @@ class Application
 
     inline static unsigned windowWidth, windowHeight;
 
+    inline static int windowXPos, windowYPos;
+
     /**
      * Called by the video context when the content window is resized
      * and when the context is ready (to setup the initial content scaling).
      */
     static void onWindowResized(int width, int height);
+
+    static void onWindowReposition(int xPos, int yPos);
 
     static std::vector<Activity*> getActivitiesStack();
 
@@ -186,6 +201,7 @@ class Application
     static VoidEvent* getExitEvent();
     static VoidEvent* getWindowSizeChangedEvent();
     static VoidEvent* getWindowCreationDoneEvent();
+    static VoidEvent* getWindowShouldCloseEvent();
     static Event<bool>* getWindowFocusChangedEvent();
 
     static View* getCurrentFocus();
@@ -296,6 +312,7 @@ class Application
     inline static VoidEvent exitEvent;
     inline static VoidEvent windowSizeChangedEvent;
     inline static VoidEvent windowCreationDoneEvent;
+    inline static VoidEvent windowShouldCloseEvent;
     inline static Event<bool> windowFocusChangedEvent;
 
     inline static std::unordered_map<std::string, XMLViewCreator> xmlViewsRegister;

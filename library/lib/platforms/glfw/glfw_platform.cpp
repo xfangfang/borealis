@@ -70,11 +70,49 @@ GLFWPlatform::GLFWPlatform()
     this->audioPlayer = new NullAudioPlayer();
 }
 
-void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
+void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
-    this->inputManager = new GLFWInputManager(this->videoContext->getGLFWWindow());
-    this->imeManager   = new GLFWImeManager(this->videoContext->getGLFWWindow());
+    GLFWwindow* win = this->videoContext->getGLFWWindow();
+    this->inputManager = new GLFWInputManager(win);
+    this->imeManager   = new GLFWImeManager(win);
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+    glfwSetWindowPos(win, windowXPos, windowYPos);
+#endif
+}
+
+void GLFWPlatform::restoreWindow()
+{
+    glfwRestoreWindow(this->videoContext->getGLFWWindow());
+}
+
+void GLFWPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
+{
+    if (windowWidth > 0 && windowHeight > 0)
+        glfwSetWindowSize(this->videoContext->getGLFWWindow(), windowWidth, windowHeight);
+}
+
+void GLFWPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight)
+{
+    if (windowMinWidth > 0 && windowMinHeight > 0)
+        glfwSetWindowSizeLimits(this->videoContext->getGLFWWindow(), windowMinWidth, windowMinHeight, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    if ((windowMaxWidth > 0 && windowMaxHeight > 0) && (windowMaxHeight > windowMinWidth && windowMaxHeight >windowMinHeight))
+        glfwSetWindowSizeLimits(this->videoContext->getGLFWWindow(), GLFW_DONT_CARE, GLFW_DONT_CARE, windowMaxWidth, windowMaxHeight);
+}
+
+void GLFWPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
+{
+    if (windowWidth > 0 && windowHeight > 0) {
+        GLFWwindow* win = this->videoContext->getGLFWWindow();
+        glfwRestoreWindow(win);
+        glfwSetWindowSize(win, windowWidth, windowHeight);
+        glfwSetWindowPos(win, windowXPos, windowYPos);
+    }
+}
+
+void GLFWPlatform::setWindowPosition(int windowXPos, int windowYPos)
+{
+    glfwSetWindowPos(this->videoContext->getGLFWWindow(), windowXPos, windowYPos);
 }
 
 std::string GLFWPlatform::getName()
