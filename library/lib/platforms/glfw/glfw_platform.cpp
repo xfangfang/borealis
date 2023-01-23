@@ -100,19 +100,18 @@ void GLFWPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowM
         glfwSetWindowSizeLimits(this->videoContext->getGLFWWindow(), GLFW_DONT_CARE, GLFW_DONT_CARE, windowMaxWidth, windowMaxHeight);
 }
 
+void GLFWPlatform::setWindowPosition(int windowXPos, int windowYPos)
+{
+    glfwSetWindowPos(this->videoContext->getGLFWWindow(), windowXPos, windowYPos);
+}
+
 void GLFWPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
     if (windowWidth > 0 && windowHeight > 0) {
         GLFWwindow* win = this->videoContext->getGLFWWindow();
         glfwRestoreWindow(win);
-        glfwSetWindowSize(win, windowWidth, windowHeight);
-        glfwSetWindowPos(win, windowXPos, windowYPos);
+        glfwSetWindowMonitor(win, nullptr, windowXPos, windowYPos, windowWidth, windowHeight, 0);
     }
-}
-
-void GLFWPlatform::setWindowPosition(int windowXPos, int windowYPos)
-{
-    glfwSetWindowPos(this->videoContext->getGLFWWindow(), windowXPos, windowYPos);
 }
 
 std::string GLFWPlatform::getName()
