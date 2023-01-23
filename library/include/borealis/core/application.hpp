@@ -50,16 +50,6 @@ typedef std::function<View*(void)> XMLViewCreator;
 class Application
 {
   public:
-#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-    struct WindowState
-    {
-        uint32_t width;
-        uint32_t height;
-        int xPos;
-        int yPos;
-        bool initFullscreen;
-    };
-#endif
 
     /**
      * Inits the borealis application.

@@ -106,10 +106,10 @@ SwitchPlatform::SwitchPlatform()
     appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
 }
 
-void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
+void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
 #ifdef __SDL2__
-    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight);
+    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, 0, 0);
 #else
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
 #endif
