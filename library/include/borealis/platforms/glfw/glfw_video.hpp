@@ -32,8 +32,8 @@ namespace brls
 class GLFWVideoContext : public VideoContext
 {
   public:
-    GLFWVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight);
-    ~GLFWVideoContext();
+    GLFWVideoContext(const std::string& windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowX = NAN, float windowY = NAN);
+    ~GLFWVideoContext() override;
 
     NVGcontext* getNVGContext() override;
 
@@ -44,6 +44,7 @@ class GLFWVideoContext : public VideoContext
     void disableScreenDimming(bool disable) override;
     double getScaleFactor() override;
     void fullScreen(bool fs) override;
+    int getCurrentMonitorIndex() override;
 
     GLFWwindow* getGLFWWindow();
 

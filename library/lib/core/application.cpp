@@ -58,16 +58,6 @@
 #include <set>
 #include <thread>
 
-// Constants used for scaling as well as
-// creating a window of the right size on PC
-#ifdef __PSV__
-constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 960;
-constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 544;
-#else
-constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
-constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 720;
-#endif
-
 #define BUTTON_REPEAT_DELAY 15
 #define BUTTON_REPEAT_CADENCY 5
 
@@ -105,18 +95,17 @@ void Application::createWindow(std::string windowTitle)
         return;
     }
 
-#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-    int width = Application::windowWidth;
-    int height = Application::windowHeight;
-    int XPos = Application::windowXPos;
-    int YPos = Application::windowYPos;
-    width = width > 0 ? width : ORIGINAL_WINDOW_WIDTH;
-    height = height > 0 ? height : ORIGINAL_WINDOW_HEIGHT;
-    Application::getPlatform()->createWindow(windowTitle, width, height, XPos, YPos);
-#else
-    // Create the actual window
-    Application::getPlatform()->createWindow(windowTitle, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, 0, 0);
-#endif
+    if (VideoContext::sizeW == 0 || VideoContext::sizeH == 0)
+    {
+        // Create a window with a default size and position
+        Application::getPlatform()->createWindow(windowTitle, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT);
+    }
+    else
+    {
+        // Creates a window based on the window position and size data from the last non-full-screen mode
+        Application::getPlatform()->createWindow(windowTitle, VideoContext::sizeW, VideoContext::sizeH,
+            VideoContext::posX, VideoContext::posY);
+    }
 
     // Load most commonly used sounds
     AudioPlayer* audioPlayer = Application::getAudioPlayer();
@@ -968,25 +957,24 @@ void Application::onWindowResized(int width, int height)
     Application::contentWidth  = ORIGINAL_WINDOW_WIDTH;
     Application::contentHeight = (unsigned)roundf((float)height / Application::windowScale);
 
-    Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
-        width, height, contentWidth, contentHeight, Application::windowScale);
-
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
 
     // Trigger event when Window size is stable
     static size_t iter = 0;
     brls::cancelDelay(iter);
-    iter = brls::delay(100, []()
+    iter = brls::delay(100, [width, height]()
         {
-            brls::Logger::info("WindowSizeChangedEvent trigger");
+            Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
+                width, height, contentWidth, contentHeight, Application::windowScale);
+            brls::Logger::info("scale factor: {}", Application::getPlatform()->getVideoContext()->getScaleFactor());
             Application::getWindowSizeChangedEvent()->fire(); });
 }
 
-void Application::onWindowReposition(int windowXPos, int windowYPos)
-{    
-    Application::windowXPos  = windowXPos;
-    Application::windowYPos = windowYPos;
+void Application::onWindowReposition(int x, int y)
+{
+    Application::windowXPos = x;
+    Application::windowYPos = y;
     Logger::info("Window position changed to {}x{}", windowXPos, windowYPos);
 }
 

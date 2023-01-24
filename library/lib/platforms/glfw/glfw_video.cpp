@@ -41,6 +41,71 @@ namespace brls
 
 static double scaleFactor = 1.0;
 
+static int mini(int x, int y)
+{
+    return x < y ? x : y;
+}
+
+static int maxi(int x, int y)
+{
+    return x > y ? x : y;
+}
+
+static GLFWmonitor* getCurrentMonitor(GLFWwindow* window)
+{
+    int nmonitors, i;
+    int wx, wy, ww, wh;
+    int mx, my, mw, mh;
+    int overlap, bestoverlap;
+    GLFWmonitor* bestmonitor;
+    GLFWmonitor** monitors;
+    const GLFWvidmode* mode;
+
+    bestoverlap = 0;
+    bestmonitor = NULL;
+
+    glfwGetWindowPos(window, &wx, &wy);
+    glfwGetWindowSize(window, &ww, &wh);
+    monitors = glfwGetMonitors(&nmonitors);
+
+    for (i = 0; i < nmonitors; i++)
+    {
+        mode = glfwGetVideoMode(monitors[i]);
+        glfwGetMonitorPos(monitors[i], &mx, &my);
+        mw = mode->width;
+        mh = mode->height;
+
+        overlap = maxi(0, mini(wx + ww, mx + mw) - maxi(wx, mx)) * maxi(0, mini(wy + wh, my + mh) - maxi(wy, my));
+
+        if (bestoverlap < overlap)
+        {
+            bestoverlap = overlap;
+            bestmonitor = monitors[i];
+        }
+    }
+
+    return bestmonitor;
+}
+
+static GLFWmonitor* getAvailableMonitor(int index, int x, int y, int w, int h)
+{
+    int count;
+    auto** monitors      = glfwGetMonitors(&count);
+    GLFWmonitor* monitor = nullptr;
+    if (index < count)
+        monitor = monitors[index];
+    else
+        return nullptr;
+
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    int monitorX, monitorY;
+    glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+    if (x < 0 || y < 0 || x + w > mode->width + monitorX || y + h > mode->height + monitorY)
+        return nullptr;
+    return monitor;
+}
+
 static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     if (!width || !height)
@@ -51,20 +116,27 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
     scaleFactor = width * 1.0 / wWidth;
-
-    brls::Logger::info("windows size changed: {} height: {}", wWidth, wHeight);
-    brls::Logger::info("framebuffer size changed: fwidth: {} fheight: {}", width, height);
-    brls::Logger::info("scale factor: {}", scaleFactor);
-
     Application::onWindowResized(width, height);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::sizeW = wWidth;
+        VideoContext::sizeH = wHeight;
+    }
 }
 
 static void glfwWindowPositionCallback(GLFWwindow* window, int windowXPos, int windowYPos)
 {
     Application::onWindowReposition(windowXPos, windowYPos);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::posX = (float)windowXPos;
+        VideoContext::posY = (float)windowYPos;
+    }
 }
 
-GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight)
+GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowX, float windowY)
 {
     if (!glfwInit())
     {
@@ -88,18 +160,30 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
 #endif
 
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+    // If the window appears outside the screen, using the default settings
+    auto* monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
+    if (!monitor)
+    {
+        windowX      = NAN;
+        windowY      = NAN;
+        windowWidth  = ORIGINAL_WINDOW_WIDTH;
+        windowHeight = ORIGINAL_WINDOW_HEIGHT;
+        monitor      = glfwGetPrimaryMonitor();
+    }
+#endif
+
 // create window
 #if defined(__linux__) || defined(_WIN32)
     glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
     if (VideoContext::FULLSCREEN)
     {
-        GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         this->window            = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
     {
-        this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+        this->window = glfwCreateWindow((int)windowWidth, (int)windowHeight, windowTitle.c_str(), nullptr, nullptr);
     }
 #else
     this->window     = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
@@ -118,6 +202,12 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
         fatal("glfw: Failed to create window");
         return;
     }
+
+#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
+    // Set window position
+    if (!isnan(windowX) && !isnan(windowY))
+        glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
+#endif
 
     // Configure window
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
@@ -161,7 +251,7 @@ GLFWVideoContext::GLFWVideoContext(std::string windowTitle, uint32_t windowWidth
     glfwWindowPositionCallback(window, xPos, yPos);
 
 #ifdef __SWITCH__
-    monitor          = glfwGetPrimaryMonitor();
+    this->monitor    = glfwGetPrimaryMonitor();
     const char* name = glfwGetMonitorName(monitor);
     brls::Logger::info("glfw: Monitor: {}", name);
 #endif
@@ -243,32 +333,52 @@ NVGcontext* GLFWVideoContext::getNVGContext()
     return this->nvgContext;
 }
 
+int GLFWVideoContext::getCurrentMonitorIndex()
+{
+    if (!this->window)
+        return 0;
+
+    int count;
+    auto* monitor   = getCurrentMonitor(this->window);
+    auto** monitors = glfwGetMonitors(&count);
+    for (int i = 0; i < count; i++)
+    {
+        if (monitor == monitors[i])
+            return i;
+    }
+    return 0;
+}
+
 void GLFWVideoContext::fullScreen(bool fs)
 {
     VideoContext::FULLSCREEN = fs;
 
-    static int posX = -1, posY = -1, sizeW = -1, sizeH = -1;
-
-    GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    brls::Logger::info("Set fullscreen: {} refreshRate: {}", fs, mode->refreshRate);
-
+    brls::Logger::info("Set fullscreen: {}", fs);
     if (fs)
     {
-        glfwGetWindowPos(this->window, &posX, &posY);
-        glfwGetWindowSize(this->window, &sizeW, &sizeH);
+        GLFWmonitor* monitor    = getCurrentMonitor(this->window);
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        VideoContext::monitorIndex = getCurrentMonitorIndex();
         glfwSetWindowMonitor(this->window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     }
     else
     {
-        if (sizeW < 0 || sizeH < 0)
+        GLFWmonitor* monitor    = glfwGetWindowMonitor(this->window);
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        int monitorX, monitorY;
+        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+        if (posX < 0 || posY < 0 || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
-            glfwSetWindowMonitor(this->window, nullptr, abs(mode->width - 1280) / 2,
-                abs(mode->height - 720) / 2, 1280, 720, GLFW_DONT_CARE);
+            // If the window appears outside the screen, using the default settings
+            glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - ORIGINAL_WINDOW_WIDTH) / 2,
+                fabs(mode->height - ORIGINAL_WINDOW_HEIGHT) / 2, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, GLFW_DONT_CARE);
         }
         else
         {
-            glfwSetWindowMonitor(this->window, nullptr, posX, posY, sizeW, sizeH, mode->refreshRate);
+            // Sets the window position and size
+            glfwSetWindowMonitor(this->window, nullptr, (int)posX, (int)posY, (int)sizeW, (int)sizeH, mode->refreshRate);
         }
     }
     glfwSwapInterval(1);

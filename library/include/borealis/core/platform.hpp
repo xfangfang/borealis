@@ -20,10 +20,10 @@
 #include <borealis/core/audio.hpp>
 #include <borealis/core/font.hpp>
 #include <borealis/core/i18n.hpp>
+#include <borealis/core/ime.hpp>
 #include <borealis/core/input.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/video.hpp>
-#include <borealis/core/ime.hpp>
 #include <string>
 
 namespace brls
@@ -40,44 +40,43 @@ class Platform
      * Called on startup, right after instanciation, to create and open a window
      * with the given title and size.
      */
-    virtual void createWindow(std::string title, uint32_t width, uint32_t height, int windowXPos, int windowYPos) = 0;
+    virtual void createWindow(std::string title, uint32_t width, uint32_t height, float windowXPos = NAN, float windowYPos = NAN) = 0;
 
     /**
      *
      * This function also restores windows from maximization.
      *
-    */
+     */
     virtual void restoreWindow() {};
 
     /**
      *
      * Set window size
      *
-    */
+     */
     virtual void setWindowSize(uint32_t windowWidth, uint32_t windowHeight) {};
 
     /**
      *
      * Set window size limits
      *
-    */
+     */
     virtual void setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight) {};
 
     /**
      *
      * Set window position
      *
-    */
+     */
     virtual void setWindowPosition(int windowXPos, int windowYPos) {};
 
-    
     /**
      *
      * 1.restoreWindow
      * 2.Set window size
      * 3.Set window position
      *
-    */
+     */
     virtual void setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) {};
 
     /**

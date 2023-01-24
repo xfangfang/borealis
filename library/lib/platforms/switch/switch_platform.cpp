@@ -106,18 +106,13 @@ SwitchPlatform::SwitchPlatform()
     appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
 }
 
-void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
+void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
 #ifdef __SDL2__
-    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, 0, 0);
+    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight);
 #else
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
 #endif
-
-    // Fixme: Dirty fix to reinitialise controllers with settings from borealis, not by GLFW
-    //    brls::Logger::info("create SwitchInputManager");
-    //    this->inputManager = new SwitchInputManager();
-    //    brls::Logger::info("create SwitchInputManager done");
 }
 
 bool SwitchPlatform::canShowBatteryLevel()

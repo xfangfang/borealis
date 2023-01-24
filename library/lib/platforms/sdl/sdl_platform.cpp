@@ -36,7 +36,7 @@ SDLPlatform::SDLPlatform()
     this->audioPlayer = new NullAudioPlayer();
 }
 
-void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
+void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
@@ -68,7 +68,8 @@ void SDLPlatform::setWindowPosition(int windowXPos, int windowYPos)
 
 void SDLPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
-    if (windowWidth > 0 && windowHeight > 0) {
+    if (windowWidth > 0 && windowHeight > 0)
+    {
         SDL_Window* win = this->videoContext->getSDLWindow();
         SDL_RestoreWindow(win);
         SDL_SetWindowSize(win, windowWidth, windowHeight);

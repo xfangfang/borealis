@@ -27,8 +27,8 @@ namespace brls
 class SDLVideoContext : public VideoContext
 {
   public:
-    SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos);
-    ~SDLVideoContext();
+    SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos);
+    ~SDLVideoContext() override;
 
     NVGcontext* getNVGContext() override;
 

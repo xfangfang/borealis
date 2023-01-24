@@ -70,15 +70,12 @@ GLFWPlatform::GLFWPlatform()
     this->audioPlayer = new NullAudioPlayer();
 }
 
-void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
+void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
-    this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
-    GLFWwindow* win = this->videoContext->getGLFWWindow();
+    this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
+    GLFWwindow* win    = this->videoContext->getGLFWWindow();
     this->inputManager = new GLFWInputManager(win);
     this->imeManager   = new GLFWImeManager(win);
-#if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-    glfwSetWindowPos(win, windowXPos, windowYPos);
-#endif
 }
 
 void GLFWPlatform::restoreWindow()
@@ -96,7 +93,7 @@ void GLFWPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowM
 {
     if (windowMinWidth > 0 && windowMinHeight > 0)
         glfwSetWindowSizeLimits(this->videoContext->getGLFWWindow(), windowMinWidth, windowMinHeight, GLFW_DONT_CARE, GLFW_DONT_CARE);
-    if ((windowMaxWidth > 0 && windowMaxHeight > 0) && (windowMaxHeight > windowMinWidth && windowMaxHeight >windowMinHeight))
+    if ((windowMaxWidth > 0 && windowMaxHeight > 0) && (windowMaxHeight > windowMinWidth && windowMaxHeight > windowMinHeight))
         glfwSetWindowSizeLimits(this->videoContext->getGLFWWindow(), GLFW_DONT_CARE, GLFW_DONT_CARE, windowMaxWidth, windowMaxHeight);
 }
 
@@ -107,7 +104,8 @@ void GLFWPlatform::setWindowPosition(int windowXPos, int windowYPos)
 
 void GLFWPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos)
 {
-    if (windowWidth > 0 && windowHeight > 0) {
+    if (windowWidth > 0 && windowHeight > 0)
+    {
         GLFWwindow* win = this->videoContext->getGLFWWindow();
         glfwRestoreWindow(win);
         glfwSetWindowMonitor(win, nullptr, windowXPos, windowYPos, windowWidth, windowHeight, 0);

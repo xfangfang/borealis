@@ -18,6 +18,8 @@
 
 #include <nanovg.h>
 
+#include <cmath>
+
 // A VideoContext is responsible for providing a nanovg context for the app
 // (so by extension it manages all the graphics state as well as the window / context).
 // The VideoContext implementation must also provide the nanovg implementation. As such, there
@@ -60,9 +62,17 @@ class VideoContext
     /*
      * Full screen window at primary monitor
      */
-    virtual void fullScreen(bool fs) {}
+    virtual void fullScreen(bool fs) { }
 
     virtual NVGcontext* getNVGContext() = 0;
 
+    virtual int getCurrentMonitorIndex() { return 0; };
+
     static inline bool FULLSCREEN = true;
+
+    // The position and size of the window in the last non-full-screen mode
+    static inline float posX = NAN, posY = NAN;
+    static inline uint32_t sizeW = 0, sizeH = 0;
+
+    static inline int monitorIndex = 0;
 };
