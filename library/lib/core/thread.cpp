@@ -69,17 +69,15 @@ size_t Threading::delay(long milliseconds, const std::function<void()>& func)
     operation.startPoint        = std::chrono::high_resolution_clock::now();
     operation.delayMilliseconds = milliseconds;
     operation.func              = func;
-    operation.cancel            = false;
+    operation.index             = ++m_delay_index;
     m_delay_tasks.push_back(operation);
-    m_delay_map[++m_delay_index] = m_delay_tasks.end() - 1;
     return m_delay_index;
 }
 
 void Threading::cancelDelay(size_t iter)
 {
     std::lock_guard<std::mutex> guard(m_delay_mutex);
-    if (m_delay_map.find(iter) != m_delay_map.end())
-        m_delay_map[iter]->cancel = true;
+    m_delay_cancel_set.insert(iter);
 }
 
 void Threading::performSyncTasks()
@@ -104,13 +102,20 @@ void Threading::performSyncTasks()
     m_delay_mutex.lock();
     auto delay_local = m_delay_tasks;
     m_delay_tasks.clear();
-    m_delay_map.clear();
     m_delay_mutex.unlock();
 
     for (auto& d : delay_local)
     {
-        if (d.cancel)
+        // Check cancel
+        m_delay_mutex.lock();
+        if (m_delay_cancel_set.count(d.index))
+        {
+            m_delay_cancel_set.erase(d.index);
+            m_delay_mutex.unlock();
             continue;
+        }
+        m_delay_mutex.unlock();
+
         auto timeNow  = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
 
@@ -124,6 +129,11 @@ void Threading::performSyncTasks()
             {
                 brls::Logger::error("error: performSyncTasks(delay): {}", e.what());
             }
+
+            m_delay_mutex.lock();
+            if (m_delay_cancel_set.count(d.index)) m_delay_cancel_set.erase(d.index);
+            m_delay_mutex.unlock();
+
         }
         else
         {

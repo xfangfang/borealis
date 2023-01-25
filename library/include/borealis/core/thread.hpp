@@ -22,8 +22,8 @@
 #include <functional>
 #include <mutex>
 #include <thread>
-#include <unordered_map>
 #include <vector>
+#include <set>
 
 namespace brls
 {
@@ -32,7 +32,7 @@ struct DelayOperation
 {
     std::chrono::high_resolution_clock::time_point startPoint;
     long delayMilliseconds;
-    bool cancel;
+    size_t index;
     std::function<void()> func;
 };
 
@@ -110,7 +110,7 @@ class Threading
 
     inline static std::mutex m_delay_mutex;
     inline static std::vector<DelayOperation> m_delay_tasks;
-    inline static std::unordered_map<size_t, DelayOperationIterator> m_delay_map;
+    inline static std::set<size_t> m_delay_cancel_set;
     inline static size_t m_delay_index = 0;
 
     inline static volatile bool task_loop_active = true;
