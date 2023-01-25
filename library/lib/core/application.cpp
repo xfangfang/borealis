@@ -975,7 +975,12 @@ void Application::onWindowReposition(int x, int y)
 {
     Application::windowXPos = x;
     Application::windowYPos = y;
-    Logger::info("Window position changed to {}x{}", windowXPos, windowYPos);
+    
+    static size_t iter = 0;
+    brls::cancelDelay(iter);
+    iter = brls::delay(100, [x, y]()
+        {
+            Logger::info("Window position changed to {}x{}", x, y); });
 }
 
 std::string Application::getTitle()

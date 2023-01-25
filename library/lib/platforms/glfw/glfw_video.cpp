@@ -101,7 +101,7 @@ static GLFWmonitor* getAvailableMonitor(int index, int x, int y, int w, int h)
     int monitorX, monitorY;
     glfwGetMonitorPos(monitor, &monitorX, &monitorY);
 
-    if (x < 0 || y < 0 || x + w > mode->width + monitorX || y + h > mode->height + monitorY)
+    if (x < monitorX || y < monitorY || x + w > mode->width + monitorX || y + h > mode->height + monitorY)
         return nullptr;
     return monitor;
 }
@@ -171,6 +171,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         windowHeight = ORIGINAL_WINDOW_HEIGHT;
         monitor      = glfwGetPrimaryMonitor();
     }
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 #endif
 
 // create window
@@ -178,8 +179,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
     if (VideoContext::FULLSCREEN)
     {
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        this->window            = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
+        this->window  = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
     {
@@ -205,8 +205,17 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // Set window position
-    if (!isnan(windowX) && !isnan(windowY))
-        glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
+    if (!VideoContext::FULLSCREEN)
+    {
+        if (!isnan(windowX) && !isnan(windowY))
+        {
+            glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
+        }
+        else {
+            glfwSetWindowPos(this->window, fabs(mode->width - windowWidth) / 2,
+                fabs(mode->height - windowHeight) / 2);
+        }
+    }
 #endif
 
     // Configure window
@@ -369,7 +378,7 @@ void GLFWVideoContext::fullScreen(bool fs)
         int monitorX, monitorY;
         glfwGetMonitorPos(monitor, &monitorX, &monitorY);
 
-        if (posX < 0 || posY < 0 || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
+        if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
             // If the window appears outside the screen, using the default settings
             glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - ORIGINAL_WINDOW_WIDTH) / 2,
