@@ -377,6 +377,7 @@ void GLFWVideoContext::fullScreen(bool fs)
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         int monitorX, monitorY;
         glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+        glfwRestoreWindow(this->window);
 
         if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
@@ -386,7 +387,7 @@ void GLFWVideoContext::fullScreen(bool fs)
         }
         else
         {
-            // Sets the window position and size
+            // Set the window position and size
             glfwSetWindowMonitor(this->window, nullptr, (int)posX, (int)posY, (int)sizeW, (int)sizeH, mode->refreshRate);
         }
     }
