@@ -54,7 +54,7 @@ class Label : public View
 {
   public:
     Label();
-    ~Label();
+    ~Label() override;
 
     void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
     void onLayout() override;
@@ -142,9 +142,9 @@ class Label : public View
 
     static inline bool OPENCC_ON = true;
 
-  private:
-    std::string truncatedText = "";
-    std::string fullText      = "";
+  protected:
+    std::string truncatedText;
+    std::string fullText;
 
     int font;
     float fontSize;

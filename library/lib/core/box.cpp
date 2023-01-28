@@ -85,25 +85,20 @@ Box::Box(Axis axis)
         });
 
     // Padding
-    this->registerFloatXMLAttribute("paddingTop", [this](float value) {
-        this->setPaddingTop(value);
-    });
+    this->registerFloatXMLAttribute("paddingTop", [this](float value)
+        { this->setPaddingTop(value); });
 
-    this->registerFloatXMLAttribute("paddingRight", [this](float value) {
-        this->setPaddingRight(value);
-    });
+    this->registerFloatXMLAttribute("paddingRight", [this](float value)
+        { this->setPaddingRight(value); });
 
-    this->registerFloatXMLAttribute("paddingBottom", [this](float value) {
-        this->setPaddingBottom(value);
-    });
+    this->registerFloatXMLAttribute("paddingBottom", [this](float value)
+        { this->setPaddingBottom(value); });
 
-    this->registerFloatXMLAttribute("paddingLeft", [this](float value) {
-        this->setPaddingLeft(value);
-    });
+    this->registerFloatXMLAttribute("paddingLeft", [this](float value)
+        { this->setPaddingLeft(value); });
 
-    this->registerFloatXMLAttribute("padding", [this](float value) {
-        this->setPadding(value);
-    });
+    this->registerFloatXMLAttribute("padding", [this](float value)
+        { this->setPadding(value); });
 }
 
 Box::Box()
@@ -313,6 +308,25 @@ void Box::setPaddingLeft(float left)
     this->invalidate();
 }
 
+float Box::getPaddingTop()
+{
+    return YGNodeStyleGetPadding(this->ygNode, YGEdgeTop).value;
+}
+
+float Box::getPaddingBottom()
+{
+    return YGNodeStyleGetPadding(this->ygNode, YGEdgeBottom).value;
+}
+
+float Box::getPaddingLeft()
+{
+    return YGNodeStyleGetPadding(this->ygNode, YGEdgeLeft).value;
+}
+float Box::getPaddingRight()
+{
+    return YGNodeStyleGetPadding(this->ygNode, YGEdgeRight).value;
+}
+
 View* Box::getDefaultFocus()
 {
     // Focus ourself first
@@ -353,7 +367,7 @@ View* Box::hitTest(Point point)
     if (this->getFrame().pointInside(point))
     {
         //        Logger::debug(describe() + ": --- X: " + std::to_string((int)getX()) + ", Y: " + std::to_string((int)getY()) + ", W: " + std::to_string((int)getWidth()) + ", H: " + std::to_string((int)getHeight()));
-        for(auto child = this->children.rbegin(); child!= this->children.rend(); child++)
+        for (auto child = this->children.rbegin(); child != this->children.rend(); child++)
         {
             View* result = (*child)->hitTest(point);
 
@@ -648,24 +662,32 @@ void Box::setLastFocusedView(View* view)
     this->lastFocusedView = view;
 }
 
-void Box::setDefaultFocusedIndex(int index){
-    if(index < 0) return;
+void Box::setDefaultFocusedIndex(int index)
+{
+    if (index < 0)
+        return;
     this->defaultFocusedIndex = index;
 }
 
-size_t Box::getDefaultFocusedIndex(){
+size_t Box::getDefaultFocusedIndex()
+{
     return this->defaultFocusedIndex;
 }
 
-bool Box::isChildFocused() {
-    for (auto &child : getChildren()) {
-        Box *box = dynamic_cast<Box *>(child);
-        if (box) {
+bool Box::isChildFocused()
+{
+    for (auto& child : getChildren())
+    {
+        Box* box = dynamic_cast<Box*>(child);
+        if (box)
+        {
             if (box->isFocused())
                 return true;
             if (box->isChildFocused())
                 return true;
-        } else if (child->isFocused()) {
+        }
+        else if (child->isFocused())
+        {
             return true;
         }
     }
@@ -696,9 +718,12 @@ Box::~Box()
     for (auto it : getChildren())
     {
         it->setParent(nullptr);
-        if (!it->isPtrLocked()){
+        if (!it->isPtrLocked())
+        {
             delete it;
-        } else {
+        }
+        else
+        {
             it->freeView();
         }
     }

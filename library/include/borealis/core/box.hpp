@@ -126,11 +126,15 @@ class Box : public View
      */
     virtual void setPaddingTop(float top);
 
+    float getPaddingTop();
+
     /**
      * Sets the padding of the view, aka the internal space to give
      * between this view boundaries and its children.
      */
     virtual void setPaddingRight(float right);
+
+    float getPaddingRight();
 
     /**
      * Sets the padding of the view, aka the internal space to give
@@ -138,11 +142,15 @@ class Box : public View
      */
     virtual void setPaddingBottom(float bottom);
 
+    float getPaddingBottom();
+
     /**
      * Sets the padding of the view, aka the internal space to give
      * between this view boundaries and its children.
      */
     virtual void setPaddingLeft(float left);
+
+    float getPaddingLeft();
 
     /**
      * Sets the children alignment along the Box axis.
