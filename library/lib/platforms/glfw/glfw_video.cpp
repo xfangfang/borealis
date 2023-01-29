@@ -172,6 +172,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         monitor      = glfwGetPrimaryMonitor();
     }
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 #endif
 
 // create window
@@ -179,7 +183,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
     if (VideoContext::FULLSCREEN)
     {
-        this->window  = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
+        this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
     {
@@ -211,7 +215,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         {
             glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
         }
-        else {
+        else
+        {
             glfwSetWindowPos(this->window, fabs(mode->width - windowWidth) / 2,
                 fabs(mode->height - windowHeight) / 2);
         }
