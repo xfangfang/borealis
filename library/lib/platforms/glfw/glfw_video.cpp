@@ -21,12 +21,15 @@
 // nanovg implementation
 #ifdef __PSV__
 #define NANOVG_GLES2_IMPLEMENTATION
-#include <nanovg-gl/nanovg_gl.h>
 #else
 #include <glad/glad.h>
+#ifdef USE_GL2
+#define NANOVG_GL2_IMPLEMENTATION
+#else
 #define NANOVG_GL3_IMPLEMENTATION
+#endif /* USE_GL2 */
+#endif /* __PSV__ */
 #include <nanovg-gl/nanovg_gl.h>
-#endif
 
 #ifdef __SWITCH__
 #include <switch.h>
@@ -160,6 +163,13 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
 #endif
 
+#ifdef USE_GL2
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+#endif
+
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // If the window appears outside the screen, using the default settings
     auto* monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
@@ -246,6 +256,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Initialize nanovg
 #ifdef __PSV__
     this->nvgContext = nvgCreateGLES2(0);
+#elif defined(USE_GL2)
+    this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif
@@ -330,6 +342,8 @@ GLFWVideoContext::~GLFWVideoContext()
         if (this->nvgContext)
 #ifdef __PSV__
             nvgDeleteGLES2(this->nvgContext);
+#elif defined(USE_GL2)
+            nvgDeleteGL2(this->nvgContext);
 #else
             nvgDeleteGL3(this->nvgContext);
 #endif
