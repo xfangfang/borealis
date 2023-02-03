@@ -138,7 +138,16 @@ int DesktopPlatform::getBatteryLevel()
     {
         b = b.substr(0, b.size() - 1);
     }
-    return stoi(b);
+    int res = 100;
+    try
+    {
+        res = stoi(b);
+    }
+    catch (...)
+    {
+        return 100;
+    }
+    return res;
 #else
     return 100;
 #endif
