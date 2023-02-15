@@ -29,14 +29,14 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #endif /* USE_GL2 */
 #endif /* __PSV__ */
-#include <nanovg-gl/nanovg_gl.h>
+#include <nanovg_gl.h>
 
 #ifdef __SWITCH__
 #include <switch.h>
 #endif
 
 #ifdef _WIN32
-#include "nanovg-gl/stb_image.h"
+#include "stb_image.h"
 #endif
 
 namespace brls
