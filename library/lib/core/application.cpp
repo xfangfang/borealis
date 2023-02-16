@@ -974,7 +974,8 @@ void Application::onWindowResized(int width, int height)
             Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
                 width, height, contentWidth, contentHeight, Application::windowScale);
             brls::Logger::info("scale factor: {}", Application::getPlatform()->getVideoContext()->getScaleFactor());
-            Application::getWindowSizeChangedEvent()->fire(); });
+            Application::getWindowSizeChangedEvent()->fire();
+        });
 }
 
 void Application::onWindowReposition(int x, int y)

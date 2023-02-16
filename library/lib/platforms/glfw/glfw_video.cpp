@@ -211,17 +211,27 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 // create window
 #if defined(__linux__) || defined(_WIN32)
-    glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
+    VideoContext::FULLSCREEN = false;
     if (VideoContext::FULLSCREEN)
     {
+        glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
     {
+#ifdef _WIN32
+        // windows 下 dpi 存在时把初始窗口大小乘上 dpi 倍率
+        float xscale, yscale;
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+        if (xscale > 1.0f && xscale == yscale) {
+            windowWidth *= xscale;
+            windowHeight *= xscale;
+        }
+#endif
         this->window = glfwCreateWindow((int)windowWidth, (int)windowHeight, windowTitle.c_str(), nullptr, nullptr);
     }
 #else
-    this->window     = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+    this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
 #endif
 
 #ifdef _WIN32

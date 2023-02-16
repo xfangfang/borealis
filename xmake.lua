@@ -70,7 +70,6 @@ target("borealis")
     }) do
         add_files(path.join("library/lib/extern/libretro-common", dir, "*.c"))
     end
-    add_files("library/lib/platforms/glfw/glfw_video_metal.mm")
     local windowLib = get_config("window")
     if windowLib == "glfw" then
         add_files("library/lib/platforms/glfw/*.cpp")
@@ -86,13 +85,15 @@ target("borealis")
     if driver == "metal" then
         add_defines("BOREALIS_USE_METAL")
         add_frameworks("Metal", "MetalKit", "QuartzCore")
+        add_files("library/lib/platforms/glfw/glfw_video_metal.mm")
     elseif driver == "opengl" then
         add_defines("BOREALIS_USE_OPENGL")
         add_packages("glad")
     elseif driver == "d3d11" then
         add_defines("BOREALIS_USE_D3D11")
     end
-    add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga")
+    add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
+    add_defines("BOREALIS_USE_STD_THREAD")
 
 target("demo")
     for _, dir in ipairs({
@@ -107,3 +108,6 @@ target("demo")
         add_links("nanovg_metal")
     end
     add_deps("borealis")
+    if is_plat("mingw") then
+        add_ldflags("-static-libgcc", "-static-libstdc++")
+    end

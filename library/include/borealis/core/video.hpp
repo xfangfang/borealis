@@ -68,7 +68,7 @@ class VideoContext
 
     virtual int getCurrentMonitorIndex() { return 0; };
 
-    static inline bool FULLSCREEN = true;
+    static inline bool FULLSCREEN = false;
 
     // The position and size of the window in the last non-full-screen mode
     static inline float posX = NAN, posY = NAN;

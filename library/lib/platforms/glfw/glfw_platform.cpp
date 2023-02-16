@@ -85,8 +85,19 @@ void GLFWPlatform::restoreWindow()
 
 void GLFWPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
-    if (windowWidth > 0 && windowHeight > 0)
+    if (windowWidth > 0 && windowHeight > 0) {
+#ifdef _WIN32
+        // api 方式设置与 macosx 保持一致
+        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+        float xscale, yscale;
+        glfwGetMonitorContentScale(primaryMonitor, &xscale, &yscale);
+        if (xscale > 1.0f && xscale == yscale) {
+            windowWidth *= xscale;
+            windowHeight *= xscale;
+        }
+#endif
         glfwSetWindowSize(this->videoContext->getGLFWWindow(), windowWidth, windowHeight);
+    }
 }
 
 void GLFWPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight)
