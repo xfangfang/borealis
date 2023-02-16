@@ -12,11 +12,25 @@ option("window")
     set_showmenu(true)
 option_end()
 
+-- https://github.com/zeromake/nanovg
+package("zeromake_nanovg")
+    if os.exists("../nanovg") then
+        set_sourcedir("../nanovg")
+    else
+        set_sourcedir(os.getenv("NANOVG_PATH"))
+    end
+    add_links("nanovg")
+    on_install(function (package)
+        local configs = {}
+        import("package.tools.xmake").install(package, configs)
+    end)
+package_end()
+
 add_requires("xfangfang_glfw")
 add_requires("tinyxml2")
 add_requires("yoga")
 add_requires("stb")
-add_requires("nanovg")
+add_requires("zeromake_nanovg")
 add_requires("nlohmann_json")
 add_requires("glad")
 add_requires("fmt")
@@ -24,7 +38,8 @@ add_requires("tweeny")
 
 add_defines(
     'BRLS_RESOURCES="./resources/"',
-    "YG_ENABLE_EVENTS"
+    "YG_ENABLE_EVENTS",
+    "__GLFW__"
 )
 
 target("borealis")
@@ -61,7 +76,7 @@ target("borealis")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("sdl")
     end
-    add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny", "yoga")
+    add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga")
 
 target("demo")
     for _, dir in ipairs({
@@ -70,5 +85,5 @@ target("demo")
         add_includedirs(path.join("library", dir))
     end
     add_files("demo/*.cpp")
-    add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
+    add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga")
     add_deps("borealis")
