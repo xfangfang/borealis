@@ -22,6 +22,11 @@ add_requires("glad")
 add_requires("fmt")
 add_requires("tweeny")
 
+add_defines(
+    'BRLS_RESOURCES="./resources/"',
+    "YG_ENABLE_EVENTS"
+)
+
 target("borealis")
     set_kind("static")
     -- set_kind("shared")
@@ -40,11 +45,11 @@ target("borealis")
         add_files(path.join("library", dir, "*.cpp"))
     end
     for _, dir in ipairs({
-        "lib/extern/libretro-common/compat",
-        "lib/extern/libretro-common/encodings",
-        "lib/extern/libretro-common/features",
+        "compat",
+        "encodings",
+        "features",
     }) do
-        add_files(path.join("library", dir, "*.c"))
+        add_files(path.join("library/lib/extern/libretro-common", dir, "*.c"))
     end
     local windowLib = get_config("window")
     if windowLib == "glfw" then
@@ -57,12 +62,6 @@ target("borealis")
         add_packages("sdl")
     end
     add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny", "yoga")
-    add_frameworks("CoreFoundation")
-    add_defines(
-        'BRLS_RESOURCES="./resources/"',
-        "YG_ENABLE_EVENTS",
-        "__GLFW__"
-    )
 
 target("demo")
     for _, dir in ipairs({
@@ -72,9 +71,4 @@ target("demo")
     end
     add_files("demo/*.cpp")
     add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
-    add_defines(
-        'BRLS_RESOURCES="./resources/"',
-        "YG_ENABLE_EVENTS",
-        "__GLFW__"
-    )
     add_deps("borealis")
