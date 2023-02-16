@@ -14,7 +14,7 @@ option_end()
 
 add_requires("xfangfang_glfw")
 add_requires("tinyxml2")
--- add_requires("yoga")
+add_requires("yoga")
 add_requires("stb")
 add_requires("nanovg")
 add_requires("nlohmann_json")
@@ -26,8 +26,7 @@ target("borealis")
     set_kind("static")
     -- set_kind("shared")
     for _, dir in ipairs({
-        "include",
-        "lib/extern/yoga/src"
+        "include"
     }) do
         add_includedirs(path.join("library", dir))
     end
@@ -47,7 +46,6 @@ target("borealis")
     }) do
         add_files(path.join("library", dir, "*.c"))
     end
-    add_files("library/lib/extern/yoga/src/yoga/**.cpp")
     local windowLib = get_config("window")
     if windowLib == "glfw" then
         add_files("library/lib/platforms/glfw/*.cpp")
@@ -58,7 +56,7 @@ target("borealis")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("sdl")
     end
-    add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny")
+    add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny", "yoga")
     add_frameworks("CoreFoundation")
     add_defines(
         'BRLS_RESOURCES="./resources/"',
@@ -68,13 +66,12 @@ target("borealis")
 
 target("demo")
     for _, dir in ipairs({
-        "include",
-        "lib/extern/yoga/src"
+        "include"
     }) do
         add_includedirs(path.join("library", dir))
     end
     add_files("demo/*.cpp")
-    add_packages("tinyxml2", "nanovg", "fmt", "tweeny")
+    add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
     add_defines(
         'BRLS_RESOURCES="./resources/"',
         "YG_ENABLE_EVENTS",

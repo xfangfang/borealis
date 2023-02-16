@@ -126,16 +126,17 @@ void Application::createWindow(std::string windowTitle)
     // Init yoga
     YGConfig* defaultConfig       = YGConfigGetDefault();
     defaultConfig->useWebDefaults = true;
+    using namespace facebook;
 
-    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData)
-        {
+    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData) {
         View* view = (View*)node.getContext();
 
         if (!view)
             return;
 
         if (eventType == yoga::Event::NodeLayout)
-            view->onLayout(); });
+            view->onLayout();
+    });
 
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
