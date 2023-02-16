@@ -577,8 +577,13 @@ void Application::frame()
     NVGcolor backgroundColor = frameContext.theme["brls/background"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
+    float scaleFactor = frameContext.pixelRatio;
+#ifdef BOREALIS_USE_METAL
+    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 ScaleFactor
+    scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
+#endif
 
-    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, frameContext.pixelRatio);
+    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, scaleFactor);
     nvgScale(Application::getNVGContext(), Application::windowScale, Application::windowScale);
 
     std::vector<View*> viewsToDraw;

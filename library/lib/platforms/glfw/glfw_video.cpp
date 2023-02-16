@@ -19,6 +19,7 @@
 #include <borealis/platforms/glfw/glfw_video.hpp>
 
 // nanovg implementation
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
 #define NANOVG_GLES2_IMPLEMENTATION
 #else
@@ -30,6 +31,10 @@
 #endif /* USE_GL2 */
 #endif /* __PSV__ */
 #include <nanovg_gl.h>
+#elif defined(BOREALIS_USE_METAL)
+static void *METAL_CONTEXT = nullptr;
+#include <borealis/platforms/glfw/glfw_video_metal.hpp>
+#endif
 
 #ifdef __SWITCH__
 #include <switch.h>
@@ -113,12 +118,24 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
 {
     if (!width || !height)
         return;
-
+#ifdef BOREALIS_USE_OPENGL
     glViewport(0, 0, width, height);
-
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
     scaleFactor = width * 1.0 / wWidth;
+#elif defined(BOREALIS_USE_METAL)
+    if (METAL_CONTEXT == nullptr) {
+        return;
+    }
+    scaleFactor = GetMetalScaleFactor(METAL_CONTEXT);
+    ResizeMetalDrawable(METAL_CONTEXT, width, height);
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    // cocoa 画布大小和窗口一致
+    width = wWidth;
+    height = wHeight;
+#endif
+
     Application::onWindowResized(width, height);
 
     if (!VideoContext::FULLSCREEN)
@@ -147,6 +164,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     }
 
     // Create window
+#ifdef BOREALIS_USE_OPENGL
 #if defined(__PSV__)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -168,6 +186,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+#endif
+#elif defined(BOREALIS_USE_METAL)
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
@@ -238,10 +259,13 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #ifdef __APPLE__
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 #endif
+#ifdef BOREALIS_USE_OPENGL
     glfwMakeContextCurrent(window);
+#endif
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
     glfwSetWindowPosCallback(window, glfwWindowPositionCallback);
 
+#ifdef BOREALIS_USE_OPENGL
 #ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -251,15 +275,24 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
     Logger::info("glfw: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
     Logger::info("glfw: GL Version: {}", (const char*)glGetString(GL_VERSION));
+#endif
     Logger::info("glfw: GLFW Version: {}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
     // Initialize nanovg
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
     this->nvgContext = nvgCreateGLES2(0);
 #elif defined(USE_GL2)
     this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#endif
+#elif defined(BOREALIS_USE_METAL)
+    Logger::info("glfw: use metal");
+    void *ctx = CreateMetalContext(window);
+    METAL_CONTEXT = ctx;
+    this->nvgContext = nvgCreateMTL(GetMetalLayer(ctx), NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+    scaleFactor = GetMetalScaleFactor(ctx);
 #endif
     if (!this->nvgContext)
     {
@@ -300,11 +333,15 @@ void GLFWVideoContext::beginFrame()
 
 void GLFWVideoContext::endFrame()
 {
+#ifdef BOREALIS_USE_OPENGL
     glfwSwapBuffers(this->window);
+#endif
 }
 
 void GLFWVideoContext::clear(NVGcolor color)
 {
+
+#ifdef BOREALIS_USE_OPENGL
     glClearColor(
         color.r,
         color.g,
@@ -312,15 +349,24 @@ void GLFWVideoContext::clear(NVGcolor color)
         1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#elif defined(BOREALIS_USE_METAL)
+    nvgClearWithColor(nvgContext, nvgRGBAf(
+        color.r,
+        color.g,
+        color.b,
+        1.0f));
+#endif
 }
 
 void GLFWVideoContext::resetState()
 {
+#ifdef BOREALIS_USE_OPENGL
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
+#endif
 }
 
 void GLFWVideoContext::disableScreenDimming(bool disable)
@@ -340,12 +386,17 @@ GLFWVideoContext::~GLFWVideoContext()
     try
     {
         if (this->nvgContext)
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
             nvgDeleteGLES2(this->nvgContext);
 #elif defined(USE_GL2)
             nvgDeleteGL2(this->nvgContext);
 #else
             nvgDeleteGL3(this->nvgContext);
+#endif
+#elif defined(BOREALIS_USE_METAL)
+            nvgDeleteMTL(this->nvgContext);
+            METAL_CONTEXT = nullptr;
 #endif
     }
     catch (...)

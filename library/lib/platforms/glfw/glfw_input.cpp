@@ -317,6 +317,10 @@ void GLFWInputManager::updateMouseStates(RawMouseState* state)
     state->rightButton  = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
     double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
+#ifdef BOREALIS_USE_METAL
+    // 使用 metal 的 cocoa 窗口鼠标事件不需要进行 dpi 缩放。
+    scaleFactor = 1.0;
+#endif
     state->position.x  = x * scaleFactor / Application::windowScale;
     state->position.y  = y * scaleFactor / Application::windowScale;
     state->offset      = pointerOffset;

@@ -12,6 +12,11 @@ option("window")
     set_showmenu(true)
 option_end()
 
+option("driver")
+    set_default("opengl")
+    set_showmenu(true)
+option_end()
+
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")
     if os.exists("../nanovg") then
@@ -38,8 +43,7 @@ add_requires("tweeny")
 
 add_defines(
     'BRLS_RESOURCES="./resources/"',
-    "YG_ENABLE_EVENTS",
-    "__GLFW__"
+    "YG_ENABLE_EVENTS"
 )
 
 target("borealis")
@@ -66,15 +70,27 @@ target("borealis")
     }) do
         add_files(path.join("library/lib/extern/libretro-common", dir, "*.c"))
     end
+    add_files("library/lib/platforms/glfw/glfw_video_metal.mm")
     local windowLib = get_config("window")
     if windowLib == "glfw" then
         add_files("library/lib/platforms/glfw/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
-        add_packages("xfangfang_glfw", "glad")
+        add_packages("xfangfang_glfw")
+        add_defines("__GLFW__")
     elseif windowLib == "sdl" then
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("sdl")
+    end
+    local driver = get_config("driver")
+    if driver == "metal" then
+        add_defines("BOREALIS_USE_METAL")
+        add_frameworks("Metal", "MetalKit", "QuartzCore")
+    elseif driver == "opengl" then
+        add_defines("BOREALIS_USE_OPENGL")
+        add_packages("glad")
+    elseif driver == "d3d11" then
+        add_defines("BOREALIS_USE_D3D11")
     end
     add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga")
 
@@ -86,4 +102,8 @@ target("demo")
     end
     add_files("demo/*.cpp")
     add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga")
+    local driver = get_config("driver")
+    if driver == "metal" then
+        add_links("nanovg_metal")
+    end
     add_deps("borealis")
