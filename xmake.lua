@@ -49,11 +49,7 @@ add_defines(
 target("borealis")
     set_kind("static")
     -- set_kind("shared")
-    for _, dir in ipairs({
-        "include"
-    }) do
-        add_includedirs(path.join("library", dir))
-    end
+    add_includedirs("library/include")
     for _, dir in ipairs({
         "lib/core",
         "lib/core/touch",
@@ -80,12 +76,14 @@ target("borealis")
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("sdl")
+        add_defines("__SDL__")
     end
     local driver = get_config("driver")
     if driver == "metal" then
         add_defines("BOREALIS_USE_METAL")
         add_frameworks("Metal", "MetalKit", "QuartzCore")
-        add_files("library/lib/platforms/glfw/glfw_video_metal.mm")
+        add_files("library/lib/platforms/glfw/driver/metal.mm")
+        add_links("nanovg_metal")
     elseif driver == "opengl" then
         add_defines("BOREALIS_USE_OPENGL")
         add_packages("glad")
@@ -96,17 +94,9 @@ target("borealis")
     add_defines("BOREALIS_USE_STD_THREAD")
 
 target("demo")
-    for _, dir in ipairs({
-        "include"
-    }) do
-        add_includedirs(path.join("library", dir))
-    end
+    add_includedirs("library/include")
     add_files("demo/*.cpp")
     add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga")
-    local driver = get_config("driver")
-    if driver == "metal" then
-        add_links("nanovg_metal")
-    end
     add_deps("borealis")
     if is_plat("mingw") then
         add_ldflags("-static-libgcc", "-static-libstdc++")

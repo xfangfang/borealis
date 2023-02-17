@@ -33,7 +33,7 @@
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_METAL)
 static void *METAL_CONTEXT = nullptr;
-#include <borealis/platforms/glfw/glfw_video_metal.hpp>
+#include <borealis/platforms/glfw/driver/metal.hpp>
 #endif
 
 #ifdef __SWITCH__
