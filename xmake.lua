@@ -89,6 +89,8 @@ target("borealis")
         add_packages("glad")
     elseif driver == "d3d11" then
         add_defines("BOREALIS_USE_D3D11")
+        add_files("library/lib/platforms/glfw/driver/d3d11.cpp")
+        add_syslinks("d3d11")
     end
     add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")

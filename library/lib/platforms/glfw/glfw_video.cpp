@@ -34,6 +34,10 @@
 #elif defined(BOREALIS_USE_METAL)
 static void *METAL_CONTEXT = nullptr;
 #include <borealis/platforms/glfw/driver/metal.hpp>
+#elif defined(BOREALIS_USE_D3D11)
+#include <borealis/platforms/glfw/driver/d3d11.hpp>
+#include <nanovg_d3d11.h>
+static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
 
 #ifdef __SWITCH__
@@ -134,6 +138,14 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     // cocoa 画布大小和窗口一致
     width = wWidth;
     height = wHeight;
+#elif defined(BOREALIS_USE_D3D11)
+    if (D3D11_CONTEXT == nullptr) {
+        return;
+    }
+    D3D11_CONTEXT->ResizeFramebufferSize(width, height);
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    scaleFactor = width * 1.0 / wWidth;
 #endif
 
     Application::onWindowResized(width, height);
@@ -173,7 +185,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#elif defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
+#elif defined(__linux__) || defined(__APPLE__)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -187,7 +199,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #endif
-#elif defined(BOREALIS_USE_METAL)
+#elif defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 
@@ -211,10 +223,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 // create window
 #if defined(__linux__) || defined(_WIN32)
-    VideoContext::FULLSCREEN = false;
     if (VideoContext::FULLSCREEN)
     {
-        glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
+        glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
@@ -303,6 +314,15 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     METAL_CONTEXT = ctx;
     this->nvgContext = nvgCreateMTL(GetMetalLayer(ctx), NVG_STENCIL_STROKES | NVG_ANTIALIAS);
     scaleFactor = GetMetalScaleFactor(ctx);
+#elif defined(BOREALIS_USE_D3D11)
+    Logger::info("glfw: use d3d11");
+    D3D11_CONTEXT = std::make_shared<D3D11Context>();
+    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
+        Logger::error("glfw: unable to init d3d11");
+        glfwTerminate();
+        return;
+    }
+    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 #endif
     if (!this->nvgContext)
     {
@@ -345,6 +365,8 @@ void GLFWVideoContext::endFrame()
 {
 #ifdef BOREALIS_USE_OPENGL
     glfwSwapBuffers(this->window);
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->Present();
 #endif
 }
 
@@ -361,6 +383,12 @@ void GLFWVideoContext::clear(NVGcolor color)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #elif defined(BOREALIS_USE_METAL)
     nvgClearWithColor(nvgContext, nvgRGBAf(
+        color.r,
+        color.g,
+        color.b,
+        1.0f));
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->ClearWithColor(nvgRGBAf(
         color.r,
         color.g,
         color.b,
@@ -407,6 +435,9 @@ GLFWVideoContext::~GLFWVideoContext()
 #elif defined(BOREALIS_USE_METAL)
             nvgDeleteMTL(this->nvgContext);
             METAL_CONTEXT = nullptr;
+#elif defined(BOREALIS_USE_D3D11)
+            nvgDeleteD3D11(this->nvgContext);
+            D3D11_CONTEXT = nullptr;
 #endif
     }
     catch (...)
