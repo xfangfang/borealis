@@ -101,5 +101,5 @@ target("demo")
     add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga")
     add_deps("borealis")
     if is_plat("mingw") then
-        add_ldflags("-static-libgcc", "-static-libstdc++")
+        add_ldflags("-static")
     end
