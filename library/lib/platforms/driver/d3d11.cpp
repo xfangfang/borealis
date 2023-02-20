@@ -1,17 +1,48 @@
-#include <borealis\platforms\glfw\driver\d3d11.hpp>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
+#include <borealis/platforms/driver/d3d11.hpp>
 #define NANOVG_D3D11_IMPLEMENTATION
 #include <nanovg_d3d11.h>
+#ifdef __ALLOW_TEARING__
+#include <dxgi1_6.h>
+#endif
+#ifdef __GLFW__
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#elif definde(__SDL__)
+#include <SDL_syswm.h>
+#endif
 
 namespace brls {
+#ifdef __GLFW__
     bool D3D11Context::InitializeDX(GLFWwindow* window, int width, int height) {
         HWND hWndMain = glfwGetWin32Window(window);
+        return InitializeDXInternal(hWndMain, nullptr, width, height);
+    }
+#elif definde(__SDL__)
+    bool D3D11Context::InitializeDX(SDL_Window* window, int width, int height) {
+        SDL_SysWMinfo windowinfo;
+        SDL_GetWindowWMInfo(renderer->window, &windowinfo);
+#ifdef __WINRT__
+        // winrt 代码需要特别编译
+        if (windowinfo.subsystem == SDL_SYSWM_WINRT) {
+            ABI::Windows::UI::Core::ICoreWindow *coreWindow = NULL;
+            if (FAILED(windowinfo.info.winrt.window->QueryInterface(&coreWindow))) {
+                return false;
+            }
+            IUnknown *coreWindowAsIUnknown = NULL;
+            coreWindow->QueryInterface(&coreWindowAsIUnknown);
+            coreWindow->Release();
+            return InitializeDXInternal(nullptr, coreWindowAsIUnknown, width, height);
+        }
+#endif
+        return InitializeDXInternal(windowinfo.info.win.window, nullptr, width, height);
+    }
+#endif
+    bool D3D11Context::InitializeDXInternal(HWND hWndMain, IUnknown *coreWindow, int width, int height) {
         HRESULT hr = S_OK;
         UINT deviceFlags = 0;
         IDXGIDevice *pDXGIDevice = NULL;
         IDXGIAdapter *pAdapter = NULL;
-        IDXGIFactory *pDXGIFactory = NULL;
+        IDXGIFactory2 *pDXGIFactory = NULL;
         static const D3D_DRIVER_TYPE driverAttempts[] =
         {
             D3D_DRIVER_TYPE_HARDWARE,
@@ -57,23 +88,56 @@ namespace brls {
         }
         if (SUCCEEDED(hr))
         {
-            hr = pAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&pDXGIFactory);
+            hr = pAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)&pDXGIFactory);
         }
+#ifdef __ALLOW_TEARING__
+        IDXGIFactory6* factory6;
+        if (SUCCEEDED(hr))
+        {
+            hr = pAdapter->GetParent(__uuidof(IDXGIFactory6), (void**)&factory6);
+        }
+        if (SUCCEEDED(hr)) {
+            BOOL allowTearing = FALSE;
+            factory6->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+            this->tearingSupport = allowTearing == TRUE;
+        }
+#endif
         if (SUCCEEDED(hr))
         {
             ZeroMemory(&this->swapDesc, sizeof(this->swapDesc));
             this->swapDesc.SampleDesc.Count = 1;
             this->swapDesc.SampleDesc.Quality = 0;
-            this->swapDesc.BufferDesc.Width = width;
-            this->swapDesc.BufferDesc.Height = height;
-            this->swapDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-            this->swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-            this->swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+            this->swapDesc.Width = width;
+            this->swapDesc.Height = height;
+            this->swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            this->swapDesc.Stereo = FALSE;
             this->swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            this->swapDesc.BufferCount = 1;
-            this->swapDesc.OutputWindow = hWndMain;
-            this->swapDesc.Windowed = TRUE;
-            hr = pDXGIFactory->CreateSwapChain((IUnknown*)this->device, &this->swapDesc, &this->swapChain);
+            this->swapDesc.BufferCount = 2;
+            this->swapDesc.Scaling = DXGI_SCALING_STRETCH;
+            this->swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+            this->swapDesc.Flags = 0;
+            if (this->tearingSupport) {
+                this->swapDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            }
+            // this->swapDesc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+            if (coreWindow) {
+                hr = pDXGIFactory->CreateSwapChainForCoreWindow(
+                    (IUnknown*)this->device,
+                    coreWindow,
+                    &this->swapDesc,
+                    NULL,
+                    &this->swapChain
+                );
+            } else {
+                hr = pDXGIFactory->CreateSwapChainForHwnd(
+                    (IUnknown*)this->device,
+                    hWndMain,
+                    &this->swapDesc,
+                    NULL,
+                    NULL,
+                    &this->swapChain
+                );
+            }
         }
         D3D_API_RELEASE(pDXGIDevice);
         D3D_API_RELEASE(pAdapter);
@@ -114,7 +178,11 @@ namespace brls {
 
         D3D_API_RELEASE(this->renderTargetView);
         D3D_API_RELEASE(this->depthStencilView);
-        hr = this->swapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+        UINT resizeBufferFlags = 0;
+        if (this->tearingSupport) {
+            resizeBufferFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+        }
+        hr = this->swapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, resizeBufferFlags);
         if (FAILED(hr))
         {
             return false;
@@ -207,6 +275,12 @@ namespace brls {
 
     void D3D11Context::Present() {
         // https://learn.microsoft.com/zh-cn/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present
-        this->swapChain->Present(1, 0);
+        UINT presentFlags = 0;
+        UINT syncInterval = 1;
+        if (this->tearingSupport) {
+            presentFlags |= DXGI_PRESENT_ALLOW_TEARING;
+            syncInterval = 0;
+        }
+        this->swapChain->Present1(syncInterval, presentFlags, NULL);
     }
 }

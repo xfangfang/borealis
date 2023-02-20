@@ -35,7 +35,7 @@
 static void *METAL_CONTEXT = nullptr;
 #include <borealis/platforms/glfw/driver/metal.hpp>
 #elif defined(BOREALIS_USE_D3D11)
-#include <borealis/platforms/glfw/driver/d3d11.hpp>
+#include <borealis/platforms/driver/d3d11.hpp>
 #include <nanovg_d3d11.h>
 static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif

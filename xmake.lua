@@ -17,6 +17,11 @@ option("driver")
     set_showmenu(true)
 option_end()
 
+option("winrt")
+    set_default(false)
+    set_showmenu(true)
+option_end()
+
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")
     if os.exists("../nanovg") then
@@ -88,9 +93,15 @@ target("borealis")
         add_defines("BOREALIS_USE_OPENGL")
         add_packages("glad")
     elseif driver == "d3d11" then
+        -- Todo: winrt 的 cpp 需要单独走 vs 的 winrt 编译，考虑把 winrt 的代码单独提取
+        add_files("library/lib/platforms/driver/d3d11.cpp")
+        if get_config("winrt") then
+            add_defines("__WINRT__=1")
+        end
         add_defines("BOREALIS_USE_D3D11")
-        add_files("library/lib/platforms/glfw/driver/d3d11.cpp")
         add_syslinks("d3d11")
+        -- d3d11 可以开启可变帧率
+        -- add_defines("__ALLOW_TEARING__=1")
     end
     add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")
