@@ -163,6 +163,9 @@ void Box::addView(View* view)
 
 void Box::addView(View* view, size_t position)
 {
+    if (position > this->children.size() || position < 0)
+        fatal(fmt::format("cannot insert view at {}:{}/{}", this->describe(), this->children.size(), position));
+
     // Add the view to our children and YGNode
     this->children.insert(this->children.begin() + position, view);
 
@@ -174,6 +177,13 @@ void Box::addView(View* view, size_t position)
     *userdata        = position;
 
     view->setParent(this, userdata);
+
+    for (size_t i = position + 1; i < this->children.size(); i++)
+    {
+        auto* index = (size_t*)this->children[i]->getParentUserData();
+        if (index)
+            (*index)++;
+    }
 
     // Layout and events
     this->invalidate();
