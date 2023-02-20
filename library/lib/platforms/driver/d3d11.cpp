@@ -1,6 +1,7 @@
 #include <borealis/platforms/driver/d3d11.hpp>
 #define NANOVG_D3D11_IMPLEMENTATION
 #include <nanovg_d3d11.h>
+#include <versionhelpers.h>
 #ifdef __ALLOW_TEARING__
 #include <dxgi1_6.h>
 #endif
@@ -121,7 +122,7 @@ namespace brls {
             // swapDesc.Scaling = DXGI_SCALING_STRETCH;
             swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
             swapDesc.Flags = 0;
-            if (WIN_IsWindows8OrGreater()) {
+            if (IsWindows8OrGreater()) {
                 swapDesc.Scaling = DXGI_SCALING_NONE;
             } else {
                 swapDesc.Scaling = DXGI_SCALING_STRETCH;
