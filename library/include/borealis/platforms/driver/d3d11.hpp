@@ -48,7 +48,7 @@ namespace brls
             ID3D11Texture2D* depthStencil;
             ID3D11DepthStencilView* depthStencilView;
             D3D_FEATURE_LEVEL featureLevel;
-            DXGI_SWAP_CHAIN_DESC1 swapDesc;
+            DXGI_SAMPLE_DESC sampleDesc;
             bool tearingSupport;
     };
 }

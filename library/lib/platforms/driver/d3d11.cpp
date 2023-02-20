@@ -104,27 +104,40 @@ namespace brls {
 #endif
         if (SUCCEEDED(hr))
         {
-            ZeroMemory(&this->swapDesc, sizeof(this->swapDesc));
-            this->swapDesc.SampleDesc.Count = 1;
-            this->swapDesc.SampleDesc.Quality = 0;
-            this->swapDesc.Width = width;
-            this->swapDesc.Height = height;
-            this->swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-            this->swapDesc.Stereo = FALSE;
-            this->swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            this->swapDesc.BufferCount = 2;
-            this->swapDesc.Scaling = DXGI_SCALING_STRETCH;
-            this->swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-            this->swapDesc.Flags = 0;
+            DXGI_SWAP_CHAIN_DESC1 swapDesc;
+            ZeroMemory(&swapDesc, sizeof(swapDesc));
+            ZeroMemory(&this->sampleDesc, sizeof(this->sampleDesc));
+            this->sampleDesc.Count = 1;
+            this->sampleDesc.Quality = 0;
+            swapDesc.SampleDesc.Count = this->sampleDesc.Count;
+            swapDesc.SampleDesc.Quality = this->sampleDesc.Quality;
+            swapDesc.Width = width;
+            swapDesc.Height = height;
+            swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            swapDesc.Stereo = FALSE;
+            swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            swapDesc.BufferCount = 2;
+            // swapDesc.Scaling = DXGI_SCALING_STRETCH;
+            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+            swapDesc.Flags = 0;
+            if (WIN_IsWindows8OrGreater()) {
+                swapDesc.Scaling = DXGI_SCALING_NONE;
+            } else {
+                swapDesc.Scaling = DXGI_SCALING_STRETCH;
+            }
+#if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
+            swapDesc.Scaling = DXGI_SCALING_STRETCH;
+            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+#endif
             if (this->tearingSupport) {
-                this->swapDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+                swapDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
             }
             // this->swapDesc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
             if (coreWindow) {
                 hr = pDXGIFactory->CreateSwapChainForCoreWindow(
                     (IUnknown*)this->device,
                     coreWindow,
-                    &this->swapDesc,
+                    &swapDesc,
                     NULL,
                     &this->swapChain
                 );
@@ -132,7 +145,7 @@ namespace brls {
                 hr = pDXGIFactory->CreateSwapChainForHwnd(
                     (IUnknown*)this->device,
                     hWndMain,
-                    &this->swapDesc,
+                    &swapDesc,
                     NULL,
                     NULL,
                     &this->swapChain
@@ -197,7 +210,7 @@ namespace brls {
             return false;
         }
         renderDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-        renderDesc.ViewDimension = (swapDesc.SampleDesc.Count>1) ?
+        renderDesc.ViewDimension = (this->sampleDesc.Count>1) ?
             D3D11_RTV_DIMENSION_TEXTURE2DMS:
             D3D11_RTV_DIMENSION_TEXTURE2D;
         renderDesc.Texture2D.MipSlice = 0;
@@ -218,8 +231,8 @@ namespace brls {
         texDesc.Width = (UINT)width;
         texDesc.MipLevels = 1;
         texDesc.MiscFlags = 0;
-        texDesc.SampleDesc.Count = swapDesc.SampleDesc.Count;
-        texDesc.SampleDesc.Quality = swapDesc.SampleDesc.Quality;
+        texDesc.SampleDesc.Count = this->sampleDesc.Count;
+        texDesc.SampleDesc.Quality = this->sampleDesc.Quality;
         texDesc.Usage = D3D11_USAGE_DEFAULT;
         D3D_API_RELEASE(this->depthStencil);
         hr = this->device->CreateTexture2D(
@@ -231,7 +244,7 @@ namespace brls {
             return false;
         }
         depthViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        depthViewDesc.ViewDimension = (swapDesc.SampleDesc.Count>1) ?
+        depthViewDesc.ViewDimension = (this->sampleDesc.Count>1) ?
             D3D11_DSV_DIMENSION_TEXTURE2DMS:
             D3D11_DSV_DIMENSION_TEXTURE2D;
         depthViewDesc.Flags = 0;
