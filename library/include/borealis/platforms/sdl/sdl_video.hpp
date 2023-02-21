@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include <borealis/core/video.hpp>
 

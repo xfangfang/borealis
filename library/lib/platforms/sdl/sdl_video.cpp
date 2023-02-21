@@ -185,8 +185,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Logger::info("sdl: use d3d11");
     D3D11_CONTEXT = std::make_shared<D3D11Context>();
     if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
-        Logger::error("sdl: unable to init d3d11");
-        glfwTerminate();
+        fatal("sdl: unable to init d3d11");
         return;
     }
     this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
@@ -265,8 +264,14 @@ SDLVideoContext::~SDLVideoContext()
 {
     try
     {
-        if (this->nvgContext)
+        if (this->nvgContext) {
+#ifdef BOREALIS_USE_OPENGL
             nvgDeleteGL3(this->nvgContext);
+#elif defined(BOREALIS_USE_D3D11)
+            nvgDeleteD3D11(this->nvgContext);
+            D3D11_CONTEXT = nullptr;
+#endif
+        }
     }
     catch (...)
     {

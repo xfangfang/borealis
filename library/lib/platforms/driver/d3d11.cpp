@@ -8,7 +8,7 @@
 #ifdef __GLFW__
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-#elif definde(__SDL__)
+#elif defined(__SDL2__)
 #include <SDL_syswm.h>
 #endif
 
@@ -18,10 +18,10 @@ namespace brls {
         HWND hWndMain = glfwGetWin32Window(window);
         return InitializeDXInternal(hWndMain, nullptr, width, height);
     }
-#elif definde(__SDL__)
+#elif defined(__SDL2__)
     bool D3D11Context::InitializeDX(SDL_Window* window, int width, int height) {
         SDL_SysWMinfo windowinfo;
-        SDL_GetWindowWMInfo(renderer->window, &windowinfo);
+        SDL_GetWindowWMInfo(window, &windowinfo);
 #ifdef __WINRT__
         // winrt 代码需要特别编译
         if (windowinfo.subsystem == SDL_SYSWM_WINRT) {

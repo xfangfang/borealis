@@ -6,7 +6,7 @@
 #ifdef __GLFW__
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#elif definde(__SDL__)
+#elif defined(__SDL2__)
 #include <SDL.h>
 #endif
 
@@ -31,7 +31,7 @@ namespace brls
         public:
 #ifdef __GLFW__
             bool InitializeDX(GLFWwindow* window, int width, int height);
-#elif definde(__SDL__)
+#elif defined(__SDL2__)
             bool InitializeDX(SDL_Window* window, int width, int height);
 #endif
             void UnInitializeDX();

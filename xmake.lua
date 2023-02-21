@@ -41,7 +41,6 @@ package("zeromake_nanovg")
     end)
 package_end()
 
-add_requires("xfangfang_glfw")
 add_requires("tinyxml2")
 add_requires("yoga", {debug=true})
 add_requires("stb")
@@ -56,6 +55,15 @@ add_defines(
     "YG_ENABLE_EVENTS",
     "FMT_CONSTEVAL="
 )
+
+
+local windowLib = get_config("window")
+
+if windowLib == "sdl" then
+    add_requires("sdl2")
+elseif windowLib == "glfw" then
+    add_requires("xfangfang_glfw")
+end
 
 target("borealis")
     set_kind("static")
@@ -86,8 +94,8 @@ target("borealis")
     elseif windowLib == "sdl" then
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
-        add_packages("sdl")
-        add_defines("__SDL__")
+        add_packages("sdl2")
+        add_defines("__SDL2__")
     end
     local driver = get_config("driver")
     if driver == "metal" then
@@ -107,7 +115,7 @@ target("borealis")
         add_defines("BOREALIS_USE_D3D11")
         add_syslinks("d3d11")
         -- d3d11 可以开启可变帧率
-        add_defines("__ALLOW_TEARING__=1")
+        -- add_defines("__ALLOW_TEARING__=1")
     end
     add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")
