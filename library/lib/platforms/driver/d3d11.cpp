@@ -44,6 +44,7 @@ namespace brls {
         IDXGIDevice *pDXGIDevice = NULL;
         IDXGIAdapter *pAdapter = NULL;
         IDXGIFactory2 *pDXGIFactory = NULL;
+        ID3D11DeviceContext *d3dContext = NULL;
         static const D3D_DRIVER_TYPE driverAttempts[] =
         {
             D3D_DRIVER_TYPE_HARDWARE,
@@ -73,12 +74,15 @@ namespace brls {
                 D3D11_SDK_VERSION,
                 &this->device,
                 &this->featureLevel,
-                &this->deviceContext);
+                &d3dContext);
 
             if (SUCCEEDED(hr))
             {
                 break;
             }
+        }
+        if (SUCCEEDED(hr)) {
+            d3dContext->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&this->deviceContext));
         }
         if (SUCCEEDED(hr))
         {
@@ -121,8 +125,8 @@ namespace brls {
             swapDesc.BufferCount = SwapChainBufferCount;
             swapDesc.Flags = 0;
             swapDesc.Scaling = DXGI_SCALING_STRETCH;
-#ifdef __WINRT__
             swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+#ifdef __WINRT__
             if (IsWindows8OrGreater()) {
                 swapDesc.Scaling = DXGI_SCALING_NONE;
             } else {
@@ -298,7 +302,9 @@ namespace brls {
             presentFlags |= DXGI_PRESENT_ALLOW_TEARING;
             syncInterval = 0;
         }
-        DXGI_PRESENT_PARAMETERS presentParameters = {0};
-        this->swapChain->Present1(syncInterval, presentFlags, &presentParameters);
+        DXGI_PRESENT_PARAMETERS presentParameters;
+        ZeroMemory(&presentParameters, sizeof(DXGI_PRESENT_PARAMETERS));
+        this->swapChain->Present1(syncInterval, presentFlags, NULL);
+        // this->deviceContext->DiscardView(this->renderTargetView);
     }
 }
