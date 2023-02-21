@@ -2,7 +2,6 @@
 #include <nanovg.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
-#include <dxgi1_2.h>
 
 #ifdef __GLFW__
 #define GLFW_INCLUDE_NONE
@@ -44,7 +43,7 @@ namespace brls
             }
         private:
             ID3D11Device* device;
-            ID3D11DeviceContext1* deviceContext;
+            ID3D11DeviceContext* deviceContext;
             IDXGISwapChain1* swapChain;
             ID3D11RenderTargetView* renderTargetView;
             ID3D11Texture2D* depthStencil;

@@ -44,7 +44,6 @@ namespace brls {
         IDXGIDevice *pDXGIDevice = NULL;
         IDXGIAdapter *pAdapter = NULL;
         IDXGIFactory2 *pDXGIFactory = NULL;
-        ID3D11DeviceContext *d3dContext = NULL;
         static const D3D_DRIVER_TYPE driverAttempts[] =
         {
             D3D_DRIVER_TYPE_HARDWARE,
@@ -74,15 +73,12 @@ namespace brls {
                 D3D11_SDK_VERSION,
                 &this->device,
                 &this->featureLevel,
-                &d3dContext);
+                &this->deviceContext);
 
             if (SUCCEEDED(hr))
             {
                 break;
             }
-        }
-        if (SUCCEEDED(hr)) {
-            d3dContext->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&this->deviceContext));
         }
         if (SUCCEEDED(hr))
         {
@@ -265,11 +261,9 @@ namespace brls {
         {
             return false;
         }
-
-        this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
         D3D11_VIEWPORT viewport;
-        viewport.Height = (float)height;
         viewport.Width = (float)width;
+        viewport.Height = (float)height;
         viewport.MaxDepth = 1.0f;
         viewport.MinDepth = 0.0f;
         viewport.TopLeftX = 0.0f;
@@ -279,6 +273,8 @@ namespace brls {
     }
 
     void D3D11Context::ClearWithColor(NVGcolor color) {
+        // 清空前必须设置 RenderTarget 否则 SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL 情况会丢失绘制画面
+        this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
         float clearColor[4];
         clearColor[0] = color.r;
         clearColor[1] = color.g;
@@ -287,11 +283,11 @@ namespace brls {
         this->deviceContext->ClearRenderTargetView(
             this->renderTargetView,
             clearColor);
-        // this->deviceContext->ClearDepthStencilView(
-        //     this->depthStencilView,
-        //     D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-        //     0.0f,
-        //     (UINT8)0);
+        this->deviceContext->ClearDepthStencilView(
+            this->depthStencilView,
+            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+            0.0f,
+            (UINT8)0);
     }
 
     void D3D11Context::Present() {
@@ -304,7 +300,7 @@ namespace brls {
         }
         DXGI_PRESENT_PARAMETERS presentParameters;
         ZeroMemory(&presentParameters, sizeof(DXGI_PRESENT_PARAMETERS));
-        this->swapChain->Present1(syncInterval, presentFlags, NULL);
+        this->swapChain->Present1(syncInterval, presentFlags, &presentParameters);
         // this->deviceContext->DiscardView(this->renderTargetView);
     }
 }
