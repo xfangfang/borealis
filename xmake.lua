@@ -1,6 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
-set_languages("c++17")
+set_languages("c++20")
 
 option("platfrom")
     set_default("desktop")
@@ -22,6 +22,11 @@ option("winrt")
     set_showmenu(true)
 option_end()
 
+if is_plat("windows") then
+    add_cxflags("/utf-8")
+    add_includedirs("library/include/compat")
+end
+
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")
     if os.exists("../nanovg") then
@@ -38,7 +43,7 @@ package_end()
 
 add_requires("xfangfang_glfw")
 add_requires("tinyxml2")
-add_requires("yoga")
+add_requires("yoga", {debug=true})
 add_requires("stb")
 add_requires("zeromake_nanovg")
 add_requires("nlohmann_json")
@@ -48,7 +53,8 @@ add_requires("tweeny")
 
 add_defines(
     'BRLS_RESOURCES="./resources/"',
-    "YG_ENABLE_EVENTS"
+    "YG_ENABLE_EVENTS",
+    "FMT_CONSTEVAL="
 )
 
 target("borealis")
@@ -101,7 +107,7 @@ target("borealis")
         add_defines("BOREALIS_USE_D3D11")
         add_syslinks("d3d11")
         -- d3d11 可以开启可变帧率
-        -- add_defines("__ALLOW_TEARING__=1")
+        add_defines("__ALLOW_TEARING__=1")
     end
     add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")

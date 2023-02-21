@@ -27,6 +27,7 @@ namespace brls
             }
         private:
             bool InitializeDXInternal(HWND window, IUnknown *coreWindow, int width, int height);
+            static const int SwapChainBufferCount = 2;
         public:
 #ifdef __GLFW__
             bool InitializeDX(GLFWwindow* window, int width, int height);

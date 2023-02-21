@@ -419,7 +419,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
         nextFocus = currentFocus->getCustomNavigationRoutePtr(direction);
 
         if (!nextFocus)
-            Logger::warning("Tried to follow a navigation route that leads to a nullptr view! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ")");
+            Logger::warning("Tried to follow a navigation route that leads to a nullptr view! (from=\"{}\", direction={})", currentFocus->describe(), std::to_string((int)direction));
     }
     // By ID
     else if (currentFocus->hasCustomNavigationRouteById(direction))
@@ -428,7 +428,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
         nextFocus      = currentFocus->getNearestView(id);
 
         if (!nextFocus)
-            Logger::warning("Tried to follow a navigation route that leads to an unknown view ID! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ", targetId=\"" + id + "\")");
+            Logger::warning("Tried to follow a navigation route that leads to an unknown view ID! (from=\"{}\", direction={}, targetId=\"{}\")", currentFocus->describe(), std::to_string((int)direction), id);
     }
     // Do nothing if current focus doesn't have a parent
     // (in which case there is nothing to traverse)

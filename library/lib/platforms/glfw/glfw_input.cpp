@@ -236,7 +236,7 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
         size_t brlsButton = GLFW_BUTTONS_MAPPING[i];
         size_t key        = GLFW_GAMEPAD_TO_KEYBOARD[i];
         if (key != GLFW_GAMEPAD_BUTTON_NONE)
-            state->buttons[brlsButton] |= glfwGetKey(this->window, key);
+            state->buttons[brlsButton] |= glfwGetKey(this->window, key) != 0;
     }
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];

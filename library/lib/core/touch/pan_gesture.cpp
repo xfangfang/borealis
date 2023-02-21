@@ -70,6 +70,7 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
         }
     }
 
+    static PanAcceleration acceleration;
     switch (phase)
     {
         case TouchPhase::START:
@@ -124,7 +125,6 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
 
             // If last touch frame, calculate acceleration
 
-            static PanAcceleration acceleration;
             if (this->state == GestureState::END)
             {
                 float time = posHistory.size() / FPS;

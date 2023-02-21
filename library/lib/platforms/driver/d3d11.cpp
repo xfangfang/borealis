@@ -92,7 +92,7 @@ namespace brls {
         {
             hr = pAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)&pDXGIFactory);
         }
-#ifdef __ALLOW_TEARING__
+#if defined(__ALLOW_TEARING__) && defined(__WINRT__)
         IDXGIFactory6* factory6;
         if (SUCCEEDED(hr))
         {
@@ -118,15 +118,17 @@ namespace brls {
             swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
             swapDesc.Stereo = FALSE;
             swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            swapDesc.BufferCount = 2;
-            // swapDesc.Scaling = DXGI_SCALING_STRETCH;
-            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+            swapDesc.BufferCount = SwapChainBufferCount;
             swapDesc.Flags = 0;
+            swapDesc.Scaling = DXGI_SCALING_STRETCH;
+#ifdef __WINRT__
+            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
             if (IsWindows8OrGreater()) {
                 swapDesc.Scaling = DXGI_SCALING_NONE;
             } else {
                 swapDesc.Scaling = DXGI_SCALING_STRETCH;
             }
+#endif
 #if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
             swapDesc.Scaling = DXGI_SCALING_STRETCH;
             swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -197,7 +199,7 @@ namespace brls {
         if (this->tearingSupport) {
             resizeBufferFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
         }
-        hr = this->swapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, resizeBufferFlags);
+        hr = this->swapChain->ResizeBuffers(SwapChainBufferCount, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, resizeBufferFlags);
         if (FAILED(hr))
         {
             return false;
@@ -281,11 +283,11 @@ namespace brls {
         this->deviceContext->ClearRenderTargetView(
             this->renderTargetView,
             clearColor);
-        this->deviceContext->ClearDepthStencilView(
-            this->depthStencilView,
-            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-            0.0f,
-            (UINT8)0);
+        // this->deviceContext->ClearDepthStencilView(
+        //     this->depthStencilView,
+        //     D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+        //     0.0f,
+        //     (UINT8)0);
     }
 
     void D3D11Context::Present() {
@@ -296,6 +298,7 @@ namespace brls {
             presentFlags |= DXGI_PRESENT_ALLOW_TEARING;
             syncInterval = 0;
         }
-        this->swapChain->Present1(syncInterval, presentFlags, NULL);
+        DXGI_PRESENT_PARAMETERS presentParameters = {0};
+        this->swapChain->Present1(syncInterval, presentFlags, &presentParameters);
     }
 }
