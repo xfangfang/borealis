@@ -26,6 +26,9 @@ if is_plat("windows") then
     add_cxflags("/utf-8")
     add_includedirs("library/include/compat")
 end
+if is_plat("mingw") then
+    add_defines("WINVER=0x0605")
+end
 
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")

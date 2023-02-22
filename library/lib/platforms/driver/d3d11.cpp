@@ -95,7 +95,7 @@ namespace brls {
         {
             hr = pAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)&pDXGIFactory);
         }
-#if defined(__ALLOW_TEARING__) && defined(__WINRT__)
+#if defined(__ALLOW_TEARING__)
         IDXGIFactory6* factory6;
         if (SUCCEEDED(hr))
         {

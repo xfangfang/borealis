@@ -44,14 +44,14 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
         return;
 
     int fWidth, fHeight;
+#ifdef BOREALIS_USE_OPENGL
     SDL_GetWindowSizeInPixels(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
-#ifdef BOREALIS_USE_OPENGL
     glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
-    // scaleFactor = D3D11_CONTEXT->GetDpi();
-    // fWidth = width * scaleFactor;
-    // fHeight = height * scaleFactor;
+    scaleFactor = D3D11_CONTEXT->GetDpi();
+    fWidth = width * scaleFactor;
+    fHeight = height * scaleFactor;
     D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
 #endif
 
