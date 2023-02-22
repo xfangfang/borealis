@@ -146,7 +146,7 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
         size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
         if (key != SDL_SCANCODE_UNKNOWN)
-            state->buttons[brlsButton] |= keyboard[key];
+            state->buttons[brlsButton] |= keyboard[key] != 0;
     }
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];

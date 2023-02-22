@@ -17,6 +17,9 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #ifdef BOREALIS_USE_OPENGL
 #include <glad/glad.h>
 #define NANOVG_GL3_IMPLEMENTATION
@@ -42,12 +45,14 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
 
     int fWidth, fHeight;
     SDL_GetWindowSizeInPixels(window, &fWidth, &fHeight);
-#ifdef BOREALIS_USE_OPENGL
     scaleFactor = fWidth * 1.0 / width;
+#ifdef BOREALIS_USE_OPENGL
     glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
-    scaleFactor = fWidth * 1.0 / width;
-    D3D11_CONTEXT->ResizeFramebufferSize(width, height);
+    // scaleFactor = D3D11_CONTEXT->GetDpi();
+    // fWidth = width * scaleFactor;
+    // fHeight = height * scaleFactor;
+    D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
 #endif
 
     brls::Logger::info("windows size changed: {} height: {}", width, height);
@@ -109,7 +114,11 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         Logger::error("sdl: failed to initialize");
         return;
     }
-
+    #ifdef _WIN32
+    this->dpiScale = GetDpiForSystem() / 96.0f;
+    windowWidth *= this->dpiScale;
+    windowHeight *= this->dpiScale;
+    #endif
     // Create window
     Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 #ifdef BOREALIS_USE_OPENGL
@@ -175,9 +184,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
     SDL_GL_SetSwapInterval(1);
 
-    Logger::info("sdl: GL Vendor: {}", glGetString(GL_VENDOR));
-    Logger::info("sdl: GL Renderer: {}", glGetString(GL_RENDERER));
-    Logger::info("sdl: GL Version: {}", glGetString(GL_VERSION));
+    Logger::info("sdl: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
+    Logger::info("sdl: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
+    Logger::info("sdl: GL Version: {}", (const char*)glGetString(GL_VERSION));
 
     // Initialize nanovg
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
@@ -207,6 +216,18 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 
 void SDLVideoContext::beginFrame()
 {
+#ifdef _WIN32
+    // 暂时支持 windows 下的窗口 dpi 变化
+    float nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0;
+    if (this->dpiScale != nextDpiScale && nextDpiScale >= 1.0f) {
+        int width, height;
+        SDL_GetWindowSize(this->window, &width, &height);
+        width = width / this->dpiScale * nextDpiScale;
+        height = height / this->dpiScale * nextDpiScale;
+        this->dpiScale = nextDpiScale;
+        SDL_SetWindowSize(this->window, width, height);
+    }
+#endif
 }
 
 void SDLVideoContext::endFrame()

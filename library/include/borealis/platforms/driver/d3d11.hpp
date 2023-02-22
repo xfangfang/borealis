@@ -28,6 +28,11 @@ namespace brls
         private:
             bool InitializeDXInternal(HWND window, IUnknown *coreWindow, int width, int height);
             static const int SwapChainBufferCount = 2;
+#ifdef __GLFW__
+#elif defined(__SDL2__)
+            SDL_Window* sdlWindow;
+            HWND hwnd;
+#endif
         public:
 #ifdef __GLFW__
             bool InitializeDX(GLFWwindow* window, int width, int height);
@@ -35,6 +40,7 @@ namespace brls
             bool InitializeDX(SDL_Window* window, int width, int height);
 #endif
             void UnInitializeDX();
+            float GetDpi();
             bool ResizeFramebufferSize(int width, int height);
             void ClearWithColor(NVGcolor color);
             void Present();

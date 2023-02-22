@@ -21,7 +21,9 @@ namespace brls {
 #elif defined(__SDL2__)
     bool D3D11Context::InitializeDX(SDL_Window* window, int width, int height) {
         SDL_SysWMinfo windowinfo;
+        SDL_GetVersion(&windowinfo.version);
         SDL_GetWindowWMInfo(window, &windowinfo);
+        this->sdlWindow = window;
 #ifdef __WINRT__
         // winrt 代码需要特别编译
         if (windowinfo.subsystem == SDL_SYSWM_WINRT) {
@@ -35,7 +37,8 @@ namespace brls {
             return InitializeDXInternal(nullptr, coreWindowAsIUnknown, width, height);
         }
 #endif
-        return InitializeDXInternal(windowinfo.info.win.window, nullptr, width, height);
+        this->hwnd = windowinfo.info.win.window;
+        return InitializeDXInternal(this->hwnd, nullptr, width, height);
     }
 #endif
     bool D3D11Context::InitializeDXInternal(HWND hWndMain, IUnknown *coreWindow, int width, int height) {
@@ -181,6 +184,17 @@ namespace brls {
         D3D_API_RELEASE(this->renderTargetView);
         D3D_API_RELEASE(this->depthStencil);
         D3D_API_RELEASE(this->depthStencilView);
+    }
+
+    float D3D11Context::GetDpi() {
+        float dpi = 1.0f;
+#ifdef __SDL2__
+#ifdef __WINRT__
+#else
+        dpi = GetDpiForWindow(this->hwnd) / 96.0f;
+#endif
+#endif
+        return dpi;
     }
 
     bool D3D11Context::ResizeFramebufferSize(int width, int height) {

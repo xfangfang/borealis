@@ -127,4 +127,7 @@ target("demo")
     add_deps("borealis")
     if is_plat("mingw") then
         add_ldflags("-static")
+        add_files("demo/resource.rc")
+    elseif is_plat("windows") then 
+        add_files("demo/resource.manifest")
     end

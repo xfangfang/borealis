@@ -41,6 +41,7 @@ class SDLVideoContext : public VideoContext
     SDL_Window* getSDLWindow();
 
     double getScaleFactor() override;
+    float dpiScale = 1.0;
 
   private:
     SDL_Window* window     = nullptr;
