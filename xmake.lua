@@ -25,48 +25,13 @@ option_end()
 if is_plat("windows") then
     add_cxflags("/utf-8")
     add_includedirs("library/include/compat")
+    if is_mode("release") then
+        set_optimize("faster")
+    end
 end
 if is_plat("mingw") then
     add_defines("WINVER=0x0605")
 end
-
-package("yoga")
-    set_homepage("https://yogalayout.com")
-    set_description("Yoga is a cross-platform layout engine which implements Flexbox.")
-    set_license("MIT")
-    if os.exists("../yoga") then
-        set_sourcedir("../yoga")
-    else
-        -- set_sourcedir(os.getenv("YOGA_PATH"))
-        set_urls(
-            "https://github.com/facebook/yoga/archive/220d2582c94517b59d1c36f1c2faf5e3f88306f1.zip"
-        )
-        add_versions("latest", "a4477216404e803ba91adfdf672339e2e0ca803ec104a0b31354fed066e5ed46")
-    end
-    on_install(function (package)
-        io.writefile("xmake.lua", [[
-add_rules("mode.debug", "mode.release")
-local sourceFiles = {
-    "yoga/**.cpp"
-}
-
-target("yoga")
-    set_kind("$(kind)")
-    set_languages("c++17")
-    add_includedirs(".")
-    add_headerfiles("yoga/*.h", {prefixdir = "yoga"})
-    add_headerfiles("yoga/event/*.h", {prefixdir = "yoga/event"})
-    for _, f in ipairs(sourceFiles) do
-        add_files(f)
-    end
-    if is_plat("windows") then
-        add_cxflags("/utf-8")
-    end
-]])
-        local configs = {}
-        import("package.tools.xmake").install(package, configs)
-    end)
-package_end()
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")
     if os.exists("../nanovg") then
