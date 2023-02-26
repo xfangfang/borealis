@@ -99,7 +99,15 @@ target("borealis")
     elseif windowLib == "sdl" then
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
-        add_packages("sdl2")
+        if get_config("winrt") then
+            add_includedirs("../SDL-release-2.26.3/include")
+            add_linkdirs("../SDL-release-2.26.3/VisualC-WinRT/x64/Release/SDL-UWP")
+            add_links("sdl2")
+            add_defines("SDL_VIDEO_DRIVER_WINRT")
+            add_files("build/winrt.obj")
+        else
+            add_packages("sdl2")
+        end
         add_defines("__SDL2__")
     end
     local driver = get_config("driver")
@@ -130,6 +138,11 @@ target("demo")
     add_files("demo/*.cpp")
     add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga")
     add_deps("borealis")
+    if get_config("winrt") then
+        add_defines("__WINRT__=1")
+        add_ldflags("/nodefaultlib:vccorlib", "/nodefaultlib:msvcrt", {force = true})
+        add_syslinks("vccorlib", "msvcrt", "libcmt", "WindowsApp")
+    end
     if is_plat("mingw") then
         add_ldflags("-static")
         add_files("demo/resource.rc")

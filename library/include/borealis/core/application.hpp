@@ -35,6 +35,13 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef __WINRT__
+#ifdef main
+#undef main
+#endif
+#define main SDL_main
+#endif
+
 namespace brls
 {
 

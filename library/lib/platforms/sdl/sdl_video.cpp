@@ -114,7 +114,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         Logger::error("sdl: failed to initialize");
         return;
     }
-    #ifdef _WIN32
+    #if defined(_WIN32) && !defined(__WINRT__)
     this->dpiScale = GetDpiForSystem() / 96.0f;
     windowWidth *= this->dpiScale;
     windowHeight *= this->dpiScale;
@@ -216,7 +216,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 
 void SDLVideoContext::beginFrame()
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__WINRT__)
     // 暂时支持 windows 下的窗口 dpi 变化
     float nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0;
     if (this->dpiScale != nextDpiScale && nextDpiScale >= 1.0f) {

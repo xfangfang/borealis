@@ -11,6 +11,9 @@
 #elif defined(__SDL2__)
 #include <SDL_syswm.h>
 #endif
+#ifdef __WINRT__
+#include <borealis/platforms/driver/winrt.hpp>
+#endif
 
 namespace brls {
 #ifdef __GLFW__
@@ -20,25 +23,18 @@ namespace brls {
     }
 #elif defined(__SDL2__)
     bool D3D11Context::InitializeDX(SDL_Window* window, int width, int height) {
+#ifndef __WINRT__
         SDL_SysWMinfo windowinfo;
         SDL_GetVersion(&windowinfo.version);
         SDL_GetWindowWMInfo(window, &windowinfo);
         this->sdlWindow = window;
-#ifdef __WINRT__
-        // winrt 代码需要特别编译
-        if (windowinfo.subsystem == SDL_SYSWM_WINRT) {
-            ABI::Windows::UI::Core::ICoreWindow *coreWindow = NULL;
-            if (FAILED(windowinfo.info.winrt.window->QueryInterface(&coreWindow))) {
-                return false;
-            }
-            IUnknown *coreWindowAsIUnknown = NULL;
-            coreWindow->QueryInterface(&coreWindowAsIUnknown);
-            coreWindow->Release();
-            return InitializeDXInternal(nullptr, coreWindowAsIUnknown, width, height);
-        }
-#endif
         this->hwnd = windowinfo.info.win.window;
         return InitializeDXInternal(this->hwnd, nullptr, width, height);
+#else
+        // winrt 代码需要特别编译
+        IUnknown *coreWindow = SDL_GetCoreWindow(window);
+        return InitializeDXInternal(nullptr, coreWindow, width, height);
+#endif
     }
 #endif
     bool D3D11Context::InitializeDXInternal(HWND hWndMain, IUnknown *coreWindow, int width, int height) {

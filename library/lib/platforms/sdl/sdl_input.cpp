@@ -74,7 +74,11 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
     : window(window)
 {
 
-    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
+    int32_t flags = SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
+#ifndef __WINRT__
+    flags |= SDL_INIT_HAPTIC;
+#endif
+    if (SDL_Init(flags) < 0)
     {
         brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
     }

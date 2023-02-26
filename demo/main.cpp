@@ -37,7 +37,7 @@
 
 using namespace brls::literals; // for _i18n
 
-int main(int argc, char* argv[])
+extern "C" int main(int argc, char* argv[])
 {
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
