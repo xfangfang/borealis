@@ -6,6 +6,7 @@
 [Files]
 "build\resources.pri"			                                            "resources.pri"
 "build\windows\x64\debug\demo.exe"			                                "demo.exe"
+"build\windows\x64\debug\demo.pdb"			                                "demo.pdb"
 "..\sdl\VisualC-WinRT\x64\Release\SDL-UWP\SDL2.dll"			"SDL2.dll"
 "winrt\Assets\Wide310x150Logo.png"			                                "Assets\Wide310x150Logo.png"
 "winrt\Assets\StoreLogo.png"			                                    "Assets\StoreLogo.png"

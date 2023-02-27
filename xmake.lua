@@ -90,19 +90,17 @@ elseif windowLib == "glfw" then
     add_requires("xfangfang_glfw")
 end
 
--- target("winrt")
---     set_kind("static")
---     add_defines("SDL_VIDEO_DRIVER_WINRT")
---     add_defines("__SDL2__")
---     add_defines("__WINRT__")
---     add_includedirs("library/include")
---     add_packages("sdl2")
---     add_files("library/lib/platforms/driver/winrt.cpp")
---     add_cxflags("/await")
---     add_cxflags(
---         "/FUC:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\lib\\x86\\store\\references\\platform.winmd",
---         {force = true}
---     )
+target("winrt")
+    set_kind("static")
+    set_languages("c++latest")
+    add_cxflags("/await")
+    add_includedirs("library/include")
+    add_includedirs("build/include")
+    add_defines("SDL_VIDEO_DRIVER_WINRT")
+    add_defines("__SDL2__")
+    add_defines("__WINRT__")
+    add_files("library/lib/platforms/driver/winrt.cpp")
+    add_packages("sdl2")
 
 target("borealis")
     set_kind("static")
@@ -136,7 +134,9 @@ target("borealis")
         add_packages("sdl2")
         if get_config("winrt") then
             add_defines("SDL_VIDEO_DRIVER_WINRT")
-            add_files("build/winrt.obj")
+            -- add_files("build/winrt.obj")
+            add_deps("winrt")
+            -- add_files("library/lib/platforms/driver/winrt.cpp")
         end
         add_defines("__SDL2__")
     end

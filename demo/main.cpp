@@ -37,7 +37,7 @@
 
 using namespace brls::literals; // for _i18n
 
-extern "C" int main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
@@ -96,3 +96,7 @@ extern "C" int main(int argc, char* argv[])
     // Exit
     return EXIT_SUCCESS;
 }
+
+#ifdef __WINRT__
+#include <borealis/core/main.hpp>
+#endif
