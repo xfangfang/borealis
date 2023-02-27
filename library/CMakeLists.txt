@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 # using custom glfw
 if ((NOT USE_SDL2) AND PLATFORM_DESKTOP)
-    add_subdirectory(lib/extern/glfw)
+    add_subdirectory(lib/extern/glfw EXCLUDE_FROM_ALL)
 endif ()
 
 set(BOREALIS_PATH ${CMAKE_CURRENT_SOURCE_DIR})

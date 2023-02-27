@@ -35,7 +35,7 @@
 #include <switch.h>
 #endif
 
-#ifdef _WIN32
+#if defined(__linux__) || defined(_WIN32)
 #include "nanovg-gl/stb_image.h"
 #endif
 
@@ -172,8 +172,11 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // If the window appears outside the screen, using the default settings
-    auto* monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
-    if (!monitor)
+    GLFWmonitor* monitor = nullptr;
+    if (!isnan(windowX) && !isnan(windowY))
+        monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
+
+    if (monitor == nullptr)
     {
         windowX      = NAN;
         windowY      = NAN;
@@ -186,6 +189,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
 #endif
 
 // create window
@@ -203,10 +207,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     this->window     = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
 #endif
 
-#ifdef _WIN32
+#if defined(__linux__) || defined(_WIN32)
     // Set window icon
     GLFWimage images[1];
-    images[0].pixels = stbi_load("resources/icon/icon.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load(BRLS_ASSET("icon/icon.png"), &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(this->window, 1, images);
 #endif
 
