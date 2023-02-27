@@ -32,6 +32,26 @@ end
 if is_plat("mingw") then
     add_defines("WINVER=0x0605")
 end
+
+package("sdl2")
+    if os.exists("../sdl") then
+        set_sourcedir("../sdl")
+    else
+        set_sourcedir(os.getenv("SDL_PATH"))
+    end
+    add_links("sdl2")
+    on_install(function (package)
+        local content = io.readfile("VisualC-WinRT\\SDL-UWP.vcxproj"):gsub("v142", "v143")
+        io.writefile("VisualC-WinRT\\SDL-UWP.vcxproj", content)
+        local configs = {"VisualC-WinRT\\SDL-UWP.vcxproj", "/p:Configuration=Release", "/p:Platform=x64"}
+        import("package.tools.msbuild").build(package, configs)
+        os.cp("include/*.h", package:installdir("include").."/")
+        os.cp("VisualC-WinRT/x64/Release/SDL-UWP/*.dll", package:installdir("bin"))
+        os.cp("VisualC-WinRT/x64/Release/SDL-UWP/*.lib", package:installdir("lib"))
+        os.cp("VisualC-WinRT/x64/Release/SDL-UWP/*.pdb", package:installdir("lib"))
+    end)
+package_end()
+
 -- https://github.com/zeromake/nanovg
 package("zeromake_nanovg")
     if os.exists("../nanovg") then
@@ -70,6 +90,20 @@ elseif windowLib == "glfw" then
     add_requires("xfangfang_glfw")
 end
 
+-- target("winrt")
+--     set_kind("static")
+--     add_defines("SDL_VIDEO_DRIVER_WINRT")
+--     add_defines("__SDL2__")
+--     add_defines("__WINRT__")
+--     add_includedirs("library/include")
+--     add_packages("sdl2")
+--     add_files("library/lib/platforms/driver/winrt.cpp")
+--     add_cxflags("/await")
+--     add_cxflags(
+--         "/FUC:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\lib\\x86\\store\\references\\platform.winmd",
+--         {force = true}
+--     )
+
 target("borealis")
     set_kind("static")
     -- set_kind("shared")
@@ -99,14 +133,10 @@ target("borealis")
     elseif windowLib == "sdl" then
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
+        add_packages("sdl2")
         if get_config("winrt") then
-            add_includedirs("../SDL-release-2.26.3/include")
-            add_linkdirs("../SDL-release-2.26.3/VisualC-WinRT/x64/Release/SDL-UWP")
-            add_links("sdl2")
             add_defines("SDL_VIDEO_DRIVER_WINRT")
             add_files("build/winrt.obj")
-        else
-            add_packages("sdl2")
         end
         add_defines("__SDL2__")
     end
