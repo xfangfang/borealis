@@ -28,7 +28,7 @@
 class VideoContext
 {
   public:
-    virtual ~VideoContext() {};
+    virtual ~VideoContext() = default;;
 
     /**
      * Called at the beginning of every frame to clear the window
@@ -44,8 +44,6 @@ class VideoContext
      * Called at the end of every frame to end it (swap buffers...).
      */
     virtual void endFrame() = 0;
-
-    virtual void disableScreenDimming(bool disable) = 0;
 
     /**
      * Can be called by the application to reset the graphics

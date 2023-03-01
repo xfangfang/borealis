@@ -150,6 +150,11 @@ int SwitchPlatform::getWirelessLevel()
     return wifiSignal;
 }
 
+void SwitchPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
+{
+    appletSetMediaPlaybackState(disable);
+}
+
 std::string SwitchPlatform::getIpAddress()
 {
     u32 ip;

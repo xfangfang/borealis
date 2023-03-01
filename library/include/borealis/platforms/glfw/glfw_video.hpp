@@ -41,7 +41,6 @@ class GLFWVideoContext : public VideoContext
     void beginFrame() override;
     void endFrame() override;
     void resetState() override;
-    void disableScreenDimming(bool disable) override;
     double getScaleFactor() override;
     void fullScreen(bool fs) override;
     int getCurrentMonitorIndex() override;

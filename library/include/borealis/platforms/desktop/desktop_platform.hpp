@@ -20,6 +20,9 @@
 #include <borealis/core/platform.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
 #include <borealis/platforms/desktop/desktop_ime.hpp>
+#ifdef __linux__
+#include <dbus/dbus.h>
+#endif
 
 namespace brls
 {
@@ -28,7 +31,7 @@ class DesktopPlatform : public Platform
 {
   public:
     DesktopPlatform();
-    ~DesktopPlatform();
+    ~DesktopPlatform() override;
 
     std::string getName() override;
 
@@ -44,6 +47,7 @@ class DesktopPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     std::string exec(const char* cmd);
@@ -60,6 +64,9 @@ class DesktopPlatform : public Platform
     ThemeVariant themeVariant     = ThemeVariant::LIGHT;
     DesktopImeManager* imeManager = nullptr;
     std::string locale;
+#ifdef __linux__
+    uint32_t inhibitCookie = 0;
+#endif
 };
 
 } // namespace brls

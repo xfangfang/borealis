@@ -31,10 +31,6 @@
 #endif /* __PSV__ */
 #include <nanovg-gl/nanovg_gl.h>
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 #if defined(__linux__) || defined(_WIN32)
 #include "nanovg-gl/stb_image.h"
 #endif
@@ -325,13 +321,6 @@ void GLFWVideoContext::resetState()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
-}
-
-void GLFWVideoContext::disableScreenDimming(bool disable)
-{
-#ifdef __SWITCH__
-    appletSetMediaPlaybackState(disable);
-#endif
 }
 
 double GLFWVideoContext::getScaleFactor()

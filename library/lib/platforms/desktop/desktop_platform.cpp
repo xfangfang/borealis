@@ -61,6 +61,190 @@ int windows_system(const char* command)
 }
 #endif
 
+#ifdef __linux__
+// Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
+enum INHIBIT_TYPE
+{
+    FDO_SS, /**< KDE >= 4 and GNOME >= 3.10 */
+    FDO_PM, /**< KDE and GNOME <= 2.26 and Xfce */
+    MATE, /**< >= 1.0 */
+    GNOME, /**< GNOME 2.26..3.4 */
+};
+
+static const char dbus_service[][40] = {
+    [FDO_SS] = "org.freedesktop.ScreenSaver",
+    [FDO_PM] = "org.freedesktop.PowerManagement",
+    [MATE]   = "org.mate.SessionManager",
+    [GNOME]  = "org.gnome.SessionManager",
+};
+
+static const char dbus_interface[][40] = {
+    [FDO_SS] = "org.freedesktop.ScreenSaver",
+    [FDO_PM] = "org.freedesktop.PowerManagement.Inhibit",
+    [MATE]   = "org.mate.SessionManager",
+    [GNOME]  = "org.gnome.SessionManager",
+};
+
+static const char dbus_path[][41] = {
+    [FDO_SS] = "/ScreenSaver",
+    [FDO_PM] = "/org/freedesktop/PowerManagement/Inhibit",
+    [MATE]   = "/org/mate/SessionManager",
+    [GNOME]  = "/org/gnome/SessionManager",
+};
+
+static const char dbus_method_uninhibit[][10] = {
+    [FDO_SS] = "UnInhibit",
+    [FDO_PM] = "UnInhibit",
+    [MATE]   = "Uninhibit",
+    [GNOME]  = "Uninhibit",
+};
+
+static const char dbus_method_inhibit[] = "Inhibit";
+
+static inline INHIBIT_TYPE detectLinuxDesktopEnvironment()
+{
+    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    if (currentDesktop)
+    {
+        std::string xdgCurrentDesktop { currentDesktop };
+        // to upper
+        for (auto& i : xdgCurrentDesktop)
+        {
+            if ('a' <= i && i <= 'z')
+            {
+                i -= 32;
+            }
+        }
+        Logger::info("XDG_CURRENT_DESKTOP: {}", xdgCurrentDesktop);
+        if (xdgCurrentDesktop == "GNOME")
+            return GNOME;
+        if (xdgCurrentDesktop == "UBUNTU:GNOME")
+            return GNOME;
+        if (xdgCurrentDesktop == "MATE")
+            return MATE;
+    }
+    if (getenv("GNOME_DESKTOP_SESSION_ID"))
+    {
+        return GNOME;
+    }
+    const char* kdeVersion = getenv("KDE_SESSION_VERSION");
+    if (kdeVersion && atoi(kdeVersion) >= 4)
+    {
+        return FDO_SS;
+    }
+    return FDO_PM;
+}
+
+INHIBIT_TYPE systemType = detectLinuxDesktopEnvironment();
+
+static DBusConnection* connectSessionBus()
+{
+    DBusConnection* bus;
+    DBusError err;
+
+    dbus_error_init(&err);
+
+    bus = dbus_bus_get_private(DBUS_BUS_SESSION, &err);
+
+    if (!bus)
+    {
+        Logger::error("Could not connect to bus: {}", err.message);
+        dbus_error_free(&err);
+    }
+
+    return bus;
+}
+
+void closeSessionBus(DBusConnection* bus)
+{
+    Logger::info("DBus closed");
+    dbus_connection_close(bus);
+    dbus_connection_unref(bus);
+}
+
+uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const std::string& reason)
+{
+    DBusMessage* msg = dbus_message_new_method_call(dbus_service[systemType],
+        dbus_path[systemType],
+        dbus_interface[systemType],
+        dbus_method_inhibit);
+    if (!msg)
+    {
+        Logger::error("DBus cannot create new method call: {};{};{};{}", dbus_service[systemType],
+            dbus_path[systemType],
+            dbus_interface[systemType],
+            dbus_method_inhibit);
+        return 0;
+    }
+
+    const char* app_ptr    = app.c_str();
+    const char* reason_ptr = reason.c_str();
+    dbus_message_append_args(msg,
+        DBUS_TYPE_STRING, &app_ptr,
+        DBUS_TYPE_STRING, &reason_ptr,
+        DBUS_TYPE_INVALID);
+
+    DBusError dbus_error;
+    dbus_error_init(&dbus_error);
+    DBusMessage* dbus_reply = dbus_connection_send_with_reply_and_block(connection, msg, DBUS_TIMEOUT_USE_DEFAULT,
+        &dbus_error);
+    dbus_message_unref(msg);
+    if (!dbus_reply)
+    {
+        dbus_error_free(&dbus_error);
+        Logger::error("DBus connection failed");
+        return 0;
+    }
+
+    uint32_t id               = 0;
+    dbus_bool_t dbus_args_res = dbus_message_get_args(dbus_reply, &dbus_error, DBUS_TYPE_UINT32, &id,
+        DBUS_TYPE_INVALID);
+    dbus_message_unref(dbus_reply);
+    if (!dbus_args_res)
+    {
+        Logger::error("DBus cannot parse replay");
+        ::perror(dbus_error.name);
+        ::perror(dbus_error.message);
+        return 0;
+    }
+    return id;
+}
+
+void dbusUnInhibit(DBusConnection* connection, uint32_t cookie)
+{
+    DBusMessage* msg = dbus_message_new_method_call(dbus_service[systemType],
+        dbus_path[systemType],
+        dbus_interface[systemType],
+        dbus_method_uninhibit[systemType]);
+    if (!msg)
+    {
+        Logger::error("DBus cannot create new method call: {};{};{};{}", dbus_service[systemType],
+            dbus_path[systemType],
+            dbus_interface[systemType],
+            dbus_method_uninhibit[systemType]);
+        return;
+    }
+
+    dbus_message_append_args(msg,
+        DBUS_TYPE_UINT32, &cookie,
+        DBUS_TYPE_INVALID);
+
+    DBusError dbus_error;
+    dbus_error_init(&dbus_error);
+    DBusMessage* dbus_reply = dbus_connection_send_with_reply_and_block(connection, msg, DBUS_TIMEOUT_USE_DEFAULT,
+        &dbus_error);
+    dbus_message_unref(msg);
+    if (!dbus_reply)
+    {
+        dbus_error_free(&dbus_error);
+        Logger::error("DBus connection failed");
+    }
+}
+
+std::unique_ptr<DBusConnection, std::function<void(DBusConnection*)>> dbus_conn(connectSessionBus(),
+    closeSessionBus);
+#endif
+
 DesktopPlatform::DesktopPlatform()
 {
     // Theme
@@ -176,6 +360,23 @@ bool DesktopPlatform::hasWirelessConnection()
 int DesktopPlatform::getWirelessLevel()
 {
     return 3;
+}
+
+void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
+{
+    if (disable)
+    {
+#ifdef __linux__
+        inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
+#endif
+    }
+    else
+    {
+#ifdef __linux__
+        if (inhibitCookie != 0)
+            dbusUnInhibit(dbus_conn.get(), inhibitCookie);
+#endif
+    }
 }
 
 std::string DesktopPlatform::getIpAddress()

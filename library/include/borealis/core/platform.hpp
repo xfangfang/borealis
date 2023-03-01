@@ -34,7 +34,7 @@ namespace brls
 class Platform
 {
   public:
-    virtual ~Platform() {};
+    virtual ~Platform() = default;;
 
     /**
      * Called on startup, right after instanciation, to create and open a window
@@ -123,6 +123,15 @@ class Platform
      * Returns the battery level from 0 to 100.
      */
     virtual bool isBatteryCharging() = 0;
+
+    /**
+     * Disable screen dimming/saver...
+     *
+     * @param disable Inhibit or not
+     * @param reason If disable is true, pass Inhibited reason to the system.
+     * @param app If disable is true, pass app name to the system.
+     */
+    virtual void disableScreenDimming(bool disable, const std::string& reason="disable dimming", const std::string& app="borealis") = 0;
 
     /**
      * Called at every iteration of the main loop.

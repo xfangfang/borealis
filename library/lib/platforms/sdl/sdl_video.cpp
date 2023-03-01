@@ -22,10 +22,6 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg-gl/nanovg_gl.h>
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 namespace brls
 {
 
@@ -213,13 +209,6 @@ void SDLVideoContext::resetState()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
-}
-
-void SDLVideoContext::disableScreenDimming(bool disable)
-{
-#ifdef __SWITCH__
-    appletSetMediaPlaybackState(disable);
-#endif
 }
 
 double SDLVideoContext::getScaleFactor()
