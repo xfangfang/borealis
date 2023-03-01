@@ -65,7 +65,7 @@ std::string getStr(std::string stringName, Args&&... args)
 
     try
     {
-        return fmt::format(rawStr, args...);
+        return fmt::format(fmt::runtime(rawStr), args...);
     }
     catch (const std::exception& e)
     {

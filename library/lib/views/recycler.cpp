@@ -399,7 +399,7 @@ void RecyclerFrame::cellsRecyclingLoop()
         queueReusableCell(minCell);
         this->contentBox->removeView(minCell, false);
 
-        Logger::debug("Cell #" + std::to_string(visibleMin) + " - destroyed");
+        Logger::debug("Cell #{} - destroyed", visibleMin);
 
         visibleMin++;
     }
@@ -420,7 +420,7 @@ void RecyclerFrame::cellsRecyclingLoop()
         queueReusableCell(maxCell);
         this->contentBox->removeView(maxCell, false);
 
-        Logger::debug("Cell #" + std::to_string(visibleMax) + " - destroyed");
+        Logger::debug("Cell #{} - destroyed", visibleMax);
 
         visibleMax--;
     }
@@ -490,7 +490,7 @@ void RecyclerFrame::addCellAt(size_t index, size_t downSide)
         cacheFramesData[index].height = cellFrame.getHeight();
     }
 
-    Logger::debug("Cell #" + std::to_string(index) + " - added");
+    Logger::debug("Cell #{} - added", index);
 }
 
 void RecyclerFrame::onLayout()

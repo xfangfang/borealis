@@ -58,8 +58,7 @@ add_requires("tweeny")
 
 add_defines(
     'BRLS_RESOURCES="./resources/"',
-    "YG_ENABLE_EVENTS",
-    "FMT_CONSTEVAL="
+    "YG_ENABLE_EVENTS"
 )
 
 

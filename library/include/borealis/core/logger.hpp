@@ -57,16 +57,16 @@ class Logger
         try
         {
             fmt::print("{}\033{}[{}]\033[0m ", strTime, color, prefix);
-            fmt::print(format, args...);
+            fmt::print(format, std::forward<Args>(args)...);
             fmt::print("\n");
 
-            std::string log = fmt::format(format, args...);
+            std::string log = fmt::format(format, std::forward<Args>(args)...);
             logEvent.fire(log);
         }
         catch (const std::exception& e)
         {
             // will be printed after the first fmt::print (so after the log tag)
-            // printf("! Invalid log format string: \"%s\": %s\n", basic_string_view<char>(format).data(), e.what());
+            printf("! Invalid log format string: \"%s\": %s\n", fmt::basic_string_view<char>(format).data(), e.what());
         }
 
 #ifdef __MINGW32__
@@ -77,31 +77,31 @@ class Logger
     template <typename... Args>
     inline static void error(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_ERROR, "ERROR", "[0;31m", format, args...);
+        Logger::log(LogLevel::LOG_ERROR, "ERROR", "[0;31m", format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void warning(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_WARNING, "WARNING", "[0;33m", format, args...);
+        Logger::log(LogLevel::LOG_WARNING, "WARNING", "[0;33m", format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void info(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_INFO, "INFO", "[0;34m", format, args...);
+        Logger::log(LogLevel::LOG_INFO, "INFO", "[0;34m", format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void debug(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_DEBUG, "DEBUG", "[0;32m", format, args...);
+        Logger::log(LogLevel::LOG_DEBUG, "DEBUG", "[0;32m", format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void verbose(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", "[0;37m", format, args...);
+        Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", "[0;37m", format, std::forward<Args>(args)...);
     }
 
     static Event<std::string>* getLogEvent()
