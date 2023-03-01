@@ -1,6 +1,10 @@
 add_rules("mode.debug", "mode.release")
 
-set_languages("c++20")
+if is_plat("windows") then
+    set_languages("c++20")
+else
+    set_languages("c++17")
+end
 
 option("platfrom")
     set_default("desktop")
