@@ -37,24 +37,11 @@ if is_plat("mingw") then
     add_defines("WINVER=0x0605")
 end
 
--- https://github.com/zeromake/nanovg
-package("zeromake_nanovg")
-    if os.exists("../nanovg") then
-        set_sourcedir("../nanovg")
-    else
-        set_sourcedir(os.getenv("NANOVG_PATH"))
-    end
-    add_links("nanovg")
-    on_install(function (package)
-        local configs = {}
-        import("package.tools.xmake").install(package, configs)
-    end)
-package_end()
 
 add_requires("tinyxml2")
 add_requires("yoga")
 add_requires("stb")
-add_requires("zeromake_nanovg")
+add_requires("nanovg")
 add_requires("nlohmann_json")
 add_requires("glad")
 add_requires("fmt")
@@ -135,13 +122,13 @@ target("borealis")
         -- d3d11 可以开启可变帧率
         -- add_defines("__ALLOW_TEARING__=1")
     end
-    add_packages("tinyxml2", "nlohmann_json", "zeromake_nanovg", "fmt", "tweeny", "yoga", "stb")
+    add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")
 
 target("demo")
     add_includedirs("library/include")
     add_files("demo/*.cpp")
-    add_packages("tinyxml2", "zeromake_nanovg", "fmt", "tweeny", "yoga", "sdl2")
+    add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga", "sdl2")
     add_deps("borealis")
     if get_config("winrt") then
         add_defines("__WINRT__=1")
