@@ -79,15 +79,6 @@ elseif windowLib == "glfw" then
     add_requires("xfangfang_glfw")
 end
 
-target("winrt")
-    set_kind("static")
-    add_includedirs("library/include")
-    add_defines("SDL_VIDEO_DRIVER_WINRT")
-    add_defines("__SDL2__")
-    add_defines("__WINRT__")
-    add_files("library/lib/platforms/driver/winrt.cpp")
-    add_packages("sdl2", "cppwinrt")
-
 target("borealis")
     set_kind("static")
     -- set_kind("shared")
@@ -120,7 +111,8 @@ target("borealis")
         add_packages("sdl2")
         if get_config("winrt") then
             add_defines("SDL_VIDEO_DRIVER_WINRT")
-            add_deps("winrt")
+            add_packages("cppwinrt")
+            add_files("library/lib/platforms/driver/winrt.cpp")
         end
         add_defines("__SDL2__")
     end
@@ -134,7 +126,6 @@ target("borealis")
         add_defines("BOREALIS_USE_OPENGL")
         add_packages("glad")
     elseif driver == "d3d11" then
-        -- Todo: winrt 的 cpp 需要单独走 vs 的 winrt 编译，考虑把 winrt 的代码单独提取
         add_files("library/lib/platforms/driver/d3d11.cpp")
         if get_config("winrt") then
             add_defines("__WINRT__=1")
