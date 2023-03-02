@@ -578,8 +578,9 @@ void Application::frame()
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
     float scaleFactor = frameContext.pixelRatio;
-#ifdef BOREALIS_USE_METAL
-    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 ScaleFactor
+#if defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
+    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 scaleFactor
+    // d3d11 用  文字有明显的锯齿，改用 scaleFactor
     scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
 #endif
 

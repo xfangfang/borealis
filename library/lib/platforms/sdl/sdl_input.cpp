@@ -225,9 +225,15 @@ void SDLInputManager::updateMouseStates(RawMouseState* state)
     state->middleButton = buttons & SDL_BUTTON_MIDDLE;
     state->rightButton  = buttons & SDL_BUTTON_RIGHT;
 
+#ifdef BOREALIS_USE_D3D11
+    // d3d11 scaleFactor 不计算在点击事件里
+    state->position.x  = x / Application::windowScale;
+    state->position.y  = y / Application::windowScale;
+#else
     double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
     state->position.x  = x * scaleFactor / Application::windowScale;
     state->position.y  = y * scaleFactor / Application::windowScale;
+#endif
 
     state->offset = pointerOffset;
 

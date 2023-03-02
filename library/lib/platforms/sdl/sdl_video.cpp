@@ -34,6 +34,7 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
 #ifdef __WINRT__
 #include <winrt/Windows.Graphics.Display.h>
+#include <winrt/Windows.Foundation.h>
 #endif
 
 namespace brls
@@ -42,17 +43,18 @@ namespace brls
 static double scaleFactor = 1.0;
 
 #ifdef __WINRT__
-static int GetDpiForWindow() {
+static float GetDpiForWindow() {
     winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
-    return (int)displayInformation.ResolutionScale();
+    return (int)displayInformation.ResolutionScale() / 100.0f;
 }
 
-// void InitDpiChanged() {
-//     winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
-//     displayInformation.DpiChanged({this, [](winrt::Windows::Graphics::Display::DisplayInformation const & sender, winrt::Windows::Foundation::IInspectable const & args){
-//         printf("OnDpiChanged\n");
-//     }});
-// }
+static void InitDpiChanged(SDLVideoContext* ctx) {
+    winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+    displayInformation.DpiChanged([&](auto && sender, auto && args){
+        float dpi = (int)sender.ResolutionScale() / 100.0f;
+        ctx->dpiChanged(dpi);
+    });
+}
 #endif
 
 static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int height)
@@ -66,9 +68,8 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
     scaleFactor = fWidth * 1.0 / width;
     glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
-    scaleFactor = D3D11_CONTEXT->GetDpi();
-    fWidth = width * scaleFactor;
-    fHeight = height * scaleFactor;
+    fWidth = width;
+    fHeight = height;
     D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
 #endif
 
@@ -131,11 +132,6 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         Logger::error("sdl: failed to initialize");
         return;
     }
-    #if defined(_WIN32) && !defined(__WINRT__)
-    this->dpiScale = GetDpiForSystem() / 96.0f;
-    windowWidth *= this->dpiScale;
-    windowHeight *= this->dpiScale;
-    #endif
     // Create window
     Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 #ifdef BOREALIS_USE_OPENGL
@@ -189,6 +185,13 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         fatal("sdl: failed to create window");
         return;
     }
+    // 处理 dpi 窗口缩放
+#ifdef __WINRT__
+    this->dpiChanged(GetDpiForWindow(), true);
+    InitDpiChanged(this);
+#elif defined(_WIN32)
+    this->dpiChanged(GetDpiForSystem() / 96.0f, true);
+#endif
 
 #ifdef BOREALIS_USE_OPENGL
     // Configure window
@@ -221,7 +224,6 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         brls::fatal("glfw: unable to init nanovg");
         return;
     }
-
     // Setup scaling
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
@@ -231,24 +233,29 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     sdlWindowPositionCallback(window, xPos, yPos);
 }
 
-void SDLVideoContext::beginFrame()
-{
-    float nextDpiScale = this->dpiScale;
-#if defined(_WIN32) && !defined(__WINRT__)
-    // 暂时支持 windows 下的窗口 dpi 变化
-    nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0f;
-#elif defined(__WINRT__)
-    nextDpiScale = GetDpiForWindow() / 100.0f;
-#endif
+void SDLVideoContext::dpiChanged(float nextDpiScale, bool init) {
     if (this->dpiScale != nextDpiScale && nextDpiScale >= 1.0f) {
         int width, height;
         SDL_GetWindowSize(this->window, &width, &height);
         width = width / this->dpiScale * nextDpiScale;
         height = height / this->dpiScale * nextDpiScale;
         this->dpiScale = nextDpiScale;
+        scaleFactor = nextDpiScale;
         SDL_SetWindowSize(this->window, width, height);
-        sdlWindowFramebufferSizeCallback(this->window, width, height);
+        if (init) {
+            SDL_SetWindowPosition(this->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        }
+        // sdlWindowFramebufferSizeCallback(this->window, width, height);
     }
+}
+
+void SDLVideoContext::beginFrame()
+{
+#if defined(_WIN32) && !defined(__WINRT__)
+    // 暂时使用每次绘制前扫描 dpi 支持 windows 下的窗口 dpi 变化
+    float nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0f;
+    this->dpiChanged(nextDpiScale);
+#endif
 }
 
 void SDLVideoContext::endFrame()
