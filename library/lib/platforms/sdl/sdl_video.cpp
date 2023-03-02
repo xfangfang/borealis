@@ -32,11 +32,28 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #ifdef __SWITCH__
 #include <switch.h>
 #endif
+#ifdef __WINRT__
+#include <winrt/Windows.Graphics.Display.h>
+#endif
 
 namespace brls
 {
 
 static double scaleFactor = 1.0;
+
+#ifdef __WINRT__
+static int GetDpiForWindow() {
+    winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+    return (int)displayInformation.ResolutionScale();
+}
+
+// void InitDpiChanged() {
+//     winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+//     displayInformation.DpiChanged({this, [](winrt::Windows::Graphics::Display::DisplayInformation const & sender, winrt::Windows::Foundation::IInspectable const & args){
+//         printf("OnDpiChanged\n");
+//     }});
+// }
+#endif
 
 static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int height)
 {
@@ -216,9 +233,13 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 
 void SDLVideoContext::beginFrame()
 {
+    float nextDpiScale = this->dpiScale;
 #if defined(_WIN32) && !defined(__WINRT__)
     // 暂时支持 windows 下的窗口 dpi 变化
-    float nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0;
+    nextDpiScale = GetDpiForWindow(GetActiveWindow()) / 96.0f;
+#elif defined(__WINRT__)
+    nextDpiScale = GetDpiForWindow() / 100.0f;
+#endif
     if (this->dpiScale != nextDpiScale && nextDpiScale >= 1.0f) {
         int width, height;
         SDL_GetWindowSize(this->window, &width, &height);
@@ -226,8 +247,8 @@ void SDLVideoContext::beginFrame()
         height = height / this->dpiScale * nextDpiScale;
         this->dpiScale = nextDpiScale;
         SDL_SetWindowSize(this->window, width, height);
+        sdlWindowFramebufferSizeCallback(this->window, width, height);
     }
-#endif
 }
 
 void SDLVideoContext::endFrame()
