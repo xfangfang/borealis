@@ -72,31 +72,31 @@ enum INHIBIT_TYPE
 };
 
 static const char dbus_service[][40] = {
-    [FDO_SS] = "org.freedesktop.ScreenSaver",
-    [FDO_PM] = "org.freedesktop.PowerManagement",
-    [MATE]   = "org.mate.SessionManager",
-    [GNOME]  = "org.gnome.SessionManager",
+    "org.freedesktop.ScreenSaver",
+    "org.freedesktop.PowerManagement",
+    "org.mate.SessionManager",
+    "org.gnome.SessionManager",
 };
 
 static const char dbus_interface[][40] = {
-    [FDO_SS] = "org.freedesktop.ScreenSaver",
-    [FDO_PM] = "org.freedesktop.PowerManagement.Inhibit",
-    [MATE]   = "org.mate.SessionManager",
-    [GNOME]  = "org.gnome.SessionManager",
+    "org.freedesktop.ScreenSaver",
+    "org.freedesktop.PowerManagement.Inhibit",
+    "org.mate.SessionManager",
+    "org.gnome.SessionManager",
 };
 
 static const char dbus_path[][41] = {
-    [FDO_SS] = "/ScreenSaver",
-    [FDO_PM] = "/org/freedesktop/PowerManagement/Inhibit",
-    [MATE]   = "/org/mate/SessionManager",
-    [GNOME]  = "/org/gnome/SessionManager",
+    "/ScreenSaver",
+    "/org/freedesktop/PowerManagement/Inhibit",
+    "/org/mate/SessionManager",
+    "/org/gnome/SessionManager",
 };
 
 static const char dbus_method_uninhibit[][10] = {
-    [FDO_SS] = "UnInhibit",
-    [FDO_PM] = "UnInhibit",
-    [MATE]   = "Uninhibit",
-    [GNOME]  = "Uninhibit",
+    "UnInhibit",
+    "UnInhibit",
+    "Uninhibit",
+    "Uninhibit",
 };
 
 static const char dbus_method_inhibit[] = "Inhibit";
@@ -125,17 +125,20 @@ static inline INHIBIT_TYPE detectLinuxDesktopEnvironment()
     }
     if (getenv("GNOME_DESKTOP_SESSION_ID"))
     {
+        Logger::info("CURRENT_DESKTOP: GNOME");
         return GNOME;
     }
     const char* kdeVersion = getenv("KDE_SESSION_VERSION");
     if (kdeVersion && atoi(kdeVersion) >= 4)
     {
+        Logger::info("CURRENT_DESKTOP: KDE {}", kdeVersion);
         return FDO_SS;
     }
+    Logger::info("CURRENT_DESKTOP: DEFAULT");
     return FDO_PM;
 }
 
-INHIBIT_TYPE systemType = detectLinuxDesktopEnvironment();
+static INHIBIT_TYPE systemType = detectLinuxDesktopEnvironment();
 
 static DBusConnection* connectSessionBus()
 {
@@ -179,10 +182,28 @@ uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const s
 
     const char* app_ptr    = app.c_str();
     const char* reason_ptr = reason.c_str();
-    dbus_message_append_args(msg,
-        DBUS_TYPE_STRING, &app_ptr,
-        DBUS_TYPE_STRING, &reason_ptr,
-        DBUS_TYPE_INVALID);
+    switch (systemType)
+    {
+        case MATE:
+        case GNOME:
+        {
+            dbus_uint32_t xid    = 0;
+            dbus_uint32_t gflags = 0xC;
+            dbus_message_append_args(msg,
+                DBUS_TYPE_STRING, &app_ptr,
+                DBUS_TYPE_UINT32, &xid,
+                DBUS_TYPE_STRING, &reason_ptr,
+                DBUS_TYPE_UINT32, &gflags,
+                DBUS_TYPE_INVALID);
+            break;
+        }
+        default:
+            dbus_message_append_args(msg,
+                DBUS_TYPE_STRING, &app_ptr,
+                DBUS_TYPE_STRING, &reason_ptr,
+                DBUS_TYPE_INVALID);
+            break;
+    }
 
     DBusError dbus_error;
     dbus_error_init(&dbus_error);
@@ -191,8 +212,8 @@ uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const s
     dbus_message_unref(msg);
     if (!dbus_reply)
     {
+        Logger::error("DBus connection failed: {}/{}", dbus_error.name, dbus_error.message);
         dbus_error_free(&dbus_error);
-        Logger::error("DBus connection failed");
         return 0;
     }
 
@@ -202,9 +223,8 @@ uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const s
     dbus_message_unref(dbus_reply);
     if (!dbus_args_res)
     {
-        Logger::error("DBus cannot parse replay");
-        ::perror(dbus_error.name);
-        ::perror(dbus_error.message);
+        Logger::error("DBus cannot parse replay: {}/{}", dbus_error.name, dbus_error.message);
+        dbus_error_free(&dbus_error);
         return 0;
     }
     return id;
@@ -236,12 +256,12 @@ void dbusUnInhibit(DBusConnection* connection, uint32_t cookie)
     dbus_message_unref(msg);
     if (!dbus_reply)
     {
+        Logger::error("DBus connection failed: {}/{}", dbus_error.name, dbus_error.message);
         dbus_error_free(&dbus_error);
-        Logger::error("DBus connection failed");
     }
 }
 
-std::unique_ptr<DBusConnection, std::function<void(DBusConnection*)>> dbus_conn(connectSessionBus(),
+static std::unique_ptr<DBusConnection, std::function<void(DBusConnection*)>> dbus_conn(connectSessionBus(),
     closeSessionBus);
 #endif
 
@@ -364,6 +384,11 @@ int DesktopPlatform::getWirelessLevel()
 
 void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
 {
+    static bool status = false;
+    if (status == disable)
+        return;
+    status = disable;
+
     if (disable)
     {
 #ifdef __linux__
