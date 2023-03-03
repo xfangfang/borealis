@@ -234,12 +234,13 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 }
 
 void SDLVideoContext::dpiChanged(float nextDpiScale, bool init) {
-    if (this->dpiScale != nextDpiScale && nextDpiScale >= 1.0f) {
+    if (sizeScale != nextDpiScale && nextDpiScale >= 1.0f) {
         int width, height;
         SDL_GetWindowSize(this->window, &width, &height);
-        width = width / this->dpiScale * nextDpiScale;
-        height = height / this->dpiScale * nextDpiScale;
-        this->dpiScale = nextDpiScale;
+        int scale = (nextDpiScale * 100) / sizeScale;
+        width = width / (int)sizeScale * (int)nextDpiScale;
+        height = height / (int)sizeScale * (int)nextDpiScale;
+        sizeScale = nextDpiScale;
         scaleFactor = nextDpiScale;
         SDL_SetWindowSize(this->window, width, height);
         if (init) {
@@ -338,6 +339,10 @@ NVGcontext* SDLVideoContext::getNVGContext()
 SDL_Window* SDLVideoContext::getSDLWindow()
 {
     return this->window;
+}
+
+void SDLVideoContext::fullScreen(bool fs) {
+    SDL_SetWindowFullscreen(this->window, fs? SDL_WINDOW_FULLSCREEN : 0);
 }
 
 } // namespace brls

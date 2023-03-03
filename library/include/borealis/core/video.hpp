@@ -73,6 +73,7 @@ class VideoContext
     // The position and size of the window in the last non-full-screen mode
     static inline float posX = NAN, posY = NAN;
     static inline uint32_t sizeW = 0, sizeH = 0;
+    static inline float sizeScale = 1.0f;
 
     static inline int monitorIndex = 0;
 };

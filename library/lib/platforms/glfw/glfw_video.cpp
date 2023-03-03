@@ -234,7 +234,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         // windows 下 dpi 存在时把初始窗口大小乘上 dpi 倍率
         float xscale, yscale;
         glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-        if (xscale > 1.0f && xscale == yscale) {
+        if (xscale > 1.0f && xscale == yscale && sizeScale == 1.0f) {
+            sizeScale = xscale;
             windowWidth *= xscale;
             windowHeight *= xscale;
         }
@@ -492,9 +493,17 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
+            int width = ORIGINAL_WINDOW_WIDTH;
+            int height = ORIGINAL_WINDOW_HEIGHT;
+#ifdef _WIN32
+            if (sizeScale > 1.0f) {
+                width *= sizeScale;
+                height *= sizeScale;
+            }
+#endif
             // If the window appears outside the screen, using the default settings
-            glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - ORIGINAL_WINDOW_WIDTH) / 2,
-                fabs(mode->height - ORIGINAL_WINDOW_HEIGHT) / 2, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, GLFW_DONT_CARE);
+            glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - width) / 2,
+                fabs(mode->height - height) / 2, width, height, GLFW_DONT_CARE);
         }
         else
         {

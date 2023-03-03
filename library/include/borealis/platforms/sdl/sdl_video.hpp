@@ -37,11 +37,11 @@ class SDLVideoContext : public VideoContext
     void endFrame() override;
     void resetState() override;
     void disableScreenDimming(bool disable) override;
+    void fullScreen(bool fs) override;
 
     SDL_Window* getSDLWindow();
 
     double getScaleFactor() override;
-    float dpiScale = 1.0;
     void dpiChanged(float nextDpiScale, bool init = false);
 
   private:
