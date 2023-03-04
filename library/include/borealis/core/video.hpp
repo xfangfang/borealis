@@ -19,6 +19,7 @@
 #include <nanovg.h>
 
 #include <cmath>
+#include <borealis/core/geometry.hpp>
 
 // A VideoContext is responsible for providing a nanovg context for the app
 // (so by extension it manages all the graphics state as well as the window / context).
@@ -75,5 +76,17 @@ class VideoContext
     static inline uint32_t sizeW = 0, sizeH = 0;
     static inline float sizeScale = 1.0f;
 
+    static inline void getWindowState(struct brls::Rect* rect) {
+        rect->origin.x = posX;
+        rect->origin.y = posY;
+        rect->size.width = (float)sizeW / sizeScale;
+        rect->size.height = (float)sizeH / sizeScale;
+    }
+    static inline void setWindowState(struct brls::Rect rect) {
+        posX = rect.origin.x;
+        posY = rect.origin.y;
+        sizeW = rect.size.width;
+        sizeH = rect.size.height;
+    }
     static inline int monitorIndex = 0;
 };

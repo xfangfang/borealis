@@ -43,9 +43,9 @@ namespace brls
 static double scaleFactor = 1.0;
 
 #ifdef __WINRT__
-static float GetDpiForWindow() {
+static unsigned int GetDpiForSystem() {
     winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
-    return (int)displayInformation.ResolutionScale() / 100.0f;
+    return (unsigned int)displayInformation.LogicalDpi();
 }
 
 static void InitDpiChanged(SDLVideoContext* ctx) {
@@ -186,10 +186,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         return;
     }
     // 处理 dpi 窗口缩放
-#ifdef __WINRT__
-    this->dpiChanged(GetDpiForWindow(), true);
-    InitDpiChanged(this);
-#elif defined(_WIN32)
+#if defined(_WIN32) || defined(__WINRT__)
     this->dpiChanged(GetDpiForSystem() / 96.0f, true);
 #endif
 
@@ -243,10 +240,6 @@ void SDLVideoContext::dpiChanged(float nextDpiScale, bool init) {
         sizeScale = nextDpiScale;
         scaleFactor = nextDpiScale;
         SDL_SetWindowSize(this->window, width, height);
-        if (init) {
-            SDL_SetWindowPosition(this->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-        }
-        // sdlWindowFramebufferSizeCallback(this->window, width, height);
     }
 }
 
