@@ -192,6 +192,7 @@ class Application
     static void setFPSStatus(bool enabled);
     static bool getFPSStatus();
     static size_t getFPS();
+    static void setLimitedFPS(size_t fps);
 
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
@@ -301,6 +302,7 @@ class Application
     inline static size_t globalFPS                      = 60;
     inline static unsigned int FPS_INTERNAL             = 30;
     inline static unsigned int FPS_INTERNAL_TIME        = FPS_INTERNAL * 1000000;
+    inline static Time limitedFrameTime                 = 0;
 
     inline static View* repetitionOldFocus = nullptr;
 
