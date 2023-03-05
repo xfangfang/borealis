@@ -51,6 +51,9 @@ namespace brls {
         };
         static const D3D_FEATURE_LEVEL levelAttempts[] =
         {
+            D3D_FEATURE_LEVEL_12_2,
+            D3D_FEATURE_LEVEL_12_1,
+            D3D_FEATURE_LEVEL_12_0,
             D3D_FEATURE_LEVEL_11_1,  // Direct3D 11.1 SM 6
             D3D_FEATURE_LEVEL_11_0,  // Direct3D 11.0 SM 5
             D3D_FEATURE_LEVEL_10_1,  // Direct3D 10.1 SM 4
@@ -76,6 +79,7 @@ namespace brls {
 
             if (SUCCEEDED(hr))
             {
+                // printf("feature level: 0x%X\n", this->featureLevel);
                 break;
             }
         }
