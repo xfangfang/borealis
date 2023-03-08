@@ -51,7 +51,6 @@ namespace brls {
         };
         static const D3D_FEATURE_LEVEL levelAttempts[] =
         {
-            D3D_FEATURE_LEVEL_12_2,
             D3D_FEATURE_LEVEL_12_1,
             D3D_FEATURE_LEVEL_12_0,
             D3D_FEATURE_LEVEL_11_1,  // Direct3D 11.1 SM 6
