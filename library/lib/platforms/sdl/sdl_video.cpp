@@ -335,7 +335,13 @@ SDL_Window* SDLVideoContext::getSDLWindow()
 }
 
 void SDLVideoContext::fullScreen(bool fs) {
-    SDL_SetWindowFullscreen(this->window, fs? SDL_WINDOW_FULLSCREEN : 0);
+#ifdef BOREALIS_USE_D3D11
+    // opengl 会很模糊，而且点击事件貌似也错位了。
+    unsigned int flag = SDL_WINDOW_FULLSCREEN;
+#else
+    unsigned int flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
+    SDL_SetWindowFullscreen(this->window, fs? flag : 0);
 }
 
 } // namespace brls
