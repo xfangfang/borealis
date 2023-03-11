@@ -335,8 +335,8 @@ SDL_Window* SDLVideoContext::getSDLWindow()
 }
 
 void SDLVideoContext::fullScreen(bool fs) {
-#ifdef BOREALIS_USE_D3D11
-    // opengl 会很模糊，而且点击事件貌似也错位了。
+#ifdef __WINRT__
+    // win32 会很模糊，而且点击事件貌似也错位了，只给 winrt 使用。
     unsigned int flag = SDL_WINDOW_FULLSCREEN;
 #else
     unsigned int flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
