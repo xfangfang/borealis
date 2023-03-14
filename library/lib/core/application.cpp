@@ -972,7 +972,7 @@ std::string* Application::getCommonFooter()
     return &Application::commonFooter;
 }
 
-void Application::onWindowResized(int width, int height)
+void Application::setWindowSize(int width, int height)
 {
     Application::windowWidth  = width;
     Application::windowHeight = height;
@@ -984,7 +984,10 @@ void Application::onWindowResized(int width, int height)
 
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
+}
 
+void Application::onWindowResized(int width, int height)
+{
     // Trigger event when Window size is stable
     static size_t iter = 0;
     brls::cancelDelay(iter);
@@ -993,18 +996,25 @@ void Application::onWindowResized(int width, int height)
             Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
                 width, height, contentWidth, contentHeight, Application::windowScale);
             brls::Logger::info("scale factor: {}", Application::getPlatform()->getVideoContext()->getScaleFactor());
+
+            Application::setWindowSize(width, height);
             Application::getWindowSizeChangedEvent()->fire(); });
+}
+
+void Application::setWindowPosition(int x, int y)
+{
+    Application::windowXPos = x;
+    Application::windowYPos = y;
 }
 
 void Application::onWindowReposition(int x, int y)
 {
-    Application::windowXPos = x;
-    Application::windowYPos = y;
-
     static size_t iter = 0;
     brls::cancelDelay(iter);
     iter = brls::delay(100, [x, y]()
-        { Logger::info("Window position changed to {}x{}", x, y); });
+        {
+            Logger::info("Window position changed to {}x{}", x, y);
+            Application::setWindowPosition(x, y); });
 }
 
 std::string Application::getTitle()

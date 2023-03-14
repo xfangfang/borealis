@@ -268,13 +268,22 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         return;
     }
 
-    // Setup scaling
+    // Setup window state
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glfwWindowFramebufferSizeCallback(window, width, height);
+    Application::setWindowSize(width, height);
+
     int xPos, yPos;
     glfwGetWindowPos(window, &xPos, &yPos);
-    glfwWindowPositionCallback(window, xPos, yPos);
+    Application::setWindowPosition(xPos, yPos);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::sizeW = width;
+        VideoContext::sizeH = height;
+        VideoContext::posX = (float)xPos;
+        VideoContext::posY = (float)yPos;
+    }
 
 #ifdef __SWITCH__
     this->monitor    = glfwGetPrimaryMonitor();

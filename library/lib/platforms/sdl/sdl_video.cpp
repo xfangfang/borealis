@@ -173,13 +173,22 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         return;
     }
 
-    // Setup scaling
+    // Setup window state
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
-    sdlWindowFramebufferSizeCallback(window, width, height);
+    Application::setWindowSize(width, height);
+
     int xPos, yPos;
     SDL_GetWindowPosition(window, &xPos, &yPos);
-    sdlWindowPositionCallback(window, xPos, yPos);
+    Application::setWindowPosition(xPos, yPos);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::sizeW = width;
+        VideoContext::sizeH = height;
+        VideoContext::posX = (float)xPos;
+        VideoContext::posY = (float)yPos;
+    }
 }
 
 void SDLVideoContext::beginFrame()

@@ -90,11 +90,25 @@ class Application
 
     /**
      * Called by the video context when the content window is resized
-     * and when the context is ready (to setup the initial content scaling).
      */
     static void onWindowResized(int width, int height);
 
+    /**
+     * Do not call this function, use it internally.
+     * Called when the video context is ready (to setup the initial content scaling).
+     */
+    static void setWindowSize(int width, int height);
+
+    /**
+     * Called by the video context when the content window is Repositioned
+     */
     static void onWindowReposition(int xPos, int yPos);
+
+    /**
+     * Do not call this function, use it internally.
+     * Called when the video context is ready (to setup the initial window position).
+     */
+    static void setWindowPosition(int xPos, int yPos);
 
     static std::vector<Activity*> getActivitiesStack();
 

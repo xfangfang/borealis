@@ -28,7 +28,7 @@
 class VideoContext
 {
   public:
-    virtual ~VideoContext() = default;;
+    virtual ~VideoContext() = default;
 
     /**
      * Called at the beginning of every frame to clear the window
