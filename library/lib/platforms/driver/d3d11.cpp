@@ -12,6 +12,7 @@
 #include <SDL_syswm.h>
 #endif
 #ifdef __WINRT__
+#include <winrt/Windows.Graphics.Display.h>
 #include <borealis/platforms/driver/winrt.hpp>
 #endif
 
@@ -189,6 +190,8 @@ namespace brls {
         float dpi = 1.0f;
 #ifdef __SDL2__
 #ifdef __WINRT__
+        static winrt::Windows::Graphics::Display::DisplayInformation displayInformation = winrt::Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+        dpi = (unsigned int)displayInformation.LogicalDpi() / 96.0f;
 #else
         dpi = GetDpiForWindow(this->hwnd) / 96.0f;
 #endif

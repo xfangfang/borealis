@@ -74,19 +74,5 @@ class VideoContext
     // The position and size of the window in the last non-full-screen mode
     static inline float posX = NAN, posY = NAN;
     static inline uint32_t sizeW = 0, sizeH = 0;
-    static inline float sizeScale = 1.0f;
-
-    static inline void getWindowState(struct brls::Rect* rect) {
-        rect->origin.x = posX;
-        rect->origin.y = posY;
-        rect->size.width = (float)sizeW / sizeScale;
-        rect->size.height = (float)sizeH / sizeScale;
-    }
-    static inline void setWindowState(struct brls::Rect rect) {
-        posX = rect.origin.x;
-        posY = rect.origin.y;
-        sizeW = rect.size.width;
-        sizeH = rect.size.height;
-    }
     static inline int monitorIndex = 0;
 };

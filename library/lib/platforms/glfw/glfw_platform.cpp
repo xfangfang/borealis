@@ -86,14 +86,6 @@ void GLFWPlatform::restoreWindow()
 void GLFWPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
     if (windowWidth > 0 && windowHeight > 0) {
-#ifdef _WIN32
-        // api 方式设置与 macosx 保持一致
-        float sizeScale = VideoContext::sizeScale;
-        if (sizeScale > 1.0f) {
-            windowWidth *= sizeScale;
-            windowHeight *= sizeScale;
-        }
-#endif
         glfwSetWindowSize(this->videoContext->getGLFWWindow(), windowWidth, windowHeight);
     }
 }
@@ -115,14 +107,6 @@ void GLFWPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, i
 {
     if (windowWidth > 0 && windowHeight > 0)
     {
-#ifdef _WIN32
-        // api 方式设置与 macosx 保持一致
-        float sizeScale = VideoContext::sizeScale;
-        if (sizeScale > 1.0f) {
-            windowWidth *= sizeScale;
-            windowHeight *= sizeScale;
-        }
-#endif
         GLFWwindow* win = this->videoContext->getGLFWWindow();
         glfwRestoreWindow(win);
         glfwSetWindowMonitor(win, nullptr, windowXPos, windowYPos, windowWidth, windowHeight, 0);

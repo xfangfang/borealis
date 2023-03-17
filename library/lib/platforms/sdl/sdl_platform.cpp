@@ -50,22 +50,12 @@ void SDLPlatform::restoreWindow()
 void SDLPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
     if (windowWidth > 0 && windowHeight > 0) {
-        if (VideoContext::sizeScale > 1.0f) {
-            windowWidth *= VideoContext::sizeScale;
-            windowHeight *= VideoContext::sizeScale;
-        }
         SDL_SetWindowSize(this->videoContext->getSDLWindow(), windowWidth, windowHeight);
     }
 }
 
 void SDLPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight)
 {
-    if (VideoContext::sizeScale > 1.0f) {
-        windowMinWidth *= VideoContext::sizeScale;
-        windowMinHeight *= VideoContext::sizeScale;
-        windowMaxWidth *= VideoContext::sizeScale;
-        windowMaxHeight *= VideoContext::sizeScale;
-    }
     if (windowMinWidth > 0 && windowMinHeight > 0)
         SDL_SetWindowMinimumSize(this->videoContext->getSDLWindow(), windowMinWidth, windowMinHeight);
     if ((windowMaxWidth > 0 && windowMaxHeight > 0) && (windowMaxWidth > windowMinWidth && windowMaxHeight > windowMinHeight))
@@ -81,10 +71,6 @@ void SDLPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, in
 {
     if (windowWidth > 0 && windowHeight > 0)
     {
-        if (VideoContext::sizeScale > 1.0f) {
-            windowWidth *= VideoContext::sizeScale;
-            windowWidth *= VideoContext::sizeScale;
-        }
         SDL_Window* win = this->videoContext->getSDLWindow();
         SDL_RestoreWindow(win);
         SDL_SetWindowSize(win, windowWidth, windowHeight);
