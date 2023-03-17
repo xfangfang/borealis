@@ -33,15 +33,10 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
         return;
 
     int fWidth, fHeight;
-
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
 
     glViewport(0, 0, fWidth, fHeight);
-
-    brls::Logger::info("windows size changed: {} height: {}", width, height);
-    brls::Logger::info("framebuffer size changed: fwidth: {} fheight: {}", fWidth, fHeight);
-    brls::Logger::info("scale factor: {}", scaleFactor);
 
     Application::onWindowResized(fWidth, fHeight);
 
@@ -178,6 +173,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GetWindowSize(window, &width, &height);
     Application::setWindowSize(width, height);
 
+    int fWidth, fHeight;
+    SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
+    scaleFactor = fWidth * 1.0 / width;
+
     int xPos, yPos;
     SDL_GetWindowPosition(window, &xPos, &yPos);
     Application::setWindowPosition(xPos, yPos);
@@ -186,8 +185,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     {
         VideoContext::sizeW = width;
         VideoContext::sizeH = height;
-        VideoContext::posX = (float)xPos;
-        VideoContext::posY = (float)yPos;
+        VideoContext::posX  = (float)xPos;
+        VideoContext::posY  = (float)yPos;
     }
 }
 

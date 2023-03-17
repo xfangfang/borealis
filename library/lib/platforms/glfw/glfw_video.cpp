@@ -273,6 +273,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwGetFramebufferSize(window, &width, &height);
     Application::setWindowSize(width, height);
 
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    scaleFactor = width * 1.0 / wWidth;
+
     int xPos, yPos;
     glfwGetWindowPos(window, &xPos, &yPos);
     Application::setWindowPosition(xPos, yPos);
