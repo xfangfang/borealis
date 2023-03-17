@@ -19,6 +19,7 @@
 #include <borealis/platforms/glfw/glfw_video.hpp>
 
 // nanovg implementation
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
 #define NANOVG_GLES2_IMPLEMENTATION
 #else
@@ -29,10 +30,18 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #endif /* USE_GL2 */
 #endif /* __PSV__ */
-#include <nanovg-gl/nanovg_gl.h>
+#include <nanovg_gl.h>
+#elif defined(BOREALIS_USE_METAL)
+static void *METAL_CONTEXT = nullptr;
+#include <borealis/platforms/glfw/driver/metal.hpp>
+#elif defined(BOREALIS_USE_D3D11)
+#include <borealis/platforms/driver/d3d11.hpp>
+#include <nanovg_d3d11.h>
+static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
+#endif
 
 #if defined(__linux__) || defined(_WIN32)
-#include "nanovg-gl/stb_image.h"
+#include "stb_image.h"
 #endif
 
 namespace brls
@@ -109,12 +118,32 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
 {
     if (!width || !height)
         return;
-
+#ifdef BOREALIS_USE_OPENGL
     glViewport(0, 0, width, height);
-
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
     scaleFactor = width * 1.0 / wWidth;
+#elif defined(BOREALIS_USE_METAL)
+    if (METAL_CONTEXT == nullptr) {
+        return;
+    }
+    scaleFactor = GetMetalScaleFactor(METAL_CONTEXT);
+    ResizeMetalDrawable(METAL_CONTEXT, width, height);
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    // cocoa 画布大小和窗口一致
+    width = wWidth;
+    height = wHeight;
+#elif defined(BOREALIS_USE_D3D11)
+    if (D3D11_CONTEXT == nullptr) {
+        return;
+    }
+    D3D11_CONTEXT->ResizeFramebufferSize(width, height);
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    scaleFactor = width * 1.0 / wWidth;
+#endif
+
     Application::onWindowResized(width, height);
 
     if (!VideoContext::FULLSCREEN)
@@ -143,6 +172,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     }
 
     // Create window
+#ifdef BOREALIS_USE_OPENGL
 #if defined(__PSV__)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -165,6 +195,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #endif
+#elif defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#endif
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // If the window appears outside the screen, using the default settings
@@ -185,14 +218,14 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, 0);
 #endif
 
 // create window
 #if defined(__linux__) || defined(_WIN32)
-    glfwWindowHint(GLFW_SOFT_FULLSCREEN, GL_TRUE);
     if (VideoContext::FULLSCREEN)
     {
+        glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
     }
     else
@@ -200,7 +233,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         this->window = glfwCreateWindow((int)windowWidth, (int)windowHeight, windowTitle.c_str(), nullptr, nullptr);
     }
 #else
-    this->window     = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
+    this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
 #endif
 
 #if defined(__linux__) || defined(_WIN32)
@@ -238,28 +271,49 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #ifdef __APPLE__
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 #endif
+#ifdef BOREALIS_USE_OPENGL
     glfwMakeContextCurrent(window);
+#endif
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
     glfwSetWindowPosCallback(window, glfwWindowPositionCallback);
 
+#ifdef BOREALIS_USE_OPENGL
 #ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 #endif
     glfwSwapInterval(1);
 
-    Logger::info("glfw: GL Vendor: {}", glGetString(GL_VENDOR));
-    Logger::info("glfw: GL Renderer: {}", glGetString(GL_RENDERER));
-    Logger::info("glfw: GL Version: {}", glGetString(GL_VERSION));
+    Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
+    Logger::info("glfw: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
+    Logger::info("glfw: GL Version: {}", (const char*)glGetString(GL_VERSION));
+#endif
     Logger::info("glfw: GLFW Version: {}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
     // Initialize nanovg
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
     this->nvgContext = nvgCreateGLES2(0);
 #elif defined(USE_GL2)
     this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#endif
+#elif defined(BOREALIS_USE_METAL)
+    Logger::info("glfw: use metal");
+    void *ctx = CreateMetalContext(window);
+    METAL_CONTEXT = ctx;
+    this->nvgContext = nvgCreateMTL(GetMetalLayer(ctx), NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+    scaleFactor = GetMetalScaleFactor(ctx);
+#elif defined(BOREALIS_USE_D3D11)
+    Logger::info("glfw: use d3d11");
+    D3D11_CONTEXT = std::make_shared<D3D11Context>();
+    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
+        Logger::error("glfw: unable to init d3d11");
+        glfwTerminate();
+        return;
+    }
+    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 #endif
     if (!this->nvgContext)
     {
@@ -313,11 +367,17 @@ void GLFWVideoContext::beginFrame()
 
 void GLFWVideoContext::endFrame()
 {
+#ifdef BOREALIS_USE_OPENGL
     glfwSwapBuffers(this->window);
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->Present();
+#endif
 }
 
 void GLFWVideoContext::clear(NVGcolor color)
 {
+
+#ifdef BOREALIS_USE_OPENGL
     glClearColor(
         color.r,
         color.g,
@@ -325,15 +385,30 @@ void GLFWVideoContext::clear(NVGcolor color)
         1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#elif defined(BOREALIS_USE_METAL)
+    nvgClearWithColor(nvgContext, nvgRGBAf(
+        color.r,
+        color.g,
+        color.b,
+        1.0f));
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->ClearWithColor(nvgRGBAf(
+        color.r,
+        color.g,
+        color.b,
+        1.0f));
+#endif
 }
 
 void GLFWVideoContext::resetState()
 {
+#ifdef BOREALIS_USE_OPENGL
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
+#endif
 }
 
 double GLFWVideoContext::getScaleFactor()
@@ -346,12 +421,20 @@ GLFWVideoContext::~GLFWVideoContext()
     try
     {
         if (this->nvgContext)
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
             nvgDeleteGLES2(this->nvgContext);
 #elif defined(USE_GL2)
             nvgDeleteGL2(this->nvgContext);
 #else
             nvgDeleteGL3(this->nvgContext);
+#endif
+#elif defined(BOREALIS_USE_METAL)
+            nvgDeleteMTL(this->nvgContext);
+            METAL_CONTEXT = nullptr;
+#elif defined(BOREALIS_USE_D3D11)
+            nvgDeleteD3D11(this->nvgContext);
+            D3D11_CONTEXT = nullptr;
 #endif
     }
     catch (...)
@@ -406,9 +489,11 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
+            int width = ORIGINAL_WINDOW_WIDTH;
+            int height = ORIGINAL_WINDOW_HEIGHT;
             // If the window appears outside the screen, using the default settings
-            glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - ORIGINAL_WINDOW_WIDTH) / 2,
-                fabs(mode->height - ORIGINAL_WINDOW_HEIGHT) / 2, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, GLFW_DONT_CARE);
+            glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - width) / 2,
+                fabs(mode->height - height) / 2, width, height, GLFW_DONT_CARE);
         }
         else
         {

@@ -85,8 +85,9 @@ void GLFWPlatform::restoreWindow()
 
 void GLFWPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
-    if (windowWidth > 0 && windowHeight > 0)
+    if (windowWidth > 0 && windowHeight > 0) {
         glfwSetWindowSize(this->videoContext->getGLFWWindow(), windowWidth, windowHeight);
+    }
 }
 
 void GLFWPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight)

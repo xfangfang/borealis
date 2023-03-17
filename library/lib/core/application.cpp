@@ -126,16 +126,17 @@ void Application::createWindow(std::string windowTitle)
     // Init yoga
     YGConfig* defaultConfig       = YGConfigGetDefault();
     defaultConfig->useWebDefaults = true;
+    using namespace facebook;
 
-    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData)
-        {
+    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData) {
         View* view = (View*)node.getContext();
 
         if (!view)
             return;
 
         if (eventType == yoga::Event::NodeLayout)
-            view->onLayout(); });
+            view->onLayout();
+    });
 
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
@@ -434,7 +435,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
         nextFocus = currentFocus->getCustomNavigationRoutePtr(direction);
 
         if (!nextFocus)
-            Logger::warning("Tried to follow a navigation route that leads to a nullptr view! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ")");
+            Logger::warning("Tried to follow a navigation route that leads to a nullptr view! (from=\"{}\", direction={})", currentFocus->describe(), std::to_string((int)direction));
     }
     // By ID
     else if (currentFocus->hasCustomNavigationRouteById(direction))
@@ -443,7 +444,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
         nextFocus      = currentFocus->getNearestView(id);
 
         if (!nextFocus)
-            Logger::warning("Tried to follow a navigation route that leads to an unknown view ID! (from=\"" + currentFocus->describe() + "\", direction=" + std::to_string((int)direction) + ", targetId=\"" + id + "\")");
+            Logger::warning("Tried to follow a navigation route that leads to an unknown view ID! (from=\"{}\", direction={}, targetId=\"{}\")", currentFocus->describe(), std::to_string((int)direction), id);
     }
     // Do nothing if current focus doesn't have a parent
     // (in which case there is nothing to traverse)
@@ -596,8 +597,14 @@ void Application::frame()
     NVGcolor backgroundColor = frameContext.theme["brls/background"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
+    float scaleFactor = frameContext.pixelRatio;
+#if defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
+    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 scaleFactor
+    // d3d11 用  文字有明显的锯齿，改用 scaleFactor
+    scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
+#endif
 
-    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, frameContext.pixelRatio);
+    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, scaleFactor);
     nvgScale(Application::getNVGContext(), Application::windowScale, Application::windowScale);
 
     std::vector<View*> viewsToDraw;

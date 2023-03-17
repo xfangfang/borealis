@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <borealis/platforms/sdl/sdl_input.hpp>

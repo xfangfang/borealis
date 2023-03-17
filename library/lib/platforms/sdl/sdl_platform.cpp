@@ -49,8 +49,9 @@ void SDLPlatform::restoreWindow()
 
 void SDLPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
-    if (windowWidth > 0 && windowHeight > 0)
+    if (windowWidth > 0 && windowHeight > 0) {
         SDL_SetWindowSize(this->videoContext->getSDLWindow(), windowWidth, windowHeight);
+    }
 }
 
 void SDLPlatform::setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight)

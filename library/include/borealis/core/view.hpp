@@ -17,7 +17,9 @@
 
 #pragma once
 
+#ifndef _MSC_VER
 #include <cxxabi.h>
+#endif
 #include <nanovg.h>
 #include <stdio.h>
 #include <tinyxml2.h>
@@ -1190,14 +1192,16 @@ class View
     {
         // Taken from: https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname/4541470#4541470
         const char* name = typeid(*this).name();
+#ifndef _MSC_VER
         int status       = 0;
-
         std::unique_ptr<char, void (*)(void*)> res {
             abi::__cxa_demangle(name, NULL, NULL, &status),
             std::free
         };
-
         return (status == 0) ? res.get() : name;
+#else
+        return name;
+#endif
     }
 
     std::string describe() const

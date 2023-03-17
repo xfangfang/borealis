@@ -14,13 +14,21 @@
     limitations under the License.
 */
 
-#include <glad/glad.h>
-
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef BOREALIS_USE_OPENGL
+#include <glad/glad.h>
 #define NANOVG_GL3_IMPLEMENTATION
-#include <nanovg-gl/nanovg_gl.h>
+#include <nanovg_gl.h>
+#elif defined(BOREALIS_USE_D3D11)
+#include <borealis/platforms/driver/d3d11.hpp>
+#include <nanovg_d3d11.h>
+static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
+#endif
 
 namespace brls
 {
@@ -33,10 +41,16 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
         return;
 
     int fWidth, fHeight;
+#ifdef BOREALIS_USE_OPENGL
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
-
     glViewport(0, 0, fWidth, fHeight);
+#elif defined(BOREALIS_USE_D3D11)
+    fWidth = width;
+    fHeight = height;
+    scaleFactor = D3D11_CONTEXT->GetDpi();
+    D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
+#endif
 
     Application::onWindowResized(fWidth, fHeight);
 
@@ -93,8 +107,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         Logger::error("sdl: failed to initialize");
         return;
     }
-
     // Create window
+    Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+#ifdef BOREALIS_USE_OPENGL
 #ifdef __SWITCH__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -120,6 +135,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
+    windowFlags |= SDL_WINDOW_OPENGL;
+#endif
 
     if (isnan(windowXPos) || isnan(windowYPos))
     {
@@ -128,16 +145,14 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
             SDL_WINDOWPOS_UNDEFINED,
             windowWidth,
             windowHeight,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-    }
-    else
-    {
+            windowFlags);
+    } else {
         this->window = SDL_CreateWindow(windowTitle.c_str(),
             windowXPos > 0 ? windowXPos : SDL_WINDOWPOS_UNDEFINED,
             windowYPos > 0 ? windowYPos : SDL_WINDOWPOS_UNDEFINED,
             windowWidth,
             windowHeight,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+            windowFlags);
     }
 
     if (!this->window)
@@ -145,23 +160,32 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         fatal("sdl: failed to create window");
         return;
     }
-
+#ifdef BOREALIS_USE_OPENGL
     // Configure window
     SDL_GLContext context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
-
+#endif
     SDL_AddEventWatch(sdlEventWatcher, window);
-
+#ifdef BOREALIS_USE_OPENGL
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
     SDL_GL_SetSwapInterval(1);
 
-    Logger::info("sdl: GL Vendor: {}", glGetString(GL_VENDOR));
-    Logger::info("sdl: GL Renderer: {}", glGetString(GL_RENDERER));
-    Logger::info("sdl: GL Version: {}", glGetString(GL_VERSION));
+    Logger::info("sdl: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
+    Logger::info("sdl: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
+    Logger::info("sdl: GL Version: {}", (const char*)glGetString(GL_VERSION));
 
     // Initialize nanovg
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#elif defined(BOREALIS_USE_D3D11)
+    Logger::info("sdl: use d3d11");
+    D3D11_CONTEXT = std::make_shared<D3D11Context>();
+    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
+        fatal("sdl: unable to init d3d11");
+        return;
+    }
+    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+#endif
     if (!this->nvgContext)
     {
         brls::fatal("glfw: unable to init nanovg");
@@ -174,8 +198,14 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Application::setWindowSize(width, height);
 
     int fWidth, fHeight;
+#ifdef BOREALIS_USE_OPENGL
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
+#elif defined(BOREALIS_USE_D3D11)
+    scaleFactor = D3D11_CONTEXT->GetDpi();
+    fWidth = width;
+    fHeight = height;
+#endif
 
     int xPos, yPos;
     SDL_GetWindowPosition(window, &xPos, &yPos);
@@ -196,11 +226,16 @@ void SDLVideoContext::beginFrame()
 
 void SDLVideoContext::endFrame()
 {
+#ifdef BOREALIS_USE_OPENGL
     SDL_GL_SwapWindow(this->window);
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->Present();
+#endif
 }
 
 void SDLVideoContext::clear(NVGcolor color)
 {
+#ifdef BOREALIS_USE_OPENGL
     glClearColor(
         color.r,
         color.g,
@@ -208,15 +243,24 @@ void SDLVideoContext::clear(NVGcolor color)
         1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->ClearWithColor(nvgRGBAf(
+        color.r,
+        color.g,
+        color.b,
+        1.0f));
+#endif
 }
 
 void SDLVideoContext::resetState()
 {
+#ifdef BOREALIS_USE_OPENGL
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
+#endif
 }
 
 double SDLVideoContext::getScaleFactor()
@@ -228,8 +272,14 @@ SDLVideoContext::~SDLVideoContext()
 {
     try
     {
-        if (this->nvgContext)
+        if (this->nvgContext) {
+#ifdef BOREALIS_USE_OPENGL
             nvgDeleteGL3(this->nvgContext);
+#elif defined(BOREALIS_USE_D3D11)
+            nvgDeleteD3D11(this->nvgContext);
+            D3D11_CONTEXT = nullptr;
+#endif
+        }
     }
     catch (...)
     {
@@ -247,6 +297,16 @@ NVGcontext* SDLVideoContext::getNVGContext()
 SDL_Window* SDLVideoContext::getSDLWindow()
 {
     return this->window;
+}
+
+void SDLVideoContext::fullScreen(bool fs) {
+#ifdef __WINRT__
+    // win32 会很模糊，而且点击事件貌似也错位了，只给 winrt 使用。
+    static unsigned int flag = SDL_WINDOW_FULLSCREEN;
+#else
+    static unsigned int flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
+    SDL_SetWindowFullscreen(this->window, fs? flag : 0);
 }
 
 } // namespace brls

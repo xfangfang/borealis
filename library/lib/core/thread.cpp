@@ -20,10 +20,18 @@
 #include <borealis/core/thread.hpp>
 #include <exception>
 
+#ifdef BOREALIS_USE_STD_THREAD
+#include <thread>
+#endif
+
 namespace brls
 {
 
-static pthread_t task_loop_thread;
+#ifdef BOREALIS_USE_STD_THREAD
+static std::thread *task_loop_thread;
+#else
+static pthread_t task_loop_thread = nullptr;
+#endif
 
 Threading::Threading()
 {
@@ -152,9 +160,17 @@ void Threading::start()
 void Threading::stop()
 {
     task_loop_active = false;
-    pthread_join(task_loop_thread, NULL);
-}
 
+#ifdef BOREALIS_USE_STD_THREAD
+    task_loop_thread->join();
+    task_loop_thread = nullptr;
+#else
+    pthread_join(task_loop_thread, NULL);
+#endif
+}
+void Threading::std_task_loop() {
+    task_loop(nullptr);
+}
 void* Threading::task_loop(void* a)
 {
     while (task_loop_active)
@@ -178,7 +194,11 @@ void* Threading::task_loop(void* a)
 
 void Threading::start_task_loop()
 {
+#ifdef BOREALIS_USE_STD_THREAD
+    task_loop_thread = new std::thread(std_task_loop);
+#else
     pthread_create(&task_loop_thread, NULL, task_loop, NULL);
+#endif
 }
 
 } // namespace brls

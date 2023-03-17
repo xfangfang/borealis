@@ -74,7 +74,11 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
     : window(window)
 {
 
-    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
+    int32_t flags = SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
+#ifndef __WINRT__
+    flags |= SDL_INIT_HAPTIC;
+#endif
+    if (SDL_Init(flags) < 0)
     {
         brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
     }
@@ -146,7 +150,7 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
         size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
         if (key != SDL_SCANCODE_UNKNOWN)
-            state->buttons[brlsButton] |= keyboard[key];
+            state->buttons[brlsButton] |= keyboard[key] != 0;
     }
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
@@ -221,9 +225,15 @@ void SDLInputManager::updateMouseStates(RawMouseState* state)
     state->middleButton = buttons & SDL_BUTTON_MIDDLE;
     state->rightButton  = buttons & SDL_BUTTON_RIGHT;
 
+#ifdef BOREALIS_USE_D3D11
+    // d3d11 scaleFactor 不计算在点击事件里
+    state->position.x  = x / Application::windowScale;
+    state->position.y  = y / Application::windowScale;
+#else
     double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
     state->position.x  = x * scaleFactor / Application::windowScale;
     state->position.y  = y * scaleFactor / Application::windowScale;
+#endif
 
     state->offset = pointerOffset;
 

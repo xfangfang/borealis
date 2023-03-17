@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include <borealis/core/video.hpp>
 
@@ -36,10 +36,12 @@ class SDLVideoContext : public VideoContext
     void beginFrame() override;
     void endFrame() override;
     void resetState() override;
+    void fullScreen(bool fs) override;
 
     SDL_Window* getSDLWindow();
 
     double getScaleFactor() override;
+    void dpiChanged(float nextDpiScale, bool init = false);
 
   private:
     SDL_Window* window     = nullptr;

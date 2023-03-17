@@ -116,6 +116,7 @@ class Threading
     inline static volatile bool task_loop_active = true;
 
     static void* task_loop(void* a);
+    static void std_task_loop();
 
     static void start_task_loop();
 };

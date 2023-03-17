@@ -19,6 +19,7 @@
 #include <nanovg.h>
 
 #include <cmath>
+#include <borealis/core/geometry.hpp>
 
 // A VideoContext is responsible for providing a nanovg context for the app
 // (so by extension it manages all the graphics state as well as the window / context).
@@ -66,11 +67,10 @@ class VideoContext
 
     virtual int getCurrentMonitorIndex() { return 0; };
 
-    static inline bool FULLSCREEN = true;
+    static inline bool FULLSCREEN = false;
 
     // The position and size of the window in the last non-full-screen mode
     static inline float posX = NAN, posY = NAN;
     static inline uint32_t sizeW = 0, sizeH = 0;
-
     static inline int monitorIndex = 0;
 };

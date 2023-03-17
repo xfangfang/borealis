@@ -162,7 +162,7 @@ void StyleValues::addMetric(std::string name, float metric)
 float StyleValues::getMetric(std::string name)
 {
     if (this->values.count(name) == 0) {
-        brls::Logger::error("Unknown style metric \"" + name + "\" in size: " + std::to_string(this->values.size()));
+        brls::Logger::error("Unknown style metric {} in size: {}", name, std::to_string(this->values.size()));
         return 0;
     }
 
