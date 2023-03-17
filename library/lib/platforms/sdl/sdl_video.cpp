@@ -29,9 +29,6 @@
 #include <nanovg_d3d11.h>
 static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
 
 namespace brls
 {
@@ -45,7 +42,7 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
 
     int fWidth, fHeight;
 #ifdef BOREALIS_USE_OPENGL
-    SDL_GetWindowSizeInPixels(window, &fWidth, &fHeight);
+    SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
     glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
@@ -54,10 +51,6 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
     scaleFactor = D3D11_CONTEXT->GetDpi();
     D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
 #endif
-
-    brls::Logger::info("windows size changed: {} height: {}", width, height);
-    brls::Logger::info("framebuffer size changed: fwidth: {} fheight: {}", fWidth, fHeight);
-    brls::Logger::info("scale factor: {}", scaleFactor);
 
     Application::onWindowResized(fWidth, fHeight);
 
@@ -198,13 +191,33 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         brls::fatal("glfw: unable to init nanovg");
         return;
     }
-    // Setup scaling
+
+    // Setup window state
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
-    sdlWindowFramebufferSizeCallback(window, width, height);
+    Application::setWindowSize(width, height);
+
+    int fWidth, fHeight;
+#ifdef BOREALIS_USE_OPENGL
+    SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
+    scaleFactor = fWidth * 1.0 / width;
+#elif defined(BOREALIS_USE_D3D11)
+    scaleFactor = D3D11_CONTEXT->GetDpi();
+    fWidth = width;
+    fHeight = height;
+#endif
+
     int xPos, yPos;
     SDL_GetWindowPosition(window, &xPos, &yPos);
-    sdlWindowPositionCallback(window, xPos, yPos);
+    Application::setWindowPosition(xPos, yPos);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::sizeW = width;
+        VideoContext::sizeH = height;
+        VideoContext::posX  = (float)xPos;
+        VideoContext::posY  = (float)yPos;
+    }
 }
 
 void SDLVideoContext::beginFrame()
@@ -247,13 +260,6 @@ void SDLVideoContext::resetState()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
-#endif
-}
-
-void SDLVideoContext::disableScreenDimming(bool disable)
-{
-#ifdef __SWITCH__
-    appletSetMediaPlaybackState(disable);
 #endif
 }
 

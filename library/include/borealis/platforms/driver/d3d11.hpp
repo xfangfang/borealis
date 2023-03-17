@@ -41,7 +41,7 @@ namespace brls
 #endif
             void UnInitializeDX();
             float GetDpi();
-            bool ResizeFramebufferSize(int width, int height);
+            bool ResizeFramebufferSize(int width, int height, bool init = false);
             void ClearWithColor(NVGcolor color);
             void Present();
             ID3D11Device* GetDevice() {

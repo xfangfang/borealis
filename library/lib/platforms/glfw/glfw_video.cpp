@@ -40,11 +40,7 @@ static void *METAL_CONTEXT = nullptr;
 static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
 
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
-#ifdef _WIN32
+#if defined(__linux__) || defined(_WIN32)
 #include "stb_image.h"
 #endif
 
@@ -205,8 +201,11 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // If the window appears outside the screen, using the default settings
-    auto* monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
-    if (!monitor)
+    GLFWmonitor* monitor = nullptr;
+    if (!isnan(windowX) && !isnan(windowY))
+        monitor = getAvailableMonitor(VideoContext::monitorIndex, (int)windowX, (int)windowY, (int)windowWidth, (int)windowHeight);
+
+    if (monitor == nullptr)
     {
         windowX      = NAN;
         windowY      = NAN;
@@ -219,6 +218,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, 0);
 #endif
 
 // create window
@@ -236,10 +236,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
 #endif
 
-#ifdef _WIN32
+#if defined(__linux__) || defined(_WIN32)
     // Set window icon
     GLFWimage images[1];
-    images[0].pixels = stbi_load("resources/icon/icon.png", &images[0].width, &images[0].height, 0, 4);
+    images[0].pixels = stbi_load(BRLS_ASSET("icon/icon.png"), &images[0].width, &images[0].height, 0, 4);
     glfwSetWindowIcon(this->window, 1, images);
 #endif
 
@@ -322,13 +322,26 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         return;
     }
 
-    // Setup scaling
+    // Setup window state
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glfwWindowFramebufferSizeCallback(window, width, height);
+    Application::setWindowSize(width, height);
+
+    int wWidth, wHeight;
+    glfwGetWindowSize(window, &wWidth, &wHeight);
+    scaleFactor = width * 1.0 / wWidth;
+
     int xPos, yPos;
     glfwGetWindowPos(window, &xPos, &yPos);
-    glfwWindowPositionCallback(window, xPos, yPos);
+    Application::setWindowPosition(xPos, yPos);
+
+    if (!VideoContext::FULLSCREEN)
+    {
+        VideoContext::sizeW = width;
+        VideoContext::sizeH = height;
+        VideoContext::posX = (float)xPos;
+        VideoContext::posY = (float)yPos;
+    }
 
 #ifdef __SWITCH__
     this->monitor    = glfwGetPrimaryMonitor();
@@ -395,13 +408,6 @@ void GLFWVideoContext::resetState()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
-#endif
-}
-
-void GLFWVideoContext::disableScreenDimming(bool disable)
-{
-#ifdef __SWITCH__
-    appletSetMediaPlaybackState(disable);
 #endif
 }
 

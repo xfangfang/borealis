@@ -149,6 +149,12 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
+    static Time frameStartTime = 0;
+    if (Application::limitedFrameTime > 0)
+    {
+        frameStartTime = getCPUTimeUsec();
+    }
+
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
     {
@@ -201,6 +207,16 @@ bool Application::mainLoop()
     // Calculate FPS
     if (Application::globalFPSToggleEnabled)
         Application::updateFPS();
+
+    if (Application::limitedFrameTime > 0)
+    {
+        Time deltaTime = getCPUTimeUsec() - frameStartTime;
+        Time interval  = Application::limitedFrameTime - deltaTime;
+        if (interval > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(interval));
+        }
+    }
 
     return true;
 }
@@ -447,11 +463,15 @@ void Application::navigate(FocusDirection direction, bool repeating)
     }
 
     // If new focus not the same as now, play sound and give it focus
-    if (Application::getCurrentFocus() != nextFocus->getDefaultFocus())
+    if (Application::getCurrentFocus() != nextFocus->getDefaultFocus() && nextFocus->getVisibility() == Visibility::VISIBLE)
     {
         enum Sound focusSound = nextFocus->getFocusSound();
         Application::getAudioPlayer()->play(focusSound);
         Application::giveFocus(nextFocus);
+    }
+    else
+    {
+        Application::currentFocus->shakeHighlight(direction);
     }
 }
 
@@ -679,6 +699,11 @@ bool Application::getFPSStatus()
 size_t Application::getFPS()
 {
     return Application::globalFPS;
+}
+
+void Application::setLimitedFPS(size_t fps)
+{
+    Application::limitedFrameTime = 1000000.0f / fps;
 }
 
 void Application::notify(std::string text)
@@ -954,7 +979,7 @@ std::string* Application::getCommonFooter()
     return &Application::commonFooter;
 }
 
-void Application::onWindowResized(int width, int height)
+void Application::setWindowSize(int width, int height)
 {
     Application::windowWidth  = width;
     Application::windowHeight = height;
@@ -966,7 +991,10 @@ void Application::onWindowResized(int width, int height)
 
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
+}
 
+void Application::onWindowResized(int width, int height)
+{
     // Trigger event when Window size is stable
     static size_t iter = 0;
     brls::cancelDelay(iter);
@@ -975,20 +1003,25 @@ void Application::onWindowResized(int width, int height)
             Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
                 width, height, contentWidth, contentHeight, Application::windowScale);
             brls::Logger::info("scale factor: {}", Application::getPlatform()->getVideoContext()->getScaleFactor());
-            Application::getWindowSizeChangedEvent()->fire();
-        });
+
+            Application::setWindowSize(width, height);
+            Application::getWindowSizeChangedEvent()->fire(); });
+}
+
+void Application::setWindowPosition(int x, int y)
+{
+    Application::windowXPos = x;
+    Application::windowYPos = y;
 }
 
 void Application::onWindowReposition(int x, int y)
 {
-    Application::windowXPos = x;
-    Application::windowYPos = y;
-    
     static size_t iter = 0;
     brls::cancelDelay(iter);
     iter = brls::delay(100, [x, y]()
         {
-            Logger::info("Window position changed to {}x{}", x, y); });
+            Logger::info("Window position changed to {}x{}", x, y);
+            Application::setWindowPosition(x, y); });
 }
 
 std::string Application::getTitle()

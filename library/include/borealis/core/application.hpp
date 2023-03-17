@@ -97,11 +97,25 @@ class Application
 
     /**
      * Called by the video context when the content window is resized
-     * and when the context is ready (to setup the initial content scaling).
      */
     static void onWindowResized(int width, int height);
 
+    /**
+     * Do not call this function, use it internally.
+     * Called when the video context is ready (to setup the initial content scaling).
+     */
+    static void setWindowSize(int width, int height);
+
+    /**
+     * Called by the video context when the content window is Repositioned
+     */
     static void onWindowReposition(int xPos, int yPos);
+
+    /**
+     * Do not call this function, use it internally.
+     * Called when the video context is ready (to setup the initial window position).
+     */
+    static void setWindowPosition(int xPos, int yPos);
 
     static std::vector<Activity*> getActivitiesStack();
 
@@ -199,6 +213,7 @@ class Application
     static void setFPSStatus(bool enabled);
     static bool getFPSStatus();
     static size_t getFPS();
+    static void setLimitedFPS(size_t fps);
 
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
@@ -308,6 +323,7 @@ class Application
     inline static size_t globalFPS                      = 60;
     inline static unsigned int FPS_INTERNAL             = 30;
     inline static unsigned int FPS_INTERNAL_TIME        = FPS_INTERNAL * 1000000;
+    inline static Time limitedFrameTime                 = 0;
 
     inline static View* repetitionOldFocus = nullptr;
 

@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 # using custom glfw
 if ((NOT USE_SDL2) AND PLATFORM_DESKTOP)
-    add_subdirectory(lib/extern/glfw)
+    set(GLFW_BUILD_DOCS OFF)
+    add_subdirectory(lib/extern/glfw EXCLUDE_FROM_ALL)
 endif ()
 
 set(BOREALIS_PATH ${CMAKE_CURRENT_SOURCE_DIR})
@@ -97,6 +99,12 @@ foreach (lib ${BOREALIS_SOURCE})
     list(APPEND BOREALIS_SRC ${TEMP_SRC})
 endforeach (lib)
 
+if (APPLE)
+elseif (UNIX)
+    find_package(DBus)
+    list(APPEND BOREALIS_INCLUDE ${DBUS_INCLUDE_DIRS})
+    list(APPEND BRLS_PLATFORM_LIBS ${DBUS_LIBRARIES})
+endif ()
 
 add_library(borealis STATIC ${BOREALIS_SRC})
 set_property(TARGET borealis PROPERTY CXX_STANDARD 17)

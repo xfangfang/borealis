@@ -168,6 +168,7 @@ namespace brls {
             this->UnInitializeDX();
             return FALSE;
         }
+        ResizeFramebufferSize(width, height, true);
         return TRUE;
     }
 
@@ -199,7 +200,7 @@ namespace brls {
         return dpi;
     }
 
-    bool D3D11Context::ResizeFramebufferSize(int width, int height) {
+    bool D3D11Context::ResizeFramebufferSize(int width, int height, bool init) {
         D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
         ID3D11RenderTargetView *viewList[1] = { NULL };
         HRESULT hr = S_OK;
@@ -211,15 +212,19 @@ namespace brls {
 
         D3D_API_RELEASE(this->renderTargetView);
         D3D_API_RELEASE(this->depthStencilView);
-        UINT resizeBufferFlags = 0;
-        if (this->tearingSupport) {
-            resizeBufferFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+        if (!init) {
+            // 初始化时无需重建 swapChain 的 buffers
+            UINT resizeBufferFlags = 0;
+            if (this->tearingSupport) {
+                resizeBufferFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            }
+            hr = this->swapChain->ResizeBuffers(SwapChainBufferCount, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, resizeBufferFlags);
+            if (FAILED(hr))
+            {
+                return false;
+            }
         }
-        hr = this->swapChain->ResizeBuffers(SwapChainBufferCount, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, resizeBufferFlags);
-        if (FAILED(hr))
-        {
-            return false;
-        }
+
         hr = this->swapChain->GetBuffer(
             0,
             __uuidof(ID3D11Texture2D),

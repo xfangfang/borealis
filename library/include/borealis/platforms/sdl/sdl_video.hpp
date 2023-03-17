@@ -36,7 +36,6 @@ class SDLVideoContext : public VideoContext
     void beginFrame() override;
     void endFrame() override;
     void resetState() override;
-    void disableScreenDimming(bool disable) override;
     void fullScreen(bool fs) override;
 
     SDL_Window* getSDLWindow();
