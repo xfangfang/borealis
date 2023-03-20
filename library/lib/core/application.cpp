@@ -462,7 +462,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
     }
 
     // If new focus not the same as now, play sound and give it focus
-    if (Application::getCurrentFocus() != nextFocus->getDefaultFocus() && nextFocus->getVisibility() == Visibility::VISIBLE)
+    if (nextFocus->getDefaultFocus() && Application::getCurrentFocus() != nextFocus->getDefaultFocus() && nextFocus->getVisibility() == Visibility::VISIBLE)
     {
         enum Sound focusSound = nextFocus->getFocusSound();
         Application::getAudioPlayer()->play(focusSound);
@@ -709,7 +709,7 @@ void Application::giveFocus(View* view)
     View* oldFocus = Application::currentFocus;
     View* newFocus = view ? view->getDefaultFocus() : nullptr;
 
-    if (oldFocus != newFocus && newFocus != NULL)
+    if (oldFocus != newFocus && newFocus != nullptr)
     {
         if (oldFocus)
             oldFocus->onFocusLost();
