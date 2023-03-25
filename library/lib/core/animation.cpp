@@ -58,10 +58,13 @@ float Animatable::getProgress()
 
 bool Animatable::onUpdate(retro_time_t delta)
 {
+    if (this->tween.progress() >= 1.0f || this->tween.duration() <= 0)
+        return false;
+    
     // int32_t for stepping works as long as the app goes faster than 0.00001396983 FPS
     // (in which case the delta for a frame wraps in an int32_t)
     this->currentValue = this->tween.step((int32_t)delta);
-    return this->tween.progress() < 1.0f;
+    return true;
 }
 
 float Animatable::getValue()
