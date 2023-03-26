@@ -22,8 +22,12 @@ local priPath = "build\\resources.pri"
 function main(target)
     local files = {
         {priPath, "resources.pri"},
-        {target:targetfile(), "demo.exe"},
+        {target:targetfile(), path.filename(target:targetfile())},
     }
+    local target_pdb = path.join(target:targetdir(), path.basename(target:targetfile())..".pdb")
+    if os.exists(target_pdb) then
+        table.insert(files, {target_pdb, path.filename(target_pdb)})
+    end
     for _, pkg in pairs(target:pkgs()) do
         if pkg:has_shared() then
             for _, f in ipairs(pkg:libraryfiles()) do
