@@ -98,9 +98,19 @@ static void glfwJoystickCallback(int jid, int event)
     }
 }
 
+static RawTouchState touchState = {0,0,{0,0}};
+
+static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double xpos, double ypos)
+{
+    touchState.fingerId = 0;
+    touchState.pressed = true;
+    touchState.position.x = xpos / Application::windowScale;
+    touchState.position.y = ypos / Application::windowScale;
+}
+
 void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
+    auto* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
     KeyState state;
     state.key            = (BrlsKeyboardScancode)key;
     state.mods           = mods;
@@ -115,7 +125,7 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
 
 void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
+    auto* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
 #if defined(_WIN32) || defined(__linux__)
     self->scrollOffset.x += xoffset * 30;
     self->scrollOffset.y += yoffset * 30;
@@ -128,7 +138,7 @@ void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double
 
 void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)
 {
-    GLFWInputManager* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
+    auto* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
     if (self->pointerLocked)
     {
         int width, height;
@@ -169,6 +179,11 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
     glfwSetScrollCallback(window, scrollCallback);
     glfwSetCursorPosCallback(window, cursorCallback);
     glfwSetKeyCallback(window, keyboardCallback);
+    if (glfwTouchInputSupported())
+    {
+        glfwSetInputMode(window, GLFW_TOUCH, GLFW_TRUE);
+        glfwSetTouchCallback(window, glfwTouchCallback);
+    }
 
     for (int i = 0; i < GAMEPADS_MAX; i++)
     {
@@ -292,19 +307,10 @@ bool sameSign(int a, int b)
 
 void GLFWInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
-    // Uncomment to enable touch simulation by mouse
-    //    double x, y;
-    //    glfwGetCursorPos(this->window, &x, &y);
-    //
-    //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    //    {
-    //        RawTouchState state;
-    //        state.fingerId = 0;
-    //        state.pressed = true;
-    //        state.position.x = x / Application::windowScale;
-    //        state.position.y = y / Application::windowScale;
-    //        states->push_back(state);
-    //    }
+    if (touchState.pressed)
+        states->push_back(touchState);
+
+    touchState.pressed = false;
 }
 
 void GLFWInputManager::updateMouseStates(RawMouseState* state)
