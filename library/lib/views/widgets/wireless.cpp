@@ -49,6 +49,11 @@ WirelessWidget::WirelessWidget()
     _3->setScalingType(ImageScalingType::FIT);
     _3->detach();
 
+    ethernet = new Image();
+    ethernet->setSize(Size(44, 44));
+    ethernet->setScalingType(ImageScalingType::FIT);
+    ethernet->detach();
+
     platform = Application::getPlatform();
     applyTheme(platform->getThemeVariant());
 
@@ -56,6 +61,7 @@ WirelessWidget::WirelessWidget()
     addView(_1);
     addView(_2);
     addView(_3);
+    addView(ethernet);
 }
 
 void WirelessWidget::applyTheme(ThemeVariant theme)
@@ -67,12 +73,14 @@ void WirelessWidget::applyTheme(ThemeVariant theme)
             _1->setImageFromRes("img/sys/wifi_1_light.png");
             _2->setImageFromRes("img/sys/wifi_2_light.png");
             _3->setImageFromRes("img/sys/wifi_3_light.png");
+            ethernet->setImageFromRes("img/sys/ethernet_light.png");
             break;
         case ThemeVariant::DARK:
             _0->setImageFromRes("img/sys/wifi_0_dark.png");
             _1->setImageFromRes("img/sys/wifi_1_dark.png");
             _2->setImageFromRes("img/sys/wifi_2_dark.png");
             _3->setImageFromRes("img/sys/wifi_3_dark.png");
+            ethernet->setImageFromRes("img/sys/ethernet_dark.png");
             break;
     }
 }
@@ -88,6 +96,7 @@ void WirelessWidget::updateState()
         brls::async([ASYNC_TOKEN]()
             {
                 ASYNC_RELEASE
+                hasEthernetConnection = Application::getPlatform()->hasEthernetConnection();
                 hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
                 wifiLevel             = Application::getPlatform()->getWirelessLevel(); });
         time = now;
@@ -97,13 +106,22 @@ void WirelessWidget::updateState()
 void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
     updateState();
-    
-    if (!hasWirelessConnection)
+
+    if (hasEthernetConnection)
+    {
+        _0->setVisibility(Visibility::GONE);
+        _1->setVisibility(Visibility::GONE);
+        _2->setVisibility(Visibility::GONE);
+        _3->setVisibility(Visibility::GONE);
+        ethernet->setVisibility(Visibility::VISIBLE);
+    }
+    else if (!hasWirelessConnection)
     {
         _0->setVisibility(Visibility::VISIBLE);
         _1->setVisibility(Visibility::GONE);
         _2->setVisibility(Visibility::GONE);
         _3->setVisibility(Visibility::GONE);
+        ethernet->setVisibility(Visibility::GONE);
     }
     else
     {
@@ -111,6 +129,7 @@ void WirelessWidget::draw(NVGcontext* vg, float x, float y, float width, float h
         _1->setVisibility(Visibility::VISIBLE);
         _2->setVisibility(Visibility::VISIBLE);
         _3->setVisibility(Visibility::VISIBLE);
+        ethernet->setVisibility(Visibility::GONE);
 
         switch (wifiLevel)
         {

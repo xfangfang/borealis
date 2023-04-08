@@ -43,6 +43,7 @@ const std::string detailCellXML = R"xml(
             horizontalAlign="right"
             maxWidth="300"
             height="auto"
+            shrink="0"
             fontSize="@style/brls/sidebar/item_font_size"
             textColor="@theme/brls/list/listItem_value_color"/>
 

@@ -87,12 +87,17 @@ class Platform
     /**
      * Returns true if device has wireless connection.
      */
-    virtual bool hasWirelessConnection() = 0;
+    virtual bool hasWirelessConnection() { return false; };
 
     /**
      * Returns wireless quality level from 0 to 3.
      */
     virtual int getWirelessLevel() = 0;
+
+    /**
+     * Returns true if device has ethernet connection.
+     */
+    virtual bool hasEthernetConnection() { return false; };
 
     /**
      * Returns ip address.
