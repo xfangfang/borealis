@@ -40,11 +40,21 @@ void SwitchFontLoader::loadFonts()
         Logger::error("switch: could not load Standard shared font: {:#x}", rc);
 
     // Simplified Chinese
-    rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
-    if (R_SUCCEEDED(rc) && Application::loadFontFromMemory(FONT_CHINESE_SIMPLIFIED, font.address, font.size, false))
-        nvgAddFallbackFontId(vg, Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont(FONT_REGULAR));
+    // custom Font
+    if (access(USER_FONT_PATH.c_str(), F_OK) != -1)
+    {
+        brls::Logger::info("Load custom font: {}", USER_FONT_PATH);
+        this->loadFontFromFile(FONT_CHINESE_SIMPLIFIED, USER_FONT_PATH);
+    }
     else
-        Logger::error("switch: could not load Chinese Simplified shared font: {:#x}", rc);
+    {
+        brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
+        rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
+        if (R_SUCCEEDED(rc) && Application::loadFontFromMemory(FONT_CHINESE_SIMPLIFIED, font.address, font.size, false))
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont(FONT_REGULAR));
+        else
+            Logger::error("switch: could not load Chinese Simplified shared font: {:#x}", rc);
+    }
 
     // Simplified Chinese ext
     rc = plGetSharedFontByType(&font, PlSharedFontType_ExtChineseSimplified);
@@ -79,6 +89,21 @@ void SwitchFontLoader::loadFonts()
         nvgAddFallbackFontId(vg, Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont(FONT_MATERIAL_ICONS));
     else
         Logger::error("switch: could not load Material icons font from resources");
+
+    // Load Emoji
+    if (!USER_EMOJI_PATH.empty())
+    {
+        if (access(USER_EMOJI_PATH.c_str(), F_OK) != -1)
+        {
+            brls::Logger::info("Load emoji font: {}", USER_EMOJI_PATH);
+            this->loadFontFromFile("emoji", USER_EMOJI_PATH);
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont("emoji"));
+        }
+        else
+        {
+            brls::Logger::warning("Cannot find custom emoji, (Searched at: {})", USER_EMOJI_PATH);
+        }
+    }
 }
 
 } // namespace brls

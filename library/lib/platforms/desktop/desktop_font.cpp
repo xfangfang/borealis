@@ -73,6 +73,17 @@ void DesktopFontLoader::loadFonts()
         }
     }
 
+    // Load Emoji
+    if (!USER_EMOJI_PATH.empty())
+    {
+        if (access(USER_EMOJI_PATH.c_str(), F_OK) != -1)
+        {
+            brls::Logger::info("Load emoji font: {}", USER_EMOJI_PATH);
+            this->loadFontFromFile("emoji", USER_EMOJI_PATH);
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("emoji"));
+        }
+    }
+
     // Switch icons
     // Only supports user-provided font
     if (access(USER_ICON_PATH.c_str(), F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, USER_ICON_PATH))

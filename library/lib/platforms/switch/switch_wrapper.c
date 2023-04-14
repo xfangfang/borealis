@@ -46,20 +46,27 @@ uint16_t ntohs(uint16_t netshort)
 
 void userAppInit()
 {
+    printf("userAppInit\n");
     appletLockExit();
     SocketInitConfig cfg = *(socketGetDefaultInitConfig());
-    cfg.num_bsd_sessions = 16; // default is 3, (20)
-    cfg.sb_efficiency    = 8; // default is 4 (8)
-    //    cfg.udp_rx_buf_size     = 0;
-    //    cfg.udp_tx_buf_size     = 0;
-    //    cfg.tcp_tx_buf_size     = 262144;
-    //    cfg.tcp_rx_buf_size     = 262144;
-    //    cfg.tcp_tx_buf_max_size = 524288;
-    //    cfg.tcp_rx_buf_max_size = 524288;
 
-    socketInitialize(&cfg);
+    AppletType at = appletGetAppletType();
+    if (at == AppletType_Application || at == AppletType_SystemApplication)
+    {
+        cfg.num_bsd_sessions = 16; // default is 3
+        cfg.sb_efficiency    = 8; // default is 4
+        socketInitialize(&cfg);
+    }
+    else
+    {
+        cfg.num_bsd_sessions = 2;
+        cfg.sb_efficiency    = 1;
+        socketInitialize(&cfg);
+    }
 
+#ifdef DEBUG
     nxlink_sock = nxlinkStdio();
+#endif
 
     romfsInit();
     plInitialize(PlServiceType_User);
@@ -67,24 +74,6 @@ void userAppInit()
     setInitialize();
     psmInitialize();
     nifmInitialize(NifmServiceType_User);
-
-    printf("userAppInit\n");
-    printf("version: %d\n", cfg.bsdsockets_version);
-    printf("sessions: %d\n", cfg.num_bsd_sessions);
-
-    printf("tcp_tx_buf_size: %d\n", cfg.tcp_tx_buf_size);
-    printf("tcp_rx_buf_size: %d\n", cfg.tcp_rx_buf_size);
-    printf("tcp_tx_buf_max_size: %d\n", cfg.tcp_tx_buf_max_size);
-    printf("tcp_rx_buf_max_size: %d\n", cfg.tcp_rx_buf_max_size);
-    printf("udp_tx_buf_size: %d\n", cfg.udp_tx_buf_size);
-    printf("udp_rx_buf_size: %d\n", cfg.udp_rx_buf_size);
-
-    printf("sb_efficiency: %d\n", cfg.sb_efficiency);
-
-    if (cfg.bsd_service_type == BsdServiceType_User)
-    {
-        printf("bsd_service_type: User\n");
-    }
 
     appletUnlockExit();
 }
