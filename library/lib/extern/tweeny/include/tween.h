@@ -1,7 +1,7 @@
 /*
  This file is part of the Tweeny library.
 
- Copyright (c) 2016-2020 Leonardo Guilherme Lucena de Freitas
+ Copyright (c) 2016-2021 Leonardo Guilherme Lucena de Freitas
  Copyright (c) 2016 Guilherme R. Costa
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -33,6 +33,7 @@
 #include <tuple>
 #include <vector>
 #include <functional>
+#include <string>
 
 #include "tweentraits.h"
 #include "tweenpoint.h"
@@ -548,7 +549,7 @@ namespace tweeny {
              * @returns current values
              * @sa seek
              */
-            const typename detail::tweentraits<T, Ts...>::valuesType & jump(int32_t point, bool suppressCallbacks = false);
+            const typename detail::tweentraits<T, Ts...>::valuesType & jump(size_t point, bool suppressCallbacks = false);
 
             /**
              * @brief Returns the current tween point
@@ -624,7 +625,7 @@ namespace tweeny {
             tween<T> & forward(); ///< @sa tween::forward
             tween<T> & backward(); ///< @sa tween::backward
             int direction() const; ///< @sa tween::direction
-            const T & jump(int32_t point, bool suppressCallbacks = false); ///< @sa tween::jump
+            const T & jump(size_t point, bool suppressCallbacks = false); ///< @sa tween::jump
             uint16_t point() const; ///< @sa tween::point
 
         private /* member types */:

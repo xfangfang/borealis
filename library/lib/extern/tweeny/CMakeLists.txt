@@ -1,6 +1,6 @@
 # This file is part of the Tweeny library.
 #
-# Copyright (c) 2016-2020 Leonardo Guilherme Lucena de Freitas
+# Copyright (c) 2016-2021 Leonardo Guilherme Lucena de Freitas
 # Copyright (c) 2016 Guilherme R. Costa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -27,7 +27,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0063 NEW)
-project(Tweeny LANGUAGES CXX VERSION 3.1.1)
+project(Tweeny LANGUAGES CXX VERSION 3.2.0)
 
 # Setup variables and options
 option(TWEENY_BUILD_DOCUMENTATION "Attempts to build the documentation. You'll need doxygen and graphviz installed" OFF)

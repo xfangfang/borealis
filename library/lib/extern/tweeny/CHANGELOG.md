@@ -1,4 +1,22 @@
 # Tweeny Changelog
+- Version 3.2.1
+  - Adds `<string>` as dependency
+
+- Version 3.2.0
+  -  Fixed installation on other than Ubuntu distributions. (@xvitaly)
+  -  Consider interpolation duration in the right place (fix #19)
+  -  Fixes compilation error when using the `jump` function (fix #21)
+  -  Small code and documentation improvements
+  -  **New feature**: allows easing selection (`via()`) using `easing::enumerated` or `std::string`:
+  ```
+    tweeny::from(0.0f).to(1.0f).during(100).via(easing::enumerated::linear);
+    tweeny::from(0.0f).to(1.0f).during(100).via("linear");
+  ```
+
+- Version 3.1.1
+  - Remove unused CMake options
+  - Adds a single header version
+
 - Version 3.1.0:
   - From now on, tweeny will be using a more traditional versioning scheme
   - Remove some extraneous semicolons (@Omegastick)
