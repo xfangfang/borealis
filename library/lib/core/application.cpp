@@ -127,14 +127,14 @@ void Application::createWindow(std::string windowTitle)
     YGConfig* defaultConfig       = YGConfigGetDefault();
     defaultConfig->useWebDefaults = true;
 
-    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData)
+    facebook::yoga::Event::subscribe([](const YGNode& node, facebook::yoga::Event::Type eventType, facebook::yoga::Event::Data eventData)
         {
         View* view = (View*)node.getContext();
 
         if (!view)
             return;
 
-        if (eventType == yoga::Event::NodeLayout)
+        if (eventType == facebook::yoga::Event::NodeLayout)
             view->onLayout(); });
 
     // Load fonts and setup fallbacks
