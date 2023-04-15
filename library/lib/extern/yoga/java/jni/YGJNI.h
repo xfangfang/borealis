@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,6 @@ const short int LAYOUT_BORDER_START_INDEX = 14;
 
 namespace {
 
-const int DOES_LEGACY_STRETCH_BEHAVIOUR = 8;
 const int HAS_NEW_LAYOUT = 16;
 
 union YGNodeContext {

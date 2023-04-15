@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,15 +55,6 @@ static void jni_YGConfigSetExperimentalFeatureEnabledJNI(
   const YGConfigRef config = _jlong2YGConfigRef(nativePointer);
   YGConfigSetExperimentalFeatureEnabled(
       config, static_cast<YGExperimentalFeature>(feature), enabled);
-}
-
-static void jni_YGConfigSetShouldDiffLayoutWithoutLegacyStretchBehaviourJNI(
-    JNIEnv* env,
-    jobject obj,
-    jlong nativePointer,
-    jboolean enabled) {
-  const YGConfigRef config = _jlong2YGConfigRef(nativePointer);
-  YGConfigSetShouldDiffLayoutWithoutLegacyStretchBehaviour(config, enabled);
 }
 
 static void jni_YGConfigSetUseWebDefaultsJNI(
@@ -147,7 +138,7 @@ static int YGJNILogFunc(
     if (*jloggerPtr) {
       JNIEnv* env = getCurrentEnv();
 
-      jclass cl = env->FindClass("Lcom/facebook/yoga/YogaLogLevel;");
+      jclass cl = env->FindClass("com/facebook/yoga/YogaLogLevel");
       static const jmethodID smethodId =
           facebook::yoga::vanillajni::getStaticMethodId(
               env, cl, "fromInt", "(I)Lcom/facebook/yoga/YogaLogLevel;");
@@ -294,9 +285,6 @@ static void YGTransferLayoutOutputsRecursive(
 
   int fieldFlags = edgesSet.get();
   fieldFlags |= HAS_NEW_LAYOUT;
-  if (YGNodeLayoutGetDidLegacyStretchFlagAffectLayout(root)) {
-    fieldFlags |= DOES_LEGACY_STRETCH_BEHAVIOUR;
-  }
 
   const int arrSize = 6 + (marginFieldSet ? 4 : 0) + (paddingFieldSet ? 4 : 0) +
       (borderFieldSet ? 4 : 0);
@@ -367,11 +355,7 @@ static void jni_YGNodeCalculateLayoutJNI(
     void* layoutContext = nullptr;
     auto map = PtrJNodeMapVanilla{};
     if (nativePointers) {
-      size_t nativePointersSize = env->GetArrayLength(nativePointers);
-      jlong result[nativePointersSize];
-      env->GetLongArrayRegion(nativePointers, 0, nativePointersSize, result);
-
-      map = PtrJNodeMapVanilla{result, nativePointersSize, javaNodes};
+      map = PtrJNodeMapVanilla{nativePointers, javaNodes};
       layoutContext = &map;
     }
 
@@ -390,7 +374,7 @@ static void jni_YGNodeCalculateLayoutJNI(
     }
   } catch (const std::logic_error& ex) {
     env->ExceptionClear();
-    jclass cl = env->FindClass("Ljava/lang/IllegalStateException;");
+    jclass cl = env->FindClass("java/lang/IllegalStateException");
     static const jmethodID methodId = facebook::yoga::vanillajni::getMethodId(
         env, cl, "<init>", "(Ljava/lang/String;)V");
     auto throwable = env->NewObject(cl, methodId, env->NewStringUTF(ex.what()));
@@ -405,11 +389,11 @@ static void jni_YGNodeMarkDirtyJNI(
   YGNodeMarkDirty(_jlong2YGNodeRef(nativePointer));
 }
 
-static void jni_YGNodeMarkDirtyAndPropogateToDescendantsJNI(
+static void jni_YGNodeMarkDirtyAndPropagateToDescendantsJNI(
     JNIEnv* env,
     jobject obj,
     jlong nativePointer) {
-  YGNodeMarkDirtyAndPropogateToDescendants(_jlong2YGNodeRef(nativePointer));
+  YGNodeMarkDirtyAndPropagateToDescendants(_jlong2YGNodeRef(nativePointer));
 }
 
 static jboolean jni_YGNodeIsDirtyJNI(
@@ -726,8 +710,7 @@ static void jni_YGNodePrintJNI(JNIEnv* env, jobject obj, jlong nativePointer) {
   const YGNodeRef node = _jlong2YGNodeRef(nativePointer);
   YGNodePrint(
       node,
-      (YGPrintOptions)(
-          YGPrintOptionsStyle | YGPrintOptionsLayout | YGPrintOptionsChildren));
+      (YGPrintOptions) (YGPrintOptionsStyle | YGPrintOptionsLayout | YGPrintOptionsChildren));
 #endif
 }
 
@@ -737,6 +720,27 @@ static jlong jni_YGNodeCloneJNI(JNIEnv* env, jobject obj, jlong nativePointer) {
   clonedYogaNode->setContext(node->getContext());
 
   return reinterpret_cast<jlong>(clonedYogaNode);
+}
+
+static jfloat jni_YGNodeStyleGetGapJNI(
+    JNIEnv* env,
+    jobject obj,
+    jlong nativePointer,
+    jint gutter) {
+  return (jfloat) YGNodeStyleGetGap(
+      _jlong2YGNodeRef(nativePointer), static_cast<YGGutter>(gutter));
+}
+
+static void jni_YGNodeStyleSetGapJNI(
+    JNIEnv* env,
+    jobject obj,
+    jlong nativePointer,
+    jint gutter,
+    jfloat gapLength) {
+  YGNodeStyleSetGap(
+      _jlong2YGNodeRef(nativePointer),
+      static_cast<YGGutter>(gutter),
+      static_cast<float>(gapLength));
 }
 
 // Yoga specific properties, not compatible with flexbox specification
@@ -760,9 +764,6 @@ static JNINativeMethod methods[] = {
     {"jni_YGConfigSetUseLegacyStretchBehaviourJNI",
      "(JZ)V",
      (void*) jni_YGConfigSetUseLegacyStretchBehaviourJNI},
-    {"jni_YGConfigSetShouldDiffLayoutWithoutLegacyStretchBehaviourJNI",
-     "(JZ)V",
-     (void*) jni_YGConfigSetShouldDiffLayoutWithoutLegacyStretchBehaviourJNI},
     {"jni_YGConfigSetLoggerJNI",
      "(JLcom/facebook/yoga/YogaLogger;)V",
      (void*) jni_YGConfigSetLoggerJNI},
@@ -784,9 +785,9 @@ static JNINativeMethod methods[] = {
      "(JFF[J[Lcom/facebook/yoga/YogaNodeJNIBase;)V",
      (void*) jni_YGNodeCalculateLayoutJNI},
     {"jni_YGNodeMarkDirtyJNI", "(J)V", (void*) jni_YGNodeMarkDirtyJNI},
-    {"jni_YGNodeMarkDirtyAndPropogateToDescendantsJNI",
+    {"jni_YGNodeMarkDirtyAndPropagateToDescendantsJNI",
      "(J)V",
-     (void*) jni_YGNodeMarkDirtyAndPropogateToDescendantsJNI},
+     (void*) jni_YGNodeMarkDirtyAndPropagateToDescendantsJNI},
     {"jni_YGNodeIsDirtyJNI", "(J)Z", (void*) jni_YGNodeIsDirtyJNI},
     {"jni_YGNodeCopyStyleJNI", "(JJ)V", (void*) jni_YGNodeCopyStyleJNI},
     {"jni_YGNodeStyleGetDirectionJNI",
@@ -976,6 +977,8 @@ static JNINativeMethod methods[] = {
     {"jni_YGNodeSetHasMeasureFuncJNI",
      "(JZ)V",
      (void*) jni_YGNodeSetHasMeasureFuncJNI},
+    {"jni_YGNodeStyleGetGapJNI", "(JI)F", (void*) jni_YGNodeStyleGetGapJNI},
+    {"jni_YGNodeStyleSetGapJNI", "(JIF)V", (void*) jni_YGNodeStyleSetGapJNI},
     {"jni_YGNodeSetHasBaselineFuncJNI",
      "(JZ)V",
      (void*) jni_YGNodeSetHasBaselineFuncJNI},

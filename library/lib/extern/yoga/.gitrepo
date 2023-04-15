@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/facebook/yoga.git
+	branch = main
+	commit = e255cdd5629ec343af37f3d760141414c5748c15
+	parent = 4e15dc3f0e2d040023047cb29c0b877b27fb5776
+	method = merge
+	cmdver = 0.4.5
