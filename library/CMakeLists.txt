@@ -11,12 +11,14 @@ endif ()
 # fmt
 add_subdirectory(${BOREALIS_PATH}/lib/extern/fmt EXCLUDE_FROM_ALL)
 
+# tweeny
+add_subdirectory(${BOREALIS_PATH}/lib/extern/tweeny EXCLUDE_FROM_ALL)
+
 set(BOREALIS_INCLUDE
         ${BOREALIS_PATH}/include
         ${BOREALIS_PATH}/include/borealis/extern
         ${BOREALIS_PATH}/include/borealis/extern/tinyxml2
         ${BOREALIS_PATH}/lib/extern/yoga/src
-        ${BOREALIS_PATH}/lib/extern/tweeny/include
         ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl
         )
 set(BOREALIS_SOURCE
@@ -109,7 +111,7 @@ endif ()
 add_library(borealis STATIC ${BOREALIS_SRC})
 set_property(TARGET borealis PROPERTY CXX_STANDARD 17)
 target_include_directories(borealis PUBLIC ${BOREALIS_INCLUDE})
-target_link_libraries(borealis fmt ${BRLS_PLATFORM_LIBS})
+target_link_libraries(borealis fmt tweeny ${BRLS_PLATFORM_LIBS})
 target_compile_options(borealis PUBLIC
         -DBRLS_RESOURCES=${BRLS_PLATFORM_RESOURCES_PATH}
         -DYG_ENABLE_EVENTS
