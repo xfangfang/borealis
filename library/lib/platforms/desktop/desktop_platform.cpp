@@ -20,6 +20,7 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
+#include <memory>
 
 #ifdef _WIN32
 #include <Windows.h>
