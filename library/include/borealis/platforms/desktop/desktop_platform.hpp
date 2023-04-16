@@ -22,6 +22,8 @@
 #include <borealis/platforms/desktop/desktop_ime.hpp>
 #ifdef __linux__
 #include <dbus/dbus.h>
+#elif __APPLE__
+#import <IOKit/pwr_mgt/IOPMLib.h>
 #endif
 
 namespace brls
@@ -48,6 +50,7 @@ class DesktopPlatform : public Platform
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
+    bool isScreenDimmingDisabled() override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     std::string exec(const char* cmd);
@@ -64,8 +67,11 @@ class DesktopPlatform : public Platform
     ThemeVariant themeVariant     = ThemeVariant::LIGHT;
     DesktopImeManager* imeManager = nullptr;
     std::string locale;
+    bool screenDimmingDisabled = false;
 #ifdef __linux__
     uint32_t inhibitCookie = 0;
+#elif __APPLE__
+    IOPMAssertionID assertionID = 0;
 #endif
 };
 

@@ -58,6 +58,7 @@ class SwitchPlatform : public Platform
     bool hasEthernetConnection() override;
     int getWirelessLevel() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
+    bool isScreenDimmingDisabled() override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     bool isApplicationMode() override;

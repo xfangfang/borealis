@@ -35,6 +35,10 @@
 #include "nanovg-gl/stb_image.h"
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 namespace brls
 {
 
@@ -194,6 +198,12 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     if (VideoContext::FULLSCREEN)
     {
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
+#ifdef _WIN32
+        // glfw will disable screen sleep when in full-screen mode
+        // We will cancel it here and let the application handle this issue internally
+        // X11 and wayland may have similar issues
+        SetThreadExecutionState(ES_CONTINUOUS);
+#endif
     }
     else
     {
@@ -236,6 +246,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Configure window
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 #ifdef __APPLE__
+    // Make the touchpad click normally
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 #endif
     glfwMakeContextCurrent(window);
@@ -395,6 +406,15 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         VideoContext::monitorIndex = getCurrentMonitorIndex();
         glfwSetWindowMonitor(this->window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+#ifdef _WIN32
+        // glfw will disable screen sleep when in full-screen mode
+        // We will cancel it here and let the application handle this issue internally
+        // X11 and wayland may have similar issues
+        if (!Application::getPlatform()->isScreenDimmingDisabled())
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
+        }
+#endif
     }
     else
     {

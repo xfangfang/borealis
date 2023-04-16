@@ -136,7 +136,12 @@ class Platform
      * @param reason If disable is true, pass Inhibited reason to the system.
      * @param app If disable is true, pass app name to the system.
      */
-    virtual void disableScreenDimming(bool disable, const std::string& reason="disable dimming", const std::string& app="borealis") = 0;
+    virtual void disableScreenDimming(bool disable, const std::string& reason = "disable dimming", const std::string& app = "borealis") = 0;
+
+    /**
+     * Returns true if screen dimming is disabled
+     */
+    virtual bool isScreenDimmingDisabled() = 0;
 
     /**
      * Called at every iteration of the main loop.

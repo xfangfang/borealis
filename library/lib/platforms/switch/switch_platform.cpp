@@ -164,6 +164,12 @@ void SwitchPlatform::disableScreenDimming(bool disable, const std::string& reaso
     appletSetMediaPlaybackState(disable);
 }
 
+bool SwitchPlatform::isScreenDimmingDisabled()
+{
+    Logger::error("Not support isScreenDimmingDisabled()");
+    return false;
+}
+
 std::string SwitchPlatform::getIpAddress()
 {
     u32 ip;
