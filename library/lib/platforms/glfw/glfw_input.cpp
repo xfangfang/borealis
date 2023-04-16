@@ -226,6 +226,9 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
+    if (!glfwGetWindowAttrib(window, GLFW_FOCUSED))
+        return;
+
     for (int i = 0; i < GAMEPADS_MAX; i++)
     {
         ControllerState localState;
