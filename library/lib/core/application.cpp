@@ -750,7 +750,7 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     }
 
     // Focus
-    if (Application::focusStack.size() > 0)
+    if (!Application::focusStack.empty())
     {
         View* newFocus = Application::focusStack[Application::focusStack.size() - 1];
 
@@ -785,7 +785,7 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     Application::blockInputs();
 
     // Focus
-    if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
+    if (!Application::activitiesStack.empty() && Application::currentFocus != nullptr)
     {
         Logger::debug("Pushing {} to the focus stack", Application::currentFocus->describe());
         Application::focusStack.push_back(Application::currentFocus);
@@ -796,13 +796,6 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     activity->onContentAvailable();
     activity->resizeToFitWindow();
 
-    // Call hide() on the previous activity in the stack if no
-    // activities are translucent, then call show() once the animation ends
-    Activity* last = nullptr;
-    if (Application::activitiesStack.size() > 0)
-        last = Application::activitiesStack[Application::activitiesStack.size() - 1];
-
-    bool fadeOut = last && !last->isTranslucent() && !activity->isTranslucent(); // play the fade out animation?
     bool fadeIn  = animation == TransitionAnimation::FADE || animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
 
     if (Application::globalQuitEnabled)
@@ -814,21 +807,20 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
 
     if (!fadeIn) // No animations
     {
+        brls::Logger::debug("push activity to the stack");
         Application::activitiesStack.push_back(activity);
         Application::unblockInputs();
-    }
-    else if (fadeOut) // Fade out animation
-    {
-        last->hide([]() {}, false, 0);
-        Application::activitiesStack.push_back(activity);
-        activity->show([]()
-            { Application::unblockInputs(); },
-            false, 0);
     }
     else
     {
+        activity->hide([]() {}, false, 0);
+
+        brls::Logger::debug("push activity to the stack");
         Application::activitiesStack.push_back(activity);
-        Application::unblockInputs();
+        float duration = activity->getShowAnimationDuration(animation);
+        activity->show([]()
+            { Application::unblockInputs(); },
+            duration > 0, duration);
     }
 }
 
