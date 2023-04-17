@@ -41,6 +41,7 @@ class FontLoader
   public:
     inline static std::string USER_FONT_PATH = BRLS_ASSET("font/font.ttf");
     inline static std::string USER_ICON_PATH = BRLS_ASSET("font/icon.ttf");
+    inline static std::string USER_EMOJI_PATH;
 
     virtual ~FontLoader() { }
     /**

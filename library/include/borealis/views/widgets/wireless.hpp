@@ -37,6 +37,7 @@ class WirelessWidget : public Box
     Image* _1;
     Image* _2;
     Image* _3;
+    Image* ethernet;
     Platform* platform;
 
     void applyTheme(ThemeVariant theme);
@@ -44,6 +45,7 @@ class WirelessWidget : public Box
     void updateState();
     inline static bool hasWirelessConnection = false;
     inline static int wifiLevel              = 3;
+    inline static bool hasEthernetConnection = false;
 };
 
 } // namespace brls

@@ -1,21 +1,27 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+set(BOREALIS_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 # using custom glfw
 if ((NOT USE_SDL2) AND PLATFORM_DESKTOP)
     set(GLFW_BUILD_DOCS OFF)
-    add_subdirectory(lib/extern/glfw EXCLUDE_FROM_ALL)
+    add_subdirectory(${BOREALIS_PATH}/lib/extern/glfw EXCLUDE_FROM_ALL)
 endif ()
 
-set(BOREALIS_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+# fmt
+add_subdirectory(${BOREALIS_PATH}/lib/extern/fmt EXCLUDE_FROM_ALL)
+
+# tweeny
+add_subdirectory(${BOREALIS_PATH}/lib/extern/tweeny EXCLUDE_FROM_ALL)
+
+# yoga
+add_subdirectory(${BOREALIS_PATH}/lib/extern/yoga/yoga EXCLUDE_FROM_ALL)
+target_compile_options(yogacore PRIVATE -fvisibility=default)
 
 set(BOREALIS_INCLUDE
         ${BOREALIS_PATH}/include
-        ${BOREALIS_PATH}/lib/extern/fmt/include
         ${BOREALIS_PATH}/include/borealis/extern
         ${BOREALIS_PATH}/include/borealis/extern/tinyxml2
-        ${BOREALIS_PATH}/lib/extern/yoga/src
-        ${BOREALIS_PATH}/lib/extern/tweeny/include
         ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl
         )
 set(BOREALIS_SOURCE
@@ -29,10 +35,7 @@ set(BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/compat
         ${BOREALIS_PATH}/lib/extern/libretro-common/encodings
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
-        ${BOREALIS_PATH}/lib/extern/yoga/src/yoga
-        ${BOREALIS_PATH}/lib/extern/yoga/src/yoga/event
         ${BOREALIS_PATH}/lib/extern/nanovg-gl
-        ${BOREALIS_PATH}/lib/extern/fmt/src
         )
 
 if (NOT BRLS_RESOURCES_DIR)
@@ -109,7 +112,7 @@ endif ()
 add_library(borealis STATIC ${BOREALIS_SRC})
 set_property(TARGET borealis PROPERTY CXX_STANDARD 17)
 target_include_directories(borealis PUBLIC ${BOREALIS_INCLUDE})
-target_link_libraries(borealis ${BRLS_PLATFORM_LIBS})
+target_link_libraries(borealis fmt tweeny yogacore ${BRLS_PLATFORM_LIBS})
 target_compile_options(borealis PUBLIC
         -DBRLS_RESOURCES=${BRLS_PLATFORM_RESOURCES_PATH}
         -DYG_ENABLE_EVENTS

@@ -95,10 +95,15 @@ BottomBar::BottomBar()
 
 void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx)
 {
+    this->updateText();
+    Box::draw(vg, x, y, width, height, style, ctx);
+}
+
+void BottomBar::updateText()
+{
     auto timeNow   = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(timeNow);
 
-    static std::string bottomText;
     std::stringstream ss;
     ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
     if (ss.str() != bottomText)
@@ -113,8 +118,6 @@ void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height
             time->setText(bottomText);
         }
     }
-
-    Box::draw(vg, x, y, width, height, style, ctx);
 }
 
 View* BottomBar::create()

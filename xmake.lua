@@ -70,6 +70,7 @@ target("borealis")
     set_kind("static")
     -- set_kind("shared")
     add_includedirs("library/include")
+    add_includedirs("library/include/borealis/extern")
     for _, dir in ipairs({
         "lib/core",
         "lib/core/touch",
@@ -127,6 +128,7 @@ target("borealis")
 
 target("demo")
     add_includedirs("library/include")
+    add_includedirs("library/include/borealis/extern")
     add_files("demo/*.cpp")
     add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga", "sdl2")
     add_deps("borealis")

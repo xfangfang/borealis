@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'com.facebook.yoga.android'
+
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
+    ndkVersion rootProject.ndkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+    }
+
+    compileOptions {
+        targetCompatibility rootProject.targetCompatibilityVersion
+        sourceCompatibility rootProject.sourceCompatibilityVersion
+    }
+}
+
+dependencies {
+    api project(':yoga')
+}
+
+// We don't build Javadoc at this time as we can't disable "BUCK" files
+// from mistakenly getting parsed as Java.
+tasks.withType(Javadoc).all {
+  enabled = false
+}
+
+apply plugin: 'com.vanniktech.maven.publish'

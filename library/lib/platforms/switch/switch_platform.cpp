@@ -141,6 +141,15 @@ bool SwitchPlatform::hasWirelessConnection()
     return res;
 }
 
+bool SwitchPlatform::hasEthernetConnection()
+{
+    NifmInternetConnectionType type;
+    u32 wifiSignal;
+    NifmInternetConnectionStatus status;
+    nifmGetInternetConnectionStatus(&type, &wifiSignal, &status);
+    return type == NifmInternetConnectionType_Ethernet;
+}
+
 int SwitchPlatform::getWirelessLevel()
 {
     NifmInternetConnectionType type;
@@ -153,6 +162,12 @@ int SwitchPlatform::getWirelessLevel()
 void SwitchPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
 {
     appletSetMediaPlaybackState(disable);
+}
+
+bool SwitchPlatform::isScreenDimmingDisabled()
+{
+    Logger::error("Not support isScreenDimmingDisabled()");
+    return false;
 }
 
 std::string SwitchPlatform::getIpAddress()

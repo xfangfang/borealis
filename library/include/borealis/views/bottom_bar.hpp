@@ -33,6 +33,8 @@ class BottomBar : public Box
     static View* create();
 
   private:
+    void updateText();
+    std::string bottomText;
     BRLS_BIND(Box, hints, "brls/hints");
     BRLS_BIND(Label, time, "brls/hints/time");
     BRLS_BIND(View, battery, "brls/battery");

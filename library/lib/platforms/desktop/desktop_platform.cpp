@@ -20,6 +20,7 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
+#include <memory>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -384,15 +385,23 @@ int DesktopPlatform::getWirelessLevel()
 
 void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
 {
-    static bool status = false;
-    if (status == disable)
+    if (this->screenDimmingDisabled == disable)
         return;
-    status = disable;
+    this->screenDimmingDisabled = disable;
 
     if (disable)
     {
 #ifdef __linux__
         inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
+#elif __APPLE__
+        std::string sleepReason           = app + " " + reason;
+        CFStringRef reasonForActivity     = ::CFStringCreateWithCString(kCFAllocatorDefault, sleepReason.c_str(),
+                kCFStringEncodingUTF8);
+        [[maybe_unused]] IOReturn success = IOPMAssertionCreateWithName(
+            kIOPMAssertionTypeNoDisplaySleep, kIOPMAssertionLevelOn,
+            reasonForActivity, &assertionID);
+#elif _WIN32
+        SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_CONTINUOUS);
 #endif
     }
     else
@@ -400,8 +409,17 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
 #ifdef __linux__
         if (inhibitCookie != 0)
             dbusUnInhibit(dbus_conn.get(), inhibitCookie);
+#elif __APPLE__
+        IOPMAssertionRelease(assertionID);
+#elif _WIN32
+        SetThreadExecutionState(ES_CONTINUOUS);
 #endif
     }
+}
+
+bool DesktopPlatform::isScreenDimmingDisabled()
+{
+    return this->screenDimmingDisabled;
 }
 
 std::string DesktopPlatform::getIpAddress()

@@ -97,8 +97,8 @@ class Activity
      */
     bool isTranslucent();
 
-    void willAppear(bool resetState = false);
-    void willDisappear(bool resetState = false);
+    virtual void willAppear(bool resetState = false);
+    virtual void willDisappear(bool resetState = false);
 
     /**
      * If set to true, will force the activity to be translucent.
@@ -106,8 +106,8 @@ class Activity
     void setInFadeAnimation(bool translucent);
 
     /**
-      * Shows the activity with a fade in animation, or no animation at all.
-      */
+     * Shows the activity with a fade in animation, or no animation at all.
+     */
     void show(std::function<void(void)> cb, bool animate, float animationDuration);
 
     /**

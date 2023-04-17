@@ -104,10 +104,10 @@ bool SwitchAudioPlayer::load(enum Sound sound)
 
     std::string soundName = SOUNDS_MAP[sound];
 
-    if (soundName == "")
+    if (soundName.empty())
         return false; // unimplemented sound
 
-    Logger::debug("Loading sound {}: {}", sound, soundName);
+    Logger::debug("Loading sound {}: {}", (int)sound, soundName);
 
     PLSR_RC rc = plsrPlayerLoadSoundByName(&this->qlaunchBfsar, soundName.c_str(), &this->sounds[sound]);
     if (PLSR_RC_FAILED(rc))

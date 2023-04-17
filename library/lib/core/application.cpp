@@ -128,15 +128,15 @@ void Application::createWindow(std::string windowTitle)
     defaultConfig->useWebDefaults = true;
     using namespace facebook;
 
-    yoga::Event::subscribe([](const YGNode& node, yoga::Event::Type eventType, yoga::Event::Data eventData) {
+    facebook::yoga::Event::subscribe([](const YGNode& node, facebook::yoga::Event::Type eventType, facebook::yoga::Event::Data eventData)
+        {
         View* view = (View*)node.getContext();
 
         if (!view)
             return;
 
-        if (eventType == yoga::Event::NodeLayout)
-            view->onLayout();
-    });
+        if (eventType == facebook::yoga::Event::NodeLayout)
+            view->onLayout(); });
 
     // Load fonts and setup fallbacks
     Application::platform->getFontLoader()->loadFonts();
@@ -463,7 +463,7 @@ void Application::navigate(FocusDirection direction, bool repeating)
     }
 
     // If new focus not the same as now, play sound and give it focus
-    if (Application::getCurrentFocus() != nextFocus->getDefaultFocus() && nextFocus->getVisibility() == Visibility::VISIBLE)
+    if (nextFocus->getDefaultFocus() && Application::getCurrentFocus() != nextFocus->getDefaultFocus() && nextFocus->getVisibility() == Visibility::VISIBLE)
     {
         enum Sound focusSound = nextFocus->getFocusSound();
         Application::getAudioPlayer()->play(focusSound);
@@ -716,7 +716,7 @@ void Application::giveFocus(View* view)
     View* oldFocus = Application::currentFocus;
     View* newFocus = view ? view->getDefaultFocus() : nullptr;
 
-    if (oldFocus != newFocus && newFocus != NULL)
+    if (oldFocus != newFocus && newFocus != nullptr)
     {
         if (oldFocus)
             oldFocus->onFocusLost();
@@ -757,7 +757,7 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     }
 
     // Focus
-    if (Application::focusStack.size() > 0)
+    if (!Application::focusStack.empty())
     {
         View* newFocus = Application::focusStack[Application::focusStack.size() - 1];
 
@@ -792,7 +792,7 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     Application::blockInputs();
 
     // Focus
-    if (Application::activitiesStack.size() > 0 && Application::currentFocus != nullptr)
+    if (!Application::activitiesStack.empty() && Application::currentFocus != nullptr)
     {
         Logger::debug("Pushing {} to the focus stack", Application::currentFocus->describe());
         Application::focusStack.push_back(Application::currentFocus);
@@ -803,13 +803,6 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     activity->onContentAvailable();
     activity->resizeToFitWindow();
 
-    // Call hide() on the previous activity in the stack if no
-    // activities are translucent, then call show() once the animation ends
-    Activity* last = nullptr;
-    if (Application::activitiesStack.size() > 0)
-        last = Application::activitiesStack[Application::activitiesStack.size() - 1];
-
-    bool fadeOut = last && !last->isTranslucent() && !activity->isTranslucent(); // play the fade out animation?
     bool fadeIn  = animation == TransitionAnimation::FADE || animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
 
     if (Application::globalQuitEnabled)
@@ -821,21 +814,20 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
 
     if (!fadeIn) // No animations
     {
+        brls::Logger::debug("push activity to the stack");
         Application::activitiesStack.push_back(activity);
         Application::unblockInputs();
-    }
-    else if (fadeOut) // Fade out animation
-    {
-        last->hide([]() {}, false, 0);
-        Application::activitiesStack.push_back(activity);
-        activity->show([]()
-            { Application::unblockInputs(); },
-            false, 0);
     }
     else
     {
+        activity->hide([]() {}, false, 0);
+
+        brls::Logger::debug("push activity to the stack");
         Application::activitiesStack.push_back(activity);
-        Application::unblockInputs();
+        float duration = activity->getShowAnimationDuration(animation);
+        activity->show([]()
+            { Application::unblockInputs(); },
+            duration > 0, duration);
     }
 }
 

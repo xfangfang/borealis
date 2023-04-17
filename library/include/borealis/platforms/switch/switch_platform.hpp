@@ -35,7 +35,7 @@ class SwitchPlatform : public Platform
 {
   public:
     SwitchPlatform();
-    ~SwitchPlatform();
+    ~SwitchPlatform() override;
 
     void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos) override;
 
@@ -55,8 +55,10 @@ class SwitchPlatform : public Platform
     int getBatteryLevel() override;
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
+    bool hasEthernetConnection() override;
     int getWirelessLevel() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
+    bool isScreenDimmingDisabled() override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     bool isApplicationMode() override;

@@ -66,7 +66,7 @@ class Label : public View
     /**
      * Sets the text of the label.
      */
-    void setText(std::string text);
+    virtual void setText(std::string text);
 
     /**
      * Sets the alignment of the text inside

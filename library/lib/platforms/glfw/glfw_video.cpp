@@ -44,6 +44,10 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #include "stb_image.h"
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 namespace brls
 {
 
@@ -227,6 +231,12 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     {
         glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
+#ifdef _WIN32
+        // glfw will disable screen sleep when in full-screen mode
+        // We will cancel it here and let the application handle this issue internally
+        // X11 and wayland may have similar issues
+        SetThreadExecutionState(ES_CONTINUOUS);
+#endif
     }
     else
     {
@@ -269,6 +279,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Configure window
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 #ifdef __APPLE__
+    // Make the touchpad click normally
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 #endif
 #ifdef BOREALIS_USE_OPENGL
@@ -284,9 +295,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #endif
     glfwSwapInterval(1);
 
-    Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
-    Logger::info("glfw: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
-    Logger::info("glfw: GL Version: {}", (const char*)glGetString(GL_VERSION));
+    Logger::info("glfw: GL Vendor: {}", print(glGetString(GL_VENDOR)));
+    Logger::info("glfw: GL Renderer: {}", print(glGetString(GL_RENDERER)));
+    Logger::info("glfw: GL Version: {}", print(glGetString(GL_VERSION)));
 #endif
     Logger::info("glfw: GLFW Version: {}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
@@ -478,6 +489,15 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         VideoContext::monitorIndex = getCurrentMonitorIndex();
         glfwSetWindowMonitor(this->window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+#ifdef _WIN32
+        // glfw will disable screen sleep when in full-screen mode
+        // We will cancel it here and let the application handle this issue internally
+        // X11 and wayland may have similar issues
+        if (!Application::getPlatform()->isScreenDimmingDisabled())
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
+        }
+#endif
     }
     else
     {

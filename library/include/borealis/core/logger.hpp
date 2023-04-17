@@ -35,28 +35,35 @@ enum class LogLevel
     LOG_VERBOSE
 };
 
+static inline std::string print(const unsigned char* str)
+{
+    if (str)
+    {
+        return std::string { (const char*)str };
+    }
+    return "";
+}
+
 class Logger
 {
   public:
     static void setLogLevel(LogLevel logLevel);
 
     template <typename... Args>
-    inline static void log(LogLevel logLevel, std::string prefix, std::string color, fmt::format_string<Args...> format, Args&&... args)
+    inline static void log(LogLevel level, std::string prefix, std::string color, fmt::format_string<Args...> format, Args&&... args)
     {
-        if (Logger::logLevel < logLevel)
+        if (Logger::logLevel < level)
             return;
 
         auto now    = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
             - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
-        time_t tt        = std::chrono::system_clock::to_time_t(now);
-        auto time_tm     = localtime(&tt);
-        char strTime[13] = { 0 };
-        sprintf(strTime, "%02d:%02d:%02d.%03d", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms);
+        time_t tt    = std::chrono::system_clock::to_time_t(now);
+        auto time_tm = localtime(&tt);
 
         try
         {
-            fmt::print("{}\033{}[{}]\033[0m ", strTime, color, prefix);
+            fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m ", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix);
             fmt::print(format, std::forward<Args>(args)...);
             fmt::print("\n");
 

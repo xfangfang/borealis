@@ -87,12 +87,17 @@ class Platform
     /**
      * Returns true if device has wireless connection.
      */
-    virtual bool hasWirelessConnection() = 0;
+    virtual bool hasWirelessConnection() { return false; };
 
     /**
      * Returns wireless quality level from 0 to 3.
      */
     virtual int getWirelessLevel() = 0;
+
+    /**
+     * Returns true if device has ethernet connection.
+     */
+    virtual bool hasEthernetConnection() { return false; };
 
     /**
      * Returns ip address.
@@ -131,7 +136,12 @@ class Platform
      * @param reason If disable is true, pass Inhibited reason to the system.
      * @param app If disable is true, pass app name to the system.
      */
-    virtual void disableScreenDimming(bool disable, const std::string& reason="disable dimming", const std::string& app="borealis") = 0;
+    virtual void disableScreenDimming(bool disable, const std::string& reason = "disable dimming", const std::string& app = "borealis") = 0;
+
+    /**
+     * Returns true if screen dimming is disabled
+     */
+    virtual bool isScreenDimmingDisabled() = 0;
 
     /**
      * Called at every iteration of the main loop.
