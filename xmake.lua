@@ -141,7 +141,7 @@ target("demo")
     end
     if is_plat("mingw") then
         add_ldflags("-static")
+    end
+    if is_plat("windows", "mingw") then
         add_files("demo/resource.rc")
-    elseif is_plat("windows") then 
-        add_files("demo/resource.manifest")
     end

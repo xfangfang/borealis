@@ -20,6 +20,8 @@ namespace brls {
 #ifdef __GLFW__
     bool D3D11Context::InitializeDX(GLFWwindow* window, int width, int height) {
         HWND hWndMain = glfwGetWin32Window(window);
+        this->glfwWindow = window;
+        this->hwnd = hWndMain;
         return InitializeDXInternal(hWndMain, nullptr, width, height);
     }
 #elif defined(__SDL2__)
@@ -196,6 +198,8 @@ namespace brls {
 #else
         dpi = GetDpiForWindow(this->hwnd) / 96.0f;
 #endif
+#else
+        dpi = GetDpiForWindow(this->hwnd) / 96.0f;
 #endif
         return dpi;
     }

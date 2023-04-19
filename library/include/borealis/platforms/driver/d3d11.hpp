@@ -29,6 +29,8 @@ namespace brls
             bool InitializeDXInternal(HWND window, IUnknown *coreWindow, int width, int height);
             static const int SwapChainBufferCount = 2;
 #ifdef __GLFW__
+            GLFWwindow* glfwWindow;
+            HWND hwnd;
 #elif defined(__SDL2__)
             SDL_Window* sdlWindow;
             HWND hwnd;

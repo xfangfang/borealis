@@ -142,10 +142,9 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     if (D3D11_CONTEXT == nullptr) {
         return;
     }
+    float scaleFactor = D3D11_CONTEXT->GetDpi();
+    int wWidth = width, wHeight = height;
     D3D11_CONTEXT->ResizeFramebufferSize(width, height);
-    int wWidth, wHeight;
-    glfwGetWindowSize(window, &wWidth, &wHeight);
-    scaleFactor = width * 1.0 / wWidth;
 #endif
 
     Application::onWindowResized(width, height);
@@ -325,6 +324,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
         return;
     }
     this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    scaleFactor = D3D11_CONTEXT->GetDpi();
 #endif
     if (!this->nvgContext)
     {
@@ -338,9 +338,12 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwGetFramebufferSize(window, &width, &height);
     Application::setWindowSize(width, height);
 
+#if defined(BOREALIS_USE_D3D11) || defined(BOREALIS_USE_METAL)
+#else
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
     scaleFactor = width * 1.0 / wWidth;
+#endif
 
     int xPos, yPos;
     glfwGetWindowPos(window, &xPos, &yPos);
