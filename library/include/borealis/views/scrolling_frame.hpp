@@ -95,7 +95,7 @@ class ScrollingFrame : public Box
 
     static View* create();
 
-  private:
+  protected:
     View* contentView             = nullptr;
     Rectangle* scrollingIndicator = nullptr;
 
