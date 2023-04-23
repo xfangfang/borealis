@@ -741,10 +741,11 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
 
     bool fade = animation == TransitionAnimation::FADE;
 
+    Activity* toShow = nullptr;
     // Animate the old activity immediately
     if (Application::activitiesStack.size() > 1)
     {
-        Activity* toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
+        toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
         toShow->hide([]() {}, false, 0);
         toShow->show([]() {}, false, 0);
     }
@@ -754,9 +755,16 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     {
         View* newFocus = Application::focusStack[Application::focusStack.size() - 1];
 
-        Logger::debug("Giving focus to {}, and removing it from the focus stack", newFocus->describe());
+        if (!toShow || newFocus->getParentActivity() == toShow)
+        {
+            Logger::debug("Giving focus to {}, and removing it from the focus stack", newFocus->describe());
+            Application::giveFocus(newFocus);
+        }
+        else if (toShow)
+        {
+            Application::giveFocus(toShow->getContentView());
+        }
 
-        Application::giveFocus(newFocus);
         Application::focusStack.pop_back();
     }
 
