@@ -351,17 +351,27 @@ std::string Label::STConverter(const std::string& text)
     return text;
 }
 
-void Label::setText(std::string text)
+void Label::setText(const std::string& text)
 {
 #ifdef OPENCC
     static bool trans = Application::getLocale() == LOCALE_ZH_HANT || Application::getLocale() == LOCALE_ZH_TW;
     if (trans && OPENCC_ON)
-        text = Label::STConverter(text);
-#endif
+    {
+        this->truncatedText = Label::STConverter(text);
+        this->fullText      = this->truncatedText;
+    }
+    else
+    {
+        this->truncatedText = text;
+        this->fullText      = text;
+    }
+    this->invalidate();
+#else
     this->truncatedText = text;
     this->fullText      = text;
 
     this->invalidate();
+#endif
 }
 
 void Label::setSingleLine(bool singleLine)

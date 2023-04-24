@@ -257,6 +257,8 @@ void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
             state.position.x = hidState.touches[i].x / Application::windowScale;
             state.position.y = hidState.touches[i].y / Application::windowScale;
             states->push_back(state);
+            // only single touch is allowed
+            break;
         }
     }
 }
