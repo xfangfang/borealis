@@ -7,7 +7,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #elif defined(__SDL2__)
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 namespace brls
