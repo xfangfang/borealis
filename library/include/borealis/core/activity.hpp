@@ -95,15 +95,18 @@ class Activity
      * Is this activity translucent, aka can we see the
      * activities under it in the stack?
      */
-    bool isTranslucent();
+    virtual bool isTranslucent();
 
     virtual void willAppear(bool resetState = false);
     virtual void willDisappear(bool resetState = false);
+    virtual void onPause() { }
+    virtual void onResume() { }
 
     /**
      * If set to true, will force the activity to be translucent.
      */
-    void setInFadeAnimation(bool translucent);
+    void
+    setInFadeAnimation(bool translucent);
 
     /**
      * Shows the activity with a fade in animation, or no animation at all.
@@ -111,8 +114,8 @@ class Activity
     void show(std::function<void(void)> cb, bool animate, float animationDuration);
 
     /**
-      * Hides the activity with a fade in animation, or no animation at all.
-      */
+     * Hides the activity with a fade in animation, or no animation at all.
+     */
     void hide(std::function<void(void)> cb, bool animate, float animationDuration);
 
     bool isHidden();

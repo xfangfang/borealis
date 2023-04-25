@@ -754,6 +754,7 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     {
         toShow = Application::activitiesStack[Application::activitiesStack.size() - 2];
         toShow->hide([]() {}, false, 0);
+        toShow->onResume();
         toShow->show([]() {}, false, 0);
     }
 
@@ -811,7 +812,13 @@ void Application::pushActivity(Activity* activity, TransitionAnimation animation
     activity->onContentAvailable();
     activity->resizeToFitWindow();
 
-    bool fadeIn  = animation == TransitionAnimation::FADE || animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
+    if (!Application::activitiesStack.empty())
+    {
+        Activity* last = Application::activitiesStack[Application::activitiesStack.size() - 1];
+        last->onPause();
+    }
+
+    bool fadeIn = animation == TransitionAnimation::FADE || animation == TransitionAnimation::SLIDE_LEFT || animation == TransitionAnimation::SLIDE_RIGHT; // wait for the old activity animation to be done before showing the new one?
 
     if (Application::globalQuitEnabled)
         Application::gloablQuitIdentifier = activity->registerExitAction();
