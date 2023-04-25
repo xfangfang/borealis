@@ -28,9 +28,9 @@ namespace brls
 {
 
 #ifdef BOREALIS_USE_STD_THREAD
-static std::thread *task_loop_thread;
+static std::thread *task_loop_thread = nullptr;
 #else
-static pthread_t task_loop_thread = nullptr;
+static pthread_t task_loop_thread = NULL;
 #endif
 
 Threading::Threading()
@@ -163,6 +163,7 @@ void Threading::stop()
 
 #ifdef BOREALIS_USE_STD_THREAD
     task_loop_thread->join();
+    delete task_loop_thread;
     task_loop_thread = nullptr;
 #else
     pthread_join(task_loop_thread, NULL);
