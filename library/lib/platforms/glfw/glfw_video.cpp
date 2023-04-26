@@ -338,23 +338,24 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwGetFramebufferSize(window, &width, &height);
     Application::setWindowSize(width, height);
 
-#if defined(BOREALIS_USE_D3D11) || defined(BOREALIS_USE_METAL)
-#else
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
-    scaleFactor = width * 1.0 / wWidth;
-#endif
 
     int xPos, yPos;
     glfwGetWindowPos(window, &xPos, &yPos);
     Application::setWindowPosition(xPos, yPos);
 
+#if defined(BOREALIS_USE_D3D11) || defined(BOREALIS_USE_METAL)
+#else
+    scaleFactor      = width * 1.0 / wWidth;
+#endif
+
     if (!VideoContext::FULLSCREEN)
     {
-        VideoContext::sizeW = width;
-        VideoContext::sizeH = height;
-        VideoContext::posX = (float)xPos;
-        VideoContext::posY = (float)yPos;
+        VideoContext::sizeW = wWidth;
+        VideoContext::sizeH = wHeight;
+        VideoContext::posX  = (float)xPos;
+        VideoContext::posY  = (float)yPos;
     }
 
 #ifdef __SWITCH__
