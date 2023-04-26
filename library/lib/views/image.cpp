@@ -89,16 +89,31 @@ static YGSize imageMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
         // Grow height as much as possible then deduce width
         if (heightMode != YGMeasureModeUndefined)
         {
-            size.height = measureHeight(node, width, widthMode, height, heightMode, originalHeight, scalingType);
-            size.width  = measureWidth(node, width, widthMode, height, heightMode, size.height * imageAspectRatio, scalingType);
+            if (ntz(width) > 0)
+            {
+                float viewAspectRatio = width / height;
+                if (viewAspectRatio > imageAspectRatio)
+                {
+                    size.height = height;
+                    size.width  = height * imageAspectRatio;
+                }
+                else
+                {
+                    size.width  = width;
+                    size.height = width / imageAspectRatio;
+                }
+            }
+            else
+            {
+                size.height = measureHeight(node, width, widthMode, height, heightMode, originalHeight, scalingType);
+                size.width  = measureWidth(node, width, widthMode, height, heightMode, size.height * imageAspectRatio, scalingType);
+            }
         }
         // Grow width as much as possible then deduce height
         else
         {
             size.width  = measureWidth(node, width, widthMode, height, heightMode, originalWidth, scalingType);
-            size.height = measureHeight(node, width, widthMode, height, heightMode, size.width * imageAspectRatio, scalingType);
-//          size.height = measureHeight(node, width, widthMode, height, heightMode, size.width / imageAspectRatio, scalingType);
-
+            size.height = measureHeight(node, width, widthMode, height, heightMode, size.width / imageAspectRatio, scalingType);
         }
     }
     // Crop (and fallback) method: grow as much as possible in both directions
