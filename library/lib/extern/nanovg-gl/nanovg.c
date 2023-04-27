@@ -2637,7 +2637,7 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 	const char* breakEnd = NULL;
 	float breakWidth = 0;
 	float breakMaxX = 0;
-	int type = NVG_SPACE, ptype = NVG_SPACE;
+	int type = NVG_SPACE, ptype = NVG_NEWLINE;
 	unsigned int pcodepoint = 0;
 
 	if (maxRows == 0) return 0;
@@ -2668,7 +2668,6 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 			case 9:			// \t
 			case 11:		// \v
 			case 12:		// \f
-			case 32:		// space
 			case 0x00a0:	// NBSP
 				type = NVG_SPACE;
 				break;
@@ -2681,6 +2680,11 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 			case 0x0085:	// NEL
 				type = NVG_NEWLINE;
 				break;
+            case 32:
+                if (ptype != NVG_NEWLINE) {
+                     type = NVG_SPACE;
+                     break;
+                }
 			default:
 				if ((iter.codepoint >= 0x4E00 && iter.codepoint <= 0x9FFF) ||
 					(iter.codepoint >= 0x3000 && iter.codepoint <= 0x30FF) ||
