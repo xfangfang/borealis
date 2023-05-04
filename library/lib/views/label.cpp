@@ -46,42 +46,11 @@ static size_t strLen(const std::string& str)
     return res;
 }
 
-static std::string slice(const std::string& str, size_t start, size_t end)
-{
-    if (start > end || end > str.length())
-        return "";
-    size_t index = 0, s_index = 0, e_index = 0, inc = 0;
-    while (inc < str.length())
-    {
-        if (index == start)
-        {
-            s_index = inc;
-        }
-        else if (index == end)
-        {
-            e_index = inc;
-            break;
-        }
-        if (str[inc] & 0x80)
-            if (str[inc] & 0x20)
-                if (str[inc] & 0x10)
-                    inc += 4;
-                else
-                    inc += 3;
-            else
-                inc += 2;
-        else
-            inc += 1;
-        index++;
-    }
-    return str.substr(s_index, e_index);
-}
-
 static void computeLabelHeight(Label* label, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode, YGSize* size, float* originalBounds)
 {
     label->setIsWrapping(false);
 
-    float requiredHeight = originalBounds[3] - originalBounds[1] + 5;
+    float requiredHeight = originalBounds[3] - originalBounds[1];
     if (heightMode == YGMeasureModeUndefined || heightMode == YGMeasureModeAtMost)
     {
         // Grow the label vertically as much as possible
@@ -103,7 +72,7 @@ static void computeLabelHeight(Label* label, float width, YGMeasureMode widthMod
 static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode)
 {
     NVGcontext* vg       = Application::getNVGContext();
-    Label* label         = (Label*)YGNodeGetContext(node);
+    auto* label          = (Label*)YGNodeGetContext(node);
     std::string fullText = label->getFullText();
 
     YGSize size = {
@@ -111,7 +80,7 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
         .height = height,
     };
 
-    if (fullText == "")
+    if (fullText.empty())
         return size;
 
     // XXX: workaround for a Yoga bug
@@ -128,14 +97,14 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
     nvgTextLineHeight(vg, label->getLineHeight());
 
     // Measure the needed width for the ellipsis
-    float bounds[4]; // width = xmax - xmin + some padding because nvgTextBounds isn't super precise
+    float bounds[4];
     nvgTextBounds(vg, 0, 0, ELLIPSIS, nullptr, bounds);
-    float ellipsisWidth = bounds[2] - bounds[0] + 5;
+    float ellipsisWidth = bounds[2] - bounds[0];
     label->setEllipsisWidth(ellipsisWidth);
 
     // Measure the needed width for the fullText
     nvgTextBounds(vg, 0, 0, fullText.c_str(), nullptr, bounds);
-    float requiredWidth = bounds[2] - bounds[0] + 5;
+    float requiredWidth = bounds[2] - bounds[0];
     label->setRequiredWidth(requiredWidth);
 
     // XXX: This is an approximation since the given width here may not match the actual final width of the view
@@ -359,16 +328,19 @@ void Label::setText(const std::string& text)
     {
         this->truncatedText = Label::STConverter(text);
         this->fullText      = this->truncatedText;
+        this->stringLength  = strLen(this->fullText);
     }
     else
     {
         this->truncatedText = text;
         this->fullText      = text;
+        this->stringLength  = strLen(this->fullText);
     }
     this->invalidate();
 #else
     this->truncatedText = text;
     this->fullText      = text;
+    this->stringLength  = strLen(text);
 
     this->invalidate();
 #endif
@@ -403,21 +375,6 @@ void Label::setIsWrapping(bool isWrapping)
 bool Label::isSingleLine()
 {
     return this->singleLine;
-}
-
-static std::string trim(const std::string& str)
-{
-    std::string result = "";
-    size_t endIndex    = str.size();
-    while (endIndex > 0 && std::isblank(str[endIndex - 1]))
-        endIndex -= 1;
-    for (size_t i = 0; i < endIndex; i += 1)
-    {
-        char ch = str[i];
-        if (!isblank(ch) || result.size() > 0)
-            result += ch;
-    }
-    return result;
 }
 
 enum NVGalign Label::getNVGVerticalAlign()
@@ -468,7 +425,8 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
     if (this->animating)
     {
         nvgSave(vg);
-        nvgIntersectScissor(vg, x, y, width, height);
+        float scissorHeight = fontSize * lineHeight;
+        nvgIntersectScissor(vg, x, y, width, scissorHeight < height ? height : scissorHeight);
 
         float baseX   = x - this->scrollingAnimation;
         float spacing = style["brls/label/scrolling_animation_spacing"];
@@ -589,17 +547,33 @@ void Label::onLayout()
     }
 
     // Prebake clipping
-    if (width < this->requiredWidth && !this->isWrapping)
+    if (!this->fullText.empty() && width < this->requiredWidth && !this->isWrapping)
     {
         // Compute the position of the ellipsis (in chars), should the string be truncated
-        // Use an approximation based on the text width and ellipsis width
         // Cannot do it in the measure function because the margins are not applied yet there
-        float toRemove      = std::min(this->requiredWidth, this->requiredWidth - width + this->ellipsisWidth); // little bit more than ellipsis width to make sure it doesn't overflow
-        float toRemoveRatio = toRemove / requiredWidth;
+        auto vg = Application::getNVGContext();
+        nvgFontSize(vg, this->fontSize);
+        nvgTextAlign(vg, this->getNVGHorizontalAlign() | this->getNVGVerticalAlign());
+        nvgFontFaceId(vg, this->font);
+        nvgTextLineHeight(vg, this->lineHeight);
 
-        size_t len              = strLen(this->fullText);
-        size_t ellipsisPosition = len - roundf((float)len * toRemoveRatio);
-        this->truncatedText     = trim(slice(this->fullText, 0, ellipsisPosition)) + ELLIPSIS;
+        NVGglyphPosition positions[stringLength];
+        nvgTextGlyphPositions(vg, 0, 0, fullText.c_str(), nullptr, positions, stringLength);
+
+        const char* start   = fullText.c_str();
+        this->truncatedText = fullText;
+        for (auto& i : positions)
+        {
+            if (i.str == start)
+                continue;
+            if (i.str - start >= fullText.size())
+                break;
+            if (i.maxx + this->ellipsisWidth > width)
+            {
+                this->truncatedText = fullText.substr(0, i.str - start) + ELLIPSIS;
+                break;
+            }
+        }
     }
     else
     {

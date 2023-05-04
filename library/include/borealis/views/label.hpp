@@ -154,6 +154,7 @@ class Label : public View
 
     float requiredWidth    = 0;
     unsigned ellipsisWidth = 0;
+    size_t stringLength    = 0;
 
     bool singleLine = false;
     bool isWrapping = false;
