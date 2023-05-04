@@ -195,16 +195,17 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     // Setup window state
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
-    Application::setWindowSize(width, height);
 
     int fWidth, fHeight;
 #ifdef BOREALIS_USE_OPENGL
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
+    Application::setWindowSize(fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
-    scaleFactor = D3D11_CONTEXT->GetDpi();
-    fWidth = width;
-    fHeight = height;
+    scaleFactor      = D3D11_CONTEXT->GetDpi();
+    fWidth           = width;
+    fHeight          = height;
+    Application::setWindowSize(width, height);
 #endif
 
     int xPos, yPos;
