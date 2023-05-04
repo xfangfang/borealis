@@ -55,7 +55,10 @@ if (PLATFORM_DESKTOP)
         list(APPEND BOREALIS_SOURCE
                 ${BOREALIS_PATH}/lib/platforms/sdl
                 ${BOREALIS_PATH}/lib/platforms/desktop)
-        set(BRLS_PLATFORM_LIBS ${SDL2_LIBRARIES})
+        set(BRLS_PLATFORM_LIBS ${SDL2_LIBRARIES} "-framework Cocoa" "-framework IOKit")
+        if (APPLE)
+            list(APPEND BRLS_PLATFORM_LIBS "-framework Cocoa" "-framework IOKit")
+        endif ()
         set(BRLS_PLATFORM_OPTION -D__SDL2__ -I/usr/local/include -I${SDL2_INCLUDE_DIR})
     else ()
         message("using GLFW3")
