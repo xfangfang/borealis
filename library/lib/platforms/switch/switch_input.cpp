@@ -100,6 +100,7 @@ SwitchInputManager::SwitchInputManager()
 {
     padConfigureInput(GAMEPADS_MAX, HidNpadStyleSet_NpadStandard);
     hidSetNpadJoyHoldType(HidNpadJoyHoldType_Horizontal);
+    hidSetNpadHandheldActivationMode(HidNpadHandheldActivationMode_Single);
 
     padInitialize(&this->padStateHandheld, HidNpadIdType_Handheld);
     hidInitializeVibrationDevices(m_vibration_device_handheld, 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
