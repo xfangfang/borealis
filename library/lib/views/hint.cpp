@@ -127,7 +127,12 @@ Hints::Hints()
     setDirection(Direction::LEFT_TO_RIGHT);
 
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]()
-        { refillHints(Application::getCurrentFocus()); });
+        {
+            if (!AppletFrame::HIDE_BOTTOM_BAR)
+            {
+                refillHints(Application::getCurrentFocus());
+            }
+        });
 
     this->registerBoolXMLAttribute("addBaseAction", [this](bool value)
         { this->setAddUnableAButtonAction(value); });
@@ -146,6 +151,7 @@ void Hints::refillHints(View* focusView)
     if (!focusView)
         return;
 
+    // todo: 做一个缓存，可以节约 Hint 组件生成
     clearViews();
 
     std::set<ControllerButton> addedButtons; // we only ever want one action per key

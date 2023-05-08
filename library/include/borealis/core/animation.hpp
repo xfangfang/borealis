@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <tweeny.h>
 
 #include <borealis/core/time.hpp>

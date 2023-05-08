@@ -50,6 +50,8 @@ void userAppInit()
     appletLockExit();
     SocketInitConfig cfg = *(socketGetDefaultInitConfig());
 
+    cfg.bsd_service_type = BsdServiceType_System;
+
     AppletType at = appletGetAppletType();
     if (at == AppletType_Application || at == AppletType_SystemApplication)
     {
