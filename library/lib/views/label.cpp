@@ -557,8 +557,9 @@ void Label::onLayout()
         nvgFontFaceId(vg, this->font);
         nvgTextLineHeight(vg, this->lineHeight);
 
-        NVGglyphPosition positions[stringLength];
-        nvgTextGlyphPositions(vg, 0, 0, fullText.c_str(), nullptr, positions, stringLength);
+        std::vector<NVGglyphPosition> positions;
+        positions.resize(stringLength);
+        nvgTextGlyphPositions(vg, 0, 0, fullText.c_str(), nullptr, positions.data(), stringLength);
 
         const char* start   = fullText.c_str();
         this->truncatedText = fullText;
