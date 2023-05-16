@@ -84,11 +84,7 @@ class LRUCache
     {
         if (isCacheHit(key))
         {
-            // Cache hit, modify existing Key.
-            K newKey             = key + DIRTY;
-            cacheMap[key]->key   = newKey;
-            cacheMap[key]->dirty = true;
-            cacheMap[newKey]     = cacheMap[key];
+            throw std::logic_error("Can not cache the same key twice.");
         }
 
         // Check capacity limits
@@ -119,7 +115,7 @@ class LRUCache
     /**
      * Update a cache value
      */
-    void update(size_t old_val, size_t new_val)
+    void update(T old_val, T new_val)
     {
         if (!isExisted(old_val))
         {
@@ -143,10 +139,35 @@ class LRUCache
         }
     }
 
-    void markDirty()
+    /**
+     * A dirty cache is not able to be hit
+     * @param value
+     */
+    void markDirty(T value)
+    {
+        if (!isExisted(value))
+        {
+            return;
+        }
+
+        auto item = valueMap[value];
+        if (item->dirty)
+            return;
+
+        // modify existing Key.
+        cacheMap.erase(item->key);
+        item->key += DIRTY;
+        item->dirty = true;
+    }
+
+    void markAllDirty()
     {
         for (auto& i : cacheList)
         {
+            if (i.dirty)
+                continue;
+            cacheMap.erase(i.key);
+            i.key += DIRTY;
             i.dirty = true;
         }
     }
@@ -218,7 +239,7 @@ class TextureCache : public Singleton<TextureCache>
     {
         brls::Application::getWindowSizeChangedEvent()->subscribe(
             [this]()
-            { this->cache.markDirty(); });
+            { this->cache.markAllDirty(); });
 
         brls::Application::getExitEvent()->subscribe([this]()
             { this->clean(); });
@@ -245,6 +266,13 @@ class TextureCache : public Singleton<TextureCache>
         if (texture <= 0)
             return;
         cache.remove(texture);
+    }
+
+    void markDirty(size_t texture)
+    {
+        if (texture <= 0)
+            return;
+        cache.markDirty(texture);
     }
 
     /**
