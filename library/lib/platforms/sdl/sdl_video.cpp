@@ -218,6 +218,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         VideoContext::sizeH = height;
         VideoContext::posX  = (float)xPos;
         VideoContext::posY  = (float)yPos;
+    } else {
+        this->fullScreen(true);
     }
 }
 
