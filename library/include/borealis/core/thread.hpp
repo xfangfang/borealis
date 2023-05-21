@@ -93,11 +93,13 @@ class Threading
 
     static std::vector<std::function<void()>>* getSyncFunctions()
     {
+        std::lock_guard<std::mutex> guard(m_sync_mutex);
         return &m_sync_functions;
     }
 
     static std::vector<std::function<void()>>* getAsyncTasks()
     {
+        std::lock_guard<std::mutex> guard(m_async_mutex);
         return &m_async_tasks;
     }
 

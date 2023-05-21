@@ -149,6 +149,7 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
+    Application::setActiveEvent(false);
     static Time frameStartTime = 0;
     if (Application::limitedFrameTime > 0)
     {
@@ -229,7 +230,7 @@ void Application::updateFPS()
     if (index++ == FPS_INTERNAL)
     {
         unsigned int end       = getCPUTimeUsec();
-        Application::globalFPS = FPS_INTERNAL_TIME / (end - start);
+        Application::globalFPS = std::ceil(FPS_INTERNAL_TIME / (end - start));
         start                  = end;
         index                  = 0;
     }
@@ -529,6 +530,59 @@ View* Application::getCurrentFocus()
     return Application::currentFocus;
 }
 
+void Application::setAutomaticDeactivation(bool value)
+{
+    Application::deactivatedBehavior = value;
+}
+
+bool Application::getAutomaticDeactivation()
+{
+    return Application::deactivatedBehavior;
+}
+
+bool Application::hasActiveEvent()
+{
+#ifdef __SWITCH__
+    // Switch does not support waiting for events
+    return true;
+#else
+    if (!Application::deactivatedBehavior || activeEvent || getCPUTimeUsec() - lastActiveTime < Application::deactivatedTime)
+        return true;
+    return false;
+#endif
+}
+
+void Application::setActiveEvent(bool value)
+{
+#ifndef __SWITCH__
+    Application::activeEvent = value;
+    if (value)
+    {
+        lastActiveTime = getCPUTimeUsec();
+    }
+#endif
+}
+
+void Application::setDeactivatedTime(int millisecond)
+{
+    Application::deactivatedTime = millisecond * 1000;
+}
+
+void Application::setDeactivatedFPS(int value)
+{
+    Application::deactivatedFPS = value;
+}
+
+int Application::getDeactivatedFPS()
+{
+    return Application::deactivatedFPS;
+}
+
+double Application::getDeactivatedFrameTime()
+{
+    return 1.0 / Application::deactivatedFPS;
+}
+
 bool Application::handleAction(char button, bool repeating)
 {
     // Dismiss if input type was changed
@@ -703,7 +757,7 @@ size_t Application::getFPS()
 
 void Application::setLimitedFPS(size_t fps)
 {
-    Application::limitedFrameTime = 1000000.0f / fps;
+    Application::limitedFrameTime = fps == 0 ? 0 : 1000000.0f / fps;
 }
 
 void Application::notify(std::string text)
@@ -998,6 +1052,8 @@ void Application::setWindowSize(int width, int height)
 
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
+
+    brls::Application::setActiveEvent(true);
 }
 
 void Application::onWindowResized(int width, int height)
