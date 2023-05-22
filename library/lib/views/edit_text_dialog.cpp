@@ -1,4 +1,6 @@
 #include <borealis/views/edit_text_dialog.hpp>
+#include <borealis/core/i18n.hpp>
+#include <borealis/core/application.hpp>
 
 namespace brls
 {

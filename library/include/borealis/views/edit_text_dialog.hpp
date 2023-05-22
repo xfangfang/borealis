@@ -1,6 +1,6 @@
 #include <borealis/core/box.hpp>
 #include <borealis/views/label.hpp>
-#include <borealis/views/dialog.hpp>
+#include <borealis/core/bind.hpp>
 
 namespace brls
 {

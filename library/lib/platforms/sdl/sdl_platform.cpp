@@ -38,8 +38,10 @@ SDLPlatform::SDLPlatform()
 
 void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
-    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
+    auto videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
+    this->videoContext = videoContext;
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
+    this->imeManager   = new SDLImeManager(videoContext->getOtherEvent());
 }
 
 void SDLPlatform::restoreWindow()
@@ -123,6 +125,10 @@ VideoContext* SDLPlatform::getVideoContext()
 InputManager* SDLPlatform::getInputManager()
 {
     return this->inputManager;
+}
+
+ImeManager* SDLPlatform::getImeManager() {
+    return this->imeManager;
 }
 
 SDLPlatform::~SDLPlatform()

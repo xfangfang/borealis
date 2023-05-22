@@ -21,6 +21,7 @@
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <borealis/platforms/sdl/sdl_input.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
+#include <borealis/platforms/sdl/sdl_ime.hpp>
 
 namespace brls
 {
@@ -45,11 +46,13 @@ class SDLPlatform : public DesktopPlatform
     AudioPlayer* getAudioPlayer() override;
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
+    ImeManager* getImeManager() override;
 
   private:
     NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;
+    SDLImeManager* imeManager     = nullptr;
 };
 
 } // namespace brls

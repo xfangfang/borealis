@@ -37,6 +37,8 @@ class SDLVideoContext : public VideoContext
     void endFrame() override;
     void resetState() override;
     void fullScreen(bool fs) override;
+    Event<SDL_Event*>* getOtherEvent();
+    Event<SDL_Event*> otherEvent;
 
     SDL_Window* getSDLWindow();
 
