@@ -16,6 +16,8 @@
 
 #include "settings_tab.hpp"
 
+using namespace brls::literals;  // for _i18n
+
 bool radioSelected = false;
 
 SettingsTab::SettingsTab()
@@ -38,7 +40,7 @@ SettingsTab::SettingsTab()
     });
 
     input->init(
-        "Input text", "", [](std::string text) {
+        "Input text", "https://github.com", [](std::string text) {
 
         },
         "Placeholder", "Hint");
@@ -48,6 +50,12 @@ SettingsTab::SettingsTab()
 
         },
         "Hint");
+
+    input->registerAction("hints/open"_i18n, brls::BUTTON_X, [](brls::View* view) {
+        brls::DetailCell *cell = dynamic_cast<brls::DetailCell *>(view);
+        brls::Application::getPlatform()->openBrowser(cell->detail->getFullText());
+        return true;
+    }, false, false, brls::SOUND_CLICK);
 }
 
 brls::View* SettingsTab::create()
