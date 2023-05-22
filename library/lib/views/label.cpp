@@ -567,7 +567,7 @@ void Label::onLayout()
         {
             if (i.str == start)
                 continue;
-            if (i.str - start >= fullText.size())
+            if (i.str >= start + fullText.size())
                 break;
             if (i.maxx + this->ellipsisWidth > width)
             {
