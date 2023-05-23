@@ -28,6 +28,31 @@ namespace brls
     event(event),
     cursor(0){}
 
+    static int utf8_len(std::string &s) {
+        int result = 0;
+        for (auto &it: s) {
+            if ((it & 0xc0) != 0x80) {
+                result += 1;
+            }
+        }
+        return result;
+    }
+
+    static int utf8_find_prev(std::string &s, int size) {
+        int result = 0;
+        for (int i = s.size() - 1; i >= 0; i--) {
+            char p = s.at(i);
+            result += 1;
+            if ((p & 0xc0) != 0x80) {
+                size--;
+            }
+            if (size <= 0) {
+                break;
+            }
+        }
+        return result;
+    }
+
     void SDLImeManager::openInputDialog(
         std::function<void(std::string)> cb,
         std::string headerText,
@@ -36,19 +61,18 @@ namespace brls
         std::string initialText) {
         EditTextDialog* dialog = new EditTextDialog();
         this->inputBuffer = initialText;
-        dialog->setText(initialText);
+        auto updateText = [this, dialog, maxStringLength]() {
+            dialog->setText(this->inputBuffer);
+            dialog->setCountText(fmt::format("{}/{}", utf8_len(this->inputBuffer), maxStringLength));
+        };
         dialog->setHeaderText(headerText);
-        dialog->setCountText("0/" + std::to_string(maxStringLength));
+        updateText();
         float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
         // 更新输入法条位置
         dialog->getLayoutEvent()->subscribe([this, scale](Point p) {
-            const SDL_Rect rect = {(p.x) * scale, (p.y) * scale, 10, 10};
+            const SDL_Rect rect = {(int)(p.x * scale), (int)(p.y * scale), 10, 10};
             SDL_SetTextInputRect(&rect);
         });
-        auto updateText = [this, dialog, maxStringLength]() {
-            dialog->setText(this->inputBuffer);
-            dialog->setCountText(std::to_string(this->inputBuffer.length())+"/" + std::to_string(maxStringLength));
-        };
         auto eventID1 = event->subscribe([this, updateText](SDL_Event *e) {
             switch (e->type) {
             case SDL_TEXTINPUT:
@@ -69,7 +93,8 @@ namespace brls
         // delete text
         dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText](...) {
             if(inputBuffer.empty()) return true;
-            inputBuffer.erase(inputBuffer.size()-1, 1);
+            int offset = utf8_find_prev(inputBuffer, 1);
+            inputBuffer.erase(inputBuffer.size()-offset, offset);
             updateText();
             return true;
         },true, true);
@@ -88,8 +113,8 @@ namespace brls
             return true;
         });
 
-        dialog->open();
         SDL_StartTextInput();
+        dialog->open();
     }
 
     bool SDLImeManager::openForText(std::function<void(std::string)> f, std::string headerText,
