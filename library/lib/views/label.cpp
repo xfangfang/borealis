@@ -80,8 +80,21 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
         .height = height,
     };
 
-    if (fullText.empty())
+    if (fullText.empty()) {
+        if (widthMode == YGMeasureModeExactly && heightMode == YGMeasureModeExactly)
+        {
+            return size;
+        }
+        else if (heightMode == YGMeasureModeExactly)
+        {
+            size.width = 0;
+        }
+        else if (widthMode == YGMeasureModeExactly)
+        {
+            size.height = 0;
+        }
         return size;
+    }
 
     // XXX: workaround for a Yoga bug
     if (widthMode == YGMeasureModeAtMost && (width == 0 || std::isnan(width)))

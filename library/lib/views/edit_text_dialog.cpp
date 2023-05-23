@@ -36,6 +36,8 @@ namespace brls
                 id="brls/dialog/label"
                 grow="1"
                 width="680"
+                height="24"
+                fontSize="24"
                 margin="20"
                 autoAnimate="false"
                 verticalAlign="top"/>
@@ -56,7 +58,6 @@ namespace brls
                 marginRight="10"
                 width="auto"
                 height="auto"/>
-
         </brls:Box>
 
     </brls:Box>

@@ -49,27 +49,47 @@ void DesktopFontLoader::loadFonts()
     }
 
     // Using system font as fallback
-    std::string systemFont;
 #if defined(__APPLE__)
-    systemFont = "/Library/Fonts/Arial Unicode.ttf";
+    std::vector<std::string> systemFonts = {
+        "PingFang.ttc",
+        "PingFang.ttf",
+        "Arial Unicode.ttf",
+    };
+    std::string prefix = "/Library/Fonts/";
 #elif defined(_WIN32)
+    std::string prefix = "C:\\Windows\\Fonts\\";
     char* winDir = getenv("systemroot");
-    if (winDir)
-        systemFont = std::string{winDir} + "\\Fonts\\malgun.ttf";
-    else
-        systemFont = "C:\\Windows\\Fonts\\malgun.ttf";
+    if (winDir) {
+        prefix = std::string{winDir} + "\\Fonts\\";
+    }
+    std::vector<std::string> systemFonts = {
+        "msyh.ttc",
+        "msyh.ttf",
+        "malgun.ttf",
+    };
+#elif defined(ANDROID)
+    std::string prefix = "/system/fonts/";
+    std::vector<std::string> systemFonts = {
+        "NotoSansSC-Regular.otf",
+        "NotoSansCJK-Regular.ttc",
+        "DroidSansFallback.ttf",
+        "DroidSansChinese.ttf",
+    };
+#else
+    std::vector<std::string> systemFonts;
+    std::string prefix;
 #endif
-    if (!systemFont.empty())
-    {
-        if (access(systemFont.c_str(), F_OK) != -1)
-        {
-            brls::Logger::info("Load system font: {}", systemFont);
-            this->loadFontFromFile("system", systemFont);
-            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("system"));
-        }
-        else
-        {
-            brls::Logger::warning("Cannot find system font, (Searched at: {})", systemFont);
+    if (!systemFonts.empty()) {
+        for (auto &fontName: systemFonts) {
+            std::string systemFont = prefix + fontName;
+            if (access(systemFont.c_str(), F_OK) != -1) {
+                brls::Logger::info("Load system font: {}", systemFont);
+                this->loadFontFromFile("system", systemFont);
+                nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("system"));
+                break;
+            } else {
+                brls::Logger::warning("Cannot find system font, (Searched at: {})", systemFont);
+            }
         }
     }
 
