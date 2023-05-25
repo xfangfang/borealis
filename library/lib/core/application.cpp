@@ -149,12 +149,9 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
+    Application::updateFPS();
+    Application::frameStartTime = getCPUTimeUsec();
     Application::setActiveEvent(false);
-    static Time frameStartTime = 0;
-    if (Application::limitedFrameTime > 0)
-    {
-        frameStartTime = getCPUTimeUsec();
-    }
 
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
@@ -205,10 +202,6 @@ bool Application::mainLoop()
     }
     Application::deletionPool = undeletedViews;
 
-    // Calculate FPS
-    if (Application::globalFPSToggleEnabled)
-        Application::updateFPS();
-
     if (Application::limitedFrameTime > 0)
     {
         Time deltaTime = getCPUTimeUsec() - frameStartTime;
@@ -224,15 +217,15 @@ bool Application::mainLoop()
 
 void Application::updateFPS()
 {
-    static unsigned int start = getCPUTimeUsec();
-    static unsigned int index = 0;
+    static Time start = getCPUTimeUsec();
+    static size_t index = 0;
 
-    if (index++ == FPS_INTERNAL)
-    {
-        unsigned int end       = getCPUTimeUsec();
-        Application::globalFPS = std::ceil(FPS_INTERNAL_TIME / (end - start));
-        start                  = end;
-        index                  = 0;
+    index++;
+    // update FPS every second
+    if (Application::frameStartTime - start > 1000000) {
+        Application::globalFPS = index;
+        start = Application::frameStartTime;
+        index = 0;
     }
 }
 
@@ -546,7 +539,7 @@ bool Application::hasActiveEvent()
     // Switch does not support waiting for events
     return true;
 #else
-    if (!Application::deactivatedBehavior || activeEvent || getCPUTimeUsec() - lastActiveTime < Application::deactivatedTime)
+    if (!Application::deactivatedBehavior || activeEvent || Application::frameStartTime - lastActiveTime < Application::deactivatedTime)
         return true;
     return false;
 #endif

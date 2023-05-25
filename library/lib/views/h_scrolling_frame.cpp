@@ -252,11 +252,11 @@ void HScrollingFrame::naturalScrollingButtonProcessing(FocusDirection focusDirec
     {
         case FocusDirection::LEFT:
             isBorder = getContentOffsetX() <= 0;
-            newOffset -= (1000.0f / 60.0f);
+            newOffset -= (1000.0f / Application::getFPS());
             break;
         case FocusDirection::RIGHT:
             isBorder = getContentOffsetX() >= rightLimit;
-            newOffset += (1000.0f / 60.0f);
+            newOffset += (1000.0f / Application::getFPS());
             break;
         default:
             break;

@@ -16,10 +16,6 @@
 
 #include <borealis.hpp>
 
-// TODO: get real FPS
-// Uses to calculate time to play acceleration animation
-#define FPS 60.0f
-
 // Delta from touch starting point to current, when
 // touch will be recognized as pan movement
 #define MAX_DELTA_MOVEMENT 6
@@ -127,7 +123,7 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
 
             if (this->state == GestureState::END)
             {
-                float time = posHistory.size() / FPS;
+                float time = posHistory.size() * 1.0f / Application::getFPS();
 
                 float distanceX = posHistory[posHistory.size()-1].x - posHistory[0].x;
                 float distanceY = posHistory[posHistory.size()-1].y - posHistory[0].y;
