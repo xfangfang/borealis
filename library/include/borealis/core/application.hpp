@@ -336,9 +336,8 @@ class Application
     inline static ActionIdentifier gloablQuitIdentifier = ACTION_NONE;
     inline static bool globalFPSToggleEnabled           = false;
     inline static size_t globalFPS                      = 60;
-    inline static unsigned int FPS_INTERNAL             = 4;
-    inline static double FPS_INTERNAL_TIME              = FPS_INTERNAL * 1000000;
     inline static Time limitedFrameTime                 = 0;
+    inline static Time frameStartTime                   = 0;
 
     inline static bool deactivatedBehavior = false;
     inline static bool activeEvent         = false;
