@@ -36,8 +36,7 @@ namespace brls
                 id="brls/dialog/label"
                 grow="1"
                 width="680"
-                height="24"
-                fontSize="24"
+                minHeight="30"
                 margin="20"
                 autoAnimate="false"
                 verticalAlign="top"/>
