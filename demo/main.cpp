@@ -62,6 +62,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    if (argc > 1) {
+        float fps = atof(argv[1]);
+        brls::Application::setScrollFPS(fps);
+        brls::Logger::info("set application scroll fps: {}", fps);
+    }
+
     brls::Application::createWindow("demo/title"_i18n);
 
     // Have the application register an action on every activity that will quit when you press BUTTON_START

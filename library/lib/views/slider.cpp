@@ -142,7 +142,7 @@ void Slider::buttonsProcessing()
 
         if (state.buttons[BUTTON_NAV_RIGHT])
         {
-            setProgress(progress += 0.5f / 60.0f);
+            setProgress(progress += 0.5f / Application::getScrollFPS());
             if (progress >= 1 && !repeat)
             {
                 repeat = true;
@@ -153,7 +153,7 @@ void Slider::buttonsProcessing()
 
         if (state.buttons[BUTTON_NAV_LEFT])
         {
-            setProgress(progress -= 0.5f / 60.0f);
+            setProgress(progress -= 0.5f / Application::getScrollFPS());
             if (progress <= 0 && !repeat)
             {
                 repeat = true;

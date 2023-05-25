@@ -230,6 +230,9 @@ class Application
     static int getDeactivatedFPS();
     static double getDeactivatedFrameTime();
 
+    static float getScrollFPS();
+    static void setScrollFPS(float fps);
+
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
     static Event<InputType>* getGlobalInputTypeChangeEvent();
@@ -345,6 +348,8 @@ class Application
     inline static Time lastActiveTime      = 0;
     inline static int deactivatedFPS       = 5; // FPS 5
     inline static int deactivatedTime      = 5000000; // 5s
+
+    inline static float scrollFPS          = 60.0f;
 
     inline static View* repetitionOldFocus = nullptr;
 
