@@ -75,7 +75,7 @@ void GLFWImeManager::preedit_callback(GLFWwindow* window, int preeditCount,
     if (preeditCount == 0 || blockCount == 0)
     {
         strcpy(preeditBuf, "(empty)");
-        preeditTextBuffer = "|";
+        preeditTextBuffer = "";
         return;
     }
 
@@ -88,8 +88,8 @@ void GLFWImeManager::preedit_callback(GLFWwindow* window, int preeditCount,
 
         if (i == caret)
         {
-            if (strlen(preeditBuf) + strlen("|") < MAX_PREEDIT_LEN)
-                strcat(preeditBuf, "|");
+            if (strlen(preeditBuf) < MAX_PREEDIT_LEN)
+                strcat(preeditBuf, "");
         }
         if (remainingBlockSize == 0)
         {
@@ -119,8 +119,8 @@ void GLFWImeManager::preedit_callback(GLFWwindow* window, int preeditCount,
     }
     if (caret == preeditCount)
     {
-        if (strlen(preeditBuf) + strlen("|") < MAX_PREEDIT_LEN)
-            strcat(preeditBuf, "|");
+        if (strlen(preeditBuf) < MAX_PREEDIT_LEN)
+            strcat(preeditBuf, "");
     }
 
     preeditTextBuffer = std::string { preeditBuf };
@@ -172,7 +172,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
                 if(textBuffer.empty()){
                     dialog->setText("");
                 } else{
-                    dialog->setText(getInputText() + "|");
+                    dialog->setText(getInputText());
                 }
                 dialog->setCountText(std::to_string(textBuffer.size()) + "/" + std::to_string(maxStringLength));
                 lastPreeditText.clear();
