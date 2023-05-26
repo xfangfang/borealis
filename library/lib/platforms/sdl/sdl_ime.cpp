@@ -117,14 +117,14 @@ namespace brls
             }
         );
         dialog->registerAction(
-            "hints/copy"_i18n, BUTTON_LT, [this](...){
+            "hints/copy"_i18n, BUTTON_UP, [this](...){
                 if (!this->inputBuffer.empty())
                     SDL_SetClipboardText(this->inputBuffer.data());
                 return true;
             }
         );
         dialog->registerAction(
-            "hints/paste"_i18n, BUTTON_LB, [this, updateText](...){
+            "hints/paste"_i18n, BUTTON_DOWN, [this, updateText](...){
                 if (SDL_HasClipboardText()) {
                     char* clipboard = SDL_GetClipboardText();
                     this->inputBuffer += clipboard;
