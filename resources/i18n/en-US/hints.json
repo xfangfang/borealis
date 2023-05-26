@@ -9,5 +9,7 @@
   "input": "Please input...",
   "submit": "Submit",
   "left": "Left",
-  "right": "Right"
+  "right": "Right",
+  "copy": "Copy",
+  "paste": "Paste"
 }

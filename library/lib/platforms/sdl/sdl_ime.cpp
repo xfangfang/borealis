@@ -116,6 +116,23 @@ namespace brls
                 return true;
             }
         );
+        dialog->registerAction(
+            "hints/copy"_i18n, BUTTON_LT, [this](...){
+                if (!this->inputBuffer.empty())
+                    SDL_SetClipboardText(this->inputBuffer.data());
+                return true;
+            }
+        );
+        dialog->registerAction(
+            "hints/paste"_i18n, BUTTON_LB, [this, updateText](...){
+                if (SDL_HasClipboardText()) {
+                    char* clipboard = SDL_GetClipboardText();
+                    this->inputBuffer += clipboard;
+                    updateText();
+                }
+                return true;
+            }
+        );
 
         // delete text
         dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText](...) {

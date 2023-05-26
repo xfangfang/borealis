@@ -9,5 +9,7 @@
   "input": "请输入...",
   "submit": "提交",
   "left": "左",
-  "right": "右"
+  "right": "右",
+  "copy": "拷贝",
+  "paste": "粘贴"
 }
