@@ -26,6 +26,29 @@
 namespace brls
 {
 
+const static std::vector<std::string> fontExts = {
+    ".ttc",
+    ".ttf",
+    ".otf",
+};
+
+bool DesktopFontLoader::loadFontsExist(NVGcontext* vg, std::vector<std::string> fontPaths, std::string fontName, std::string fallbackFont) {
+    for (auto &fontPath: fontPaths) {
+        for (auto &fontExt: fontExts) {
+            std::string fullPath = fontPath + fontExt;
+            if (access(fullPath.c_str(), F_OK) != -1) {
+                this->loadFontFromFile(fontName, fullPath);
+                if (!fallbackFont.empty()) {
+                    nvgAddFallbackFontId(vg, Application::getFont(fallbackFont), Application::getFont(fontName));
+                }
+                brls::Logger::info("Using {} font: {}", fontName, fullPath);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void DesktopFontLoader::loadFonts()
 {
     NVGcontext* vg = brls::Application::getNVGContext();
@@ -50,47 +73,41 @@ void DesktopFontLoader::loadFonts()
 
     // Using system font as fallback
 #if defined(__APPLE__)
-    std::vector<std::string> systemFonts = {
-        "PingFang.ttc",
-        "PingFang.ttf",
-        "Arial Unicode.ttf",
+    std::vector<std::string> koreanFonts = {
+        "/System/Library/Fonts/AppleSDGothicNeo",
     };
-    std::string prefix = "/Library/Fonts/";
+    std::vector<std::string> simplifiedChineseFonts = {
+        "/System/Library/Fonts/PingFang",
+    };
 #elif defined(_WIN32)
     std::string prefix = "C:\\Windows\\Fonts\\";
     char* winDir = getenv("systemroot");
     if (winDir) {
         prefix = std::string{winDir} + "\\Fonts\\";
     }
-    std::vector<std::string> systemFonts = {
-        "msyh.ttc",
-        "msyh.ttf",
-        "malgun.ttf",
+    std::vector<std::string> koreanFonts = {
+        prefix+"malgun",
+    };
+    std::vector<std::string> simplifiedChineseFonts = {
+        prefix+"msyh",
     };
 #elif defined(ANDROID)
-    std::string prefix = "/system/fonts/";
-    std::vector<std::string> systemFonts = {
-        "NotoSansSC-Regular.otf",
-        "NotoSansCJK-Regular.ttc",
-        "DroidSansFallback.ttf",
-        "DroidSansChinese.ttf",
+    std::vector<std::string> koreanFonts;
+    std::vector<std::string> simplifiedChineseFonts = {
+        "/system/fonts/NotoSansCJK-Regular",
+        "/system/fonts/DroidSansFallback",
+        "/system/fonts/NotoSansSC-Regular",
+        "/system/fonts/DroidSansChinese",
     };
 #else
-    std::vector<std::string> systemFonts;
-    std::string prefix;
+    std::vector<std::string> koreanFonts;
+    std::vector<std::string> simplifiedChineseFonts;
 #endif
-    if (!systemFonts.empty()) {
-        for (auto &fontName: systemFonts) {
-            std::string systemFont = prefix + fontName;
-            if (access(systemFont.c_str(), F_OK) != -1) {
-                brls::Logger::info("Load system font: {}", systemFont);
-                this->loadFontFromFile("system", systemFont);
-                nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("system"));
-                break;
-            } else {
-                brls::Logger::warning("Cannot find system font, (Searched at: {})", systemFont);
-            }
-        }
+    if (!simplifiedChineseFonts.empty()) {
+        loadFontsExist(vg, simplifiedChineseFonts, FONT_CHINESE_SIMPLIFIED, FONT_REGULAR);
+    }
+    if (!koreanFonts.empty()) {
+        loadFontsExist(vg, koreanFonts, FONT_KOREAN_REGULAR, FONT_REGULAR);
     }
 
     // Load Emoji
