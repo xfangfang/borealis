@@ -29,7 +29,7 @@
 namespace brls
 {
 
-#ifdef _WIN32
+#if defined(_WIN32) and not defined(__WINRT__)
 int shell_open(const char* command)
 {
     ShellExecute(NULL, "open", command, NULL, NULL, SW_SHOWNORMAL);
@@ -462,7 +462,7 @@ void DesktopPlatform::openBrowser(std::string url)
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
 #endif
-#ifdef _WIN32
+#if defined(_WIN32) and not defined(__WINRT__)
     shell_open(url.c_str());
 #endif
 }
