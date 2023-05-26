@@ -13,6 +13,7 @@ class EditTextDialog : public Box
     void setHeaderText(const std::string& value);
     void setHintText(const std::string& value);
     void setCountText(const std::string& value);
+    void setCursor(int cursor);
     bool isTranslucent() override;
     void onLayout() override;
     Event<Point>* getLayoutEvent();

@@ -26,7 +26,7 @@ namespace brls
 {
     SDLImeManager::SDLImeManager(Event<SDL_Event*> *event):
     event(event),
-    cursor(0){}
+    cursor(-1){}
 
     static int utf8_len(std::string &s) {
         int result = 0;
@@ -65,6 +65,9 @@ namespace brls
             dialog->setText(this->inputBuffer);
             dialog->setCountText(fmt::format("{}/{}", utf8_len(this->inputBuffer), maxStringLength));
         };
+        auto updateTextCursor = [this, dialog]() {
+            dialog->setCursor(this->cursor);
+        };
         dialog->setHeaderText(headerText);
         updateText();
         float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
@@ -89,6 +92,30 @@ namespace brls
                 break;
             }
         });
+        
+        dialog->registerAction(
+            "hints/left"_i18n, BUTTON_LEFT, [this, updateTextCursor](...){
+                if (this->cursor == -1) {
+                    this->cursor = utf8_len(this->inputBuffer) - 1;
+                    updateTextCursor();
+                } else if (this->cursor > 0) {
+                    this->cursor--;
+                    updateTextCursor();
+                }
+                return true;
+            }
+        );
+        dialog->registerAction(
+            "hints/right"_i18n, BUTTON_RIGHT, [this, updateTextCursor](...){
+                if (this->cursor >= 0) {
+                    if (this->cursor < utf8_len(this->inputBuffer)) {
+                        this->cursor++;
+                        updateTextCursor();
+                    }
+                }
+                return true;
+            }
+        );
 
         // delete text
         dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText](...) {

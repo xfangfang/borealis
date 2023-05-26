@@ -36,6 +36,7 @@ namespace brls
                 id="brls/dialog/label"
                 grow="1"
                 width="680"
+                cursor="-1"
                 minHeight="30"
                 margin="20"
                 autoAnimate="false"
@@ -170,5 +171,9 @@ namespace brls
             label->setTextColor(Application::getTheme().getColor("brls/text"));
             label->setText(content);
         }
+    }
+
+    void EditTextDialog::setCursor(int cursor) {
+        label->setCursor(cursor);
     }
 }
