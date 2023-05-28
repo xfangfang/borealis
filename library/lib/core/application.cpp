@@ -369,12 +369,15 @@ void Application::processInput()
     controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
     controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
 
+    bool hasControllerState = false;
+
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
         if (controllerState.buttons[i])
         {
             anyButtonPressed = true;
             repeating        = (repeatingButtonTimer > BUTTON_REPEAT_DELAY && repeatingButtonTimer % BUTTON_REPEAT_CADENCY == 0);
+            hasControllerState = true;
 
             if (!oldControllerState.buttons[i] || repeating)
                 Application::onControllerButtonPressed((enum ControllerButton)i, repeating);
@@ -383,10 +386,85 @@ void Application::processInput()
         if (controllerState.buttons[i] != oldControllerState.buttons[i])
             buttonPressTime = repeatingButtonTimer = 0;
     }
+    
+    static Time keyPressTime     = 0;
+    static int repeatingKeyTimer = 16;
+    bool anyKeyPressed = false;
 
-    if (anyButtonPressed && getCPUTimeUsec() - buttonPressTime > 1000)
+    if (hasControllerState || controllerState.mods > 0 || controllerState.keys.size() > 0) {
+        // 处理键盘事件
+        View* hintParent = Application::currentFocus;
+        if (!hintParent)
+            hintParent = Application::activitiesStack[Application::activitiesStack.size() - 1]->getContentView();
+        
+        bool resetRepeat = false;
+        anyKeyPressed = true;
+        bool anyAction = false;
+        while (hintParent)
+        {
+            for (auto& action : hintParent->getActions())
+            {
+                if (!action.availableMulti) {
+                    continue;
+                }
+                bool controlleAvailable = true;
+                bool keyAvailable = false;
+                for (auto& button : action.buttons) {
+                    if (!controllerState.buttons[button]) {
+                        controlleAvailable = false;
+                        break;
+                    }
+                    if (controllerState.buttons[button] != oldControllerState.buttons[button]) {
+                        resetRepeat = true;
+                    }
+                }
+                if (!controlleAvailable) {
+                    keyAvailable = true;
+                    if ((controllerState.mods & action.mods) != action.mods) {
+                        keyAvailable = false;
+                    }
+                    if (keyAvailable) {
+                        if (controllerState.mods != oldControllerState.mods) {
+                            resetRepeat = true;
+                        }
+                        for (auto& key : action.keys) {
+                            if (controllerState.keys.find(key) == controllerState.keys.end()) {
+                                keyAvailable = false;
+                                break;
+                            }
+                            
+                            if (controllerState.keys[key] != oldControllerState.keys[key]) {
+                                resetRepeat = true;
+                            }
+                        }
+                    }
+                }
+                bool available = controlleAvailable || keyAvailable;
+                if (available)
+                {
+                    repeating = (repeatingKeyTimer < BUTTON_REPEAT_DELAY);
+                    // Logger::info("{} {} {}", repeating, repeatingButtonTimer, resetRepeat);
+                    if (!repeating || action.allowRepeating) {
+                        anyAction = true;
+                        action.actionListener(hintParent);
+                    }
+                }
+            }
+            hintParent = hintParent->getParent();
+        }
+        if (resetRepeat && anyAction) {
+            keyPressTime = repeatingKeyTimer = 0;
+        }
+    }
+    Time now = getCPUTimeUsec();
+    if (anyKeyPressed && now - keyPressTime > 1000)
     {
-        buttonPressTime = getCPUTimeUsec();
+        buttonPressTime = now;
+        repeatingKeyTimer++; // Increased once every ~1ms
+    }
+    if (anyButtonPressed && now - buttonPressTime > 1000)
+    {
+        buttonPressTime = now;
         repeatingButtonTimer++; // Increased once every ~1ms
     }
 

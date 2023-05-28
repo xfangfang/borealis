@@ -114,7 +114,7 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
     KeyState state;
     state.key            = (BrlsKeyboardScancode)key;
     state.mods           = mods;
-    state.pressed        = action != GLFW_RELEASE;
+    state.action        = action;
     const char* key_name = glfwGetKeyName(key, scancode);
     if (key_name != NULL)
         Logger::debug("Key: {} / Code: {} / Action: {}", key_name, key, action);

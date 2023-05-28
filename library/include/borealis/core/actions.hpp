@@ -43,6 +43,10 @@ struct Action
     bool allowRepeating;
     enum Sound sound;
     ActionListener actionListener;
+    std::vector<enum ControllerButton> buttons;
+    int mods;
+    std::vector<BrlsKeyboardScancode> keys;
+    bool availableMulti;
 
     bool operator==(const enum ControllerButton other)
     {

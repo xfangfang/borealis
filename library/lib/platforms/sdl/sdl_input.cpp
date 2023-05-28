@@ -156,6 +156,8 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
     state->buttons[BUTTON_NAV_DOWN] |= state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT] |= state->buttons[BUTTON_LEFT];
+    state->keys = this->keyboardState.keys;
+    state->mods = this->keyboardState.mods;
 }
 
 void SDLInputManager::updateControllerState(ControllerState* state, int controller)
@@ -197,6 +199,15 @@ bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
         return SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN];
     }
     return false;
+}
+
+void SDLInputManager::keyboardCallback(SDL_Window* window, BrlsKeyboardScancode key, int action, int mods) {
+    this->keyboardState.mods = mods;
+    if (action == BRLS_KBD_ACTION_RELSAE) {
+        this->keyboardState.keys.erase(key);
+    } else {
+        this->keyboardState.keys[key] = true;
+    }
 }
 
 void SDLInputManager::updateTouchStates(std::vector<RawTouchState>* states)

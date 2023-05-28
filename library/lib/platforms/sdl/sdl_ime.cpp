@@ -116,15 +116,15 @@ namespace brls
                 return true;
             }
         );
-        dialog->registerAction(
-            "hints/copy"_i18n, BUTTON_UP, [this](...){
+        dialog->registerKeysAction(
+            "hints/copy"_i18n, {BUTTON_LB, BUTTON_Y}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_C}, [this](...){
                 if (!this->inputBuffer.empty())
                     SDL_SetClipboardText(this->inputBuffer.data());
                 return true;
             }
         );
-        dialog->registerAction(
-            "hints/paste"_i18n, BUTTON_DOWN, [this, updateText](...){
+        dialog->registerKeysAction(
+            "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateText](...){
                 if (SDL_HasClipboardText()) {
                     char* clipboard = SDL_GetClipboardText();
                     this->inputBuffer += clipboard;

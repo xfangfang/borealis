@@ -22,6 +22,7 @@
 #include <borealis/core/event.hpp>
 #include <borealis/core/geometry.hpp>
 #include <vector>
+#include <map>
 
 #define GAMEPADS_MAX 5
 
@@ -35,6 +36,12 @@ typedef enum
     BRLS_KBD_MODIFIER_ALT   = 0x04,
     BRLS_KBD_MODIFIER_META  = 0x08,
 } BrlsKeyboardModifiers;
+
+typedef enum {
+    BRLS_KBD_ACTION_RELSAE = 0,
+    BRLS_KBD_ACTION_PRESS = 1,
+    BRLS_KBD_ACTION_REPEAT = 2,
+} BrlsKeyboardActions;
 
 /// HidKeyboardScancode
 /// Uses the same key codes as GLFW
@@ -225,7 +232,12 @@ struct KeyState
 {
     BrlsKeyboardScancode key;
     short mods;
-    bool pressed;
+    int action;
+};
+
+struct KeyboardState {
+    int mods;
+    std::map<BrlsKeyboardScancode, bool> keys;
 };
 
 // Represents the state of the controller (a gamepad or a keyboard) in the current frame
@@ -233,6 +245,8 @@ struct ControllerState
 {
     bool buttons[_BUTTON_MAX]; // true: pressed
     float axes[_AXES_MAX]; // from 0.0f to 1.0f
+    int mods;
+    std::map<BrlsKeyboardScancode, bool> keys;
 };
 
 // Represents a touch phase in the current frame
@@ -282,6 +296,13 @@ struct MouseState
     TouchPhase middleButton = TouchPhase::NONE;
     TouchPhase rightButton  = TouchPhase::NONE;
     View* view              = nullptr;
+};
+
+const static BrlsKeyboardModifiers brls_keymods[] = {
+    BRLS_KBD_MODIFIER_SHIFT,
+    BRLS_KBD_MODIFIER_CTRL,
+    BRLS_KBD_MODIFIER_ALT,
+    BRLS_KBD_MODIFIER_META,
 };
 
 // Interface responsible for reporting input state to the application - button presses,

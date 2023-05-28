@@ -1171,6 +1171,29 @@ class View
      */
     ActionIdentifier registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
 
+
+    /**
+     * Registers an action with the given parameters. The listener will be fired when the user presses
+     * the key when the view is focused.
+     *
+     * The listener should return true if the action was consumed, false otherwise.
+     * The sound will only be played if the listener returned true.
+     *
+     * A hidden action will not show up in the bottom-right hints.
+     *
+     * Returns the identifier for the action, so it can be unregistered later on. Returns ACTION_NONE if the
+     * action was not registered.
+     */
+    ActionIdentifier registerKeysAction(
+        std::string hintText,
+        std::vector <enum ControllerButton> buttons,
+        int mods,
+        std::vector <BrlsKeyboardScancode> keys,
+        ActionListener actionListener,
+        bool hidden = false,
+        bool allowRepeating = false,
+        enum Sound sound = SOUND_NONE);
+
     /**
      * Unregisters an action with the given identifier.
      */

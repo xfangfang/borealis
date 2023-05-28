@@ -34,9 +34,11 @@ class SDLInputManager : public InputManager
     void setPointerLock(bool lock) override;
 
     void updateMouseWheel(SDL_MouseWheelEvent event);
+    void keyboardCallback(SDL_Window* window, BrlsKeyboardScancode key, int action, int mods);
 
   private:
     std::vector<SDL_GameController*> controllers;
+    KeyboardState keyboardState;
     int controllerNum = 0;
     Point scrollOffset;
     Point pointerOffset;

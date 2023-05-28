@@ -693,6 +693,52 @@ ActionIdentifier View::registerAction(std::string hintText, enum ControllerButto
     return nextIdentifier;
 }
 
+ActionIdentifier View::registerKeysAction(
+        std::string hintText,
+        std::vector <enum ControllerButton> buttons,
+        int mods,
+        std::vector <BrlsKeyboardScancode> keys,
+        ActionListener actionListener,
+        bool hidden,
+        bool allowRepeating,
+        enum Sound sound)
+{
+    ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back().identifier + 1;
+    auto button = buttons[0];
+    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
+        *it = {
+            button,
+            nextIdentifier,
+            hintText,
+            false,
+            hidden,
+            allowRepeating,
+            sound,
+            actionListener,
+            buttons,
+            mods,
+            keys,
+            true
+        };
+    else
+        this->actions.push_back({
+            button,
+            nextIdentifier,
+            hintText,
+            false,
+            hidden,
+            allowRepeating,
+            sound,
+            actionListener,
+            buttons,
+            mods,
+            keys,
+            true
+        });
+
+    return nextIdentifier;
+}
+
 void View::unregisterAction(ActionIdentifier identifier)
 {
     auto is_matched_action = [identifier](Action action) {
