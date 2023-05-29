@@ -386,20 +386,30 @@ void Application::processInput()
         if (controllerState.buttons[i] != oldControllerState.buttons[i])
             buttonPressTime = repeatingButtonTimer = 0;
     }
-    
-    static Time keyPressTime     = 0;
-    static int repeatingKeyTimer = 16;
-    bool anyKeyPressed = false;
+    Time now = getCPUTimeUsec();
+    if (anyButtonPressed && now - buttonPressTime > 1000)
+    {
+        buttonPressTime = now;
+        repeatingButtonTimer++; // Increased once every ~1ms
+    }
 
+    oldControllerState = controllerState;
+}
+
+void Application::processKeyInput(KeyboardControllerState controllerState) {
+    static Time keyPressTime     = 0;
+    static int repeatingKeyTimer = 0;
+    bool anyKeyPressed = false;
+    bool hasControllerState = controllerState.buttons.size() > 0;
+    bool isRepeat = controllerState.action == BRLS_KBD_ACTION_REPEAT;
     if (hasControllerState || controllerState.mods > 0 || controllerState.keys.size() > 0) {
         // 处理键盘事件
         View* hintParent = Application::currentFocus;
         if (!hintParent)
             hintParent = Application::activitiesStack[Application::activitiesStack.size() - 1]->getContentView();
-        
-        bool resetRepeat = false;
         anyKeyPressed = true;
         bool anyAction = false;
+        bool repeating = (repeatingKeyTimer > BUTTON_REPEAT_DELAY && repeatingKeyTimer % BUTTON_REPEAT_CADENCY == 0);
         while (hintParent)
         {
             for (auto& action : hintParent->getActions())
@@ -414,9 +424,6 @@ void Application::processInput()
                         controlleAvailable = false;
                         break;
                     }
-                    if (controllerState.buttons[button] != oldControllerState.buttons[button]) {
-                        resetRepeat = true;
-                    }
                 }
                 if (!controlleAvailable) {
                     keyAvailable = true;
@@ -424,17 +431,10 @@ void Application::processInput()
                         keyAvailable = false;
                     }
                     if (keyAvailable) {
-                        if (controllerState.mods != oldControllerState.mods) {
-                            resetRepeat = true;
-                        }
                         for (auto& key : action.keys) {
                             if (controllerState.keys.find(key) == controllerState.keys.end()) {
                                 keyAvailable = false;
                                 break;
-                            }
-                            
-                            if (controllerState.keys[key] != oldControllerState.keys[key]) {
-                                resetRepeat = true;
                             }
                         }
                     }
@@ -442,7 +442,6 @@ void Application::processInput()
                 bool available = controlleAvailable || keyAvailable;
                 if (available)
                 {
-                    repeating = (repeatingKeyTimer < BUTTON_REPEAT_DELAY);
                     // Logger::info("{} {} {}", repeating, repeatingButtonTimer, resetRepeat);
                     if (!repeating || action.allowRepeating) {
                         anyAction = true;
@@ -452,23 +451,17 @@ void Application::processInput()
             }
             hintParent = hintParent->getParent();
         }
-        if (resetRepeat && anyAction) {
+        if (!isRepeat) {
             keyPressTime = repeatingKeyTimer = 0;
         }
     }
     Time now = getCPUTimeUsec();
     if (anyKeyPressed && now - keyPressTime > 1000)
     {
-        buttonPressTime = now;
+        keyPressTime = now;
         repeatingKeyTimer++; // Increased once every ~1ms
     }
-    if (anyButtonPressed && now - buttonPressTime > 1000)
-    {
-        buttonPressTime = now;
-        repeatingButtonTimer++; // Increased once every ~1ms
-    }
-
-    oldControllerState = controllerState;
+    // oldControllerState = controllerState;
 }
 
 Platform* Application::getPlatform()

@@ -59,8 +59,11 @@ Hint::Hint(Action action, bool allowAButtonTouch)
 {
     this->inflateFromXMLString(hintXML);
     this->setFocusable(false);
-
-    icon->setText(getKeyIcon(action.button));
+    if (!action.icon.empty()) {
+        icon->setText(action.icon);
+    } else if (action.button > 0) {
+        icon->setText(getKeyIcon(action.button));
+    }
     hint->setText(action.hintText);
 
     if ((action.button != BUTTON_A || allowAButtonTouch) && (action.available || action.availableMulti) && !Application::isInputBlocks())
@@ -154,7 +157,7 @@ void Hints::refillHints(View* focusView)
     // todo: 做一个缓存，可以节约 Hint 组件生成
     clearViews();
 
-    std::set<ControllerButton> addedButtons; // we only ever want one action per key
+    std::set<std::string> addedButtons; // we only ever want one action per key
     std::vector<Action> actions;
 
     while (focusView != nullptr)
@@ -164,25 +167,37 @@ void Hints::refillHints(View* focusView)
             if (action.hidden)
                 continue;
 
-            if (addedButtons.find(action.button) != addedButtons.end())
+            if (addedButtons.find(action.key) != addedButtons.end())
                 continue;
 
-            addedButtons.insert(action.button);
+            addedButtons.insert(action.key);
             actions.push_back(action);
         }
 
         focusView = focusView->getParent();
     }
 
-    if (addUnableAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
+    std::string key = fmt::format("{}", BUTTON_A);
+
+    if (addUnableAButtonAction && std::find(actions.begin(), actions.end(), key) == actions.end())
     {
-        actions.push_back(Action { BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
+        actions.push_back(Action {
+            .button = BUTTON_A,
+            .identifier = 0,
+            .key = key,
+            .hintText = "hints/ok"_i18n,
+            .available = false,
+            .hidden = false,
+            .allowRepeating = false,
+            .sound = Sound::SOUND_NONE,
+            .actionListener = NULL,
+        });
     }
 
     // Sort the actions
     std::stable_sort(actions.begin(), actions.end(), Hints::actionsSortFunc);
 
-    for (Action action : actions)
+    for (auto action : actions)
     {
         Hint* hint = new Hint(action, allowAButtonTouch);
         addView(hint);

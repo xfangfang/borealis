@@ -1185,6 +1185,7 @@ class View
      * action was not registered.
      */
     ActionIdentifier registerKeysAction(
+        std::string icon,
         std::string hintText,
         std::vector <enum ControllerButton> buttons,
         int mods,
@@ -1204,8 +1205,8 @@ class View
      */
     void registerClickAction(ActionListener actionListener);
 
-    void updateActionHint(enum ControllerButton button, std::string hintText);
-    void setActionAvailable(enum ControllerButton button, bool available);
+    void updateActionHint(std::vector<ControllerButton> buttons, std::string hintText);
+    void setActionAvailable(std::vector<ControllerButton> buttons, bool available);
     void setActionsAvailable(bool available);
 
     void resetClickAnimation();

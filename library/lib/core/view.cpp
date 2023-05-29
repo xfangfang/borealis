@@ -18,6 +18,7 @@
 
 #include <math.h>
 
+#include <fmt/format.h>
 #include <algorithm>
 #include <borealis/core/animation.hpp>
 #include <borealis/core/application.hpp>
@@ -684,57 +685,60 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
 ActionIdentifier View::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, bool allowRepeating, enum Sound sound)
 {
     ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back().identifier + 1;
-
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        *it = { button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener };
+    std::string key = fmt::format("{}", button);
+    struct Action item = {
+        .button = button,
+        .identifier = nextIdentifier,
+        .key = key,
+        .hintText = hintText,
+        .available = true,
+        .hidden = hidden,
+        .allowRepeating = allowRepeating,
+        .sound = sound,
+        .actionListener = actionListener,
+    };
+    if (auto it = std::find(this->actions.begin(), this->actions.end(), key); it != this->actions.end())
+        *it = item;
     else
-        this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener });
+        this->actions.push_back(item);
 
     return nextIdentifier;
 }
 
 ActionIdentifier View::registerKeysAction(
-        std::string hintText,
-        std::vector <enum ControllerButton> buttons,
-        int mods,
-        std::vector <BrlsKeyboardScancode> keys,
-        ActionListener actionListener,
-        bool hidden,
-        bool allowRepeating,
-        enum Sound sound)
+    std::string icon,
+    std::string hintText,
+    std::vector <enum ControllerButton> buttons,
+    int mods,
+    std::vector <BrlsKeyboardScancode> keys,
+    ActionListener actionListener,
+    bool hidden,
+    bool allowRepeating,
+    enum Sound sound)
 {
     ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back().identifier + 1;
+    std::string key = fmt::format("{}", fmt::join(buttons.begin(), buttons.end(), ","));
     auto button = buttons[0];
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        *it = {
-            button,
-            nextIdentifier,
-            hintText,
-            false,
-            hidden,
-            allowRepeating,
-            sound,
-            actionListener,
-            buttons,
-            mods,
-            keys,
-            true
-        };
+    struct Action item = {
+        .button = button,
+        .identifier = nextIdentifier,
+        .key = key,
+        .hintText = hintText,
+        .available = false,
+        .hidden = hidden,
+        .allowRepeating = allowRepeating,
+        .sound = sound,
+        .actionListener = actionListener,
+        .buttons = buttons,
+        .mods = mods,
+        .keys = keys,
+        .availableMulti = true,
+        .icon = icon,
+    };
+    if (auto it = std::find(this->actions.begin(), this->actions.end(), key); it != this->actions.end())
+        *it = item;
     else
-        this->actions.push_back({
-            button,
-            nextIdentifier,
-            hintText,
-            false,
-            hidden,
-            allowRepeating,
-            sound,
-            actionListener,
-            buttons,
-            mods,
-            keys,
-            true
-        });
+        this->actions.push_back(item);
 
     return nextIdentifier;
 }
@@ -753,15 +757,15 @@ void View::registerClickAction(ActionListener actionListener)
     this->registerAction("hints/ok"_i18n, BUTTON_A, actionListener, false, false, SOUND_CLICK);
 }
 
-void View::updateActionHint(enum ControllerButton button, std::string hintText)
-{
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
+void View::updateActionHint(std::vector<ControllerButton> buttons, std::string hintText)
+{   std::string key = fmt::format("{}", fmt::join(buttons.begin(), buttons.end(), ","));
+    if (auto it = std::find(this->actions.begin(), this->actions.end(), key); it != this->actions.end())
         it->hintText = hintText;
 }
 
-void View::setActionAvailable(enum ControllerButton button, bool available)
-{
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
+void View::setActionAvailable(std::vector<ControllerButton> buttons, bool available)
+{   std::string key = fmt::format("{}", fmt::join(buttons.begin(), buttons.end(), ","));
+    if (auto it = std::find(this->actions.begin(), this->actions.end(), key); it != this->actions.end())
         it->available = available;
 
     Application::getGlobalHintsUpdateEvent()->fire();

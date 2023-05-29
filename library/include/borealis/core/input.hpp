@@ -238,6 +238,7 @@ struct KeyState
 struct KeyboardState {
     int mods;
     std::map<BrlsKeyboardScancode, bool> keys;
+    int action;
 };
 
 // Represents the state of the controller (a gamepad or a keyboard) in the current frame
@@ -245,8 +246,15 @@ struct ControllerState
 {
     bool buttons[_BUTTON_MAX]; // true: pressed
     float axes[_AXES_MAX]; // from 0.0f to 1.0f
+};
+
+struct KeyboardControllerState
+{
+    std::map<ControllerButton, bool> buttons; // true: pressed
+    std::map<ControllerAxis, float> axes; // from 0.0f to 1.0f
     int mods;
     std::map<BrlsKeyboardScancode, bool> keys;
+    int action;
 };
 
 // Represents a touch phase in the current frame

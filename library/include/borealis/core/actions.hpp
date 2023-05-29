@@ -37,6 +37,7 @@ struct Action
     enum ControllerButton button;
 
     ActionIdentifier identifier;
+    std::string key;
     std::string hintText;
     bool available;
     bool hidden;
@@ -47,10 +48,11 @@ struct Action
     int mods;
     std::vector<BrlsKeyboardScancode> keys;
     bool availableMulti;
+    std::string icon;
 
-    bool operator==(const enum ControllerButton other)
+    bool operator==(const std::string other)
     {
-        return this->button == other;
+        return this->key == other;
     }
 };
 

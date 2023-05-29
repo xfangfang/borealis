@@ -116,6 +116,19 @@ short SDLInputManager::getControllersConnectedCount()
     return controllers.size();
 }
 
+void SDLInputManager::updateControllers() {
+    int controllerNum = SDL_NumJoysticks();
+    for (auto i : controllers)
+    {
+        SDL_GameControllerClose(i);
+    }
+    controllers.clear();
+    controllers.reserve(controllerNum);
+    for (int i = 0; i < controllerNum; i++) {
+        controllers.emplace_back(SDL_GameControllerOpen(i));
+    }
+}
+
 void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
 {
     for (bool& button : state->buttons)
@@ -156,8 +169,6 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
     state->buttons[BUTTON_NAV_DOWN] |= state->buttons[BUTTON_DOWN];
     state->buttons[BUTTON_NAV_LEFT] |= state->buttons[BUTTON_LEFT];
-    state->keys = this->keyboardState.keys;
-    state->mods = this->keyboardState.mods;
 }
 
 void SDLInputManager::updateControllerState(ControllerState* state, int controller)
@@ -207,6 +218,52 @@ void SDLInputManager::keyboardCallback(SDL_Window* window, BrlsKeyboardScancode 
         this->keyboardState.keys.erase(key);
     } else {
         this->keyboardState.keys[key] = true;
+    }
+    this->keyboardState.action = action;
+    Application::processKeyInput(this->keyboardState);
+}
+
+void SDLInputManager::controllerCallback(uint8_t button, uint8_t state) {
+    auto k = (ControllerButton)SDL_BUTTONS_MAPPING[button];
+    if (state == SDL_RELEASED) {
+        this->keyboardState.buttons.erase(k);
+    } else {
+        this->keyboardState.buttons[k] = true;
+    }
+    this->keyboardState.action = state;
+    Application::processKeyInput(this->keyboardState);
+}
+
+const static std::vector<ControllerButton> buttonDiffs = {
+    BUTTON_LT,
+    BUTTON_RT,
+    BUTTON_NAV_UP,
+    BUTTON_NAV_RIGHT,
+    BUTTON_NAV_DOWN,
+    BUTTON_NAV_LEFT,
+};
+
+void SDLInputManager::controllerAxisCallback(uint8_t axis, int16_t value) {
+    this->keyboardState.axes[(ControllerAxis)axis] = (float)value / 32767.0f;
+    auto buttons = this->keyboardState.buttons;
+    this->keyboardState.buttons[BUTTON_LT] = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 0.1f;
+    this->keyboardState.buttons[BUTTON_RT] = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 0.1f;
+
+    this->keyboardState.buttons[BUTTON_NAV_UP]    = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_LEFTY] < -0.5f || this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_RIGHTY] < -0.5f || this->keyboardState.buttons[BUTTON_UP];
+    this->keyboardState.buttons[BUTTON_NAV_RIGHT] = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_LEFTX] > 0.5f || this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_RIGHTX] > 0.5f || this->keyboardState.buttons[BUTTON_RIGHT];
+    this->keyboardState.buttons[BUTTON_NAV_DOWN]  = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_LEFTY] > 0.5f || this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_RIGHTY] > 0.5f || this->keyboardState.buttons[BUTTON_DOWN];
+    this->keyboardState.buttons[BUTTON_NAV_LEFT]  = this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_LEFTX] < -0.5f || this->keyboardState.axes[(ControllerAxis)SDL_CONTROLLER_AXIS_RIGHTX] < -0.5f || this->keyboardState.buttons[BUTTON_LEFT];
+    bool isRepeat = true;
+    // xbox 的扳机键作为组合键会导致不停的触发
+    for (auto& b : buttonDiffs) {
+        if (buttons[b] != this->keyboardState.buttons[b]) {
+            isRepeat = false;
+            break;
+        }
+    }
+    if (!isRepeat) {
+        this->keyboardState.action = BRLS_KBD_ACTION_PRESS;
+        Application::processKeyInput(this->keyboardState);
     }
 }
 

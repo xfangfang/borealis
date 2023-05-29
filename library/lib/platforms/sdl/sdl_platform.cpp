@@ -260,6 +260,16 @@ bool SDLPlatform::mainLoopIteration()
                     action,
                     keyModifiers);
             }
+        } else if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_CONTROLLERBUTTONUP) {
+            this->inputManager->controllerCallback(
+                event.cbutton.button,
+                event.cbutton.state);
+        } else if (event.type == SDL_CONTROLLERAXISMOTION) {
+            this->inputManager->controllerAxisCallback(
+                event.caxis.axis,
+                event.caxis.value);
+        } else if (event.type == SDL_CONTROLLERDEVICEADDED || event.type == SDL_CONTROLLERDEVICEREMOVED) {
+            this->inputManager->updateControllers();
         }
     }
 

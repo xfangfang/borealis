@@ -73,7 +73,7 @@ namespace brls
         float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
         // 更新输入法条位置
         dialog->getLayoutEvent()->subscribe([this, scale](Point p) {
-            const SDL_Rect rect = {(int)(p.x * scale), (int)(p.y * scale), 10, 10};
+            const SDL_Rect rect = {(int)((p.x + 240) * scale), (int)((p.y + 120) * scale), 100, 20};
             SDL_SetTextInputRect(&rect);
         });
         auto eventID1 = event->subscribe([this, updateText](SDL_Event *e) {
@@ -117,14 +117,14 @@ namespace brls
             }
         );
         dialog->registerKeysAction(
-            "hints/copy"_i18n, {BUTTON_LB, BUTTON_Y}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_C}, [this](...){
+            "\uE0E3", "hints/copy"_i18n, {BUTTON_RB, BUTTON_Y}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_C}, [this](...){
                 if (!this->inputBuffer.empty())
                     SDL_SetClipboardText(this->inputBuffer.data());
                 return true;
             }
         );
         dialog->registerKeysAction(
-            "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateText](...){
+            "\uE0E2", "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateText](...){
                 if (SDL_HasClipboardText()) {
                     char* clipboard = SDL_GetClipboardText();
                     this->inputBuffer += clipboard;

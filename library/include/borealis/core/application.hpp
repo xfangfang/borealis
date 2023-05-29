@@ -282,6 +282,8 @@ class Application
 
     static void tryDeinitFirstResponder(View* view);
 
+    static void processKeyInput(KeyboardControllerState state);
+
   private:
     inline static bool inited               = false;
     inline static bool quitRequested        = false;
