@@ -22,6 +22,10 @@
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <memory>
 
+#ifdef __SDL2__
+#include <SDL2/SDL_misc.h>
+#endif
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -29,13 +33,19 @@
 namespace brls
 {
 
-#if defined(_WIN32) and not defined(__WINRT__)
 int shell_open(const char* command)
 {
-    ShellExecute(NULL, "open", command, NULL, NULL, SW_SHOWNORMAL);
+#ifdef __SDL2__
+    return SDL_OpenURL(command);
+#elif defined(_WIN32) and !defined(__WINRT__)
+    WCHAR wcmd[MAX_PATH];
+    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd, MAX_PATH);
+    ShellExecuteW(NULL, L"open", wcmd, NULL, NULL, SW_SHOWNORMAL);
     return 0;
-}
+#else
+    return 0;
 #endif
+}
 
 #ifdef __linux__
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
@@ -454,15 +464,13 @@ void DesktopPlatform::forceEnableGamePlayRecording()
 void DesktopPlatform::openBrowser(std::string url)
 {
     brls::Logger::debug("open url: {}", url);
-#ifdef __APPLE__
+#if __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
-#endif
-#ifdef __linux__
+#elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
-#endif
-#if defined(_WIN32) and not defined(__WINRT__)
+#elif _WIN32
     shell_open(url.c_str());
 #endif
 }
