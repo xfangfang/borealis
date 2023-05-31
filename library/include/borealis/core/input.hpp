@@ -18,6 +18,7 @@
 #pragma once
 
 #include <nanovg.h>
+#include <fmt/core.h>
 
 #include <borealis/core/event.hpp>
 #include <borealis/core/geometry.hpp>
@@ -389,3 +390,10 @@ class InputManager
 };
 
 }; // namespace brls
+
+
+template<> struct fmt::formatter<brls::ControllerButton>: fmt::formatter<string_view> {
+    auto format(brls::ControllerButton info, format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", (int)info);
+    }
+};
