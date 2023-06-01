@@ -34,7 +34,8 @@ class SDLInputManager : public InputManager
     void setPointerLock(bool lock) override;
 
     void updateMouseWheel(SDL_MouseWheelEvent event);
-    void keyboardCallback(SDL_Window* window, BrlsKeyboardScancode key, int action, int mods);
+
+    void keyboardCallback(SDL_Scancode code, uint8_t state, uint8_t repeat, uint16_t mods);
     void controllerCallback(uint8_t button, uint8_t state);
     void controllerAxisCallback(uint8_t axis, int16_t value);
     void updateControllers();

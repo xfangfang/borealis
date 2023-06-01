@@ -363,15 +363,12 @@ void Application::processInput()
     controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
     controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
 
-    bool hasControllerState = false;
-
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
         if (controllerState.buttons[i])
         {
             anyButtonPressed = true;
             repeating        = (repeatingButtonTimer > BUTTON_REPEAT_DELAY && repeatingButtonTimer % BUTTON_REPEAT_CADENCY == 0);
-            hasControllerState = true;
 
             if (!oldControllerState.buttons[i] || repeating)
                 Application::onControllerButtonPressed((enum ControllerButton)i, repeating);
@@ -380,10 +377,10 @@ void Application::processInput()
         if (controllerState.buttons[i] != oldControllerState.buttons[i])
             buttonPressTime = repeatingButtonTimer = 0;
     }
-    Time now = getCPUTimeUsec();
-    if (anyButtonPressed && now - buttonPressTime > 1000)
+
+    if (anyButtonPressed && getCPUTimeUsec() - buttonPressTime > 1000)
     {
-        buttonPressTime = now;
+        buttonPressTime = getCPUTimeUsec();
         repeatingButtonTimer++; // Increased once every ~1ms
     }
 
@@ -455,7 +452,6 @@ void Application::processKeyInput(KeyboardControllerState controllerState) {
         keyPressTime = now;
         repeatingKeyTimer++; // Increased once every ~1ms
     }
-    // oldControllerState = controllerState;
 }
 
 Platform* Application::getPlatform()

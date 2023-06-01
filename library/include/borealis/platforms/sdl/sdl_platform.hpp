@@ -47,12 +47,13 @@ class SDLPlatform : public DesktopPlatform
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
     ImeManager* getImeManager() override;
-
+    bool processEvent(SDL_Event* event);
   private:
     NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;
     SDLImeManager* imeManager     = nullptr;
+    Event<SDL_Event*> otherEvent;
 };
 
 } // namespace brls

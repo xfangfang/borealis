@@ -96,9 +96,6 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
                 }
                 break;
         }
-    } else {
-        auto videoContext = (SDLVideoContext*)Application::getPlatform()->getVideoContext();
-        videoContext->otherEvent.fire(event);
     }
     return 0;
 }
@@ -225,11 +222,6 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     } else {
         this->fullScreen(true);
     }
-}
-
-
-Event<SDL_Event*>* SDLVideoContext::getOtherEvent() {
-    return &this->otherEvent;
 }
 
 void SDLVideoContext::beginFrame()
