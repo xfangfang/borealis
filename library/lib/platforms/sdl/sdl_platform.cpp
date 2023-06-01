@@ -17,6 +17,7 @@
 #include <strings.h>
 #include <map>
 
+#include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
@@ -216,27 +217,40 @@ const static std::map<SDL_Scancode, BrlsKeyboardScancode> brlsKeyboardMap = {
     {SDL_SCANCODE_MENU, BRLS_KBD_KEY_MENU}
 };
 
+static bool processEvent(SDLPlatform* platform, SDL_Event* event)
+{
+    if (event->type == SDL_QUIT)
+    {
+        return false;
+    }
+    else if (event->type == SDL_MOUSEWHEEL)
+    {
+        auto* manager = (SDLInputManager*)platform->getInputManager();
+        if (manager)
+            manager->updateMouseWheel(event->wheel);
+    }
+    brls::Application::setActiveEvent(true);
+    return true;
+}
+
 bool SDLPlatform::mainLoopIteration()
 {
-
-    bool platform = true;
-
-#ifdef __SWITCH__
-    platform = appletMainLoop();
-#endif
-
     SDL_Event event;
-    bool running = true;
+    bool hasEvent = false;
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
+        if (!processEvent(this, &event))
         {
-            running = false;
+            return false;
         }
-        else if (event.type == SDL_MOUSEWHEEL)
+        hasEvent = true;
+    }
+    if (!hasEvent && !Application::hasActiveEvent())
+    {
+        if (SDL_WaitEventTimeout(&event, (int)(brls::Application::getDeactivatedFrameTime() * 1000))
+            && !processEvent(this, &event))
         {
-            if (this->inputManager)
-                this->inputManager->updateMouseWheel(event.wheel);
+            return false;
         }
         else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
         {
@@ -273,7 +287,7 @@ bool SDLPlatform::mainLoopIteration()
         }
     }
 
-    return running || !platform;
+    return true;
 }
 
 AudioPlayer* SDLPlatform::getAudioPlayer()

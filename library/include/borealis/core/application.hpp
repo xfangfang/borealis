@@ -215,6 +215,21 @@ class Application
     static size_t getFPS();
     static void setLimitedFPS(size_t fps);
 
+    /**
+     * If the value is set to true, the program will limit FPS to Application::DeactivatedFPS
+     * after Application::DeactivatedTime milliseconds of inactivity.
+     *
+     * default is false;
+     */
+    static void setAutomaticDeactivation(bool value);
+    static bool getAutomaticDeactivation();
+    static bool hasActiveEvent();
+    static void setActiveEvent(bool value);
+    static void setDeactivatedTime(int millisecond);
+    static void setDeactivatedFPS(int value);
+    static int getDeactivatedFPS();
+    static double getDeactivatedFrameTime();
+
     static GenericEvent* getGlobalFocusChangeEvent();
     static VoidEvent* getGlobalHintsUpdateEvent();
     static Event<InputType>* getGlobalInputTypeChangeEvent();
@@ -317,15 +332,20 @@ class Application
     inline static unsigned blockInputsTokens = 0; // any value > 0 means inputs are blocked
     inline static bool muteSounds            = false;
 
-    inline static std::string commonFooter = "";
+    inline static std::string commonFooter;
 
     inline static bool globalQuitEnabled                = false;
     inline static ActionIdentifier gloablQuitIdentifier = ACTION_NONE;
     inline static bool globalFPSToggleEnabled           = false;
     inline static size_t globalFPS                      = 60;
-    inline static unsigned int FPS_INTERNAL             = 30;
-    inline static unsigned int FPS_INTERNAL_TIME        = FPS_INTERNAL * 1000000;
     inline static Time limitedFrameTime                 = 0;
+    inline static Time frameStartTime                   = 0;
+
+    inline static bool deactivatedBehavior = false;
+    inline static bool activeEvent         = false;
+    inline static Time lastActiveTime      = 0;
+    inline static int deactivatedFPS       = 5; // FPS 5
+    inline static int deactivatedTime      = 5000000; // 5s
 
     inline static View* repetitionOldFocus = nullptr;
 

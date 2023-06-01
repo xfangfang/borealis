@@ -96,6 +96,7 @@ static void glfwJoystickCallback(int jid, int event)
 
         controllersCount--;
     }
+    Application::setActiveEvent(true);
 }
 
 static RawTouchState touchState = {0,0,{0,0}};
@@ -106,12 +107,13 @@ static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double 
     touchState.pressed = true;
     touchState.position.x = xpos / Application::windowScale;
     touchState.position.y = ypos / Application::windowScale;
+    Application::setActiveEvent(true);
 }
 
 void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     auto* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
-    KeyState state;
+    KeyState state {};
     state.key            = (BrlsKeyboardScancode)key;
     state.mods           = mods;
     state.action        = action;
@@ -121,6 +123,7 @@ void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancod
     else
         Logger::debug("Key: NULL / Code: {} / Action: {}", key, action);
     self->getKeyboardKeyStateChanged()->fire(state);
+    Application::setActiveEvent(true);
 }
 
 void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
@@ -134,6 +137,7 @@ void GLFWInputManager::scrollCallback(GLFWwindow* window, double xoffset, double
     self->scrollOffset.y += yoffset * 10;
 #endif
     self->getMouseScrollOffsetChanged()->fire(Point(xoffset, yoffset));
+    Application::setActiveEvent(true);
 }
 
 void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)

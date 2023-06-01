@@ -30,7 +30,7 @@ namespace brls
 #ifdef BOREALIS_USE_STD_THREAD
 static std::thread *task_loop_thread = nullptr;
 #else
-static pthread_t task_loop_thread = NULL;
+static pthread_t task_loop_thread = pthread_t(0);
 #endif
 
 Threading::Threading()

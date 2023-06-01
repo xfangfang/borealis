@@ -149,11 +149,9 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
-    static Time frameStartTime = 0;
-    if (Application::limitedFrameTime > 0)
-    {
-        frameStartTime = getCPUTimeUsec();
-    }
+    Application::updateFPS();
+    Application::frameStartTime = getCPUTimeUsec();
+    Application::setActiveEvent(false);
 
     // Main loop callback
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
@@ -204,10 +202,6 @@ bool Application::mainLoop()
     }
     Application::deletionPool = undeletedViews;
 
-    // Calculate FPS
-    if (Application::globalFPSToggleEnabled)
-        Application::updateFPS();
-
     if (Application::limitedFrameTime > 0)
     {
         Time deltaTime = getCPUTimeUsec() - frameStartTime;
@@ -223,15 +217,15 @@ bool Application::mainLoop()
 
 void Application::updateFPS()
 {
-    static unsigned int start = getCPUTimeUsec();
-    static unsigned int index = 0;
+    static Time start = getCPUTimeUsec();
+    static size_t index = 0;
 
-    if (index++ == FPS_INTERNAL)
-    {
-        unsigned int end       = getCPUTimeUsec();
-        Application::globalFPS = FPS_INTERNAL_TIME / (end - start);
-        start                  = end;
-        index                  = 0;
+    index++;
+    // update FPS every second
+    if (Application::frameStartTime - start > 1000000) {
+        Application::globalFPS = index;
+        start = Application::frameStartTime;
+        index = 0;
     }
 }
 
@@ -600,6 +594,59 @@ View* Application::getCurrentFocus()
     return Application::currentFocus;
 }
 
+void Application::setAutomaticDeactivation(bool value)
+{
+    Application::deactivatedBehavior = value;
+}
+
+bool Application::getAutomaticDeactivation()
+{
+    return Application::deactivatedBehavior;
+}
+
+bool Application::hasActiveEvent()
+{
+#ifdef __SWITCH__
+    // Switch does not support waiting for events
+    return true;
+#else
+    if (!Application::deactivatedBehavior || activeEvent || Application::frameStartTime - lastActiveTime < Application::deactivatedTime)
+        return true;
+    return false;
+#endif
+}
+
+void Application::setActiveEvent(bool value)
+{
+#ifndef __SWITCH__
+    Application::activeEvent = value;
+    if (value)
+    {
+        lastActiveTime = getCPUTimeUsec();
+    }
+#endif
+}
+
+void Application::setDeactivatedTime(int millisecond)
+{
+    Application::deactivatedTime = millisecond * 1000;
+}
+
+void Application::setDeactivatedFPS(int value)
+{
+    Application::deactivatedFPS = value;
+}
+
+int Application::getDeactivatedFPS()
+{
+    return Application::deactivatedFPS;
+}
+
+double Application::getDeactivatedFrameTime()
+{
+    return 1.0 / Application::deactivatedFPS;
+}
+
 bool Application::handleAction(char button, bool repeating)
 {
     // Dismiss if input type was changed
@@ -774,7 +821,7 @@ size_t Application::getFPS()
 
 void Application::setLimitedFPS(size_t fps)
 {
-    Application::limitedFrameTime = 1000000.0f / fps;
+    Application::limitedFrameTime = fps == 0 ? 0 : 1000000.0f / fps;
 }
 
 void Application::notify(std::string text)
@@ -1069,6 +1116,8 @@ void Application::setWindowSize(int width, int height)
 
     for (Activity* activity : Application::activitiesStack)
         activity->onWindowSizeChanged();
+
+    brls::Application::setActiveEvent(true);
 }
 
 void Application::onWindowResized(int width, int height)

@@ -22,6 +22,10 @@
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <memory>
 
+#ifdef __SDL2__
+#include <SDL2/SDL_misc.h>
+#endif
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -29,38 +33,19 @@
 namespace brls
 {
 
-#ifdef _WIN32
-int windows_system(const char* command)
+int shell_open(const char* command)
 {
-    PROCESS_INFORMATION p_info;
-    STARTUPINFO s_info;
-    DWORD ReturnValue;
-    char *tmp_command, *cmd_exe_path;
-    size_t len = strlen(command);
-
-    tmp_command    = (char*)malloc(len + 4);
-    tmp_command[0] = 0x2F; // '/'
-    tmp_command[1] = 0x63; // 'c'
-    tmp_command[2] = 0x20; // <space>;
-    memcpy(tmp_command + 3, command, len + 1);
-    cmd_exe_path = getenv("COMSPEC");
-
-    memset(&s_info, 0, sizeof(s_info));
-    memset(&p_info, 0, sizeof(p_info));
-    s_info.cb = sizeof(s_info);
-
-    if (CreateProcess(cmd_exe_path, tmp_command, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &s_info, &p_info))
-    {
-        WaitForSingleObject(p_info.hProcess, INFINITE);
-        GetExitCodeProcess(p_info.hProcess, &ReturnValue);
-        CloseHandle(p_info.hProcess);
-        CloseHandle(p_info.hThread);
-    }
-
-    free(tmp_command);
-    return ReturnValue;
-}
+#ifdef __SDL2__
+    return SDL_OpenURL(command);
+#elif defined(_WIN32) and !defined(__WINRT__)
+    WCHAR wcmd[MAX_PATH];
+    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd, MAX_PATH);
+    ShellExecuteW(NULL, L"open", wcmd, NULL, NULL, SW_SHOWNORMAL);
+    return 0;
+#else
+    return 0;
 #endif
+}
 
 #ifdef __linux__
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
@@ -479,17 +464,14 @@ void DesktopPlatform::forceEnableGamePlayRecording()
 void DesktopPlatform::openBrowser(std::string url)
 {
     brls::Logger::debug("open url: {}", url);
-#ifdef __APPLE__
+#if __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
-#endif
-#ifdef __linux__
+#elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
-#endif
-#ifdef _WIN32
-    std::string cmd = "start \"\" \"" + url + "\"";
-    windows_system(cmd.c_str());
+#elif _WIN32
+    shell_open(url.c_str());
 #endif
 }
 

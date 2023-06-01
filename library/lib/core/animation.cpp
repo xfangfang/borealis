@@ -15,6 +15,7 @@
 */
 
 #include <borealis/core/animation.hpp>
+#include <borealis/core/application.hpp>
 #include <vector>
 
 namespace brls
@@ -100,6 +101,9 @@ static double highlightColor     = 0;
 
 void updateHighlightAnimation()
 {
+    if (!Application::hasActiveEvent())
+        return;
+
     Time currentTime = getCPUTimeUsec() / 1000;
 
     // Update variables

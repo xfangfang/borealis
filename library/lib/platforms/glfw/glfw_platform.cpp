@@ -15,6 +15,7 @@
     limitations under the License.
 */
 
+#include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/glfw/glfw_platform.hpp>
@@ -126,9 +127,17 @@ bool GLFWPlatform::mainLoopIteration()
         isActive = !glfwGetWindowAttrib(this->videoContext->getGLFWWindow(), GLFW_ICONIFIED);
 
         if (isActive)
+        {
             glfwPollEvents();
+            if (!Application::hasActiveEvent())
+            {
+                glfwWaitEventsTimeout(Application::getDeactivatedFrameTime());
+            }
+        }
         else
+        {
             glfwWaitEvents();
+        }
     } while (!isActive);
 
     return !glfwWindowShouldClose(this->videoContext->getGLFWWindow());
