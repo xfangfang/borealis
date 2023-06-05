@@ -53,6 +53,24 @@ namespace brls
         return result;
     }
 
+    static int utf8_find_next(std::string &s, int offset, int size) {
+        int result = 0;
+        if (size == 0) {
+            return 0;
+        }
+        for (int i = offset; i < s.size(); i++) {
+            char p = s.at(i);
+            if ((p & 0xc0) != 0x80) {
+                size--;
+            }
+            if (size < 0) {
+                break;
+            }
+            result += 1;
+        }
+        return result;
+    }
+
     void SDLImeManager::openInputDialog(
         std::function<void(std::string)> cb,
         std::string headerText,
@@ -68,15 +86,36 @@ namespace brls
         auto updateTextCursor = [this, dialog]() {
             dialog->setCursor(this->cursor);
         };
+        auto updateTextAndCursor = [this, updateText, updateTextCursor, maxStringLength](std::string text) {
+            int prev_n = utf8_len(this->inputBuffer);
+            if (prev_n >= maxStringLength) {
+                return;
+            }
+            int n = utf8_len(text);
+            if (prev_n + n > maxStringLength) {
+                n = maxStringLength - prev_n;
+                int end = utf8_find_next(text, 0, n);
+                text = text.substr(0, end);
+            }
+            if (this->cursor >= 0) {
+                int start = utf8_find_next(this->inputBuffer, 0, this->cursor);
+                this->inputBuffer.insert(start, text);
+                this->cursor += n;
+            } else {
+                this->inputBuffer += text;
+            }
+            updateTextCursor();
+            updateText();
+        };
         dialog->setHeaderText(headerText);
         updateText();
         float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
         // 更新输入法条位置
         dialog->getLayoutEvent()->subscribe([this, scale](Point p) {
-            const SDL_Rect rect = {(int)((p.x + 240) * scale), (int)((p.y + 120) * scale), 100, 20};
+            const SDL_Rect rect = {(int)(p.x* scale), (int)(p.y * scale), 100, 20};
             SDL_SetTextInputRect(&rect);
         });
-        auto eventID1 = event->subscribe([this, updateText](SDL_Event *e) {
+        auto eventID1 = event->subscribe([this, updateTextAndCursor](SDL_Event *e) {
             switch (e->type) {
             case SDL_TEXTINPUT:
                 if (strlen(e->edit.text) == 0) {
@@ -84,8 +123,7 @@ namespace brls
                 } else {
                     this->isEditing = true;
                 }
-                this->inputBuffer += e->text.text;
-                updateText();
+                updateTextAndCursor(e->text.text);
                 break;
             case SDL_TEXTEDITING:
                 this->isEditing = false;
@@ -103,7 +141,7 @@ namespace brls
                     updateTextCursor();
                 }
                 return true;
-            }
+            }, true, true
         );
         dialog->registerAction(
             "hints/right"_i18n, BUTTON_RIGHT, [this, updateTextCursor](...){
@@ -114,7 +152,25 @@ namespace brls
                     }
                 }
                 return true;
-            }
+            }, true, true
+        );
+        dialog->registerKeysAction(
+            "", "", {BUTTON_RB, BUTTON_LEFT}, 0, {BRLS_KBD_KEY_HOME}, [this, updateTextCursor](...){
+                if (this->cursor != 0) {
+                    this->cursor = 0;
+                    updateTextCursor();
+                }
+                return true;
+            }, false
+        );
+        dialog->registerKeysAction(
+            "", "", {BUTTON_RB, BUTTON_RIGHT}, 0, {BRLS_KBD_KEY_END}, [this, updateTextCursor](...){
+                if (this->cursor != -1) {
+                    this->cursor = -1;
+                    updateTextCursor();
+                }
+                return true;
+            }, false
         );
         dialog->registerKeysAction(
             "\uE0E3", "hints/copy"_i18n, {BUTTON_RB, BUTTON_Y}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_C}, [this](...){
@@ -124,21 +180,31 @@ namespace brls
             }
         );
         dialog->registerKeysAction(
-            "\uE0E2", "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateText](...){
+            "\uE0E2", "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateTextAndCursor](...){
                 if (SDL_HasClipboardText()) {
                     char* clipboard = SDL_GetClipboardText();
-                    this->inputBuffer += clipboard;
-                    updateText();
+                    updateTextAndCursor(clipboard);
                 }
                 return true;
             }
         );
 
         // delete text
-        dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText](...) {
+        dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText, updateTextCursor](...) {
             if(inputBuffer.empty()) return true;
-            int offset = utf8_find_prev(inputBuffer, 1);
-            inputBuffer.erase(inputBuffer.size()-offset, offset);
+            if (this->cursor == 0) {
+                return true;
+            }
+            if (this->cursor > 0) {
+                int start = utf8_find_next(inputBuffer, 0, this->cursor-1);
+                int n = utf8_find_next(inputBuffer, start, 1);
+                inputBuffer.erase(start, n);
+                this->cursor -= 1;
+                updateTextCursor();
+            } else {
+                int offset = utf8_find_prev(inputBuffer, 1);
+                inputBuffer.erase(inputBuffer.size()-offset, offset);
+            }
             updateText();
             return true;
         },true, true);
