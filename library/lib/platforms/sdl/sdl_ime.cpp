@@ -161,7 +161,7 @@ namespace brls
                     updateTextCursor();
                 }
                 return true;
-            }, false
+            }, true
         );
         dialog->registerKeysAction(
             "", "", {BUTTON_RB, BUTTON_RIGHT}, 0, {BRLS_KBD_KEY_END}, [this, updateTextCursor](...){
@@ -170,17 +170,22 @@ namespace brls
                     updateTextCursor();
                 }
                 return true;
-            }, false
+            }, true
         );
+#if defined(__APPLE__)
+        static BrlsKeyboardModifiers mods = BRLS_KBD_MODIFIER_META;
+#else
+        static BrlsKeyboardModifiers mods = BRLS_KBD_MODIFIER_CTRL;
+#endif
         dialog->registerKeysAction(
-            "\uE0E3", "hints/copy"_i18n, {BUTTON_RB, BUTTON_Y}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_C}, [this](...){
+            "\uE0E3", "hints/copy"_i18n, {BUTTON_RB, BUTTON_Y}, mods, {BRLS_KBD_KEY_C}, [this](...){
                 if (!this->inputBuffer.empty())
                     SDL_SetClipboardText(this->inputBuffer.data());
                 return true;
             }
         );
         dialog->registerKeysAction(
-            "\uE0E2", "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, BRLS_KBD_MODIFIER_CTRL, {BRLS_KBD_KEY_V}, [this, updateTextAndCursor](...){
+            "\uE0E2", "hints/paste"_i18n, {BUTTON_RB, BUTTON_X}, mods, {BRLS_KBD_KEY_V}, [this, updateTextAndCursor](...){
                 if (SDL_HasClipboardText()) {
                     char* clipboard = SDL_GetClipboardText();
                     updateTextAndCursor(clipboard);
