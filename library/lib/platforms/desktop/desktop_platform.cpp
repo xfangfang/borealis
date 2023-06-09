@@ -278,6 +278,26 @@ DesktopPlatform::DesktopPlatform()
         {
             brls::Logger::error("cannot get system theme");
         }
+#elif defined(_WIN32) and !defined(__WINRT__)
+
+#define APIDEF(lib, ret, calling, index, name, ...) \
+    ret(calling* pfn##name)(__VA_ARGS__) = reinterpret_cast<ret(calling*)(__VA_ARGS__)>(GetProcAddress(lib, MAKEINTRESOURCEA(index)));
+
+        HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        if (hUxtheme)
+        {
+            APIDEF(hUxtheme, BOOL, WINAPI, 138, SystemUseDarkMode);
+            if (pfnSystemUseDarkMode != nullptr && pfnSystemUseDarkMode())
+            {
+                this->themeVariant = ThemeVariant::DARK;
+                brls::Logger::info("Set app theme: Dark");
+            }
+            else
+            {
+                brls::Logger::info("Set app theme: Light");
+            }
+            FreeLibrary(hUxtheme);
+        }
 #endif
     }
     else if (!strcasecmp(themeEnv, "DARK"))
