@@ -13,7 +13,11 @@ if ((NOT USE_SDL2) AND PLATFORM_DESKTOP)
 endif ()
 
 # fmt
-add_subdirectory(${BOREALIS_PATH}/lib/extern/fmt EXCLUDE_FROM_ALL)
+if (_USE_SHARED_LIB)
+  find_package(fmt REQUIRED)
+else()
+  add_subdirectory(${BOREALIS_PATH}/lib/extern/fmt EXCLUDE_FROM_ALL)
+endif()
 
 # tweeny
 add_subdirectory(${BOREALIS_PATH}/lib/extern/tweeny EXCLUDE_FROM_ALL)
@@ -25,7 +29,6 @@ target_compile_options(yogacore PRIVATE -fvisibility=default)
 set(BOREALIS_INCLUDE
         ${BOREALIS_PATH}/include
         ${BOREALIS_PATH}/include/borealis/extern
-        ${BOREALIS_PATH}/include/borealis/extern/tinyxml2
         ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl
         )
 set(BOREALIS_SOURCE
@@ -35,7 +38,6 @@ set(BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/views/cells
         ${BOREALIS_PATH}/lib/views/widgets
         ${BOREALIS_PATH}/lib/extern/glad
-        ${BOREALIS_PATH}/lib/extern/tinyxml2
         ${BOREALIS_PATH}/lib/extern/libretro-common/compat
         ${BOREALIS_PATH}/lib/extern/libretro-common/encodings
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
@@ -115,6 +117,17 @@ elseif (UNIX)
     list(APPEND BOREALIS_INCLUDE ${DBUS_INCLUDE_DIRS})
     list(APPEND BRLS_PLATFORM_LIBS ${DBUS_LIBRARIES})
 endif ()
+
+# tinyxml2
+if (_USE_SHARED_LIB)
+  find_package(tinyxml2 REQUIRED COMPONENTS shared)
+
+  list(APPEND BOREALIS_INCLUDE ${tinyxml2_INCLUDE_DIRS})
+  list(APPEND BRLS_PLATFORM_LIBS tinyxml2::tinyxml2)
+else()
+  list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/include/borealis/extern/tinyxml2)
+  list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/tinyxml2)
+endif()
 
 set(BOREALIS_DRIVER BOREALIS_USE_OPENGL)
 if (BOREALIS_USE_METAL)
