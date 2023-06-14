@@ -63,7 +63,7 @@ endif ()
 project(borealis_demo)
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "0")
-set(VERSION_REVISION "0")
+set(VERSION_ALTER "0")
 set(PROJECT_TITLEID "0x010FF000FFFF00FF")
 set(VITA_TITLEID  "BOREALIS0")
 set(VITA_VERSION  "01.00")
@@ -79,15 +79,22 @@ add_subdirectory(library)
 file(GLOB_RECURSE MAIN_SRC demo/*.cpp)
 
 set(PLATFORM_OPTION)
-if (PLATFORM_SWITCH)
+if (PLATFORM_DESKTOP)
+    if (WIN32)
+        list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/resource.rc)
+    elseif (APPLE)
+        set(PROJECT_CONTENT ${PROJECT_NAME}.app/Contents)
+        configure_file("${CMAKE_SOURCE_DIR}/demo/demo.plist.in" "${PROJECT_CONTENT}/Info.plist")
+    endif ()
+elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
-            # needed by borealis
-            glfw3 EGL glapi drm_nouveau
-            # base lib
-            nx m
-            )
+        # needed by borealis
+        glfw3 EGL glapi drm_nouveau
+        # base lib
+        nx m
+    )
     list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/switch/switch_wrapper.c)
-elseif(PLATFORM_PSV)
+elseif (PLATFORM_PSV)
     set(PLATFORM_LIBS
         glfw3
         libgpu_es4_ext_stub_weak
@@ -98,48 +105,62 @@ elseif(PLATFORM_PSV)
         pthread
     )
     add_definitions(-D__psp2__ -D__PSV__)
-endif()
+endif ()
 
 
 # building target
 add_executable(${PROJECT_NAME} ${MAIN_SRC})
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME} PRIVATE demo)
 target_compile_options(${PROJECT_NAME} PRIVATE
-        -ffunction-sections
-        -fdata-sections
-        ${PLATFORM_OPTION}
-        )
+    -ffunction-sections
+    -fdata-sections
+    ${PLATFORM_OPTION}
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        borealis
-        ${PLATFORM_LIBS}
-        )
+    borealis
+    ${PLATFORM_LIBS}
+)
+if (APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/Library
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/MacOS
+    )
+endif ()
 
 
 # building release file
 if (PLATFORM_DESKTOP)
     add_custom_target(${PROJECT_NAME}.data
-            COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_SOURCE_DIR}/resources ${CMAKE_CURRENT_BINARY_DIR}/resources
-            )
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
+    )
     add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
-elseif(PLATFORM_PSV)
+    if (APPLE)
+        message(STATUS "CMAKE_OSX_ARCHITECTURES: x86_64;arm64")
+        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Architectures" FORCE)
+        set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "arm 64 minimum deployment target" FORCE)
+
+        add_custom_target(${PROJECT_NAME}.app
+            COMMAND "${CMAKE_COMMAND}" -E make_directory ${PROJECT_CONTENT}/Resources ${PROJECT_CONTENT}/MacOS
+            COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_CONTENT}/Resources/resources
+            COMMAND "${CMAKE_COMMAND}" -E copy ${CMAKE_SOURCE_DIR}/demo/borealis.icns ${PROJECT_CONTENT}/Resources
+        )
+        add_dependencies(${PROJECT_NAME}.app ${PROJECT_NAME})
+    endif ()
+elseif (PLATFORM_PSV)
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-      VERSION ${VITA_VERSION}
-      NAME ${PROJECT_NAME}
-      FILE ${CMAKE_SOURCE_DIR}/resources resources
-      FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-      FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
+        VERSION ${VITA_VERSION}
+        NAME ${PROJECT_NAME}
+        FILE ${CMAKE_SOURCE_DIR}/resources resources
+        FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
+        FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
     )
-else ()
-    add_custom_target(${PROJECT_NAME}.nro
-            DEPENDS ${PROJECT_NAME}
-            COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}"
-            "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}"
-            ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
-            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
-            COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON}
-            --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
-            )
+elseif (PLATFORM_SWITCH)
+    add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
+        COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
+        COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
+    )
 endif ()
