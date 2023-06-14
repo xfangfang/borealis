@@ -132,28 +132,29 @@ target("borealis")
     add_defines("BOREALIS_USE_STD_THREAD")
 
 
-if get_config("example") then
-    target("demo")
-        add_includedirs("library/include")
-        add_includedirs("library/include/borealis/extern")
-        add_files("demo/*.cpp")
-        add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
-        local windowLib = get_config("window")
-        if windowLib == "sdl" then
-            add_packages("sdl2")
-        end
-        add_deps("borealis")
-        if get_config("winrt") then
-            add_defines("__WINRT__=1")
-            add_syslinks("WindowsApp")
-            after_build(function (target)
-                import("uwp")(target)
-            end)
-        end
-        if is_plat("mingw") then
-            add_ldflags("-static")
-        end
-        if is_plat("windows", "mingw") then
-            add_files("demo/resource.rc")
-        end
-end
+
+target("demo")
+    add_includedirs("library/include")
+    add_includedirs("library/include/borealis/extern")
+    add_files("demo/*.cpp")
+    add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
+    local windowLib = get_config("window")
+    if windowLib == "sdl" then
+        add_packages("sdl2")
+    end
+    add_deps("borealis")
+    if get_config("winrt") then
+        add_defines("__WINRT__=1")
+        add_syslinks("WindowsApp")
+        after_build(function (target)
+            import("uwp")(target)
+        end)
+    end
+    if is_plat("mingw") then
+        add_ldflags("-static")
+    end
+    if is_plat("windows", "mingw") then
+        add_files("demo/resource.rc")
+    end
+    set_rundir("$(projectdir)")
+

@@ -46,6 +46,14 @@ cmake -B build_pc -DPLATFORM_DESKTOP=ON
 make -C build_pc -j$(nproc)
 ```
 
+If you want to use xmake you have to follow these steps:
+
+```bash
+xrepo add-repo zeromake-repo https://github.com/zeromake/xrepo
+xmake
+xmake run demo
+```
+
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
 
