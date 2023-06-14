@@ -28,26 +28,106 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <Wlanapi.h>
+#elif __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/ps/IOPSKeys.h>
+#include <IOKit/ps/IOPowerSources.h>
+#else
+#include <locale>
 #endif
 
 namespace brls
 {
 
+#if defined(_WIN32) and !defined(__WINRT__)
 int shell_open(const char* command)
 {
-#ifdef __SDL2__
-    return SDL_OpenURL(command);
-#elif defined(_WIN32) and !defined(__WINRT__)
-    WCHAR wcmd[MAX_PATH];
-    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd, MAX_PATH);
-    ShellExecuteW(NULL, L"open", wcmd, NULL, NULL, SW_SHOWNORMAL);
-    return 0;
-#else
-    return 0;
-#endif
+    std::vector<WCHAR> wcmd(strlen(command));
+    int len = MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd.data(), wcmd.size());
+    ShellExecuteW(nullptr, L"open", wcmd.data(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-#ifdef __linux__
+/// @return -1 no wifi interface
+///          0 no wifi connected
+int win32_wlan_quality()
+{
+    HANDLE hwlan;
+    DWORD version;
+    int quality = -1;
+    if (!WlanOpenHandle(2, nullptr, &version, &hwlan))
+    {
+        PWLAN_INTERFACE_INFO_LIST ppinfo = nullptr;
+        if (!WlanEnumInterfaces(hwlan, nullptr, &ppinfo))
+        {
+            for (DWORD i = 0; i < ppinfo->dwNumberOfItems; i++)
+            {
+                if (ppinfo->InterfaceInfo[i].isState != wlan_interface_state_connected)
+                {
+                    continue;
+                }
+                PWLAN_CONNECTION_ATTRIBUTES attrs = nullptr;
+                DWORD attr_size                   = sizeof(attrs);
+                if (!WlanQueryInterface(hwlan, &ppinfo->InterfaceInfo[i].InterfaceGuid,
+                        wlan_intf_opcode_current_connection, nullptr,
+                        &attr_size, (PVOID*)&attrs, nullptr))
+                {
+                    quality = attrs->wlanAssociationAttributes.wlanSignalQuality;
+                    WlanFreeMemory(attrs);
+                    break;
+                }
+            }
+            WlanFreeMemory(ppinfo);
+        }
+        WlanCloseHandle(hwlan, nullptr);
+    }
+    return quality;
+}
+#elif __APPLE__
+/// @return low 7bit is current capacity
+int darwin_get_powerstate()
+{
+    CFTypeRef blob = IOPSCopyPowerSourcesInfo();
+    if (!blob)
+        return -1;
+
+    CFArrayRef list = IOPSCopyPowerSourcesList(blob);
+    if (!blob)
+    {
+        CFRelease(blob);
+        return -1;
+    }
+
+    int capacity  = -1;
+    CFIndex total = CFArrayGetCount(list);
+    for (CFIndex i = 0; i < total; i++)
+    {
+        CFTypeRef ps         = (CFTypeRef)CFArrayGetValueAtIndex(list, i);
+        CFDictionaryRef dict = IOPSGetPowerSourceDescription(blob, ps);
+        if (!dict)
+            continue;
+        CFStringRef transport_type = (CFStringRef)CFDictionaryGetValue(dict, CFSTR(kIOPSTransportTypeKey));
+        // Not a battery?
+        if (transport_type && CFEqual(transport_type, CFSTR(kIOPSInternalType)))
+        {
+            CFStringRef psstat_ref    = (CFStringRef)CFDictionaryGetValue(dict, CFSTR(kIOPSPowerSourceStateKey));
+            CFBooleanRef charging_ref = (CFBooleanRef)CFDictionaryGetValue(dict, CFSTR(kIOPSIsChargingKey));
+            CFNumberRef capacity_ref  = (CFNumberRef)CFDictionaryGetValue(dict, CFSTR(kIOPSCurrentCapacityKey));
+            if (capacity_ref != nullptr)
+                CFNumberGetValue(capacity_ref, kCFNumberIntType, &capacity);
+            if (charging_ref && CFBooleanGetValue(charging_ref))
+                capacity |= 0x80;
+            if (psstat_ref && CFEqual(psstat_ref, CFSTR(kIOPSACPowerValue)))
+                capacity |= 0x80;
+            break;
+        }
+    }
+    CFRelease(list);
+    CFRelease(blob);
+    return capacity;
+}
+
+#elif __linux__
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
 enum INHIBIT_TYPE
 {
@@ -305,7 +385,11 @@ DesktopPlatform::DesktopPlatform()
 bool DesktopPlatform::canShowBatteryLevel()
 {
 #if defined(__APPLE__)
-    return true;
+    return darwin_get_powerstate() >= 0;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status)) return false;
+    return status.BatteryFlag != BATTERY_FLAG_UNKNOWN;
 #else
     return false;
 #endif
@@ -315,6 +399,8 @@ bool DesktopPlatform::canShowWirelessLevel()
 {
 #if defined(__APPLE__)
     return true;
+#elif defined(_WIN32) and !defined(__WINRT__)
+    return win32_wlan_quality() >= 0;
 #else
     return false;
 #endif
@@ -323,21 +409,11 @@ bool DesktopPlatform::canShowWirelessLevel()
 int DesktopPlatform::getBatteryLevel()
 {
 #if defined(__APPLE__)
-    std::string b = exec("pmset -g batt | grep -Eo '[0-9]+%'");
-    if (!b.empty() && b[b.size() - 1] == '%')
-    {
-        b = b.substr(0, b.size() - 1);
-    }
-    int res = 100;
-    try
-    {
-        res = stoi(b);
-    }
-    catch (...)
-    {
-        return 100;
-    }
-    return res;
+    return darwin_get_powerstate() & 0x7F;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status)) return 0;
+    return status.BatteryLifePercent;
 #else
     return 100;
 #endif
@@ -346,8 +422,11 @@ int DesktopPlatform::getBatteryLevel()
 bool DesktopPlatform::isBatteryCharging()
 {
 #if defined(__APPLE__)
-    std::string res = exec("pmset -g batt | grep -o 'AC Power'");
-    return !res.empty();
+    return darwin_get_powerstate() & 0x80;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status)) return false;
+    return (status.BatteryFlag & BATTERY_FLAG_CHARGING) != 0;
 #else
     return false;
 #endif
@@ -358,6 +437,8 @@ bool DesktopPlatform::hasWirelessConnection()
 #if defined(__APPLE__)
     std::string res = exec("networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportpower | grep -o On");
     return !res.empty();
+#elif defined(_WIN32) and !defined(__WINRT__)
+    return win32_wlan_quality() > 0;
 #else
     return true;
 #endif
@@ -365,7 +446,13 @@ bool DesktopPlatform::hasWirelessConnection()
 
 int DesktopPlatform::getWirelessLevel()
 {
+#if defined(__APPLE__)
     return 3;
+#elif defined(_WIN32) and !defined(__WINRT__)
+    return (win32_wlan_quality() * 4 - 1) / 100;
+#else
+    return 0;
+#endif
 }
 
 void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
@@ -470,7 +557,9 @@ void DesktopPlatform::openBrowser(std::string url)
 #elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
-#elif _WIN32
+#elif __SDL2__
+    SDL_OpenURL(url.c_str());
+#elif defined(_WIN32) and !defined(__WINRT__)
     shell_open(url.c_str());
 #endif
 }
