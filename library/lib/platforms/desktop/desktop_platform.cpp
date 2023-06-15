@@ -21,6 +21,7 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <memory>
+#include <sstream>
 
 #ifdef __SDL2__
 #include <SDL2/SDL_misc.h>
@@ -41,10 +42,10 @@ namespace brls
 {
 
 #if defined(_WIN32) and !defined(__WINRT__)
-int shell_open(const char* command)
+void shell_open(const char* command)
 {
-    std::vector<WCHAR> wcmd(strlen(command));
-    int len = MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd.data(), wcmd.size());
+    std::vector<WCHAR> wcmd(strlen(command) + 1);
+    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd.data(), wcmd.size());
     ShellExecuteW(nullptr, L"open", wcmd.data(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
@@ -497,7 +498,7 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 std::string DesktopPlatform::getIpAddress()
 {
 #if defined(__APPLE__) || defined(__linux__)
-    return exec("ifconfig | grep \"inet \" | grep -Fv 127.0.0.1 | awk '{print $2}' ");
+    return exec("ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print $2}' ");
 #else
     return "-";
 #endif
@@ -514,24 +515,50 @@ std::string DesktopPlatform::getDnsServer()
 
 std::string DesktopPlatform::exec(const char* cmd)
 {
-    std::string result;
+    std::stringstream ss;
 #if defined(__APPLE__) || defined(__linux__)
-    char buffer[128];
-    memset(buffer, 0, sizeof buffer);
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    FILE* pipe = popen(cmd, "r");
     if (!pipe)
     {
         throw std::runtime_error("popen() failed!");
     }
-    while (fgets(buffer, sizeof buffer, pipe.get()) != nullptr)
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
     {
-        result += buffer;
+        ss << buffer;
     }
-#endif
+    pclose(pipe);
+#elif defined(_WIN32) and !defined(__WINRT__)
+    PROCESS_INFORMATION pi;
+    std::vector<WCHAR> cmdline(strlen(cmd) + 1);
+    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
+    MultiByteToWideChar(CP_UTF8, 0, cmd, -1, cmdline.data(), cmdline.size());
 
-    if (!result.empty() && result[result.size() - 1] == '\n')
-        result = result.substr(0, result.size() - 1);
-    return result;
+    STARTUPINFOW si = { sizeof(STARTUPINFOW) };
+    HANDLE hStdread = nullptr;
+    si.dwFlags      = STARTF_USESTDHANDLES;
+    CreatePipe(&hStdread, &si.hStdOutput, &sa, 0);
+    SetHandleInformation(hStdread, HANDLE_FLAG_INHERIT, 0);
+
+    if (CreateProcessW(nullptr, cmdline.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        CloseHandle(si.hStdOutput);
+
+        char buffer[128];
+        DWORD readlen = 0;
+        while (ReadFile(hStdread, buffer, sizeof(buffer), &readlen, nullptr) == TRUE && readlen > 0)
+        {
+            ss.write(buffer, readlen);
+        }
+    }
+
+    CloseHandle(hStdread);
+#endif
+    // ss.seekp(-1, std::ios_base::end);
+    return ss.str();
 }
 
 bool DesktopPlatform::isApplicationMode()
