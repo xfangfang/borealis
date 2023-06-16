@@ -28,15 +28,20 @@
 #endif
 
 #ifdef _WIN32
+#include <winsock2.h>
+#include <iphlpapi.h>
 #include <Windows.h>
 #include <Wlanapi.h>
-#include <iphlpapi.h>
-#include <winsock2.h>
 #elif __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
-#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <SystemConfiguration/SystemConfiguration.h>
+#endif
+
+#if defined(__APPLE__) || defined(__linux__)
+#include <arpa/inet.h>
+#include <ifaddrs.h>
 #endif
 
 namespace brls
@@ -86,6 +91,8 @@ int win32_wlan_quality()
     return quality;
 }
 #elif __APPLE__
+extern int darwin_wlan_quality();
+
 /// @return low 7bit is current capacity
 int darwin_get_powerstate()
 {
@@ -340,25 +347,19 @@ DesktopPlatform::DesktopPlatform()
     if (themeEnv == nullptr)
     {
 #ifdef __APPLE__
-        char buffer[10];
-        memset(buffer, 0, sizeof buffer);
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("defaults read -g AppleInterfaceStyle", "r"), pclose);
-        if (pipe)
+        CFPropertyListRef propertyList = CFPreferencesCopyValue(
+            CFSTR("AppleInterfaceStyle"),
+            kCFPreferencesAnyApplication,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesAnyHost);
+        if (propertyList)
         {
-            fgets(buffer, sizeof buffer, pipe.get());
-            if (strncmp(buffer, "Dark", 4) == 0)
+            if (CFEqual(propertyList, CFSTR("Dark")))
             {
                 this->themeVariant = ThemeVariant::DARK;
                 brls::Logger::info("Set app theme: Dark");
             }
-            else
-            {
-                brls::Logger::info("Set app theme: Light");
-            }
-        }
-        else
-        {
-            brls::Logger::error("cannot get system theme");
+            CFRelease(propertyList);
         }
 #endif
     }
@@ -440,8 +441,7 @@ bool DesktopPlatform::isBatteryCharging()
 bool DesktopPlatform::hasWirelessConnection()
 {
 #if defined(__APPLE__)
-    std::string res = exec("networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportpower | grep -o On");
-    return !res.empty();
+    return darwin_wlan_quality() > 0;
 #elif defined(_WIN32) and !defined(__WINRT__)
     return win32_wlan_quality() > 0;
 #else
@@ -452,12 +452,46 @@ bool DesktopPlatform::hasWirelessConnection()
 int DesktopPlatform::getWirelessLevel()
 {
 #if defined(__APPLE__)
-    return 3;
+    return darwin_wlan_quality();
 #elif defined(_WIN32) and !defined(__WINRT__)
     return (win32_wlan_quality() * 4 - 1) / 100;
 #else
     return 0;
 #endif
+}
+
+bool DesktopPlatform::hasEthernetConnection()
+{
+    bool has_eth = false;
+#if defined(__APPLE__)
+    SCDynamicStoreRef storeRef = SCDynamicStoreCreate(nullptr, CFSTR("FindCurrentInterface"), nullptr, nullptr);
+    CFDictionaryRef globalRef  = (CFDictionaryRef)SCDynamicStoreCopyValue(storeRef, CFSTR("State:/Network/Global/IPv4"));
+    CFTypeRef primaryIf        = nullptr;
+    if (globalRef)
+    {
+        primaryIf = CFDictionaryGetValue(globalRef, CFSTR("PrimaryInterface"));
+        CFRelease(globalRef);
+    }
+    CFRelease(storeRef);
+
+    CFArrayRef iflist = SCNetworkInterfaceCopyAll();
+    if (iflist)
+    {
+        CFIndex count = CFArrayGetCount(iflist);
+        for (CFIndex i = 0; i < count; i++)
+        {
+            auto netif   = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(iflist, i);
+            auto if_type = SCNetworkInterfaceGetInterfaceType(netif);
+            auto if_name = SCNetworkInterfaceGetBSDName(netif);
+            if (CFEqual(primaryIf, if_name))
+            {
+                has_eth = CFEqual(if_type, kSCNetworkInterfaceTypeEthernet);
+            }
+        }
+        CFRelease(iflist);
+    }
+#endif
+    return has_eth;
 }
 
 void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
@@ -501,10 +535,21 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 
 std::string DesktopPlatform::getIpAddress()
 {
-#if defined(__APPLE__) || defined(__linux__)
-    return exec("ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print $2}' ");
-#elif defined(_WIN32)
     std::string ipaddr = "-";
+#if defined(__APPLE__) || defined(__linux__)
+    struct ifaddrs* interfaces = nullptr;
+    if (getifaddrs(&interfaces) == 0)
+    {
+        for (auto addr = interfaces; addr != nullptr; addr = addr->ifa_next)
+        {
+            if (addr->ifa_addr->sa_family == AF_INET)
+            {
+                ipaddr = inet_ntoa(reinterpret_cast<struct sockaddr_in*>(addr->ifa_addr)->sin_addr);
+            }
+        }
+    }
+    freeifaddrs(interfaces);
+#elif defined(_WIN32)
     PIP_ADAPTER_ADDRESSES addrs = nullptr;
     ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0;
     HANDLE heap = GetProcessHeap();
@@ -544,17 +589,69 @@ std::string DesktopPlatform::getIpAddress()
         Logger::warning("GetAdaptersAddresses failed {}", ret);
     }
     HeapFree(heap, 0, addrs);
-    return ipaddr;
 #endif
+    return ipaddr;
 }
 
 std::string DesktopPlatform::getDnsServer()
 {
+    std::string dnssvr = "-";
 #if defined(__APPLE__)
-    return exec("scutil --dns | grep nameserver | awk '{print $3}' | sort -u | paste -s -d',' -");
-#else
-    return "-";
+    SCPreferencesRef prefsDNS = SCPreferencesCreate(nullptr, CFSTR("DNSSETTING"), nullptr);
+    CFArrayRef services       = SCNetworkServiceCopyAll(prefsDNS);
+    if (services)
+    {
+        CFIndex count = CFArrayGetCount(services);
+        for (CFIndex i = 0; i < count; i++)
+        {
+            const SCNetworkServiceRef service = (const SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
+            CFStringRef interfaceServiceID    = SCNetworkServiceGetServiceID(service);
+            CFStringRef primaryservicepath    = CFStringCreateWithFormat(NULL, NULL, CFSTR("State:/Network/Service/%@/DNS"), interfaceServiceID);
+            SCDynamicStoreRef dynRef          = SCDynamicStoreCreate(kCFAllocatorSystemDefault, CFSTR("DNSSETTING"), NULL, NULL);
+            CFPropertyListRef propList        = SCDynamicStoreCopyValue(dynRef, primaryservicepath);
+            if (propList)
+            {
+                CFArrayRef addresses = (CFArrayRef)CFDictionaryGetValue((CFDictionaryRef)propList, CFSTR("ServerAddresses"));
+                long addressesCount  = CFArrayGetCount(addresses);
+                for (long j = 0; j < addressesCount; j++)
+                {
+                    CFStringRef address = (CFStringRef)CFArrayGetValueAtIndex(addresses, j);
+                    if (address)
+                        dnssvr = CFStringGetCStringPtr(address, kCFStringEncodingMacRomanian);
+                }
+                CFRelease(propList);
+            }
+            CFRelease(dynRef);
+            CFRelease(primaryservicepath);
+        }
+        CFRelease(services);
+    }
+    CFRelease(prefsDNS);
+#elif defined(_WIN32)
+    PFIXED_INFO info = nullptr;
+    ULONG outlen = sizeof(FIXED_INFO), ret = 0;
+    HANDLE heap = GetProcessHeap();
+    do
+    {
+        if (info != nullptr)
+            info = reinterpret_cast<PFIXED_INFO>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, info, outlen));
+        else
+            info = reinterpret_cast<PFIXED_INFO>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+        ret = GetNetworkParams(info, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        dnssvr = info->DnsServerList.IpAddress.String;
+        Logger::debug("Host Name: {} DNS Servers: {}", info->HostName, dnssvr);
+    }
+    else
+    {
+        Logger::warning("GetNetworkParams failed {}", ret);
+    }
+    HeapFree(heap, 0, info);
 #endif
+    return dnssvr;
 }
 
 std::string DesktopPlatform::exec(const char* cmd)

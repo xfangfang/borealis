@@ -23,7 +23,7 @@
 #ifdef __linux__
 #include <dbus/dbus.h>
 #elif __APPLE__
-#import <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
 #endif
 
 namespace brls
@@ -49,6 +49,7 @@ class DesktopPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    bool hasEthernetConnection() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
     bool isScreenDimmingDisabled() override;
     std::string getIpAddress() override;
