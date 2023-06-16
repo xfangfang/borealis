@@ -404,7 +404,7 @@ bool DesktopPlatform::canShowWirelessLevel()
 #if defined(__APPLE__)
     return true;
 #elif defined(_WIN32) and !defined(__WINRT__)
-    return win32_wlan_quality() >= 0;
+    return true;
 #else
     return false;
 #endif
@@ -490,6 +490,38 @@ bool DesktopPlatform::hasEthernetConnection()
         }
         CFRelease(iflist);
     }
+#elif defined(_WIN32)
+    PIP_ADAPTER_ADDRESSES addrs = nullptr;
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0;
+    HANDLE heap = GetProcessHeap();
+    do
+    {
+        if (addrs != nullptr)
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, addrs, outlen));
+        else
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+
+        ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+            nullptr, addrs, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        for (auto cur = addrs; cur != nullptr; cur = cur->Next)
+        {
+            if (cur->OperStatus == IfOperStatusUp && cur->IfType == IF_TYPE_ETHERNET_CSMACD)
+            {
+                if (wcsstr(cur->FriendlyName, L"VMware") == nullptr && 
+                    wcsstr(cur->FriendlyName, L"VirualBox") == nullptr)
+                    has_eth = true;
+            }
+        }
+    }
+    else
+    {
+        Logger::warning("GetAdaptersAddresses failed {}", ret);
+    }
+    HeapFree(heap, 0, addrs);
 #endif
     return has_eth;
 }
@@ -569,18 +601,13 @@ std::string DesktopPlatform::getIpAddress()
     {
         for (auto cur = addrs; cur != nullptr; cur = cur->Next)
         {
-            if (cur->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+            if (cur->IfType != IF_TYPE_SOFTWARE_LOOPBACK && cur->OperStatus == IfOperStatusUp)
             {
-                continue;
-            }
-            if (cur->OperStatus != IfOperStatusUp)
-            {
-                continue;
-            }
-            for (auto addr = cur->FirstUnicastAddress; addr != nullptr; addr = addr->Next)
-            {
-                PSOCKADDR_IN addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
-                ipaddr              = inet_ntoa(addrin->sin_addr);
+                for (auto addr = cur->FirstUnicastAddress; addr != nullptr; addr = addr->Next)
+                {
+                    PSOCKADDR_IN addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
+                    ipaddr              = inet_ntoa(addrin->sin_addr);
+                }
             }
         }
     }
