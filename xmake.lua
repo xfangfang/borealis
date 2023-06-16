@@ -156,4 +156,5 @@ if get_config("example") then
         if is_plat("windows", "mingw") then
             add_files("demo/resource.rc")
         end
+        set_rundir("$(projectdir)")
 end
