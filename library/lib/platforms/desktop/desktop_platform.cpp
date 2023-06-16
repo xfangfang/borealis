@@ -30,12 +30,13 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <Wlanapi.h>
+#include <iphlpapi.h>
+#include <winsock2.h>
 #elif __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
-#else
-#include <locale>
+#include <IOKit/pwr_mgt/IOPMLib.h>
 #endif
 
 namespace brls
@@ -389,7 +390,8 @@ bool DesktopPlatform::canShowBatteryLevel()
     return darwin_get_powerstate() >= 0;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
-    if (!GetSystemPowerStatus(&status)) return false;
+    if (!GetSystemPowerStatus(&status))
+        return false;
     return status.BatteryFlag != BATTERY_FLAG_UNKNOWN;
 #else
     return false;
@@ -413,7 +415,8 @@ int DesktopPlatform::getBatteryLevel()
     return darwin_get_powerstate() & 0x7F;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
-    if (!GetSystemPowerStatus(&status)) return 0;
+    if (!GetSystemPowerStatus(&status))
+        return 0;
     return status.BatteryLifePercent;
 #else
     return 100;
@@ -426,7 +429,8 @@ bool DesktopPlatform::isBatteryCharging()
     return darwin_get_powerstate() & 0x80;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
-    if (!GetSystemPowerStatus(&status)) return false;
+    if (!GetSystemPowerStatus(&status))
+        return false;
     return (status.BatteryFlag & BATTERY_FLAG_CHARGING) != 0;
 #else
     return false;
@@ -499,8 +503,48 @@ std::string DesktopPlatform::getIpAddress()
 {
 #if defined(__APPLE__) || defined(__linux__)
     return exec("ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print $2}' ");
-#else
-    return "-";
+#elif defined(_WIN32)
+    std::string ipaddr = "-";
+    PIP_ADAPTER_ADDRESSES addrs = nullptr;
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0;
+    HANDLE heap = GetProcessHeap();
+    do
+    {
+        if (addrs != nullptr)
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, addrs, outlen));
+        else
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+
+        ret = GetAdaptersAddresses(AF_INET,
+            GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+            nullptr, addrs, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        for (auto cur = addrs; cur != nullptr; cur = cur->Next)
+        {
+            if (cur->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+            {
+                continue;
+            }
+            if (cur->OperStatus != IfOperStatusUp)
+            {
+                continue;
+            }
+            for (auto addr = cur->FirstUnicastAddress; addr != nullptr; addr = addr->Next)
+            {
+                PSOCKADDR_IN addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
+                ipaddr              = inet_ntoa(addrin->sin_addr);
+            }
+        }
+    }
+    else
+    {
+        Logger::warning("GetAdaptersAddresses failed {}", ret);
+    }
+    HeapFree(heap, 0, addrs);
+    return ipaddr;
 #endif
 }
 

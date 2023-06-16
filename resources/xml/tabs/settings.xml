@@ -33,6 +33,14 @@
                 
             <brls:InputNumericCell
                 id="inputNumeric"/>
+
+            <brls:DetailCell
+                title="IP"
+                id="ipAddress"/>
+            
+            <brls:DetailCell
+                title="DNS"
+                id="dnsServer"/>
                 
             <brls:RadioCell/>
             <brls:RadioCell/>

@@ -154,7 +154,7 @@ if get_config("example") then
             add_ldflags("-static")
         end
         if is_plat("windows", "mingw") then
-            add_syslinks("Wlanapi")
+            add_syslinks("Wlanapi", "iphlpapi", "Ws2_32")
             add_files("demo/resource.rc")
         end
         set_rundir("$(projectdir)")
