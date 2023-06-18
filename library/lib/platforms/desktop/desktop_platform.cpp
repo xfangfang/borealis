@@ -30,13 +30,23 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include <Windows.h>
 #include <Wlanapi.h>
 #elif __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
 #include <SystemConfiguration/SystemConfiguration.h>
+#endif
+
+#ifdef __WINRT__
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Networking.Connectivity.h>
+#include <winrt/Windows.Devices.WiFi.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+using winrt::Windows::Devices::WiFi::WiFiAdapter;
+using winrt::Windows::UI::ViewManagement::UIColorType;
+using winrt::Windows::UI::ViewManagement::UISettings;
 #endif
 
 #if defined(__APPLE__) || defined(__linux__)
@@ -46,8 +56,21 @@
 
 namespace brls
 {
-
-#if defined(_WIN32) and !defined(__WINRT__)
+#ifdef __WINRT__
+int winrt_wlan_quality()
+{
+    auto adapters = WiFiAdapter::FindAllAdaptersAsync().get();
+    for (auto it : adapters)
+    {
+        auto profile = it.NetworkAdapter().GetConnectedProfileAsync().get();
+        if (profile != nullptr && profile.IsWlanConnectionProfile())
+        {
+            return int(profile.GetNetworkConnectivityLevel());
+        }
+    }
+    return -1; // No WiFi Adapter found.
+}
+#elif defined(_WIN32)
 void shell_open(const char* command)
 {
     std::vector<WCHAR> wcmd(strlen(command) + 1);
@@ -361,6 +384,13 @@ DesktopPlatform::DesktopPlatform()
             }
             CFRelease(propertyList);
         }
+#elif defined(__WINRT__)
+        auto clr = UISettings().GetColorValue(UIColorType::Foreground);
+        if (((5 * clr.G) + (2 * clr.R) + clr.B) > (8 * 128))
+        {
+            this->themeVariant = ThemeVariant::DARK;
+            brls::Logger::info("Set app theme: Dark");
+        }
 #endif
     }
     else if (!strcasecmp(themeEnv, "DARK"))
@@ -403,7 +433,7 @@ bool DesktopPlatform::canShowWirelessLevel()
 {
 #if defined(__APPLE__)
     return true;
-#elif defined(_WIN32) and !defined(__WINRT__)
+#elif defined(_WIN32)
     return true;
 #else
     return false;
@@ -442,7 +472,9 @@ bool DesktopPlatform::hasWirelessConnection()
 {
 #if defined(__APPLE__)
     return darwin_wlan_quality() > 0;
-#elif defined(_WIN32) and !defined(__WINRT__)
+#elif defined(__WINRT__)
+    return winrt_wlan_quality() > 0;
+#elif defined(_WIN32)
     return win32_wlan_quality() > 0;
 #else
     return true;
@@ -453,7 +485,9 @@ int DesktopPlatform::getWirelessLevel()
 {
 #if defined(__APPLE__)
     return darwin_wlan_quality();
-#elif defined(_WIN32) and !defined(__WINRT__)
+#elif defined(__WINRT__)
+    return winrt_wlan_quality();
+#elif defined(_WIN32)
     return (win32_wlan_quality() * 4 - 1) / 100;
 #else
     return 0;
@@ -492,8 +526,11 @@ bool DesktopPlatform::hasEthernetConnection()
     }
 #elif defined(_WIN32)
     PIP_ADAPTER_ADDRESSES addrs = nullptr;
-    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0;
-    HANDLE heap = GetProcessHeap();
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0, curindex = 0;
+    HANDLE heap      = GetProcessHeap();
+    SOCKADDR_IN addr = { .sin_family = AF_INET, .sin_addr = { { .S_addr = inet_addr("8.8.8.8") } } };
+    GetBestInterfaceEx(reinterpret_cast<SOCKADDR*>(&addr), &curindex);
+
     do
     {
         if (addrs != nullptr)
@@ -509,11 +546,10 @@ bool DesktopPlatform::hasEthernetConnection()
     {
         for (auto cur = addrs; cur != nullptr; cur = cur->Next)
         {
-            if (cur->OperStatus == IfOperStatusUp && cur->IfType == IF_TYPE_ETHERNET_CSMACD)
+            if (cur->OperStatus == IfOperStatusUp && cur->IfIndex == curindex)
             {
-                if (wcsstr(cur->FriendlyName, L"VMware") == nullptr && 
-                    wcsstr(cur->FriendlyName, L"VirualBox") == nullptr)
-                    has_eth = true;
+                has_eth = cur->IfType == IF_TYPE_ETHERNET_CSMACD;
+                break;
             }
         }
     }
@@ -583,8 +619,11 @@ std::string DesktopPlatform::getIpAddress()
     freeifaddrs(interfaces);
 #elif defined(_WIN32)
     PIP_ADAPTER_ADDRESSES addrs = nullptr;
-    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0;
-    HANDLE heap = GetProcessHeap();
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0, curindex = 0;
+    HANDLE heap      = GetProcessHeap();
+    SOCKADDR_IN addr = { .sin_family = AF_INET, .sin_addr = { { .S_addr = inet_addr("8.8.8.8") } } };
+    GetBestInterfaceEx(reinterpret_cast<SOCKADDR*>(&addr), &curindex);
+
     do
     {
         if (addrs != nullptr)
@@ -601,13 +640,14 @@ std::string DesktopPlatform::getIpAddress()
     {
         for (auto cur = addrs; cur != nullptr; cur = cur->Next)
         {
-            if (cur->IfType != IF_TYPE_SOFTWARE_LOOPBACK && cur->OperStatus == IfOperStatusUp)
+            if (cur->OperStatus == IfOperStatusUp && cur->IfIndex == curindex)
             {
                 for (auto addr = cur->FirstUnicastAddress; addr != nullptr; addr = addr->Next)
                 {
-                    PSOCKADDR_IN addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
-                    ipaddr              = inet_ntoa(addrin->sin_addr);
+                    auto addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
+                    ipaddr      = inet_ntoa(addrin->sin_addr);
                 }
+                break;
             }
         }
     }
