@@ -107,6 +107,14 @@ else ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"romfs:/\"")
 endif ()
 
+if (USE_BOOST_FILESYSTEM)
+    find_package(Boost 1.44 REQUIRED COMPONENTS filesystem)
+    if(Boost_FOUND)
+        list(APPEND BRLS_PLATFORM_LIBS Boost::filesystem)
+        list(APPEND BRLS_PLATFORM_OPTION -DUSE_BOOST_FILESYSTEM)
+    endif()
+endif ()
+
 # tinyxml2
 if (_USE_SHARED_LIB)
   find_package(tinyxml2 REQUIRED COMPONENTS shared)
