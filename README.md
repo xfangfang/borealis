@@ -48,6 +48,20 @@ make -C build_pc -j$(nproc)
 
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
+## Building the demo for WinRT
+
+```powershell
+# generate key for codesigning (optional)
+openssl req -nodes -newkey rsa:2048 -keyout cert.key -out cert.crt -x509 -days 365 -subj '//CN=borealis' \
+  -extensions 'v3_req' -addext 'extendedKeyUsage=codeSigning'
+openssl pkcs12 -export -nodes -out winrt/key.pfx -inkey cert.key -in cert.crt -passout pass:
+
+# add xmake repo
+xmake repo -a local https://github.com/zeromake/xrepo.git
+
+xmake f -c -y --winrt=y --window=sdl --driver=d3d11
+xmake b -y demo
+```
 
 ## Building the demo for PSV
 
