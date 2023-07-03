@@ -6,6 +6,7 @@
 #include <string>
 #include <span>
 #include <vector>
+#include "nonstd/span.hpp"
 
 #define ROMFS_CONCAT_IMPL(x, y) x##y
 #define ROMFS_CONCAT(x, y) ROMFS_CONCAT_IMPL(x, y)
@@ -17,7 +18,7 @@ namespace romfs {
     class Resource {
     public:
         constexpr Resource() : m_content() {}
-        explicit constexpr Resource(const std::span<std::byte> &content) : m_content(content) {}
+        explicit constexpr Resource(const nonstd::span<std::byte> &content) : m_content(content) {}
 
         [[nodiscard]]
         constexpr const std::byte* data() const {
@@ -34,10 +35,10 @@ namespace romfs {
             return { reinterpret_cast<const char*>(this->data()), this->size() + 1 };
         }
 
-        [[nodiscard]]
-        std::u8string_view u8string() const {
-            return { reinterpret_cast<const char8_t *>(this->data()), this->size() + 1 };
-        }
+//        [[nodiscard]]
+//        std::u8string_view u8string() const {
+//            return { reinterpret_cast<const char8_t *>(this->data()), this->size() + 1 };
+//        }
 
         [[nodiscard]]
         constexpr bool valid() const {
@@ -45,7 +46,7 @@ namespace romfs {
         }
 
     private:
-        const std::span<const std::byte> m_content;
+        const nonstd::span<const std::byte> m_content;
     };
 
     namespace impl {
