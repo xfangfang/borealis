@@ -10,31 +10,35 @@ option(USE_SHARED_LIB "using shared library" OFF)
 
 if (APPLE)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
+    message(STATUS "CMAKE_OSX_ARCHITECTURES: x86_64;arm64")
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
 endif ()
 
 if(USE_SDL2)
-    message("SDL2")
+    message(STATUS "SDL2")
     set(USE_GLFW OFF)
 elseif(USE_GLFW)
-    message("GLFW")
+    message(STATUS "GLFW")
     set(USE_SDL2 OFF)
 endif()
 
 
 # toolchain
 if (PLATFORM_DESKTOP)
-    message("building for Desktop")
+    message(STATUS "building for Desktop")
     set(TARGET_PLATFORM desktop CACHE STRING "")
-    message("Build Type: ${CMAKE_BUILD_TYPE}")
+    message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
     SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -g2 -ggdb -Wall")
     SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
     if (USE_SHARED_LIB)
-        message("Using shared library")
+        message(STATUS "Using shared library")
         SET(_USE_SHARED_LIB ON)
     endif ()
 elseif (PLATFORM_SWITCH)
-    message("building for SWITCH")
-    message("Build Type: ${CMAKE_BUILD_TYPE}")
+    message(STATUS "building for SWITCH")
+    message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
     set(CMAKE_USE_SYSTEM_ENVIRONMENT_PATH OFF)
     file(TO_CMAKE_PATH "$ENV{DEVKITPRO}" DEVKITPRO)
     if (NOT IS_DIRECTORY ${DEVKITPRO})
@@ -46,10 +50,10 @@ elseif (PLATFORM_SWITCH)
     set(CMAKE_C_FLAGS "-I${DEVKITPRO}/libnx/include -I${DEVKITPRO}/portlibs/switch/include")
     set(CMAKE_CXX_FLAGS "-I${DEVKITPRO}/libnx/include -I${DEVKITPRO}/portlibs/switch/include")
 elseif(PLATFORM_PSV)
-    message("building for PSVita")
+    message(STATUS "building for PSVita")
     set(USE_GLFW ON)
     set(USE_SDL2 OFF)
-    message("Force using GLFW")
+    message(STATUS "Force using GLFW")
     if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       if(DEFINED ENV{VITASDK})
         set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
@@ -88,7 +92,6 @@ if (PLATFORM_DESKTOP)
         list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/resource.rc)
     elseif (APPLE)
         set(PROJECT_CONTENT ${PROJECT_NAME}.app/Contents)
-        configure_file("${CMAKE_SOURCE_DIR}/demo/demo.plist.in" "${PROJECT_CONTENT}/Info.plist")
     endif ()
 elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
@@ -131,31 +134,26 @@ if (BUNDLE_MACOS_APP)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/Library
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/MacOS
     )
+    configure_file("${CMAKE_SOURCE_DIR}/demo/demo.plist.in" "${PROJECT_CONTENT}/Info.plist")
 endif ()
 
 
 # building release file
 if (PLATFORM_DESKTOP)
-    set(BUILD_RESOURCES ${CMAKE_CURRENT_BINARY_DIR}/resources)
     if (BUNDLE_MACOS_APP)
-        set(BUILD_RESOURCES ${PROJECT_CONTENT}/Resources/resources)
-    endif ()
-    add_custom_target(${PROJECT_NAME}.data
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${BUILD_RESOURCES}
-    )
-    add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
-    if (APPLE)
-        message(STATUS "CMAKE_OSX_ARCHITECTURES: x86_64;arm64")
-        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Architectures" FORCE)
-        set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "arm 64 minimum deployment target" FORCE)
-
-        add_custom_target(${PROJECT_NAME}.app
-            COMMAND "${CMAKE_COMMAND}" -E make_directory ${PROJECT_CONTENT}/Resources ${PROJECT_CONTENT}/MacOS
-            COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_CONTENT}/Resources/resources
-            COMMAND "${CMAKE_COMMAND}" -E copy ${CMAKE_SOURCE_DIR}/demo/borealis.icns ${PROJECT_CONTENT}/Resources
+        add_custom_target(${PROJECT_NAME}.icns
+                COMMAND "${CMAKE_COMMAND}" -E copy ${CMAKE_SOURCE_DIR}/demo/borealis.icns ${PROJECT_CONTENT}/Resources/borealis.icns
         )
-        add_dependencies(${PROJECT_NAME}.app ${PROJECT_NAME})
+        add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.icns)
+        add_custom_target(${PROJECT_NAME}.data
+                COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_CONTENT}/Resources/resources
+        )
+    else ()
+        add_custom_target(${PROJECT_NAME}.data
+                COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
+        )
     endif ()
+    add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
 elseif (PLATFORM_PSV)
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
