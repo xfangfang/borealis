@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.10)
 
 # build options
 option(PLATFORM_DESKTOP "build for linux macos or windows" OFF)
@@ -7,6 +7,10 @@ option(PLATFORM_PSV "build for PSVita" OFF)
 option(USE_GLFW "using glfw for input and create window" ON)
 option(USE_SDL2 "using sdl2 for input and create window" OFF)
 option(USE_SHARED_LIB "using shared library" OFF)
+
+if (APPLE)
+    option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
+endif ()
 
 if(USE_SDL2)
     message("SDL2")
@@ -121,7 +125,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     borealis
     ${PLATFORM_LIBS}
 )
-if (APPLE)
+
+if (BUNDLE_MACOS_APP)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/Library
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/MacOS
@@ -131,8 +136,12 @@ endif ()
 
 # building release file
 if (PLATFORM_DESKTOP)
+    set(BUILD_RESOURCES ${CMAKE_CURRENT_BINARY_DIR}/resources)
+    if (BUNDLE_MACOS_APP)
+        set(BUILD_RESOURCES ${PROJECT_CONTENT}/Resources/resources)
+    endif ()
     add_custom_target(${PROJECT_NAME}.data
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${BUILD_RESOURCES}
     )
     add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
     if (APPLE)
