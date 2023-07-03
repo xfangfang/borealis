@@ -310,11 +310,11 @@ void Label::setTextColor(NVGcolor color)
 
 std::string Label::STConverter(const std::string& text)
 {
-#ifdef OPENCC
+#if defined(OPENCC) && not defined(USE_LIBROMFS)
     static bool skip = Application::getLocale() != LOCALE_ZH_HANT && Application::getLocale() != LOCALE_ZH_TW;
     if (skip || !OPENCC_ON)
         return text;
-    static opencc::SimpleConverter converter = opencc::SimpleConverter(View::getFilePathXMLAttributeValue("@res/opencc/s2t.json"));
+    static opencc::SimpleConverter converter = opencc::SimpleConverter(std::string(BRLS_RESOURCES) + "opencc/s2t.json");
     return converter.Convert(text);
 #endif
     return text;

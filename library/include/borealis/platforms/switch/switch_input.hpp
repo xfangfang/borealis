@@ -62,7 +62,6 @@ class SwitchInputManager : public InputManager
     int cursorWidth, cursorHeight;
     int cursorTexture = 0;
     NVGpaint paint;
-    std::string pointerIcon;
     Point lastCursorPosition;
     PadState padStateHandheld;
     HidVibrationDeviceHandle m_vibration_device_handheld[2];

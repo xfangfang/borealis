@@ -156,8 +156,10 @@ Image::Image()
             { "nearest", ImageInterpolation::NEAREST },
         });
 
-    this->registerFilePathXMLAttribute("image", [this](std::string value)
-        { this->setImageFromFile(value); });
+    this->registerFilePathXMLAttribute("image", [this](const std::string& value)
+        { this->setImageFromFile(value); }
+
+    );
 
     setClipsToBounds(true);
 }
@@ -269,7 +271,12 @@ void Image::invalidateImageBounds()
 
 void Image::setImageFromRes(std::string name)
 {
+#ifdef USE_LIBROMFS
+    auto image = romfs::get(name);
+    this->setImageFromMem((unsigned char*)image.string().data(), image.size());
+#else
     this->setImageFromFile(std::string(BRLS_RESOURCES) + name);
+#endif
 }
 
 void Image::setInterpolation(ImageInterpolation interpolation)
@@ -287,6 +294,10 @@ int Image::getImageFlags()
 
 void Image::setImageFromFile(std::string path)
 {
+#ifdef USE_LIBROMFS
+    if (path.rfind("@res/", 0) == 0)
+        return this->setImageFromRes(path.substr(5));
+#endif
     // Let TextureCache to manage when to delete texture
     this->setFreeTexture(false);
 

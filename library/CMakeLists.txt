@@ -113,6 +113,7 @@ else ()
     set(BRLS_PLATFORM_RESOURCES_PATH "\"romfs:/\"")
 endif ()
 
+# boost::filesystem
 if (USE_BOOST_FILESYSTEM)
     find_package(Boost 1.44 REQUIRED COMPONENTS filesystem)
     if(Boost_FOUND)
@@ -120,6 +121,12 @@ if (USE_BOOST_FILESYSTEM)
         list(APPEND BRLS_PLATFORM_OPTION -DUSE_BOOST_FILESYSTEM)
     endif()
 endif ()
+
+# libromfs
+if(USE_LIBROMFS)
+    add_subdirectory(${BOREALIS_PATH}/lib/extern/libromfs EXCLUDE_FROM_ALL)
+    list(APPEND BRLS_PLATFORM_LIBS ${LIBROMFS_LIBRARY})
+endif()
 
 # tinyxml2
 if (_USE_SHARED_LIB)

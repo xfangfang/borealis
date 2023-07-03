@@ -20,7 +20,8 @@
 #include <borealis/core/assets.hpp>
 #include <borealis/core/font.hpp>
 
-#define MATERIAL_ICONS_PATH BRLS_ASSET("material/MaterialIcons-Regular.ttf")
+#define MATERIAL_ICONS "material/MaterialIcons-Regular.ttf"
+#define MATERIAL_ICONS_PATH BRLS_ASSET(MATERIAL_ICONS)
 
 namespace brls
 {
@@ -46,7 +47,12 @@ bool FontLoader::loadFontFromFile(std::string fontName, std::string filePath)
 
 bool FontLoader::loadMaterialFromResources()
 {
+#ifdef USE_LIBROMFS
+    auto font = romfs::get(MATERIAL_ICONS);
+    return Application::loadFontFromMemory(FONT_MATERIAL_ICONS, (void*)font.string().data(), font.string().size(), false);
+#else
     return this->loadFontFromFile(FONT_MATERIAL_ICONS, MATERIAL_ICONS_PATH);
+#endif
 }
 
 } // namespace brls

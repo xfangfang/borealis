@@ -1437,7 +1437,11 @@ std::string View::getFilePathXMLAttributeValue(std::string value)
     if (startsWith(value, "@res/"))
     {
         std::string resPath = value.substr(5);
+#ifdef USE_LIBROMFS
+        return resPath;
+#else
         return std::string(BRLS_RESOURCES) + resPath;
+#endif
     }
 
     return value;
@@ -1461,11 +1465,13 @@ bool View::applyXMLAttribute(std::string name, std::string value)
     // File path -> file path
     if (startsWith(value, "@res/"))
     {
-        std::string path = View::getFilePathXMLAttributeValue(value);
-
         if (this->filePathAttributes.count(name) > 0)
         {
-            this->filePathAttributes[name](path);
+#ifdef USE_LIBROMFS
+            this->filePathAttributes[name](value);
+#else
+            this->filePathAttributes[name](View::getFilePathXMLAttributeValue(value));
+#endif
             return true;
         }
         else
@@ -1686,13 +1692,17 @@ bool View::isXMLAttributeValid(std::string attributeName)
 
 View* View::createFromXMLResource(std::string name)
 {
+#ifdef USE_LIBROMFS
+    return View::createFromXMLString(romfs::get("xml/" + name).string());
+#else
     return View::createFromXMLFile(std::string(BRLS_RESOURCES) + "xml/" + name);
+#endif
 }
 
-View* View::createFromXMLString(std::string xml)
+View* View::createFromXMLString(std::string_view xml)
 {
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
-    tinyxml2::XMLError error        = document->Parse(xml.c_str());
+    tinyxml2::XMLError error        = document->Parse(xml.data());
 
     if (error != tinyxml2::XMLError::XML_SUCCESS)
         fatal("Invalid XML when creating View from XML: error " + std::to_string(error));
@@ -1744,9 +1754,17 @@ View* View::createFromXMLElement(tinyxml2::XMLElement* element)
         const tinyxml2::XMLAttribute* xmlAttribute = element->FindAttribute("xml");
 
         if (xmlAttribute)
+        {
+#ifdef USE_LIBROMFS
+            view = View::createFromXMLString(romfs::get(View::getFilePathXMLAttributeValue(xmlAttribute->Value())).string());
+#else
             view = View::createFromXMLFile(View::getFilePathXMLAttributeValue(xmlAttribute->Value()));
+#endif
+        }
         else
+        {
             fatal("brls:View XML tag must have an \"xml\" attribute");
+        }
     }
     // Otherwise look in the register
     else

@@ -21,7 +21,8 @@
 #include <borealis/core/assets.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
 
-#define INTER_FONT_PATH BRLS_ASSET("font/switch_font.ttf")
+#define INTER_FONT "font/switch_font.ttf"
+#define INTER_FONT_PATH BRLS_ASSET(INTER_FONT)
 
 namespace brls
 {
@@ -38,14 +39,24 @@ void DesktopFontLoader::loadFonts()
         this->loadFontFromFile(FONT_REGULAR, USER_FONT_PATH);
 
         // Add internal font as fallback
+#ifdef USE_LIBROMFS
+        auto font = romfs::get(INTER_FONT);
+        Application::loadFontFromMemory("default", (void*)font.string().data(), font.string().size(), false);
+#else
         this->loadFontFromFile("default", INTER_FONT_PATH);
+#endif
         nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("default"));
     }
     else
     {
+#ifdef USE_LIBROMFS
+        auto font = romfs::get(INTER_FONT);
+        Application::loadFontFromMemory(FONT_REGULAR, (void*)font.string().data(), font.string().size(), false);
+#else
         brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
         brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
         this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
+#endif
     }
 
     // Using system font as fallback

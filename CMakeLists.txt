@@ -7,6 +7,7 @@ option(PLATFORM_PSV "build for PSVita" OFF)
 option(USE_GLFW "using glfw for input and create window" ON)
 option(USE_SDL2 "using sdl2 for input and create window" OFF)
 option(USE_SHARED_LIB "using shared library" OFF)
+option(USE_LIBROMFS "using libromfs to bundle resources" OFF)
 
 if (APPLE)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
@@ -79,6 +80,13 @@ set(PROJECT_AUTHOR "borealis")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/demo_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
+if (USE_LIBROMFS)
+    message(STATUS "USE LIBROMFS")
+    set(USE_LIBROMFS ON)
+    add_definitions(-DUSE_LIBROMFS)
+    set(LIBROMFS_PROJECT_NAME ${PROJECT_NAME})
+    set(LIBROMFS_RESOURCE_LOCATION "${PROJECT_RESOURCES}")
+endif ()
 
 add_subdirectory(library)
 
@@ -153,7 +161,9 @@ if (PLATFORM_DESKTOP)
                 COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/resources
         )
     endif ()
-    add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
+    if (NOT USE_LIBROMFS)
+        add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
+    endif ()
 elseif (PLATFORM_PSV)
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
