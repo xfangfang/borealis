@@ -17,9 +17,20 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 target_compile_definitions(${PROJECT_NAME} PUBLIC LIBROMFS_PROJECT_NAME=${LIBROMFS_PROJECT_NAME})
 
 # Make sure libromfs gets rebuilt when any of the resources are changed
-add_custom_command(OUTPUT ${ROMFS}
-        COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:generator-${LIBROMFS_PROJECT_NAME}>
-        DEPENDS ../generator ${ROMFS_FILES}
-        )
+if (LIBROMFS_PREBUILT_GENERATOR)
+    message(STATUS "Using prebuilt libromfs-generator: ${LIBROMFS_PREBUILT_GENERATOR}")
+    add_custom_command(OUTPUT ${ROMFS}
+            COMMAND ${LIBROMFS_PREBUILT_GENERATOR}
+                ${LIBROMFS_PROJECT_NAME} ${LIBROMFS_RESOURCE_LOCATION}
+            DEPENDS ${ROMFS_FILES}
+            )
+else ()
+    message(STATUS "Using libromfs-generator: $<TARGET_FILE:libromfs-generator>")
+    add_custom_command(OUTPUT ${ROMFS}
+            COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:libromfs-generator>
+                ${LIBROMFS_PROJECT_NAME} ${LIBROMFS_RESOURCE_LOCATION}
+            DEPENDS ../generator ${ROMFS_FILES}
+            )
+endif ()
 
 add_custom_target(romfs_file_packer-${LIBROMFS_PROJECT_NAME} ALL DEPENDS ${ROMFS_FILES})
