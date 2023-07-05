@@ -42,7 +42,7 @@ To build for PC, the following components are required:
 Please refer to the usual sources of information for your particular operating system. Usually the commands needed to build this project will look like this:
 
 ```bash
-cmake -B build_pc -DPLATFORM_DESKTOP=ON
+cmake -B build_pc -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release
 make -C build_pc -j$(nproc)
 ```
 

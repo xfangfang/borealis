@@ -21,33 +21,144 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
 #include <memory>
+#include <sstream>
 
 #ifdef __SDL2__
 #include <SDL2/SDL_misc.h>
 #endif
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <Wlanapi.h>
+#elif __APPLE__
+#include <IOKit/ps/IOPSKeys.h>
+#include <IOKit/ps/IOPowerSources.h>
+#include <SystemConfiguration/SystemConfiguration.h>
+#endif
+
+#ifdef __WINRT__
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Networking.Connectivity.h>
+#include <winrt/Windows.Devices.WiFi.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+using winrt::Windows::Devices::WiFi::WiFiAdapter;
+using winrt::Windows::UI::ViewManagement::UIColorType;
+using winrt::Windows::UI::ViewManagement::UISettings;
+#endif
+
+#if defined(__APPLE__) || defined(__linux__)
+#include <arpa/inet.h>
+#include <ifaddrs.h>
 #endif
 
 namespace brls
 {
-
-int shell_open(const char* command)
+#ifdef __WINRT__
+int winrt_wlan_quality()
 {
-#ifdef __SDL2__
-    return SDL_OpenURL(command);
-#elif defined(_WIN32) and !defined(__WINRT__)
-    WCHAR wcmd[MAX_PATH];
-    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd, MAX_PATH);
-    ShellExecuteW(NULL, L"open", wcmd, NULL, NULL, SW_SHOWNORMAL);
-    return 0;
-#else
-    return 0;
-#endif
+    auto adapters = WiFiAdapter::FindAllAdaptersAsync().get();
+    for (auto it : adapters)
+    {
+        auto profile = it.NetworkAdapter().GetConnectedProfileAsync().get();
+        if (profile != nullptr && profile.IsWlanConnectionProfile())
+        {
+            return int(profile.GetNetworkConnectivityLevel());
+        }
+    }
+    return -1; // No WiFi Adapter found.
+}
+#elif defined(_WIN32)
+void shell_open(const char* command)
+{
+    std::vector<WCHAR> wcmd(strlen(command) + 1);
+    MultiByteToWideChar(CP_UTF8, 0, command, -1, wcmd.data(), wcmd.size());
+    ShellExecuteW(nullptr, L"open", wcmd.data(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-#ifdef __linux__
+/// @return -1 no wifi interface
+///          0 no wifi connected
+int win32_wlan_quality()
+{
+    HANDLE hwlan;
+    DWORD version;
+    int quality = -1;
+    if (!WlanOpenHandle(2, nullptr, &version, &hwlan))
+    {
+        PWLAN_INTERFACE_INFO_LIST ppinfo = nullptr;
+        if (!WlanEnumInterfaces(hwlan, nullptr, &ppinfo))
+        {
+            for (DWORD i = 0; i < ppinfo->dwNumberOfItems; i++)
+            {
+                if (ppinfo->InterfaceInfo[i].isState != wlan_interface_state_connected)
+                {
+                    continue;
+                }
+                PWLAN_CONNECTION_ATTRIBUTES attrs = nullptr;
+                DWORD attr_size                   = sizeof(attrs);
+                if (!WlanQueryInterface(hwlan, &ppinfo->InterfaceInfo[i].InterfaceGuid,
+                        wlan_intf_opcode_current_connection, nullptr,
+                        &attr_size, (PVOID*)&attrs, nullptr))
+                {
+                    quality = attrs->wlanAssociationAttributes.wlanSignalQuality;
+                    WlanFreeMemory(attrs);
+                    break;
+                }
+            }
+            WlanFreeMemory(ppinfo);
+        }
+        WlanCloseHandle(hwlan, nullptr);
+    }
+    return quality;
+}
+#elif __APPLE__
+extern int darwin_wlan_quality();
+
+/// @return low 7bit is current capacity
+int darwin_get_powerstate()
+{
+    CFTypeRef blob = IOPSCopyPowerSourcesInfo();
+    if (!blob)
+        return -1;
+
+    CFArrayRef list = IOPSCopyPowerSourcesList(blob);
+    if (!blob)
+    {
+        CFRelease(blob);
+        return -1;
+    }
+
+    int capacity  = -1;
+    CFIndex total = CFArrayGetCount(list);
+    for (CFIndex i = 0; i < total; i++)
+    {
+        CFTypeRef ps         = (CFTypeRef)CFArrayGetValueAtIndex(list, i);
+        CFDictionaryRef dict = IOPSGetPowerSourceDescription(blob, ps);
+        if (!dict)
+            continue;
+        CFStringRef transport_type = (CFStringRef)CFDictionaryGetValue(dict, CFSTR(kIOPSTransportTypeKey));
+        // Not a battery?
+        if (transport_type && CFEqual(transport_type, CFSTR(kIOPSInternalType)))
+        {
+            CFStringRef psstat_ref    = (CFStringRef)CFDictionaryGetValue(dict, CFSTR(kIOPSPowerSourceStateKey));
+            CFBooleanRef charging_ref = (CFBooleanRef)CFDictionaryGetValue(dict, CFSTR(kIOPSIsChargingKey));
+            CFNumberRef capacity_ref  = (CFNumberRef)CFDictionaryGetValue(dict, CFSTR(kIOPSCurrentCapacityKey));
+            if (capacity_ref != nullptr)
+                CFNumberGetValue(capacity_ref, kCFNumberIntType, &capacity);
+            if (charging_ref && CFBooleanGetValue(charging_ref))
+                capacity |= 0x80;
+            if (psstat_ref && CFEqual(psstat_ref, CFSTR(kIOPSACPowerValue)))
+                capacity |= 0x80;
+            break;
+        }
+    }
+    CFRelease(list);
+    CFRelease(blob);
+    return capacity;
+}
+
+#elif __linux__
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
 enum INHIBIT_TYPE
 {
@@ -258,25 +369,26 @@ DesktopPlatform::DesktopPlatform()
     if (themeEnv == nullptr)
     {
 #ifdef __APPLE__
-        char buffer[10];
-        memset(buffer, 0, sizeof buffer);
-        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("defaults read -g AppleInterfaceStyle", "r"), pclose);
-        if (pipe)
+        CFPropertyListRef propertyList = CFPreferencesCopyValue(
+            CFSTR("AppleInterfaceStyle"),
+            kCFPreferencesAnyApplication,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesAnyHost);
+        if (propertyList)
         {
-            fgets(buffer, sizeof buffer, pipe.get());
-            if (strncmp(buffer, "Dark", 4) == 0)
+            if (CFEqual(propertyList, CFSTR("Dark")))
             {
                 this->themeVariant = ThemeVariant::DARK;
                 brls::Logger::info("Set app theme: Dark");
             }
-            else
-            {
-                brls::Logger::info("Set app theme: Light");
-            }
+            CFRelease(propertyList);
         }
-        else
+#elif defined(__WINRT__)
+        auto clr = UISettings().GetColorValue(UIColorType::Foreground);
+        if (((5 * clr.G) + (2 * clr.R) + clr.B) > (8 * 128))
         {
-            brls::Logger::error("cannot get system theme");
+            this->themeVariant = ThemeVariant::DARK;
+            brls::Logger::info("Set app theme: Dark");
         }
 #endif
     }
@@ -305,7 +417,12 @@ DesktopPlatform::DesktopPlatform()
 bool DesktopPlatform::canShowBatteryLevel()
 {
 #if defined(__APPLE__)
-    return true;
+    return darwin_get_powerstate() >= 0;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status))
+        return false;
+    return status.BatteryFlag != BATTERY_FLAG_UNKNOWN;
 #else
     return false;
 #endif
@@ -315,6 +432,8 @@ bool DesktopPlatform::canShowWirelessLevel()
 {
 #if defined(__APPLE__)
     return true;
+#elif defined(_WIN32)
+    return true;
 #else
     return false;
 #endif
@@ -323,21 +442,12 @@ bool DesktopPlatform::canShowWirelessLevel()
 int DesktopPlatform::getBatteryLevel()
 {
 #if defined(__APPLE__)
-    std::string b = exec("pmset -g batt | grep -Eo '[0-9]+%'");
-    if (!b.empty() && b[b.size() - 1] == '%')
-    {
-        b = b.substr(0, b.size() - 1);
-    }
-    int res = 100;
-    try
-    {
-        res = stoi(b);
-    }
-    catch (...)
-    {
-        return 100;
-    }
-    return res;
+    return darwin_get_powerstate() & 0x7F;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status))
+        return 0;
+    return status.BatteryLifePercent;
 #else
     return 100;
 #endif
@@ -346,8 +456,12 @@ int DesktopPlatform::getBatteryLevel()
 bool DesktopPlatform::isBatteryCharging()
 {
 #if defined(__APPLE__)
-    std::string res = exec("pmset -g batt | grep -o 'AC Power'");
-    return !res.empty();
+    return darwin_get_powerstate() & 0x80;
+#elif defined(_WIN32)
+    SYSTEM_POWER_STATUS status;
+    if (!GetSystemPowerStatus(&status))
+        return false;
+    return (status.BatteryFlag & BATTERY_FLAG_CHARGING) != 0;
 #else
     return false;
 #endif
@@ -356,8 +470,11 @@ bool DesktopPlatform::isBatteryCharging()
 bool DesktopPlatform::hasWirelessConnection()
 {
 #if defined(__APPLE__)
-    std::string res = exec("networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportpower | grep -o On");
-    return !res.empty();
+    return darwin_wlan_quality() > 0;
+#elif defined(__WINRT__)
+    return winrt_wlan_quality() > 0;
+#elif defined(_WIN32)
+    return win32_wlan_quality() > 0;
 #else
     return true;
 #endif
@@ -365,7 +482,86 @@ bool DesktopPlatform::hasWirelessConnection()
 
 int DesktopPlatform::getWirelessLevel()
 {
-    return 3;
+#if defined(__APPLE__)
+    return darwin_wlan_quality();
+#elif defined(__WINRT__)
+    return winrt_wlan_quality();
+#elif defined(_WIN32)
+    return (win32_wlan_quality() * 4 - 1) / 100;
+#else
+    return 0;
+#endif
+}
+
+bool DesktopPlatform::hasEthernetConnection()
+{
+    bool has_eth = false;
+#if defined(__APPLE__)
+    SCDynamicStoreRef storeRef = SCDynamicStoreCreate(nullptr, CFSTR("FindCurrentInterface"), nullptr, nullptr);
+    CFDictionaryRef globalRef  = (CFDictionaryRef)SCDynamicStoreCopyValue(storeRef, CFSTR("State:/Network/Global/IPv4"));
+    CFTypeRef primaryIf        = nullptr;
+    if (globalRef)
+    {
+        CFDictionaryGetValueIfPresent(globalRef, kSCDynamicStorePropNetPrimaryInterface, &primaryIf);
+        CFRelease(globalRef);
+    }
+    CFRelease(storeRef);
+
+    if (!primaryIf)
+        return false;
+
+    CFArrayRef iflist = SCNetworkInterfaceCopyAll();
+    if (iflist)
+    {
+        CFIndex count = CFArrayGetCount(iflist);
+        for (CFIndex i = 0; i < count; i++)
+        {
+            auto netif   = (SCNetworkInterfaceRef)CFArrayGetValueAtIndex(iflist, i);
+            auto if_type = SCNetworkInterfaceGetInterfaceType(netif);
+            auto if_name = SCNetworkInterfaceGetBSDName(netif);
+            if (CFEqual(primaryIf, if_name))
+            {
+                has_eth = CFEqual(if_type, kSCNetworkInterfaceTypeEthernet);
+            }
+        }
+        CFRelease(iflist);
+    }
+#elif defined(_WIN32)
+    PIP_ADAPTER_ADDRESSES addrs = nullptr;
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0, curindex = 0;
+    HANDLE heap      = GetProcessHeap();
+    SOCKADDR_IN addr = { .sin_family = AF_INET, .sin_addr = { { .S_addr = inet_addr("8.8.8.8") } } };
+    GetBestInterfaceEx(reinterpret_cast<SOCKADDR*>(&addr), &curindex);
+
+    do
+    {
+        if (addrs != nullptr)
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, addrs, outlen));
+        else
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+
+        ret = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+            nullptr, addrs, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        for (auto cur = addrs; cur != nullptr; cur = cur->Next)
+        {
+            if (cur->OperStatus == IfOperStatusUp && cur->IfIndex == curindex)
+            {
+                has_eth = cur->IfType == IF_TYPE_ETHERNET_CSMACD;
+                break;
+            }
+        }
+    }
+    else
+    {
+        Logger::warning("GetAdaptersAddresses failed {}", ret);
+    }
+    HeapFree(heap, 0, addrs);
+#endif
+    return has_eth;
 }
 
 void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
@@ -409,42 +605,170 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 
 std::string DesktopPlatform::getIpAddress()
 {
+    std::string ipaddr = "-";
 #if defined(__APPLE__) || defined(__linux__)
-    return exec("ifconfig | grep \"inet \" | grep -Fv 127.0.0.1 | awk '{print $2}' ");
-#else
-    return "-";
+    struct ifaddrs* interfaces = nullptr;
+    if (getifaddrs(&interfaces) == 0)
+    {
+        for (auto addr = interfaces; addr != nullptr; addr = addr->ifa_next)
+        {
+            if (addr->ifa_addr->sa_family == AF_INET)
+            {
+                ipaddr = inet_ntoa(reinterpret_cast<struct sockaddr_in*>(addr->ifa_addr)->sin_addr);
+            }
+        }
+    }
+    freeifaddrs(interfaces);
+#elif defined(_WIN32)
+    PIP_ADAPTER_ADDRESSES addrs = nullptr;
+    ULONG outlen = sizeof(IP_ADAPTER_ADDRESSES), ret = 0, curindex = 0;
+    HANDLE heap      = GetProcessHeap();
+    SOCKADDR_IN addr = { .sin_family = AF_INET, .sin_addr = { { .S_addr = inet_addr("8.8.8.8") } } };
+    GetBestInterfaceEx(reinterpret_cast<SOCKADDR*>(&addr), &curindex);
+
+    do
+    {
+        if (addrs != nullptr)
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, addrs, outlen));
+        else
+            addrs = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+
+        ret = GetAdaptersAddresses(AF_INET,
+            GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+            nullptr, addrs, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        for (auto cur = addrs; cur != nullptr; cur = cur->Next)
+        {
+            if (cur->OperStatus == IfOperStatusUp && cur->IfIndex == curindex)
+            {
+                for (auto addr = cur->FirstUnicastAddress; addr != nullptr; addr = addr->Next)
+                {
+                    auto addrin = reinterpret_cast<PSOCKADDR_IN>(addr->Address.lpSockaddr);
+                    ipaddr      = inet_ntoa(addrin->sin_addr);
+                }
+                break;
+            }
+        }
+    }
+    else
+    {
+        Logger::warning("GetAdaptersAddresses failed {}", ret);
+    }
+    HeapFree(heap, 0, addrs);
 #endif
+    return ipaddr;
 }
 
 std::string DesktopPlatform::getDnsServer()
 {
+    std::string dnssvr = "-";
 #if defined(__APPLE__)
-    return exec("scutil --dns | grep nameserver | awk '{print $3}' | sort -u | paste -s -d',' -");
-#else
-    return "-";
+    SCPreferencesRef prefsDNS = SCPreferencesCreate(nullptr, CFSTR("DNSSETTING"), nullptr);
+    CFArrayRef services       = SCNetworkServiceCopyAll(prefsDNS);
+    if (services)
+    {
+        CFIndex count = CFArrayGetCount(services);
+        for (CFIndex i = 0; i < count; i++)
+        {
+            const SCNetworkServiceRef service = (const SCNetworkServiceRef)CFArrayGetValueAtIndex(services, i);
+            CFStringRef interfaceServiceID    = SCNetworkServiceGetServiceID(service);
+            CFStringRef primaryservicepath    = CFStringCreateWithFormat(NULL, NULL, CFSTR("State:/Network/Service/%@/DNS"), interfaceServiceID);
+            SCDynamicStoreRef dynRef          = SCDynamicStoreCreate(kCFAllocatorSystemDefault, CFSTR("DNSSETTING"), NULL, NULL);
+            CFPropertyListRef propList        = SCDynamicStoreCopyValue(dynRef, primaryservicepath);
+            if (propList)
+            {
+                CFArrayRef addresses = (CFArrayRef)CFDictionaryGetValue((CFDictionaryRef)propList, CFSTR("ServerAddresses"));
+                long addressesCount  = CFArrayGetCount(addresses);
+                for (long j = 0; j < addressesCount; j++)
+                {
+                    CFStringRef address = (CFStringRef)CFArrayGetValueAtIndex(addresses, j);
+                    if (address)
+                        dnssvr = CFStringGetCStringPtr(address, kCFStringEncodingMacRomanian);
+                }
+                CFRelease(propList);
+            }
+            CFRelease(dynRef);
+            CFRelease(primaryservicepath);
+        }
+        CFRelease(services);
+    }
+    CFRelease(prefsDNS);
+#elif defined(_WIN32)
+    PFIXED_INFO info = nullptr;
+    ULONG outlen = sizeof(FIXED_INFO), ret = 0;
+    HANDLE heap = GetProcessHeap();
+    do
+    {
+        if (info != nullptr)
+            info = reinterpret_cast<PFIXED_INFO>(HeapReAlloc(heap, HEAP_ZERO_MEMORY, info, outlen));
+        else
+            info = reinterpret_cast<PFIXED_INFO>(HeapAlloc(heap, HEAP_ZERO_MEMORY, outlen));
+        ret = GetNetworkParams(info, &outlen);
+    } while (ret == ERROR_BUFFER_OVERFLOW);
+
+    if (ret == NO_ERROR)
+    {
+        dnssvr = info->DnsServerList.IpAddress.String;
+        Logger::debug("Host Name: {} DNS Servers: {}", info->HostName, dnssvr);
+    }
+    else
+    {
+        Logger::warning("GetNetworkParams failed {}", ret);
+    }
+    HeapFree(heap, 0, info);
 #endif
+    return dnssvr;
 }
 
 std::string DesktopPlatform::exec(const char* cmd)
 {
-    std::string result;
+    std::stringstream ss;
 #if defined(__APPLE__) || defined(__linux__)
-    char buffer[128];
-    memset(buffer, 0, sizeof buffer);
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    FILE* pipe = popen(cmd, "r");
     if (!pipe)
     {
         throw std::runtime_error("popen() failed!");
     }
-    while (fgets(buffer, sizeof buffer, pipe.get()) != nullptr)
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
     {
-        result += buffer;
+        ss << buffer;
     }
-#endif
+    pclose(pipe);
+#elif defined(_WIN32) and !defined(__WINRT__)
+    PROCESS_INFORMATION pi;
+    std::vector<WCHAR> cmdline(strlen(cmd) + 1);
+    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
+    MultiByteToWideChar(CP_UTF8, 0, cmd, -1, cmdline.data(), cmdline.size());
 
-    if (!result.empty() && result[result.size() - 1] == '\n')
-        result = result.substr(0, result.size() - 1);
-    return result;
+    STARTUPINFOW si = { sizeof(STARTUPINFOW) };
+    HANDLE hStdread = nullptr;
+    si.dwFlags      = STARTF_USESTDHANDLES;
+    CreatePipe(&hStdread, &si.hStdOutput, &sa, 0);
+    SetHandleInformation(hStdread, HANDLE_FLAG_INHERIT, 0);
+
+    if (CreateProcessW(nullptr, cmdline.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        CloseHandle(si.hStdOutput);
+
+        char buffer[128];
+        DWORD readlen = 0;
+        while (ReadFile(hStdread, buffer, sizeof(buffer), &readlen, nullptr) == TRUE && readlen > 0)
+        {
+            ss.write(buffer, readlen);
+        }
+    }
+
+    CloseHandle(hStdread);
+#endif
+    // ss.seekp(-1, std::ios_base::end);
+    return ss.str();
 }
 
 bool DesktopPlatform::isApplicationMode()
@@ -470,7 +794,9 @@ void DesktopPlatform::openBrowser(std::string url)
 #elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
-#elif _WIN32
+#elif __SDL2__
+    SDL_OpenURL(url.c_str());
+#elif defined(_WIN32) and !defined(__WINRT__)
     shell_open(url.c_str());
 #endif
 }

@@ -28,6 +28,8 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::SelectorCell, selector, "selector");
     BRLS_BIND(brls::InputCell, input, "input");
     BRLS_BIND(brls::InputNumericCell, inputNumeric, "inputNumeric");
+    BRLS_BIND(brls::DetailCell, ipAddress, "ipAddress");
+    BRLS_BIND(brls::DetailCell, dnsServer, "dnsServer");
 
     static brls::View* create();
 };
