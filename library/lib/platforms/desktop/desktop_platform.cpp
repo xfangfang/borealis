@@ -488,6 +488,8 @@ int DesktopPlatform::getWirelessLevel()
     return winrt_wlan_quality();
 #elif defined(_WIN32)
     return (win32_wlan_quality() * 4 - 1) / 100;
+#elif defined(ANDROID)
+    return 0;
 #else
     return 0;
 #endif
@@ -560,6 +562,8 @@ bool DesktopPlatform::hasEthernetConnection()
         Logger::warning("GetAdaptersAddresses failed {}", ret);
     }
     HeapFree(heap, 0, addrs);
+#elif defined(ANDROID)
+    return has_eth;
 #endif
     return has_eth;
 }
@@ -572,7 +576,8 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
 
     if (disable)
     {
-#if defined(__linux__) and not defined(ANDROID)
+#ifdef ANDROID
+#elif defined(__linux__)
         inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
 #elif __APPLE__
         std::string sleepReason           = app + " " + reason;
@@ -587,7 +592,8 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     }
     else
     {
-#if defined(__linux__) and not defined(ANDROID)
+#ifdef ANDROID
+#elif defined(__linux__)
         if (inhibitCookie != 0)
             dbusUnInhibit(dbus_conn.get(), inhibitCookie);
 #elif __APPLE__
@@ -606,7 +612,8 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 std::string DesktopPlatform::getIpAddress()
 {
     std::string ipaddr = "-";
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(ANDROID)
+#elif defined(__APPLE__) || defined(__linux__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)
     {
@@ -719,6 +726,8 @@ std::string DesktopPlatform::getDnsServer()
         Logger::warning("GetNetworkParams failed {}", ret);
     }
     HeapFree(heap, 0, info);
+#elif defined(ANDROID)
+#elif defined(__linux__)
 #endif
     return dnssvr;
 }
@@ -726,7 +735,8 @@ std::string DesktopPlatform::getDnsServer()
 std::string DesktopPlatform::exec(const char* cmd)
 {
     std::stringstream ss;
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(ANDROID)
+#elif defined(__APPLE__) || defined(__linux__)
     FILE* pipe = popen(cmd, "r");
     if (!pipe)
     {
@@ -791,6 +801,7 @@ void DesktopPlatform::openBrowser(std::string url)
 #if __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
+#elif ANDROID
 #elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
