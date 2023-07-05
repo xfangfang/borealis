@@ -66,6 +66,9 @@ namespace brls
 
 bool Application::init()
 {
+    Application::inited        = false;
+    Application::quitRequested = false;
+
     // Init platform
     Application::platform = Platform::createPlatform();
 
@@ -644,15 +647,10 @@ void Application::frame()
     NVGcolor backgroundColor = frameContext.theme["brls/background"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
-    float scaleFactor = frameContext.pixelRatio;
-#if defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
-    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 scaleFactor
-    // d3d11 用  文字有明显的锯齿，改用 scaleFactor
-    scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
-#endif
+    float scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
 
-    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, scaleFactor);
-    nvgScale(Application::getNVGContext(), Application::windowScale, Application::windowScale);
+    nvgBeginFrame(frameContext.vg, Application::windowWidth, Application::windowHeight, scaleFactor);
+    nvgScale(frameContext.vg, Application::windowScale, Application::windowScale);
 
     std::vector<View*> viewsToDraw;
 
