@@ -32,7 +32,6 @@
 #include <iphlpapi.h>
 #include <Wlanapi.h>
 #elif __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
 #include <SystemConfiguration/SystemConfiguration.h>
@@ -503,10 +502,13 @@ bool DesktopPlatform::hasEthernetConnection()
     CFTypeRef primaryIf        = nullptr;
     if (globalRef)
     {
-        primaryIf = CFDictionaryGetValue(globalRef, CFSTR("PrimaryInterface"));
+        CFDictionaryGetValueIfPresent(globalRef, kSCDynamicStorePropNetPrimaryInterface, &primaryIf);
         CFRelease(globalRef);
     }
     CFRelease(storeRef);
+
+    if (!primaryIf)
+        return false;
 
     CFArrayRef iflist = SCNetworkInterfaceCopyAll();
     if (iflist)
