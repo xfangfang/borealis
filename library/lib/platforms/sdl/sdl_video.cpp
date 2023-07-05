@@ -16,13 +16,18 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/thread.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 #ifdef BOREALIS_USE_OPENGL
 #include <glad/glad.h>
+#ifdef USE_GLES2
+#define NANOVG_GLES2_IMPLEMENTATION
+#else
 #define NANOVG_GL3_IMPLEMENTATION
+#endif
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_D3D11)
 #include <borealis/platforms/driver/d3d11.hpp>
@@ -44,7 +49,14 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
 #ifdef BOREALIS_USE_OPENGL
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
+#if defined(ANDROID)
+    // On Android, doing this is to ensure that glViewport is called from the main thread
+    brls::sync([fWidth, fHeight](){
+        glViewport(0, 0, fWidth, fHeight);
+    });
+#else
     glViewport(0, 0, fWidth, fHeight);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
     fWidth = width;
     fHeight = height;
@@ -115,6 +127,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#elif defined(USE_GLES2)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -176,7 +192,11 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Logger::info("sdl: GL Version: {}", (const char*)glGetString(GL_VERSION));
 
     // Initialize nanovg
+#ifdef USE_GLES2
+    this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
     Logger::info("sdl: use d3d11");
     D3D11_CONTEXT = std::make_shared<D3D11Context>();
@@ -277,7 +297,11 @@ SDLVideoContext::~SDLVideoContext()
     {
         if (this->nvgContext) {
 #ifdef BOREALIS_USE_OPENGL
+#ifdef USE_GLES2
+            nvgDeleteGLES2(this->nvgContext);
+#else
             nvgDeleteGL3(this->nvgContext);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
             nvgDeleteD3D11(this->nvgContext);
             D3D11_CONTEXT = nullptr;

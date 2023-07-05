@@ -17,6 +17,10 @@
 
 #pragma once
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #include <fmt/core.h>
 
 #include <borealis/core/event.hpp>
@@ -68,6 +72,9 @@ class Logger
             fmt::print("\n");
 
             std::string log = fmt::format(format, std::forward<Args>(args)...);
+#ifdef ANDROID
+            __android_log_print(6 - (int)level , "borealis", "%s\n", log.c_str());
+#endif
             logEvent.fire(log);
         }
         catch (const std::exception& e)

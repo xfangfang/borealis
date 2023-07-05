@@ -20,7 +20,7 @@
 #include <borealis/core/platform.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
 #include <borealis/platforms/desktop/desktop_ime.hpp>
-#ifdef __linux__
+#if defined(__linux__) and not defined(ANDROID)
 #include <dbus/dbus.h>
 #elif __APPLE__
 #include <IOKit/pwr_mgt/IOPMLib.h>

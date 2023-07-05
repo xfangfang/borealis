@@ -26,6 +26,12 @@ namespace brls
 
 SDLPlatform::SDLPlatform()
 {
+#ifdef ANDROID
+    // Enable Fullscreen on Android
+    VideoContext::FULLSCREEN = true;
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+#endif
+
     // Init sdl
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0)
     {

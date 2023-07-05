@@ -53,7 +53,7 @@ if (PLATFORM_DESKTOP)
     if (USE_SDL2)
         message(STATUS "using SDL2")
         find_package(SDL2 REQUIRED)
-        message("=====> ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARIES}")
+        message(STATUS "Find SDL2: ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARIES}")
         list(APPEND BOREALIS_SOURCE
                 ${BOREALIS_PATH}/lib/platforms/sdl
                 ${BOREALIS_PATH}/lib/platforms/desktop)
@@ -86,6 +86,13 @@ elseif (PLATFORM_PSV)
     set(BRLS_PLATFORM_LIBS)
     set(BRLS_PLATFORM_OPTION -D__GLFW__ -D__PSV__ -DUSE_GLES2)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
+elseif(PLATFORM_ANDROID)
+    find_library(SDL2 SDL2)
+    list(APPEND BOREALIS_SOURCE
+            ${BOREALIS_PATH}/lib/platforms/sdl
+            ${BOREALIS_PATH}/lib/platforms/desktop)
+    set(BRLS_PLATFORM_LIBS SDL2)
+    set(BRLS_PLATFORM_OPTION -D__SDL2__ -DANDROID -DUSE_GLES2)
 else ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/switch
@@ -145,6 +152,7 @@ foreach (lib ${BOREALIS_SOURCE})
 endforeach (lib)
 
 if (APPLE)
+elseif(PLATFORM_ANDROID)
 elseif (UNIX)
     find_package(DBus)
     list(APPEND BOREALIS_INCLUDE ${DBUS_INCLUDE_DIRS})

@@ -157,7 +157,7 @@ int darwin_get_powerstate()
     CFRelease(blob);
     return capacity;
 }
-
+#elif ANDROID
 #elif __linux__
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
 enum INHIBIT_TYPE
@@ -572,7 +572,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
 
     if (disable)
     {
-#ifdef __linux__
+#if defined(__linux__) and not defined(ANDROID)
         inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
 #elif __APPLE__
         std::string sleepReason           = app + " " + reason;
@@ -587,7 +587,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     }
     else
     {
-#ifdef __linux__
+#if defined(__linux__) and not defined(ANDROID)
         if (inhibitCookie != 0)
             dbusUnInhibit(dbus_conn.get(), inhibitCookie);
 #elif __APPLE__
