@@ -65,6 +65,10 @@ cmake -B build_psv -DPLATFORM_PSV=ON
 make -C build_psv borealis_demo.vpk -j$(nproc)
 ```
 
+## Building the demo for Android
+
+Please refer to: https://github.com/xfangfang/borealis-android
+
 ### Including in your project (TL;DR: see the CMakeLists.txt in this repo)
 0. Your project must be built as C++17 (`-std=c++1z`). You also need to remove `-fno-rtti` and `-fno-exceptions` if you have them
 1. Use a submodule (or even better, a [subrepo](https://github.com/ingydotnet/git-subrepo)) to clone this repository in your project
