@@ -24,6 +24,9 @@
 #define INTER_FONT "font/switch_font.ttf"
 #define INTER_FONT_PATH BRLS_ASSET(INTER_FONT)
 
+#define INTER_ICON "font/switch_icons.ttf"
+#define INTER_ICON_PATH BRLS_ASSET(INTER_ICON)
+
 namespace brls
 {
 
@@ -49,12 +52,12 @@ void DesktopFontLoader::loadFonts()
     }
     else
     {
+        brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
+        brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
 #ifdef USE_LIBROMFS
         auto font = romfs::get(INTER_FONT);
         Application::loadFontFromMemory(FONT_REGULAR, (void*)font.string().data(), font.string().size(), false);
 #else
-        brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
-        brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
         this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
 #endif
     }
@@ -104,8 +107,26 @@ void DesktopFontLoader::loadFonts()
     }
     else
     {
-        Logger::warning("Cannot find keymap icon, (Searched at: {})", USER_ICON_PATH);
-        Logger::warning("Icons may not be displayed, for more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
+        brls::Logger::warning("Cannot find custom icon, (Searched at: {})", USER_ICON_PATH);
+#ifdef USE_LIBROMFS
+        // If you do not want to put a default icons in your own application,
+        // you can leave an empty icon file in the resource folder to avoid errors reported by libromfs.
+        auto icon = romfs::get(INTER_ICON);
+        // Determine if the file is empty
+        if (icon.valid()) {
+            Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.string().data(), icon.string().size(), false);
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
+        }
+#else
+        if (access(INTER_ICON_PATH, F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, INTER_ICON_PATH))
+        {
+            brls::Logger::info("Using internal icon: {}", INTER_ICON);
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
+        }
+#endif
+        else {
+            Logger::warning("Icons may not be displayed, for more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
+        }
     }
 
     // Material icons
