@@ -67,7 +67,55 @@ make -C build_psv borealis_demo.vpk -j$(nproc)
 
 ## Building the demo for Android
 
-Please refer to: https://github.com/xfangfang/borealis-android
+```shell
+./build_libromfs_generator.sh
+cd android-project
+export JAVA_HOME=/Applications/Android\ Studio.app/Contents/jbr/Contents/Home
+export ANDROID_SDK_ROOT=~/Library/Android/sdk
+# Once built, the APK will be located in the app/build/outputs/apk/debug directory by default
+./gradlew assembleDebug
+# Directly install the APK (requires the device or emulator to be connected via adb)
+./gradlew installDebug
+```
+
+
+## Building the demo for iOS
+
+### 1. Build for arm64 iphoneOS
+
+```shell
+# 1. Generate a Xcode project
+# IOS_CODE_SIGN_IDENTITY: code is not signed when IOS_CODE_SIGN_IDENTITY is empty
+# IOS_GUI_IDENTIFIER: optional, default is com.borealis.demo
+cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=13.0 \
+  -DCMAKE_TOOLCHAIN_FILE=./library/cmake/ios.toolchain.cmake \
+  -DIOS_CODE_SIGN_IDENTITY="Your identity" \
+  -DIOS_GUI_IDENTIFIER="custom.app.id.here"
+
+# 2. open project in Xcode
+open build-ios/*.xcodeproj
+
+# 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
+```
+
+### 2. Build for arm64 iphoneOS Simulator
+
+```shell
+cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0 \
+  -DCMAKE_TOOLCHAIN_FILE=./library/cmake/ios.toolchain.cmake
+
+# Build
+cmake --build build-ios
+
+# Open simulator
+open -a Simulator
+
+# After simulator is booted, install app
+xcrun simctl install booted build-ios/Debug-iphonesimulator/borealis_demo.app
+
+# create a zip (optional)
+ditto -ck --rsrc --sequesterRsrc --keepParent build/Debug-iphoneos/krkrsdl2.app build/krkrsdl2-ios-appbundle.zip
+```
 
 ### Including in your project (TL;DR: see the CMakeLists.txt in this repo)
 0. Your project must be built as C++17 (`-std=c++1z`). You also need to remove `-fno-rtti` and `-fno-exceptions` if you have them

@@ -64,7 +64,7 @@ void DesktopFontLoader::loadFonts()
 
     // Using system font as fallback
     std::string systemFont;
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(IOS)
     systemFont = "/Library/Fonts/Arial Unicode.ttf";
 #elif defined(_WIN32)
     char* winDir = getenv("systemroot");

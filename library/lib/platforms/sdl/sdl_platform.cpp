@@ -21,6 +21,17 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
 
+#ifdef IOS
+#include <sys/utsname.h>
+
+static bool isIPad()
+{
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    return strncmp(systemInfo.machine, "iPad", 4) == 0;
+}
+#endif
+
 namespace brls
 {
 
@@ -30,6 +41,14 @@ SDLPlatform::SDLPlatform()
     // Enable Fullscreen on Android
     VideoContext::FULLSCREEN = true;
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#elif defined(IOS)
+    // Enable Fullscreen on iOS
+    VideoContext::FULLSCREEN = true;
+    if (!isIPad()){
+        SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    }
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 #endif
 
     // Init sdl

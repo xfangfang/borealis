@@ -31,6 +31,7 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <Wlanapi.h>
+#elif IOS
 #elif __APPLE__
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
@@ -112,6 +113,7 @@ int win32_wlan_quality()
     }
     return quality;
 }
+#elif IOS
 #elif __APPLE__
 extern int darwin_wlan_quality();
 
@@ -368,7 +370,8 @@ DesktopPlatform::DesktopPlatform()
     char* themeEnv = getenv("BOREALIS_THEME");
     if (themeEnv == nullptr)
     {
-#ifdef __APPLE__
+#if defined(IOS)
+#elif __APPLE__
         CFPropertyListRef propertyList = CFPreferencesCopyValue(
             CFSTR("AppleInterfaceStyle"),
             kCFPreferencesAnyApplication,
@@ -416,7 +419,8 @@ DesktopPlatform::DesktopPlatform()
 
 bool DesktopPlatform::canShowBatteryLevel()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return darwin_get_powerstate() >= 0;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
@@ -430,7 +434,8 @@ bool DesktopPlatform::canShowBatteryLevel()
 
 bool DesktopPlatform::canShowWirelessLevel()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return true;
 #elif defined(_WIN32)
     return true;
@@ -441,7 +446,8 @@ bool DesktopPlatform::canShowWirelessLevel()
 
 int DesktopPlatform::getBatteryLevel()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x7F;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
@@ -455,7 +461,8 @@ int DesktopPlatform::getBatteryLevel()
 
 bool DesktopPlatform::isBatteryCharging()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x80;
 #elif defined(_WIN32)
     SYSTEM_POWER_STATUS status;
@@ -469,7 +476,8 @@ bool DesktopPlatform::isBatteryCharging()
 
 bool DesktopPlatform::hasWirelessConnection()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return darwin_wlan_quality() > 0;
 #elif defined(__WINRT__)
     return winrt_wlan_quality() > 0;
@@ -482,7 +490,8 @@ bool DesktopPlatform::hasWirelessConnection()
 
 int DesktopPlatform::getWirelessLevel()
 {
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     return darwin_wlan_quality();
 #elif defined(__WINRT__)
     return winrt_wlan_quality();
@@ -498,7 +507,8 @@ int DesktopPlatform::getWirelessLevel()
 bool DesktopPlatform::hasEthernetConnection()
 {
     bool has_eth = false;
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     SCDynamicStoreRef storeRef = SCDynamicStoreCreate(nullptr, CFSTR("FindCurrentInterface"), nullptr, nullptr);
     CFDictionaryRef globalRef  = (CFDictionaryRef)SCDynamicStoreCopyValue(storeRef, CFSTR("State:/Network/Global/IPv4"));
     CFTypeRef primaryIf        = nullptr;
@@ -577,6 +587,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     if (disable)
     {
 #ifdef ANDROID
+#elif defined(IOS)
 #elif defined(__linux__)
         inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
 #elif __APPLE__
@@ -593,6 +604,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     else
     {
 #ifdef ANDROID
+#elif defined(IOS)
 #elif defined(__linux__)
         if (inhibitCookie != 0)
             dbusUnInhibit(dbus_conn.get(), inhibitCookie);
@@ -613,6 +625,7 @@ std::string DesktopPlatform::getIpAddress()
 {
     std::string ipaddr = "-";
 #if defined(ANDROID)
+#elif defined(IOS)
 #elif defined(__APPLE__) || defined(__linux__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)
@@ -672,7 +685,8 @@ std::string DesktopPlatform::getIpAddress()
 std::string DesktopPlatform::getDnsServer()
 {
     std::string dnssvr = "-";
-#if defined(__APPLE__)
+#if defined(IOS)
+#elif defined(__APPLE__)
     SCPreferencesRef prefsDNS = SCPreferencesCreate(nullptr, CFSTR("DNSSETTING"), nullptr);
     CFArrayRef services       = SCNetworkServiceCopyAll(prefsDNS);
     if (services)
@@ -736,6 +750,7 @@ std::string DesktopPlatform::exec(const char* cmd)
 {
     std::stringstream ss;
 #if defined(ANDROID)
+#elif defined(IOS)
 #elif defined(__APPLE__) || defined(__linux__)
     FILE* pipe = popen(cmd, "r");
     if (!pipe)
@@ -798,7 +813,8 @@ void DesktopPlatform::forceEnableGamePlayRecording()
 void DesktopPlatform::openBrowser(std::string url)
 {
     brls::Logger::debug("open url: {}", url);
-#if __APPLE__
+#if defined(IOS)
+#elif __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
 #elif ANDROID

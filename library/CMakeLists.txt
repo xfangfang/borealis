@@ -95,12 +95,21 @@ elseif (PLATFORM_PSV)
     set(BRLS_PLATFORM_OPTION -D__GLFW__ -D__PSV__ -DUSE_GLES2)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
 elseif(PLATFORM_ANDROID)
-    find_library(SDL2 SDL2)
+    find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop)
-    set(BRLS_PLATFORM_LIBS SDL2)
+    set(BRLS_PLATFORM_LIBS SDL2 SDL2main)
     set(BRLS_PLATFORM_OPTION -D__SDL2__ -DANDROID -DUSE_GLES2)
+elseif(PLATFORM_IOS)
+    set(BUILD_SHARED_LIBS OFF)
+    add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL)
+    find_library(SDL2 NAMES SDL2-static SDL2main)
+    list(APPEND BOREALIS_SOURCE
+            ${BOREALIS_PATH}/lib/platforms/sdl
+            ${BOREALIS_PATH}/lib/platforms/desktop)
+    set(BRLS_PLATFORM_LIBS SDL2-static SDL2main)
+    set(BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS -DUSE_GLES2)
 else ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/switch

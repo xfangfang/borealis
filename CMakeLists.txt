@@ -5,12 +5,13 @@ option(PLATFORM_DESKTOP "build for linux macos or windows" OFF)
 option(PLATFORM_SWITCH "build for NintendoSwitch" OFF)
 option(PLATFORM_PSV "build for PSVita" OFF)
 option(PLATFORM_ANDROID "build for android" OFF)
+option(PLATFORM_IOS "build for ios" OFF)
 option(USE_GLFW "using glfw for input and create window" ON)
 option(USE_SDL2 "using sdl2 for input and create window" OFF)
 option(USE_SHARED_LIB "using shared library" OFF)
 option(USE_LIBROMFS "using libromfs to bundle resources" OFF)
 
-if (APPLE)
+if (APPLE AND NOT PLATFORM_IOS)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
@@ -70,6 +71,17 @@ elseif(PLATFORM_ANDROID)
     set(USE_GLFW OFF)
     set(USE_SDL2 ON)
     SET(USE_LIBROMFS ON)
+elseif (PLATFORM_IOS)
+    set(IOS_RESOURCES_ROOT demo/ios CACHE FILEPATH "The path to the resources for iOS.")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/library)
+    set(CMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+    set(USE_GLFW OFF)
+    set(USE_SDL2 ON)
+    SET(USE_LIBROMFS ON)
+    SET(LIBROMFS_PREBUILT_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/libromfs-generator" CACHE STRING "")
+    if (NOT EXISTS "${LIBROMFS_PREBUILT_GENERATOR}")
+        message(FATAL_ERROR "libromfs-generator has not been built, please refer to borealis/build_libromfs_generator.sh for more information")
+    endif()
 else()
     message(FATAL_ERROR "Please set build target -DPLATFORM_DESKTOP=ON or -DPLATFORM_SWITCH=ON or -DPLATFORM_PSV=ON")
 endif ()
@@ -189,4 +201,41 @@ elseif (PLATFORM_SWITCH)
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/resources/font
         COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
     )
+elseif (PLATFORM_IOS)
+    set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")
+    if(IOS_CODE_SIGN_IDENTITY STREQUAL "")
+        set(IOS_CODE_SIGNING_ENABLED NO)
+    else()
+        set(IOS_CODE_SIGNING_ENABLED YES)
+    endif()
+    if (NOT DEFINED IOS_GUI_IDENTIFIER)
+        set(IOS_GUI_IDENTIFIER "com.borealis.demo")
+    endif ()
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${IOS_CODE_SIGN_IDENTITY}"
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "${IOS_CODE_SIGNING_ENABLED}"
+            XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "${IOS_CODE_SIGNING_ENABLED}"
+            BUNDLE TRUE
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/demo/ios/iOSBundleInfo.plist.in
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER ${IOS_GUI_IDENTIFIER}
+            MACOSX_BUNDLE_BUNDLE_NAME Borealis
+            MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            XCODE_ATTRIBUTE_ENABLE_BITCODE NO
+            XCODE_ATTRIBUTE_SKIP_INSTALL NO
+            XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+            )
+    set_property(
+            SOURCE demo/ios/Images.xcassets
+            PROPERTY MACOSX_PACKAGE_LOCATION "Resources"
+    )
+    set_property(
+            SOURCE demo/ios/Splash.storyboard
+            PROPERTY MACOSX_PACKAGE_LOCATION "Resources"
+    )
+    target_sources(${PROJECT_NAME} PRIVATE
+            demo/ios/Images.xcassets
+            demo/ios/Splash.storyboard
+            )
 endif ()

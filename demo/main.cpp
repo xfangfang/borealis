@@ -20,8 +20,8 @@
 #include <switch.h>
 #endif
 
-#ifdef ANDROID
-#include <SDL2/SDL.h>
+#if defined(ANDROID) || defined(IOS)
+#include <SDL2/SDL_main.h>
 #endif
 
 #ifdef __PSV__
