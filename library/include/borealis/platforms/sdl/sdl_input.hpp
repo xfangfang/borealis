@@ -36,14 +36,11 @@ class SDLInputManager : public InputManager
     void updateMouseWheel(SDL_MouseWheelEvent event);
 
   private:
-    std::vector<SDL_GameController*> controllers;
-    int controllerNum = 0;
     Point scrollOffset;
     Point pointerOffset;
     Point pointerOffsetBuffer;
 
     SDL_Window* window;
-    bool pointerLocked = false;
 };
 
 };
