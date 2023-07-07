@@ -25,6 +25,8 @@
 #include <glad/glad.h>
 #ifdef USE_GLES2
 #define NANOVG_GLES2_IMPLEMENTATION
+#elif USE_GLES3
+#define NANOVG_GLES3_IMPLEMENTATION
 #else
 #define NANOVG_GL3_IMPLEMENTATION
 #endif
@@ -125,11 +127,25 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #ifdef __SWITCH__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #elif defined(USE_GLES2)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#elif defined(USE_GLES3)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
 
@@ -194,13 +210,16 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     // Initialize nanovg
 #ifdef USE_GLES2
     this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#elif USE_GLES3
+    this->nvgContext = nvgCreateGLES3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif
 #elif defined(BOREALIS_USE_D3D11)
     Logger::info("sdl: use d3d11");
     D3D11_CONTEXT = std::make_shared<D3D11Context>();
-    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
+    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight))
+    {
         fatal("sdl: unable to init d3d11");
         return;
     }
@@ -221,6 +240,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
     Application::setWindowSize(fWidth, fHeight);
+    glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
     scaleFactor      = D3D11_CONTEXT->GetDpi();
     fWidth           = width;
@@ -295,10 +315,13 @@ SDLVideoContext::~SDLVideoContext()
 {
     try
     {
-        if (this->nvgContext) {
+        if (this->nvgContext)
+        {
 #ifdef BOREALIS_USE_OPENGL
 #ifdef USE_GLES2
             nvgDeleteGLES2(this->nvgContext);
+#elif USE_GLES3
+            nvgDeleteGLES3(this->nvgContext);
 #else
             nvgDeleteGL3(this->nvgContext);
 #endif

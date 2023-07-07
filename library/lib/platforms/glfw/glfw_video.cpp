@@ -28,6 +28,8 @@
 #define NANOVG_GL2_IMPLEMENTATION
 #elif defined(USE_GLES2)
 #define NANOVG_GLES2_IMPLEMENTATION
+#elif defined(USE_GLES3)
+#define NANOVG_GLES3_IMPLEMENTATION
 #else
 #define NANOVG_GL3_IMPLEMENTATION
 #endif /* USE_GL2 */
@@ -183,6 +185,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#elif defined(USE_GLES3)
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #elif defined(__SWITCH__)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -307,6 +313,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #ifdef BOREALIS_USE_OPENGL
 #ifdef USE_GLES2
     this->nvgContext = nvgCreateGLES2(0);
+#elif defined(USE_GLES3)
+    this->nvgContext = nvgCreateGLES3(0);
 #elif defined(USE_GL2)
     this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
@@ -442,6 +450,8 @@ GLFWVideoContext::~GLFWVideoContext()
 #ifdef BOREALIS_USE_OPENGL
 #ifdef USE_GLES2
             nvgDeleteGLES2(this->nvgContext);
+#elif defined(USE_GLES3)
+            nvgDeleteGLES3(this->nvgContext);
 #elif defined(USE_GL2)
             nvgDeleteGL2(this->nvgContext);
 #else
