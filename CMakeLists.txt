@@ -19,15 +19,6 @@ if (APPLE AND NOT PLATFORM_IOS)
     message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
-if(USE_SDL2)
-    message(STATUS "SDL2")
-    set(USE_GLFW OFF)
-elseif(USE_GLFW)
-    message(STATUS "GLFW")
-    set(USE_SDL2 OFF)
-endif()
-
-
 # toolchain
 if (PLATFORM_DESKTOP)
     message(STATUS "building for Desktop")
@@ -72,9 +63,7 @@ elseif(PLATFORM_ANDROID)
     set(USE_SDL2 ON)
     SET(USE_LIBROMFS ON)
 elseif (PLATFORM_IOS)
-    set(IOS_RESOURCES_ROOT demo/ios CACHE FILEPATH "The path to the resources for iOS.")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/library)
-    set(CMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+    message(STATUS "building for iOS series")
     set(USE_GLFW OFF)
     set(USE_SDL2 ON)
     SET(USE_LIBROMFS ON)
@@ -85,6 +74,9 @@ elseif (PLATFORM_IOS)
 else()
     message(FATAL_ERROR "Please set build target -DPLATFORM_DESKTOP=ON or -DPLATFORM_SWITCH=ON or -DPLATFORM_PSV=ON")
 endif ()
+
+message(STATUS "USE SDL2: ${USE_SDL2}")
+message(STATUS "USE_GLFW: ${USE_GLFW}")
 
 # project info
 project(borealis_demo)
@@ -211,6 +203,12 @@ elseif (PLATFORM_IOS)
     if (NOT DEFINED IOS_GUI_IDENTIFIER)
         set(IOS_GUI_IDENTIFIER "com.borealis.demo")
     endif ()
+    if (TVOS)
+        set(IOS_SPLASH_STORYBOARD "${CMAKE_SOURCE_DIR}/demo/ios/tvos/Splash.storyboard")
+    else ()
+        set(IOS_SPLASH_STORYBOARD "${CMAKE_SOURCE_DIR}/demo/ios/iphoneos/Splash.storyboard")
+    endif ()
+    set(IOS_ASSETS ${CMAKE_SOURCE_DIR}/demo/ios/Images.xcassets)
     set_target_properties(${PROJECT_NAME} PROPERTIES
             XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${IOS_CODE_SIGN_IDENTITY}"
             XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "${IOS_CODE_SIGNING_ENABLED}"
@@ -227,15 +225,15 @@ elseif (PLATFORM_IOS)
             XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
             )
     set_property(
-            SOURCE demo/ios/Images.xcassets
+            SOURCE ${IOS_ASSETS}
             PROPERTY MACOSX_PACKAGE_LOCATION "Resources"
     )
     set_property(
-            SOURCE demo/ios/Splash.storyboard
+            SOURCE ${IOS_SPLASH_STORYBOARD}
             PROPERTY MACOSX_PACKAGE_LOCATION "Resources"
     )
     target_sources(${PROJECT_NAME} PRIVATE
-            demo/ios/Images.xcassets
-            demo/ios/Splash.storyboard
-            )
+            ${IOS_ASSETS}
+            ${IOS_SPLASH_STORYBOARD}
+    )
 endif ()
