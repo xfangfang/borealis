@@ -12,10 +12,10 @@ option(USE_LIBROMFS "using libromfs to bundle resources" OFF)
 
 if (APPLE)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
-    message(STATUS "CMAKE_OSX_ARCHITECTURES: x86_64;arm64")
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
     set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
+    message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif ()
 
 if(USE_SDL2)
@@ -104,8 +104,8 @@ set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
     if (WIN32)
         list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/resource.rc)
-    elseif (APPLE)
-        set(PROJECT_CONTENT ${PROJECT_NAME}.app/Contents)
+    elseif (BUNDLE_MACOS_APP)
+        list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/borealis.icns)
     endif ()
 elseif (PLATFORM_SWITCH)
     set(PLATFORM_LIBS
@@ -148,24 +148,22 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${PLATFORM_LIBS}
 )
 
-if (BUNDLE_MACOS_APP)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/Library
-        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_CONTENT}/MacOS
-    )
-    configure_file("${CMAKE_SOURCE_DIR}/demo/demo.plist.in" "${PROJECT_CONTENT}/Info.plist")
-endif ()
-
 
 # building release file
 if (PLATFORM_DESKTOP)
     if (BUNDLE_MACOS_APP)
-        add_custom_target(${PROJECT_NAME}.icns
-                COMMAND "${CMAKE_COMMAND}" -E copy ${CMAKE_SOURCE_DIR}/demo/borealis.icns ${PROJECT_CONTENT}/Resources/borealis.icns
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
+            MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}"
+            MACOSX_BUNDLE_ICON_FILE "borealis.icns"
+            MACOSX_BUNDLE_COPYRIGHT "Copyright 2023 ${PROJECT_AUTHOR}"
+            RESOURCE "${CMAKE_SOURCE_DIR}/demo/borealis.icns"
         )
-        add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.icns)
         add_custom_target(${PROJECT_NAME}.data
-                COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_CONTENT}/Resources/resources
+                COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_NAME}.app/Contents/Resources/resources
         )
     else ()
         add_custom_target(${PROJECT_NAME}.data
