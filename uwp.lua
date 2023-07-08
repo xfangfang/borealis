@@ -1,23 +1,17 @@
-import("lib.detect.find_program")
-import("detect.sdks.find_vstudio")
-
-local function listFiles(dir, out, i)
-    for _, f in ipairs(os.filedirs(path.join(dir, "**"))) do
-        if os.isfile(f) then
-            t = f
-            if i then
-                t = string.sub(f, i)
-            end
-            table.insert(out, {f, t})
-        end
-    end
-end
-
 local outPath = "build/demo.msix"
 local keyPath = "winrt/key.pfx"
 local priconfigPath = "build/priconfig.xml"
 local fileMapPath = "build/main.map.txt"
-local priPath = "build\\resources.pri"
+local priPath = "build/resources.pri"
+
+function findsdk()
+    local find_vstudio = import("detect.sdks.find_vstudio")
+    for _, vsinfo in pairs(find_vstudio()) do
+        if vsinfo.vcvarsall then
+            return vsinfo.vcvarsall[os.arch()]
+        end
+    end
+end
 
 function main(target)
     local files = {
@@ -37,27 +31,28 @@ function main(target)
             end
         end
     end
-    listFiles("winrt/Assets", files, 7)
-    listFiles("resources", files)
-    local context = ""
-    for _, ff in ipairs(files) do
-        context = context..format('\n"%s"\t\t"%s"', ff[1], ff[2])
+
+    for _, f in ipairs(os.files("winrt/Assets/**")) do
+        table.insert(files, {f, string.sub(f, 7)})
+    end
+    for _, f in ipairs(os.files("resources/**")) do
+        table.insert(files, {f, f})
     end
 
-    io.writefile(fileMapPath, format([[
+    local file = io.open(fileMapPath, "w")
+    file:write([[
 [ResourceMetadata]
 "ResourceDimensions"	"language-en-US"
 [Files]
-%s
-]], context))
+]])
+    for _, ff in ipairs(files) do
+        file:write(format('"%s"\t\t"%s"\n', ff[1], ff[2]))
+    end
+    file:close()
 
-    local vs = find_vstudio()["2022"]["vcvarsall"]["x86"]
-    local windowsSdkBinPath = path.join(vs["WindowsSdkBinPath"], vs["WindowsSDKVersion"], "x86")
-    local makepri = path.join(windowsSdkBinPath, "makepri.exe")
-    local makeappx = path.join(windowsSdkBinPath, "makeappx.exe")
-    local signtool = path.join(windowsSdkBinPath, "signtool.exe")
+    os.setenv("PATH", findsdk()["PATH"])
 
-    os.execv(makepri, {
+    os.execv("makepri", {
         "createconfig",
         "-Overwrite",
         "/cf",
@@ -65,7 +60,7 @@ function main(target)
         "/dq",
         "en-US"
     })
-    os.execv(makepri, {
+    os.execv("makepri", {
         "new",
         "-Overwrite",
         "/pr",
@@ -75,7 +70,7 @@ function main(target)
         "-OutputFile",
         priPath
     })
-    os.execv(makeappx, {
+    os.execv("makeappx", {
         "pack",
         "/l",
         "/h",
@@ -83,12 +78,12 @@ function main(target)
         "/f",
         fileMapPath,
         "/m",
-        "winrt/AppxManifest.xml",
+        "build/AppxManifest.xml",
         "/o",
         "/p",
         outPath
     })
-    os.execv(signtool, {
+    os.execv("signtool", {
         "sign",
         "/fd",
         "SHA256",

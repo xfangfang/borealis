@@ -1,11 +1,5 @@
 add_rules("mode.debug", "mode.release")
 
-if is_plat("windows") then
-    set_languages("c++20")
-else
-    set_languages("c++17")
-end
-
 option("platfrom")
     set_default("desktop")
     set_showmenu(true)
@@ -26,17 +20,15 @@ option("winrt")
     set_showmenu(true)
 option_end()
 
-option("example")
-    set_default(false)
-    set_showmenu(true)
-option_end()
-
 if is_plat("windows") then
+    set_languages("c++20")
     add_cxflags("/utf-8")
     add_includedirs("library/include/compat")
     if is_mode("release") then
         set_optimize("faster")
     end
+else
+    set_languages("c++17")
 end
 if is_plat("mingw") then
     add_defines("WINVER=0x0605")
@@ -57,17 +49,14 @@ add_defines(
     "YG_ENABLE_EVENTS"
 )
 
-
-local windowLib = get_config("window")
-
-if windowLib == "sdl" then
+if get_config("window") == "sdl" then
     if get_config("winrt") then
         add_requires("sdl2", {configs={shared=true,winrt=true}})
         add_requires("cppwinrt")
     else
         add_requires("sdl2")
     end
-elseif windowLib == "glfw" then
+elseif get_config("window") == "glfw" then
     add_requires("xfangfang_glfw")
 end
 
@@ -76,29 +65,16 @@ target("borealis")
     -- set_kind("shared")
     add_includedirs("library/include")
     add_includedirs("library/include/borealis/extern")
-    for _, dir in ipairs({
-        "lib/core",
-        "lib/core/touch",
-        "lib/views",
-        "lib/views/cells",
-        "lib/views/widgets"
-    }) do
-        add_files(path.join("library", dir, "*.cpp"))
-    end
-    for _, dir in ipairs({
-        "compat",
-        "encodings",
-        "features",
-    }) do
-        add_files(path.join("library/lib/extern/libretro-common", dir, "*.c"))
-    end
-    local windowLib = get_config("window")
-    if windowLib == "glfw" then
+    add_files("library/lib/core/**.cpp")
+    add_files("library/lib/views/**.cpp")
+    add_files("library/lib/extern/libretro-common/**.c")
+
+    if get_config("window") == "glfw" then
         add_files("library/lib/platforms/glfw/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("xfangfang_glfw")
         add_defines("__GLFW__")
-    elseif windowLib == "sdl" then
+    elseif get_config("window") == "sdl" then
         add_files("library/lib/platforms/sdl/*.cpp")
         add_files("library/lib/platforms/desktop/*.cpp")
         add_packages("sdl2")
@@ -132,30 +108,44 @@ target("borealis")
     add_defines("BOREALIS_USE_STD_THREAD")
 
 
-if get_config("example") then
-    target("demo")
-        add_includedirs("library/include")
-        add_includedirs("library/include/borealis/extern")
-        add_files("demo/*.cpp")
-        add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
-        local windowLib = get_config("window")
-        if windowLib == "sdl" then
-            add_packages("sdl2")
-        end
-        add_deps("borealis")
-        if get_config("winrt") then
-            add_defines("__WINRT__=1")
-            add_syslinks("WindowsApp")
-            after_build(function (target)
-                import("uwp")(target)
-            end)
-        end
+target("demo")
+    set_default(false)
+    add_includedirs("library/include")
+    add_includedirs("library/include/borealis/extern")
+    add_files("demo/*.cpp")
+    add_packages("tinyxml2", "nanovg", "fmt", "tweeny", "yoga")
+    if get_config("window") == "sdl" then
+        add_packages("sdl2")
+    end
+    add_deps("borealis")
+    on_config(function (target)
+        local cmakefile = io.readfile("CMakeLists.txt")
+        target:set("configvar", "VERSION_MAJOR", string.match(cmakefile, "set%(VERSION_MAJOR \"(%d)\"%)"))
+        target:set("configvar", "VERSION_MINOR", string.match(cmakefile, "set%(VERSION_MINOR \"(%d)\"%)"))
+        target:set("configvar", "VERSION_ALTER", string.match(cmakefile, "set%(VERSION_ALTER \"(%d)\"%)"))
+        target:set("configvar", "VERSION_BUILD", "$(shell git rev-list --count --all)")
+    end)
+    if get_config("winrt") then
+        add_defines("__WINRT__=1")
+        add_syslinks("WindowsApp")
+        add_configfiles("winrt/AppxManifest.xml.in")
+        after_build(function (target)
+            import("uwp")(target)
+        end)
+    end
+    if is_plat("mingw") then
+        add_ldflags("-static")
+    end
+    if is_mode("release") then
         if is_plat("mingw") then
-            add_ldflags("-static")
+            add_cxflags("-Wl,--subsystem,windows", {force = true})
+            add_ldflags("-Wl,--subsystem,windows", {force = true})
+        elseif is_plat("windows") then
+            add_ldflags("-subsystem:windows -entry:mainCRTStartup", {force = true})
         end
         if is_plat("windows", "mingw") then
             add_syslinks("Wlanapi", "iphlpapi", "Ws2_32")
             add_files("demo/resource.rc")
         end
-        set_rundir("$(projectdir)")
-end
+    end
+    set_rundir("$(projectdir)")
