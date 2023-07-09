@@ -100,7 +100,22 @@ void DesktopFontLoader::loadFonts()
 
     // Switch icons
     // Only supports user-provided font
+#ifdef USE_LIBROMFS
+    bool loaded = false;
+    if (USER_ICON_PATH.rfind("@res/", 0) == 0)
+    {
+        auto icon = romfs::get(USER_ICON_PATH.substr(5));
+        if (icon.valid())
+        {
+            Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.string().data(), icon.string().size(), false);
+            loaded = true;
+        }
+    }
+
+    if (loaded)
+#else
     if (access(USER_ICON_PATH.c_str(), F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, USER_ICON_PATH))
+#endif
     {
         brls::Logger::info("Load keymap icon: {}", USER_ICON_PATH);
         nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
