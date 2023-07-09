@@ -109,7 +109,7 @@ elseif(PLATFORM_IOS)
             ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop)
     set(BRLS_PLATFORM_LIBS SDL2-static SDL2main)
-    set(BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS -DUSE_GLES2)
+    set(BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS -DUSE_GLES3)
 else ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/switch
