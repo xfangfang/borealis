@@ -58,8 +58,8 @@
 #include <set>
 #include <thread>
 
-#define BUTTON_REPEAT_DELAY 15
-#define BUTTON_REPEAT_CADENCY 5
+#define BUTTOM_REPEAT_TRIGGER 250000 // 250ms
+#define BUTTON_REPEAT_DELAY   100000 // 100 ms
 
 namespace brls
 {
@@ -237,7 +237,7 @@ void Application::processInput()
     static ControllerState oldControllerState = {};
 
     // Input
-    ControllerState controllerState = {};
+    static ControllerState controllerState = {};
     std::vector<RawTouchState> rawTouch;
     RawMouseState rawMouse;
 
@@ -358,10 +358,8 @@ void Application::processInput()
     }
 
     // Trigger controller events
-    bool anyButtonPressed           = false;
     bool repeating                  = false;
-    static Time buttonPressTime     = 0;
-    static int repeatingButtonTimer = 0;
+    Time cpuTime = getCPUTimeUsec();
 
     controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
     controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
@@ -370,21 +368,19 @@ void Application::processInput()
     {
         if (controllerState.buttons[i])
         {
-            anyButtonPressed = true;
-            repeating        = (repeatingButtonTimer > BUTTON_REPEAT_DELAY && repeatingButtonTimer % BUTTON_REPEAT_CADENCY == 0);
+            repeating = controllerState.repeatingButtonStop[i] > 0 && cpuTime > controllerState.repeatingButtonStop[i];
+            
+            if (repeating)
+                controllerState.repeatingButtonStop[i] = cpuTime + BUTTON_REPEAT_DELAY;
+            
+            if (!oldControllerState.buttons[i])
+                controllerState.repeatingButtonStop[i] = cpuTime + BUTTOM_REPEAT_TRIGGER;
 
             if (!oldControllerState.buttons[i] || repeating)
                 Application::onControllerButtonPressed((enum ControllerButton)i, repeating);
+        } else {
+            controllerState.repeatingButtonStop[i] = 0;
         }
-
-        if (controllerState.buttons[i] != oldControllerState.buttons[i])
-            buttonPressTime = repeatingButtonTimer = 0;
-    }
-
-    if (anyButtonPressed && getCPUTimeUsec() - buttonPressTime > 1000)
-    {
-        buttonPressTime = getCPUTimeUsec();
-        repeatingButtonTimer++; // Increased once every ~1ms
     }
 
     oldControllerState = controllerState;
