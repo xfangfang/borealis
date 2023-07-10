@@ -121,6 +121,16 @@ static bool processEvent(SDLPlatform* platform, SDL_Event* event)
         if (manager)
             manager->updateMouseWheel(event->wheel);
     }
+#ifdef IOS
+    else if (event->type == SDL_APP_WILLENTERBACKGROUND)
+    {
+        brls::Application::getWindowFocusChangedEvent()->fire(false);
+    }
+    else if (event->type == SDL_APP_WILLENTERFOREGROUND)
+    {
+        brls::Application::getWindowFocusChangedEvent()->fire(true);
+    }
+#endif
     brls::Application::setActiveEvent(true);
     return true;
 }
