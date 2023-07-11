@@ -104,6 +104,25 @@ void SDLPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, in
     }
 }
 
+void SDLPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
+{
+    if (disable)
+    {
+        brls::Logger::error("SDL_DisableScreenSaver");
+        SDL_DisableScreenSaver();
+    }
+    else
+    {
+        brls::Logger::error("SDL_EnableScreenSaver");
+        SDL_EnableScreenSaver();
+    }
+}
+
+bool SDLPlatform::isScreenDimmingDisabled()
+{
+    return !SDL_IsScreenSaverEnabled();
+}
+
 std::string SDLPlatform::getName()
 {
     return "SDL";

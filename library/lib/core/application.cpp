@@ -1068,7 +1068,7 @@ void Application::onWindowReposition(int x, int y)
 {
     static size_t iter = 0;
     brls::cancelDelay(iter);
-    iter = brls::delay(100, [x, y]()
+    iter = brls::delay(500, [x, y]()
         {
             Logger::info("Window position changed to {}x{}", x, y);
             Application::setWindowPosition(x, y); });
