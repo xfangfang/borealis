@@ -168,7 +168,7 @@ function(linux_install res res_install svg_icon icon_res_dir icon_res_list appda
                 PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     endforeach ()
     # appdata
-    install(FILES ${appdata_dir}
+    install(FILES ${appdata}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     # desktop
