@@ -82,7 +82,9 @@ make -C build_psv borealis_demo.vpk -j$(nproc)
 ## Building the demo for Android
 
 ```shell
+# build libromfs generator
 ./build_libromfs_generator.sh
+
 cd android-project
 export JAVA_HOME=/Applications/Android\ Studio.app/Contents/jbr/Contents/Home
 export ANDROID_SDK_ROOT=~/Library/Android/sdk
@@ -95,6 +97,11 @@ export ANDROID_SDK_ROOT=~/Library/Android/sdk
 
 ## Building the demo for iOS
 
+```shell
+# build libromfs generator
+./build_libromfs_generator.sh
+```
+
 ### 1. Build for arm64 iphoneOS
 
 ```shell
@@ -102,7 +109,6 @@ export ANDROID_SDK_ROOT=~/Library/Android/sdk
 # IOS_CODE_SIGN_IDENTITY: code is not signed when IOS_CODE_SIGN_IDENTITY is empty
 # IOS_GUI_IDENTIFIER: optional, default is com.borealis.demo
 cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=13.0 \
-  -DCMAKE_TOOLCHAIN_FILE=./library/cmake/ios.toolchain.cmake \
   -DIOS_CODE_SIGN_IDENTITY="Your identity" \
   -DIOS_GUI_IDENTIFIER="custom.app.id.here"
 
@@ -115,8 +121,7 @@ open build-ios/*.xcodeproj
 ### 2. Build for arm64 iphoneOS Simulator
 
 ```shell
-cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0 \
-  -DCMAKE_TOOLCHAIN_FILE=./library/cmake/ios.toolchain.cmake
+cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0
 
 # Build
 cmake --build build-ios
