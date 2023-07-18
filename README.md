@@ -131,9 +131,6 @@ open -a Simulator
 
 # After simulator is booted, install app
 xcrun simctl install booted build-ios/Debug-iphonesimulator/borealis_demo.app
-
-# create a zip (optional)
-ditto -ck --rsrc --sequesterRsrc --keepParent build/Debug-iphoneos/krkrsdl2.app build/krkrsdl2-ios-appbundle.zip
 ```
 
 ### Including in your project (TL;DR: see the CMakeLists.txt in this repo)

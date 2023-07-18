@@ -57,8 +57,9 @@ if (USE_SYSTEM_TINYXML2)
     list(APPEND BOREALIS_INCLUDE ${tinyxml2_INCLUDE_DIRS})
     list(APPEND BRLS_PLATFORM_LIBS tinyxml2::tinyxml2)
 else()
-    list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/include/borealis/extern/tinyxml2)
-    list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/tinyxml2)
+    add_library(tinyxml2 ${BOREALIS_PATH}/lib/extern/tinyxml2/tinyxml2.cpp)
+    target_include_directories(tinyxml2 PUBLIC ${BOREALIS_PATH}/include/borealis/extern/tinyxml2)
+    list(APPEND BRLS_PLATFORM_LIBS tinyxml2)
 endif()
 
 # dbus
