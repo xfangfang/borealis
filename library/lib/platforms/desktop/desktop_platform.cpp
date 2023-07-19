@@ -30,7 +30,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include <Wlanapi.h>
+#include <wlanapi.h>
 #elif IOS
 #elif __APPLE__
 #include <IOKit/ps/IOPSKeys.h>
