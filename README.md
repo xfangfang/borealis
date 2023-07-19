@@ -46,6 +46,14 @@ cmake -B build_pc -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release
 make -C build_pc -j$(nproc)
 ```
 
+* crosscompile using mingw64 under ubuntu/debian
+
+```bash
+sudo apt-get install g++-mingw-w64-x86-64-posix
+cmake -B build_mingw -DPLATFORM_DESKTOP=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="library/cmake/MinGWCross.cmake"
+make -C build_mingw -j$(nproc)
+```
+
 Also, please note that the `resources` folder must be available in the working directory, otherwise the program will fail to find the shaders.
 
 ## Building the demo for WinRT

@@ -50,7 +50,7 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace brls
