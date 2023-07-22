@@ -426,7 +426,7 @@ bool DesktopPlatform::canShowBatteryLevel()
     SYSTEM_POWER_STATUS status;
     if (!GetSystemPowerStatus(&status))
         return false;
-    return status.BatteryFlag != BATTERY_FLAG_UNKNOWN;
+    return !(status.BatteryFlag & BATTERY_FLAG_NO_BATTERY);
 #else
     return false;
 #endif

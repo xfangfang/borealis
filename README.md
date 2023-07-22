@@ -36,8 +36,6 @@ To build for PC, the following components are required:
 
 - cmake/make build system
 - A C++ compiler supporting the C++17 standard
-- GLFW version 3.3 or higher (as a static library)
-- GLM version 0.9.8 or higher
 
 Please refer to the usual sources of information for your particular operating system. Usually the commands needed to build this project will look like this:
 
