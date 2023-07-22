@@ -689,6 +689,7 @@ std::string DesktopPlatform::getDnsServer()
 #elif defined(__APPLE__)
     SCPreferencesRef prefsDNS = SCPreferencesCreate(nullptr, CFSTR("DNSSETTING"), nullptr);
     CFArrayRef services       = SCNetworkServiceCopyAll(prefsDNS);
+    char buffer[INET6_ADDRSTRLEN];
     if (services)
     {
         CFIndex count = CFArrayGetCount(services);
@@ -707,7 +708,13 @@ std::string DesktopPlatform::getDnsServer()
                 {
                     CFStringRef address = (CFStringRef)CFArrayGetValueAtIndex(addresses, j);
                     if (address)
-                        dnssvr = CFStringGetCStringPtr(address, kCFStringEncodingMacRomanian);
+                    {
+                        const char* dnsAddress = CFStringGetCStringPtr(address, kCFStringEncodingMacRomanian);
+                        if (dnsAddress)
+                            dnssvr = dnsAddress;
+                        else if (CFStringGetCString(address, buffer, sizeof(buffer), kCFStringEncodingMacRomanian))
+                            dnssvr = buffer;
+                    }
                 }
                 CFRelease(propList);
             }
