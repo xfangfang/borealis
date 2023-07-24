@@ -55,12 +55,17 @@ void BatteryWidget::updateState()
     if ((now - time) > 5000000)
     {
         brls::Logger::verbose("isBatteryCharging: {}; batteryLevel: {}", isBatteryCharging, batteryLevel);
+#ifdef ANDROID
+        isBatteryCharging = Application::getPlatform()->isBatteryCharging();
+        batteryLevel      = Application::getPlatform()->getBatteryLevel() / 100.0f;
+#else
         ASYNC_RETAIN
         brls::async([ASYNC_TOKEN]()
             {
                 ASYNC_RELEASE
                 isBatteryCharging = Application::getPlatform()->isBatteryCharging();
                 batteryLevel      = Application::getPlatform()->getBatteryLevel() / 100.0f; });
+#endif
         time = now;
     }
 }

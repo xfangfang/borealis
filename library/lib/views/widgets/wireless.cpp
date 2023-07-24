@@ -92,6 +92,11 @@ void WirelessWidget::updateState()
     if ((now - time) > 5000000)
     {
         brls::Logger::verbose("hasWirelessConnection: {}; wifiLevel: {}", hasWirelessConnection, wifiLevel);
+#ifdef ANDROID
+        hasEthernetConnection = Application::getPlatform()->hasEthernetConnection();
+        hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
+        wifiLevel             = Application::getPlatform()->getWirelessLevel();
+#else
         ASYNC_RETAIN
         brls::async([ASYNC_TOKEN]()
             {
@@ -99,6 +104,7 @@ void WirelessWidget::updateState()
                 hasEthernetConnection = Application::getPlatform()->hasEthernetConnection();
                 hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
                 wifiLevel             = Application::getPlatform()->getWirelessLevel(); });
+#endif
         time = now;
     }
 }

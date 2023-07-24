@@ -1,5 +1,5 @@
 /*
-    Copyright 2021 natinusala
+    Copyright 2023 xfangfang
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,40 +14,26 @@
     limitations under the License.
 */
 
-#include <borealis/core/platform.hpp>
+#pragma once
 
-#ifdef __SWITCH__
-#include <borealis/platforms/switch/switch_platform.hpp>
-#endif
-
-#ifdef __GLFW__
-#include <borealis/platforms/glfw/glfw_platform.hpp>
-#endif
-
-#ifdef __SDL2__
-#ifdef ANDROID
-#include <borealis/platforms/android/android_platform.hpp>
-#else
 #include <borealis/platforms/sdl/sdl_platform.hpp>
-#endif
-#endif
 
 namespace brls
 {
 
-Platform* Platform::createPlatform()
+class AndroidPlatform : public SDLPlatform
 {
-#if defined(__SWITCH__)
-    return new SwitchPlatform();
-#elif defined(ANDROID)
-    return new AndroidPlatform();
-#elif defined(__SDL2__)
-    return new SDLPlatform();
-#elif defined(__GLFW__)
-    return new GLFWPlatform();
-#endif
-
-    return nullptr;
-}
+    public:
+        bool canShowBatteryLevel() override;
+        bool canShowWirelessLevel() override;
+        int getBatteryLevel() override;
+        bool isBatteryCharging() override;
+        bool hasWirelessConnection() override;
+        int getWirelessLevel() override;
+        bool hasEthernetConnection() override;
+        std::string getIpAddress() override;
+        std::string getDnsServer() override;
+        void openBrowser(std::string url) override;
+};
 
 } // namespace brls

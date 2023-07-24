@@ -48,7 +48,7 @@ class SDLPlatform : public DesktopPlatform
     VideoContext* getVideoContext() override;
     InputManager* getInputManager() override;
 
-  private:
+protected:
     NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;

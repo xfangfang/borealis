@@ -109,7 +109,8 @@ elseif(PLATFORM_ANDROID)
     find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/sdl
-            ${BOREALIS_PATH}/lib/platforms/desktop)
+            ${BOREALIS_PATH}/lib/platforms/desktop
+            ${BOREALIS_PATH}/lib/platforms/android)
     list(APPEND BRLS_PLATFORM_LIBS SDL2 SDL2main)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DANDROID -DUSE_GLES2)
 elseif(PLATFORM_IOS)
