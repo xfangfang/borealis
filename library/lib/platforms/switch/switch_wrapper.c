@@ -55,7 +55,7 @@ void userAppInit()
     AppletType at = appletGetAppletType();
     if (at == AppletType_Application || at == AppletType_SystemApplication)
     {
-        cfg.num_bsd_sessions = 16; // default is 3
+        cfg.num_bsd_sessions = 12; // default is 3
         cfg.sb_efficiency    = 8; // default is 4
         socketInitialize(&cfg);
     }
