@@ -57,15 +57,28 @@ using winrt::Windows::UI::ViewManagement::UISettings;
 namespace brls
 {
 #ifdef __WINRT__
+
+const static auto timeout = std::chrono::milliseconds(500);
+
 int winrt_wlan_quality()
 {
-    auto adapters = WiFiAdapter::FindAllAdaptersAsync().get();
-    for (auto it : adapters)
+    auto async = WiFiAdapter::FindAllAdaptersAsync();
+    auto code = async.wait_for(timeout);
+    if (code == winrt::Windows::Foundation::AsyncStatus::Completed)
     {
-        auto profile = it.NetworkAdapter().GetConnectedProfileAsync().get();
-        if (profile != nullptr && profile.IsWlanConnectionProfile())
+        auto adapters = async.GetResults();
+        for (auto it : adapters)
         {
-            return int(profile.GetNetworkConnectivityLevel());
+            auto profileAsync = it.NetworkAdapter().GetConnectedProfileAsync();
+            auto profileCode = profileAsync.wait_for(timeout);
+            if (profileCode == winrt::Windows::Foundation::AsyncStatus::Completed)
+            {
+                auto profile = profileAsync.GetResults();
+                if (profile != nullptr && profile.IsWlanConnectionProfile())
+                {
+                    return int(profile.GetNetworkConnectivityLevel());
+                }
+            }
         }
     }
     return -1; // No WiFi Adapter found.
