@@ -49,6 +49,10 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #include "stb_image.h"
 #endif
 
+#ifdef USE_LIBROMFS
+#include <romfs/romfs.hpp>
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -257,7 +261,12 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #if defined(__linux__) || defined(_WIN32)
     // Set window icon
     GLFWimage images[1];
+#ifdef USE_LIBROMFS
+    auto icon = romfs::get("icon/icon.png").string();
+    images[0].pixels = stbi_load_from_memory((stbi_uc*)icon.data(), icon.size(), &images[0].width, &images[0].height, 0, 4);
+#else
     images[0].pixels = stbi_load(BRLS_ASSET("icon/icon.png"), &images[0].width, &images[0].height, 0, 4);
+#endif
     glfwSetWindowIcon(this->window, 1, images);
 #endif
 

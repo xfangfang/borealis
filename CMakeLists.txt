@@ -26,7 +26,7 @@ project(borealis_demo)
 set(VERSION_MAJOR "1")
 set(VERSION_MINOR "0")
 set(VERSION_ALTER "0")
-set(APP_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REVISION}")
+set(VERSION_BUILD "0")
 set(PACKAGE_NAME "com.borealis.demo")
 set(VITA_TITLEID  "BOREALIS0")
 set(VITA_VERSION  "01.00")
@@ -47,7 +47,8 @@ file(GLOB_RECURSE MAIN_SRC demo/*.cpp)
 set(PLATFORM_OPTION)
 if (PLATFORM_DESKTOP)
     if (WIN32)
-        list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/resource.rc)
+        configure_file("${CMAKE_SOURCE_DIR}/demo/resource.rc.in" "${CMAKE_BINARY_DIR}/resource.rc")
+        list(APPEND MAIN_SRC ${CMAKE_BINARY_DIR}/resource.rc)
     elseif (BUNDLE_MACOS_APP)
         list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/borealis.icns)
     endif ()
@@ -74,7 +75,7 @@ endif ()
 
 
 # building target
-main_target(${PROJECT_NAME} "${MAIN_SRC}" "${CMAKE_CURRENT_SOURCE_DIR}/app_win32.rc")
+program_target(${PROJECT_NAME} "${MAIN_SRC}")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 
@@ -125,7 +126,7 @@ elseif (PLATFORM_IOS)
             "${CMAKE_CURRENT_SOURCE_DIR}/demo/ios/Images.xcassets"
             "${CMAKE_CURRENT_SOURCE_DIR}/demo/ios/iOSBundleInfo.plist.in"
             "borealis"
-            "${APP_VERSION}")
+            "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}")
 endif ()
 
 target_include_directories(${PROJECT_NAME} PRIVATE demo ${APP_PLATFORM_INCLUDE})
