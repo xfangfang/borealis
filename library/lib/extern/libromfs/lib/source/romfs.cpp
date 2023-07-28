@@ -2,13 +2,13 @@
 
 #include <map>
 
-const std::map<std::filesystem::path, romfs::Resource>& ROMFS_CONCAT(ROMFS_NAME, _get_resources)();
-const std::vector<std::filesystem::path>& ROMFS_CONCAT(ROMFS_NAME, _get_paths)();
+const std::map<fs::path, romfs::Resource>& ROMFS_CONCAT(ROMFS_NAME, _get_resources)();
+const std::vector<fs::path>& ROMFS_CONCAT(ROMFS_NAME, _get_paths)();
 const std::string& ROMFS_CONCAT(ROMFS_NAME, _get_name)();
 
 namespace romfs {
 
-    const romfs::Resource &impl::ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(const std::filesystem::path &path) {
+    const romfs::Resource &impl::ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(const fs::path &path) {
         try {
             return ROMFS_CONCAT(ROMFS_NAME, _get_resources)().at(path);
         } catch (std::out_of_range &ignored) {
@@ -16,11 +16,11 @@ namespace romfs {
         }
     }
 
-    std::vector<std::filesystem::path> impl::ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(const std::filesystem::path &parent) {
+    std::vector<fs::path> impl::ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(const fs::path &parent) {
         if (parent.empty()) {
             return ROMFS_CONCAT(ROMFS_NAME, _get_paths)();
         } else {
-            std::vector<std::filesystem::path> result;
+            std::vector<fs::path> result;
             for (const auto &p : ROMFS_CONCAT(ROMFS_NAME, _get_paths)())
                 if (p.parent_path() == parent)
                     result.push_back(p);

@@ -1,9 +1,14 @@
 #include <fstream>
-#include <filesystem>
 #include <string>
 #include <vector>
-
+#include <iomanip>
+#ifdef USE_BOOST_FILESYSTEM
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#else
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif
 
 namespace {
 
@@ -39,19 +44,16 @@ int main(int argc, char* argv[]) {
 
     outputFile << "#include <romfs/romfs.hpp>\n\n";
     outputFile << "#include <array>\n";
-    outputFile << "#include <cstdint>\n";
-    outputFile << "#include <filesystem>\n";
     outputFile << "#include <map>\n";
-    outputFile << "#include <string>\n";
-    outputFile << "#include <vector>\n";
 
     outputFile << "\n\n";
     outputFile << "/* Resource definitions */\n";
 
-    std::vector<std::filesystem::path> paths;
+    std::vector<fs::path> paths;
     std::uint64_t identifierCount = 0;
     for (const auto &entry : fs::recursive_directory_iterator(argv[2])) {
-        if (!entry.is_regular_file()) continue;
+        auto& p = entry.path();
+        if (!fs::is_regular_file(p)) continue;
 
         auto path = fs::canonical(fs::absolute(entry.path()));
         auto relativePath = fs::relative(entry.path(), fs::absolute(argv[2]));
@@ -61,14 +63,14 @@ int main(int argc, char* argv[]) {
             continue ;
         }
 
-        outputFile << "static std::array<std::uint8_t, " << entry.file_size() + 1 << "> " << "resource_" + std::string(argv[1]) + "_" << identifierCount << " = {\n";
+        outputFile << "static std::array<std::uint8_t, " << fs::file_size(p) + 1 << "> " << "resource_" + std::string(argv[1]) + "_" << identifierCount << " = {\n";
         outputFile << "    ";
 
         std::vector<std::byte> bytes;
-        bytes.resize(entry.file_size());
+        bytes.resize(fs::file_size(p));
 
         auto file = std::fopen(entry.path().string().c_str(), "rb");
-        bytes.resize(std::fread(bytes.data(), 1, entry.file_size(), file));
+        bytes.resize(std::fread(bytes.data(), 1, fs::file_size(p), file));
         std::fclose(file);
 
         outputFile << std::hex << std::uppercase << std::setfill('0') << std::setw(2);
@@ -88,8 +90,8 @@ int main(int argc, char* argv[]) {
 
     {
         outputFile << "/* Resource map */\n";
-        outputFile << "const std::map<std::filesystem::path, romfs::Resource>& RomFs_" + std::string(argv[1]) + "_get_resources() {\n";
-        outputFile << "    static std::map<std::filesystem::path, romfs::Resource> resources = {\n";
+        outputFile << "const std::map<fs::path, romfs::Resource>& RomFs_" + std::string(argv[1]) + "_get_resources() {\n";
+        outputFile << "    static std::map<fs::path, romfs::Resource> resources = {\n";
 
         for (std::uint64_t i = 0; i < identifierCount; i++) {
 
@@ -107,8 +109,8 @@ int main(int argc, char* argv[]) {
 
     {
         outputFile << "/* Resource paths */\n";
-        outputFile << "const std::vector<std::filesystem::path>& RomFs_" + std::string(argv[1]) + "_get_paths() {\n";
-        outputFile << "    static std::vector<std::filesystem::path> paths = {\n";
+        outputFile << "const std::vector<fs::path>& RomFs_" + std::string(argv[1]) + "_get_paths() {\n";
+        outputFile << "    static std::vector<fs::path> paths = {\n";
 
         for (std::uint64_t i = 0; i < identifierCount; i++) {
             outputFile << "        \"" << toPathString(paths[i].string()) << "\",\n";

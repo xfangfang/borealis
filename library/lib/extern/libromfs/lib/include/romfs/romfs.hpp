@@ -2,10 +2,18 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <filesystem>
 #include <string>
-#include <span>
 #include <vector>
+#if __cplusplus > 202002L
+#include <span>
+#endif
+#ifdef USE_BOOST_FILESYSTEM
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 #include "nonstd/span.hpp"
 
 #define ROMFS_CONCAT_IMPL(x, y) x##y
@@ -51,14 +59,14 @@ namespace romfs {
 
     namespace impl {
 
-        [[nodiscard]] const Resource& ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(const std::filesystem::path &path);
-        [[nodiscard]] std::vector<std::filesystem::path> ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(const std::filesystem::path &path);
+        [[nodiscard]] const Resource& ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(const fs::path &path);
+        [[nodiscard]] std::vector<fs::path> ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(const fs::path &path);
         [[nodiscard]] const std::string& ROMFS_CONCAT(name_, LIBROMFS_PROJECT_NAME)();
 
     }
 
-    [[nodiscard]] inline const Resource& get(const std::filesystem::path &path) { return impl::ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(path); }
-    [[nodiscard]] inline std::vector<std::filesystem::path> list(const std::filesystem::path &path = {}) { return impl::ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(path); }
+    [[nodiscard]] inline const Resource& get(const fs::path &path) { return impl::ROMFS_CONCAT(get_, LIBROMFS_PROJECT_NAME)(path); }
+    [[nodiscard]] inline std::vector<fs::path> list(const fs::path &path = {}) { return impl::ROMFS_CONCAT(list_, LIBROMFS_PROJECT_NAME)(path); }
     [[nodiscard]] inline const std::string& name() { return impl::ROMFS_CONCAT(name_, LIBROMFS_PROJECT_NAME)(); }
 
 

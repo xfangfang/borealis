@@ -16,6 +16,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 target_compile_definitions(${PROJECT_NAME} PUBLIC LIBROMFS_PROJECT_NAME=${LIBROMFS_PROJECT_NAME})
 
+if (USE_BOOST_FILESYSTEM)
+    find_package(Boost 1.44 REQUIRED COMPONENTS filesystem)
+    if(Boost_FOUND)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem)
+        target_compile_options(${PROJECT_NAME} PRIVATE -DUSE_BOOST_FILESYSTEM)
+    endif()
+endif ()
+
 # Make sure libromfs gets rebuilt when any of the resources are changed
 if (LIBROMFS_PREBUILT_GENERATOR)
     message(STATUS "Using prebuilt libromfs-generator: ${LIBROMFS_PREBUILT_GENERATOR}")
