@@ -21,6 +21,7 @@
 #include <borealis/core/box.hpp>
 #include <borealis/core/util.hpp>
 #include <cmath>
+#include <fstream>
 
 namespace brls
 {
@@ -480,6 +481,12 @@ void Box::inflateFromXMLString(std::string_view xml)
 
 void Box::inflateFromXMLRes(const std::string& name)
 {
+    // Check if custom xml file exists
+    if (!View::CUSTOM_RESOURCES_PATH.empty() && std::ifstream { View::CUSTOM_RESOURCES_PATH + name }.good())
+    {
+        return Box::inflateFromXMLFile(View::CUSTOM_RESOURCES_PATH + name);
+    }
+
 #ifdef USE_LIBROMFS
     return Box::inflateFromXMLString(romfs::get(name).string());
 #else

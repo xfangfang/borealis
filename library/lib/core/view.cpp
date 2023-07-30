@@ -27,6 +27,7 @@
 #include <borealis/core/util.hpp>
 #include <borealis/core/view.hpp>
 #include <borealis/views/applet_frame.hpp>
+#include <fstream>
 
 using namespace brls::literals;
 
@@ -1692,6 +1693,12 @@ bool View::isXMLAttributeValid(std::string attributeName)
 
 View* View::createFromXMLResource(std::string name)
 {
+    // Check if custom xml file exists
+    if (!View::CUSTOM_RESOURCES_PATH.empty() && std::ifstream { View::CUSTOM_RESOURCES_PATH + "xml/" + name }.good())
+    {
+        return View::createFromXMLFile(View::CUSTOM_RESOURCES_PATH + "xml/" + name);
+    }
+
 #ifdef USE_LIBROMFS
     return View::createFromXMLString(romfs::get("xml/" + name).string());
 #else

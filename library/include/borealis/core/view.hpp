@@ -374,6 +374,8 @@ class View
   public:
     static constexpr float AUTO = NAN;
 
+    inline static std::string CUSTOM_RESOURCES_PATH;
+
     View();
     virtual ~View();
 
