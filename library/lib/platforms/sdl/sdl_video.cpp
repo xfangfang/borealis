@@ -22,6 +22,10 @@
 #include <windows.h>
 #endif
 #ifdef BOREALIS_USE_OPENGL
+#ifdef __PSV__
+#include <GLES2/gl2.h>
+#define NANOVG_GLES2_IMPLEMENTATION
+#else
 #include <glad/glad.h>
 #ifdef USE_GLES2
 #define NANOVG_GLES2_IMPLEMENTATION
@@ -29,6 +33,7 @@
 #define NANOVG_GLES3_IMPLEMENTATION
 #else
 #define NANOVG_GL3_IMPLEMENTATION
+#endif
 #endif
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_D3D11)
@@ -121,6 +126,11 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         Logger::error("sdl: failed to initialize");
         return;
     }
+
+#ifdef __PSV__
+    windowWidth = 960;
+    windowHeight = 544;
+#endif
     // Create window
     Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 #ifdef BOREALIS_USE_OPENGL
@@ -204,8 +214,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     SDL_AddEventWatch(sdlEventWatcher, window);
 #ifdef BOREALIS_USE_OPENGL
+#ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
+#endif
     SDL_GL_SetSwapInterval(1);
 
     Logger::info("sdl: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
@@ -213,7 +225,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Logger::info("sdl: GL Version: {}", (const char*)glGetString(GL_VERSION));
 
     // Initialize nanovg
-#ifdef USE_GLES2
+#ifdef __PSV__
+    this->nvgContext = nvgCreateGLES2(0);
+#elif USE_GLES2
     this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #elif USE_GLES3
     this->nvgContext = nvgCreateGLES3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
@@ -232,8 +246,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     if (!this->nvgContext)
     {
-        brls::fatal("glfw: unable to init nanovg");
-        return;
+        brls::fatal("sdl: unable to init nanovg");
     }
 
     // Setup window state

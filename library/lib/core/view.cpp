@@ -19,6 +19,7 @@
 #include <math.h>
 
 #include <algorithm>
+#include <sstream>
 #include <borealis/core/animation.hpp>
 #include <borealis/core/application.hpp>
 #include <borealis/core/box.hpp>
@@ -1580,11 +1581,18 @@ bool View::applyXMLAttribute(std::string name, std::string value)
         // #RRGGBB format
         if (value.size() == 7)
         {
-            unsigned char r, g, b;
-            int result = sscanf(value.c_str(), "#%02hhx%02hhx%02hhx", &r, &g, &b);
+            unsigned int r = 0, g = 0, b = 0;
+            std::stringstream sr{value.substr(1,2)};
+            sr >> std::hex >> r;
+            std::stringstream sg{value.substr(3,2)};
+            sg >> std::hex >> g;
+            std::stringstream sb{value.substr(5,2)};
+            sb >> std::hex >> b;
 
-            if (result != 3)
+            if (sr.fail() || sg.fail() || sb.fail())
+            {
                 return false;
+            }
             else if (this->colorAttributes.count(name) > 0)
             {
                 this->colorAttributes[name](nvgRGB(r, g, b));
@@ -1598,11 +1606,20 @@ bool View::applyXMLAttribute(std::string name, std::string value)
         // #RRGGBBAA format
         else if (value.size() == 9)
         {
-            unsigned char r, g, b, a;
-            int result = sscanf(value.c_str(), "#%02hhx%02hhx%02hhx%02hhx", &r, &g, &b, &a);
+            unsigned int r = 0, g = 0, b = 0, a = 0;
+            std::stringstream sr{value.substr(1,2)};
+            sr >> std::hex >> r;
+            std::stringstream sg{value.substr(3,2)};
+            sg >> std::hex >> g;
+            std::stringstream sb{value.substr(5,2)};
+            sb >> std::hex >> b;
+            std::stringstream sa{value.substr(7,2)};
+            sa >> std::hex >> a;
 
-            if (result != 4)
+            if (sr.fail() || sg.fail() || sb.fail() || sa.fail())
+            {
                 return false;
+            }
             else if (this->colorAttributes.count(name) > 0)
             {
                 this->colorAttributes[name](nvgRGBA(r, g, b, a));

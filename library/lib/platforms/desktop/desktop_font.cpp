@@ -36,10 +36,9 @@ void DesktopFontLoader::loadFonts()
 
     // Regular
     // Try to use user-provided font first, fallback to Inter
-    if (access(USER_FONT_PATH.c_str(), F_OK) != -1)
+    if (access(USER_FONT_PATH.c_str(), F_OK) != -1 && this->loadFontFromFile(FONT_REGULAR, USER_FONT_PATH))
     {
         brls::Logger::info("Load custom font: {}", USER_FONT_PATH);
-        this->loadFontFromFile(FONT_REGULAR, USER_FONT_PATH);
 
         // Add internal font as fallback
 #ifdef USE_LIBROMFS

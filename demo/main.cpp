@@ -24,10 +24,6 @@
 #include <SDL2/SDL_main.h>
 #endif
 
-#ifdef __PSV__
-#include <borealis/platforms/psv/vita_debug.h>
-#endif
-
 #include <borealis.hpp>
 #include <cstdlib>
 #include <string>
@@ -52,13 +48,6 @@ int main(int argc, char* argv[])
     // We recommend to use INFO for real apps
     brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
     brls::Application::setFPSStatus(true);
-
-#ifdef __PSV__
-//    startDebug();
-//    brls::Logger::getLogEvent()->subscribe([](const std::string& log) {
-//            debug("%s\n", log.c_str());
-//    });
-#endif
 
     // Init the app and i18n
     if (!brls::Application::init())
@@ -97,9 +86,6 @@ int main(int argc, char* argv[])
     while (brls::Application::mainLoop())
         ;
 
-#ifdef __PSV__
-//    cleanupDebug();
-#endif
     // Exit
     return EXIT_SUCCESS;
 }

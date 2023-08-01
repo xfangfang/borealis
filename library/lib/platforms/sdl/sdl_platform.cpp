@@ -21,6 +21,13 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
 
+#ifdef __PSV__
+extern "C"
+{
+    unsigned int sceLibcHeapSize = 64 * 1024 * 1024;
+}
+#endif
+
 #ifdef IOS
 #include <sys/utsname.h>
 

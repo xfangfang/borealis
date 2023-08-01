@@ -98,13 +98,17 @@ if (PLATFORM_DESKTOP)
     list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/desktop)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"${BRLS_RESOURCES_DIR}/resources/\"")
 elseif (PLATFORM_PSV)
+    set(BUILD_SHARED_LIBS OFF)
+    set(VIDEO_VITA_PVR ON CACHE BOOL "")
+    add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL EXCLUDE_FROM_ALL)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/psv
-            ${BOREALIS_PATH}/lib/platforms/glfw
+            ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop)
-    list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
-    list(APPEND BRLS_PLATFORM_OPTION -D__GLFW__ -D__PSV__ -DUSE_GLES2)
+    list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2 pthread libGLESv2_stub)
+    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -D__PSV__ -DUSE_GLES2)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
+    set_target_properties(yogacore PROPERTIES POSITION_INDEPENDENT_CODE OFF)
 elseif(PLATFORM_ANDROID)
     find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
@@ -167,6 +171,9 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
         ${BOREALIS_PATH}/lib/extern/nanovg-gl
         )
+if (PLATFORM_PSV)
+        list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
+endif ()
 foreach (lib ${BOREALIS_SOURCE})
     file(GLOB_RECURSE TEMP_SRC "${lib}/*.cpp" "${lib}/*.c")
     list(APPEND BOREALIS_SRC ${TEMP_SRC})

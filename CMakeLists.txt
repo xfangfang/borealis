@@ -10,7 +10,7 @@ option(USE_SHARED_LIB "Whether to use shared libs provided by system" OFF)
 cmake_dependent_option(USE_SYSTEM_FMT "" OFF "NOT USE_SHARED_LIB" ON)
 cmake_dependent_option(USE_SYSTEM_TINYXML2 "" OFF "NOT USE_SHARED_LIB" ON)
 
-if (APPLE AND NOT PLATFORM_IOS)
+if (APPLE AND PLATFORM_DESKTOP)
     option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
@@ -61,15 +61,6 @@ elseif (PLATFORM_SWITCH)
     )
     list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/switch/switch_wrapper.c)
 elseif (PLATFORM_PSV)
-    set(PLATFORM_LIBS
-        glfw3
-        libgpu_es4_ext_stub_weak
-        libGLESv2_stub_weak
-        libIMGEGL_stub_weak
-        SceCtrl_stub
-        SceTouch_stub
-        pthread
-    )
     add_definitions(-D__psp2__ -D__PSV__)
 endif ()
 
