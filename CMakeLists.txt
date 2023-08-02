@@ -96,13 +96,22 @@ if (PLATFORM_DESKTOP)
     endif ()
 elseif (PLATFORM_PSV)
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
-    vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-        VERSION ${VITA_VERSION}
-        NAME ${PROJECT_NAME}
-        FILE ${CMAKE_SOURCE_DIR}/resources resources
-        FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-        FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
-    )
+    if (USE_LIBROMFS)
+        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
+            VERSION ${VITA_VERSION}
+            NAME ${PROJECT_NAME}
+            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
+            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
+        )
+    else()
+        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
+            VERSION ${VITA_VERSION}
+            NAME ${PROJECT_NAME}
+            FILE ${CMAKE_SOURCE_DIR}/resources resources
+            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
+            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
+        )
+    endif()
 elseif (PLATFORM_SWITCH)
     add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
         COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}

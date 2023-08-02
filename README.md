@@ -78,13 +78,31 @@ xmake b -y demo
 - Unlock unsafe mode in `System Settings/HENkaku`
 
 > We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`
->
-> PSV support is experimental at present, and it is very slow to run.
+> Overclock ES4(GPU) to 166MHz or higher for a smoother experience.
 
 ```bash
 cmake -B build_psv -DPLATFORM_PSV=ON
 make -C build_psv borealis_demo.vpk -j$(nproc)
 ```
+
+#### My daily development experience on PSV
+
+1. Install [PrincessLog](https://github.com/isage/plog) to psv.(This can help display the log, see the README for more info)  
+2. Install [vitacompanion](https://github.com/devnoname120/vitacompanion) to psv.(Sending updated files to psv without fully installing a vpk)
+3. Install the `borealis_demo.vpk` we built before.
+4. Run `nc -kl -w 3 9999` in Your computer. (Working as a logging server)
+5. After modifying the code, run:
+
+```shell
+make -j$(nproc) && \
+mv borealis_demo.self eboot.bin && \
+curl --ftp-method nocwd -T eboot.bin ftp://192.168.1.140:1337/ux0:/app/BOREALIS0/ && \
+echo launch BOREALIS0 | nc 192.168.1.140 1338
+```
+
+>  192.168.1.140 is the ip address of my psv
+>  BOREALIS0 is the demo app ID
+
 
 ## Building the demo for Android
 
