@@ -406,6 +406,18 @@ DesktopPlatform::DesktopPlatform()
             this->themeVariant = ThemeVariant::DARK;
             brls::Logger::info("Set app theme: Dark");
         }
+#elif defined(_WIN32)
+        HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        if (hUxtheme)
+        {
+            auto fnSystemUseDarkMode = reinterpret_cast<BOOL(WINAPI*)()>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(138)));
+            if (fnSystemUseDarkMode != nullptr && fnSystemUseDarkMode())
+            {
+                this->themeVariant = ThemeVariant::DARK;
+                brls::Logger::info("Set app theme: Dark");
+            }
+            FreeLibrary(hUxtheme);
+        }
 #endif
     }
     else if (!strcasecmp(themeEnv, "DARK"))
