@@ -95,6 +95,7 @@ if (PLATFORM_DESKTOP)
         add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
     endif ()
 elseif (PLATFORM_PSV)
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     if (USE_LIBROMFS)
         vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self

@@ -24,7 +24,8 @@
 #ifdef __PSV__
 extern "C"
 {
-    unsigned int sceLibcHeapSize = 64 * 1024 * 1024;
+    unsigned int _newlib_heap_size_user = 128 * 1024 * 1024;
+    unsigned int sceLibcHeapSize        = 64 * 1024 * 1024;
 }
 #endif
 

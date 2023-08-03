@@ -77,7 +77,7 @@ xmake b -y demo
 - put `sce_sys` files to `psv/sce_sys`
 - Unlock unsafe mode in `System Settings/HENkaku`
 
-> We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`
+> We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`  
 > Overclock ES4(GPU) to 166MHz or higher for a smoother experience.
 
 ```bash
@@ -100,7 +100,7 @@ curl --ftp-method nocwd -T eboot.bin ftp://192.168.1.140:1337/ux0:/app/BOREALIS0
 echo launch BOREALIS0 | nc 192.168.1.140 1338
 ```
 
->  192.168.1.140 is the ip address of my psv
+>  192.168.1.140 is the ip address of my psv  
 >  BOREALIS0 is the demo app ID
 
 

@@ -105,7 +105,10 @@ elseif (PLATFORM_PSV)
             ${BOREALIS_PATH}/lib/platforms/psv
             ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop)
-    list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2 pthread libGLESv2_stub)
+    list(APPEND BRLS_PLATFORM_LIBS
+            SDL2::SDL2
+            -Wl,--whole-archive pthread -Wl,--no-whole-archive
+            libGLESv2_stub)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -D__PSV__ -DUSE_GLES2)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
     set_target_properties(yogacore PROPERTIES POSITION_INDEPENDENT_CODE OFF)
