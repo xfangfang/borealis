@@ -54,6 +54,10 @@ using winrt::Windows::UI::ViewManagement::UISettings;
 #include <ifaddrs.h>
 #endif
 
+#if defined(__PSV__)
+#include <psp2/net/netctl.h>
+#endif
+
 namespace brls
 {
 #ifdef __WINRT__
@@ -462,6 +466,8 @@ bool DesktopPlatform::canShowWirelessLevel()
 #if defined(IOS)
 #elif defined(__APPLE__)
     return true;
+#elif defined(__PSV__)
+    return true;
 #elif defined(_WIN32)
     return true;
 #else
@@ -504,6 +510,10 @@ bool DesktopPlatform::hasWirelessConnection()
 #if defined(IOS)
 #elif defined(__APPLE__)
     return darwin_wlan_quality() > 0;
+#elif defined(__PSV__)
+    SceNetCtlInfo info;
+    int ret = sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
+    return ret >= 0;
 #elif defined(__WINRT__)
     return winrt_wlan_quality() > 0;
 #elif defined(_WIN32)
@@ -651,6 +661,12 @@ std::string DesktopPlatform::getIpAddress()
     std::string ipaddr = "-";
 #if defined(ANDROID)
 #elif defined(IOS)
+#elif defined(__PSV__)
+    SceNetCtlInfo info;
+    int ret = sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
+    if (ret < 0)
+        return ipaddr;
+    return std::string{info.ip_address};
 #elif defined(__APPLE__) || defined(__linux__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)
