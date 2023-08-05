@@ -98,9 +98,13 @@ if (PLATFORM_DESKTOP)
     list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/desktop)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"${BRLS_RESOURCES_DIR}/resources/\"")
 elseif (PLATFORM_PSV)
-    set(BUILD_SHARED_LIBS OFF)
-    set(VIDEO_VITA_PVR ON CACHE BOOL "")
-    add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL EXCLUDE_FROM_ALL)
+    if (USE_SYSTEM_SDL2)
+        find_package(SDL2 REQUIRED)
+    else ()
+        set(BUILD_SHARED_LIBS OFF)
+        set(VIDEO_VITA_PVR ON CACHE BOOL "")
+        add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL EXCLUDE_FROM_ALL)
+    endif ()
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/psv
             ${BOREALIS_PATH}/lib/platforms/sdl
