@@ -361,7 +361,6 @@ void Application::processInput()
     bool repeating                  = false;
     Time cpuTime = getCPUTimeUsec();
 
-    controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
     controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
 
     for (int i = 0; i < _BUTTON_MAX; i++)

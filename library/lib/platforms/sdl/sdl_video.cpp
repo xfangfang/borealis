@@ -24,6 +24,11 @@
 #ifdef BOREALIS_USE_OPENGL
 #ifdef __PSV__
 #include <GLES2/gl2.h>
+extern "C"
+{
+#include <gpu_es4/psp2_pvr_hint.h>
+#include <psp2/kernel/modulemgr.h>
+}
 #define NANOVG_GLES2_IMPLEMENTATION
 #else
 #include <glad/glad.h>
@@ -121,16 +126,47 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
 
 SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
+#ifdef __PSV__
+#define MAX_PATH 256
+    /// Huge thanks to SonicMastr for his kindness help and contribution in psv homebrew.
+
+    windowWidth  = 960;
+    windowHeight = 544;
+
+    /* Disable Back Touchpad to prevent "misclicks" */
+    SDL_setenv("VITA_DISABLE_TOUCH_BACK", "1", 1);
+
+    /* We need to use some custom hints */
+    SDL_setenv("VITA_PVR_SKIP_INIT", "yeet", 1);
+
+    PVRSRV_PSP2_APPHINT hint;
+    char target_path[MAX_PATH];
+    const char* default_path = "app0:module";
+
+    /* Load Modules */
+    sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+    sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+    snprintf(target_path, MAX_PATH, "%s/%s", default_path, "libgpu_es4_ext.suprx");
+    sceKernelLoadStartModule(target_path, 0, NULL, 0, NULL, NULL);
+    snprintf(target_path, MAX_PATH, "%s/%s", default_path, "libIMGEGL.suprx");
+    sceKernelLoadStartModule(target_path, 0, NULL, 0, NULL, NULL);
+
+    /* Set PVR Hints */
+    PVRSRVInitializeAppHint(&hint);
+    snprintf(hint.szGLES1, MAX_PATH, "%s/%s", default_path, "libGLESv1_CM.suprx");
+    snprintf(hint.szGLES2, MAX_PATH, "%s/%s", default_path, "libGLESv2.suprx");
+    snprintf(hint.szWindowSystem, MAX_PATH, "%s/%s", default_path, "libpvrPSP2_WSEGL.suprx");
+
+    hint.ui32SwTexOpCleanupDelay = 32000; // Set to 32 milliseconds to prevent a pool of unfreed memory
+    PVRSRVCreateVirtualAppHint(&hint);
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         Logger::error("sdl: failed to initialize");
         return;
     }
 
-#ifdef __PSV__
-    windowWidth = 960;
-    windowHeight = 544;
-#endif
     // Create window
     Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 #ifdef BOREALIS_USE_OPENGL
