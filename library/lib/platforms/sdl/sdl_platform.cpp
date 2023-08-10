@@ -20,15 +20,7 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
-
-#ifdef __PSV__
-extern "C"
-{
-    unsigned int _newlib_heap_size_user      = 240 * 1024 * 1024;
-    unsigned int sceLibcHeapSize             = 24 * 1024 * 1024;
-    unsigned int _pthread_stack_default_user = 2 * 1024 * 1024;
-}
-#endif
+#include <unordered_map>
 
 #ifdef IOS
 #include <sys/utsname.h>
@@ -54,7 +46,8 @@ SDLPlatform::SDLPlatform()
 #elif defined(IOS)
     // Enable Fullscreen on iOS
     VideoContext::FULLSCREEN = true;
-    if (!isIPad()){
+    if (!isIPad())
+    {
         SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     }
     SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
@@ -69,6 +62,36 @@ SDLPlatform::SDLPlatform()
 
     // Platform impls
     this->audioPlayer = new NullAudioPlayer();
+
+    // override local
+    if (Platform::APP_LOCALE_DEFAULT == LOCALE_AUTO)
+    {
+        SDL_Locale* locales = SDL_GetPreferredLocales();
+        if (locales != nullptr && locales->language != nullptr)
+        {
+            std::unordered_map<std::string, std::string> sdl2brls = {
+                { "zh_CN", LOCALE_ZH_HANS },
+                { "zh_TW", LOCALE_ZH_HANT },
+                { "ja_JP", LOCALE_JA },
+                { "ko_KR", LOCALE_Ko },
+            };
+            std::string lang = std::string { locales->language };
+            if (locales->country)
+            {
+                lang += "_" + std::string { locales->country };
+            }
+            if (sdl2brls.count(lang) > 0)
+            {
+                this->locale = sdl2brls[lang];
+            }
+            else
+            {
+                this->locale = LOCALE_EN_US;
+            }
+            brls::Logger::info("Set app locale: {}", this->locale);
+            SDL_free(locales);
+        }
+    }
 }
 
 void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)

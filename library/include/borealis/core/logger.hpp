@@ -21,6 +21,10 @@
 #include <android/log.h>
 #endif
 
+#ifdef __PSV__
+#include <psp2/kernel/clib.h>
+#endif
+
 #include <fmt/core.h>
 
 #include <borealis/core/event.hpp>
@@ -76,23 +80,22 @@ class Logger
         auto now    = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
             - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
-        time_t tt    = std::chrono::system_clock::to_time_t(now);
-        auto time_tm = localtime(&tt);
+        time_t tt       = std::chrono::system_clock::to_time_t(now);
+        auto time_tm    = localtime(&tt);
+        std::string log = fmt::format(format, std::forward<Args>(args)...);
 
         try
         {
 #ifdef IOS
-            fmt::print("{:02d}:{:02d}:{:02d}.{:03d} {} ", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color);
-#else
-            fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m ", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix);
-#endif
-            fmt::print(format, std::forward<Args>(args)...);
-            fmt::print("\n");
-
-            std::string log = fmt::format(format, std::forward<Args>(args)...);
-#ifdef ANDROID
+            fmt::print("{:02d}:{:02d}:{:02d}.{:03d} {} {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, log);
+#elif defined(ANDROID)
             __android_log_print(6 - (int)level, "borealis", "%s\n", log.c_str());
+#elif defined(__PSV__)
+            sceClibPrintf("%02d:%02d:%02d.%03d\033%s[%s]\033[0m %s\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color.c_str(), prefix.c_str(), log.c_str());
+#else
+            fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix, log);
 #endif
+
             logEvent.fire(log);
         }
         catch (const std::exception& e)

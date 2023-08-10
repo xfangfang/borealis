@@ -54,9 +54,6 @@ using winrt::Windows::UI::ViewManagement::UISettings;
 #include <ifaddrs.h>
 #endif
 
-#if defined(__PSV__)
-#include <psp2/net/netctl.h>
-#endif
 
 namespace brls
 {
@@ -67,14 +64,14 @@ const static auto timeout = std::chrono::milliseconds(500);
 int winrt_wlan_quality()
 {
     auto async = WiFiAdapter::FindAllAdaptersAsync();
-    auto code = async.wait_for(timeout);
+    auto code  = async.wait_for(timeout);
     if (code == winrt::Windows::Foundation::AsyncStatus::Completed)
     {
         auto adapters = async.GetResults();
         for (auto it : adapters)
         {
             auto profileAsync = it.NetworkAdapter().GetConnectedProfileAsync();
-            auto profileCode = profileAsync.wait_for(timeout);
+            auto profileCode  = profileAsync.wait_for(timeout);
             if (profileCode == winrt::Windows::Foundation::AsyncStatus::Completed)
             {
                 auto profile = profileAsync.GetResults();
@@ -434,12 +431,13 @@ DesktopPlatform::DesktopPlatform()
     {
         char* langEnv = getenv("BOREALIS_LANG");
         this->locale  = langEnv ? std::string(langEnv) : LOCALE_DEFAULT;
+        brls::Logger::info("Auto set app locale: {}", this->locale);
     }
     else
     {
         this->locale = Platform::APP_LOCALE_DEFAULT;
+        brls::Logger::info("Set app locale: {}", this->locale);
     }
-    brls::Logger::info("Set app locale: {}", this->locale);
 
     // Platform impls
     this->fontLoader = new DesktopFontLoader();
@@ -465,8 +463,6 @@ bool DesktopPlatform::canShowWirelessLevel()
 {
 #if defined(IOS)
 #elif defined(__APPLE__)
-    return true;
-#elif defined(__PSV__)
     return true;
 #elif defined(_WIN32)
     return true;
@@ -510,10 +506,6 @@ bool DesktopPlatform::hasWirelessConnection()
 #if defined(IOS)
 #elif defined(__APPLE__)
     return darwin_wlan_quality() > 0;
-#elif defined(__PSV__)
-    SceNetCtlInfo info;
-    int ret = sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
-    return ret >= 0;
 #elif defined(__WINRT__)
     return winrt_wlan_quality() > 0;
 #elif defined(_WIN32)
@@ -661,12 +653,6 @@ std::string DesktopPlatform::getIpAddress()
     std::string ipaddr = "-";
 #if defined(ANDROID)
 #elif defined(IOS)
-#elif defined(__PSV__)
-    SceNetCtlInfo info;
-    int ret = sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
-    if (ret < 0)
-        return ipaddr;
-    return std::string{info.ip_address};
 #elif defined(__APPLE__) || defined(__linux__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)

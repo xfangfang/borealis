@@ -85,7 +85,7 @@ namespace brls
         if (level >= -60) {
             return 3;
         } else if (level >= -70) {
-            return 1;
+            return 2;
         }  else if (level >= -80) {
             return 1;
         }
