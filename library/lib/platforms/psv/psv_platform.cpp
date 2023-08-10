@@ -56,10 +56,6 @@ int CallbackThread(SceSize args, void* arg)
 
     for (;;)
     {
-        if (DISABLE_SUSPEND)
-        {
-            sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DISABLE_AUTO_SUSPEND);
-        }
         sceKernelDelayThreadCB(10000000);
     }
 
@@ -150,16 +146,6 @@ std::string PsvPlatform::getDnsServer()
 
 void PsvPlatform::openBrowser(std::string url)
 {
-}
-
-void PsvPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
-{
-    DISABLE_SUSPEND = disable;
-}
-
-bool PsvPlatform::isScreenDimmingDisabled()
-{
-    return DISABLE_SUSPEND;
 }
 
 } // namespace brls

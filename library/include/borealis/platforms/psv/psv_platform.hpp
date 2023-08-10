@@ -36,8 +36,6 @@ namespace brls
         std::string getIpAddress() override;
         std::string getDnsServer() override;
         void openBrowser(std::string url) override;
-        void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
-        bool isScreenDimmingDisabled() override;
     };
 
 } // namespace brls
