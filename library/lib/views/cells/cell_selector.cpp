@@ -28,8 +28,7 @@ SelectorCell::SelectorCell()
     this->registerClickAction([this](View* view) {
         Dropdown* dropdown = new Dropdown(
             this->title->getFullText(), data, [this](int selected) {
-                this->setSelection(selected);
-                this->event.fire(selected);
+                this->setSelection(selected, false);
             },
             selection);
         Application::pushActivity(new Activity(dropdown));
