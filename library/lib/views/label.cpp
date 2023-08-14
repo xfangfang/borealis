@@ -80,8 +80,21 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
         .height = height,
     };
 
-    if (fullText.empty())
+    if (fullText.empty()) {
+        if (widthMode == YGMeasureModeExactly && heightMode == YGMeasureModeExactly)
+        {
+            return size;
+        }
+        else if (heightMode == YGMeasureModeExactly)
+        {
+            size.width = 0;
+        }
+        else if (widthMode == YGMeasureModeExactly)
+        {
+            size.height = 0;
+        }
         return size;
+    }
 
     // XXX: workaround for a Yoga bug
     if (widthMode == YGMeasureModeAtMost && (width == 0 || std::isnan(width)))
@@ -185,6 +198,10 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
     return size;
 }
 
+void Label::setCursor(int cursor) {
+    this->cursor = cursor;
+}
+
 Label::Label()
 {
     Style style = Application::getStyle();
@@ -227,6 +244,9 @@ Label::Label()
 
     this->registerBoolXMLAttribute("singleLine", [this](bool value)
         { this->setSingleLine(value); });
+
+    this->registerFloatXMLAttribute("cursor", [this](float value)
+        { this->setCursor(value); });
 
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
         "horizontalAlign", HorizontalAlign, this->setHorizontalAlign,
@@ -460,7 +480,36 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
         else if (vertAlign == NVG_ALIGN_BOTTOM)
             textY += height;
 
-        nvgText(vg, textX, textY, this->truncatedText.c_str(), nullptr);
+        // 绘制编辑游标
+        float nextX = nvgText(vg, textX, textY, this->truncatedText.c_str(), nullptr);
+        if (this->cursor >= (int)CursorPosition::END) {
+            nvgSave(vg);
+            float lineh;
+            nvgTextMetrics(vg, NULL, NULL, &lineh);
+            float cursorX = x;
+            int textSize = this->truncatedText.size();
+            if (this->cursor == (int)CursorPosition::END) {
+                cursorX = nextX;
+            } else if (this->cursor > (int)CursorPosition::START) {
+                if (textSize > this->cursor) {
+                    std::vector<NVGglyphPosition> glyphs;
+                    glyphs.resize(textSize);
+                    int nglyphs = nvgTextGlyphPositions(vg, x, y, this->truncatedText.c_str(), NULL, glyphs.data(), textSize);
+                    if (nglyphs <= this->cursor) {
+                        cursorX = nextX;
+                    } else {
+                        cursorX = glyphs.at(this->cursor).x;
+                    }
+                } else if (textSize == this->cursor) {
+                    cursorX = nextX;
+                }
+            }
+            int cursorY = textX;
+            nvgBeginPath(vg);
+            nvgRect(vg, cursorX, y, 1, lineh);
+            nvgFill(vg);
+            nvgRestore(vg);
+        }
     }
 }
 

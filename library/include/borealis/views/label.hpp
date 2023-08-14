@@ -43,6 +43,13 @@ enum class VerticalAlign
     BOTTOM,
 };
 
+enum class CursorPosition
+{
+    UNSET = -2,
+    END = -1,
+    START = 0,
+};
+
 // Some text. The Label will automatically grow as much as possible.
 // If there is enough space, the label dimensions will fit the text.
 // If there is not enough horizontal space available, it will wrap and expand its height.
@@ -141,6 +148,7 @@ class Label : public View
     static std::string STConverter(const std::string& text);
 
     static inline bool OPENCC_ON = true;
+    void setCursor(int cursor);
 
   protected:
     std::string truncatedText;
@@ -162,6 +170,7 @@ class Label : public View
     bool autoAnimate = true;
     bool animated    = false; // should it animate?
     bool animating   = false; // currently animating?
+    int cursor = -2;
 
     Timer scrollingTimer;
     Animatable scrollingAnimation;

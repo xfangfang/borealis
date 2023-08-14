@@ -133,7 +133,12 @@ target("demo")
             import("uwp")(target)
         end)
     end
-    if is_plat("mingw") then
+    if is_plat("windows", "mingw") then
+        add_syslinks("Wlanapi", "iphlpapi", "Ws2_32")
+    end
+    if is_plat("windows") then
+        add_ldflags("/manifest:EMBED", "/MANIFESTINPUT:demo/resource.manifest", {force = true})
+    elseif is_plat("mingw") then
         add_ldflags("-static")
     end
     if is_mode("release") then
@@ -142,10 +147,6 @@ target("demo")
             add_ldflags("-Wl,--subsystem,windows", {force = true})
         elseif is_plat("windows") then
             add_ldflags("/SUBSYSTEM:WINDOWS", "/ENTRY:mainCRTStartup", {force = true})
-            add_ldflags("/manifest:EMBED", "/MANIFESTINPUT:demo/resource.manifest", {force = true})
-        end
-        if is_plat("windows", "mingw") then
-            add_syslinks("Wlanapi", "iphlpapi", "Ws2_32")
         end
     end
     set_rundir("$(projectdir)")

@@ -98,6 +98,7 @@ void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, ui
 {
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
+    this->imeManager   = new SDLImeManager(&this->otherEvent);
 }
 
 void SDLPlatform::restoreWindow()
@@ -158,7 +159,7 @@ std::string SDLPlatform::getName()
     return "SDL";
 }
 
-static bool processEvent(SDLPlatform* platform, SDL_Event* event)
+bool SDLPlatform::processEvent(SDL_Event* event)
 {
     if (event->type == SDL_QUIT)
     {
@@ -166,7 +167,7 @@ static bool processEvent(SDLPlatform* platform, SDL_Event* event)
     }
     else if (event->type == SDL_MOUSEWHEEL)
     {
-        auto* manager = (SDLInputManager*)platform->getInputManager();
+        auto* manager = this->inputManager;
         if (manager)
             manager->updateMouseWheel(event->wheel);
     }
@@ -178,8 +179,14 @@ static bool processEvent(SDLPlatform* platform, SDL_Event* event)
     else if (event->type == SDL_APP_WILLENTERFOREGROUND)
     {
         brls::Application::getWindowFocusChangedEvent()->fire(true);
+
     }
 #endif
+    else if (event->type != SDL_POLLSENTINEL)
+    {
+        // 其它没有处理的事件
+        this->otherEvent.fire(event);
+    }
     brls::Application::setActiveEvent(true);
     return true;
 }
@@ -190,7 +197,7 @@ bool SDLPlatform::mainLoopIteration()
     bool hasEvent = false;
     while (SDL_PollEvent(&event))
     {
-        if (!processEvent(this, &event))
+        if (!processEvent(&event))
         {
             return false;
         }
@@ -199,12 +206,11 @@ bool SDLPlatform::mainLoopIteration()
     if (!hasEvent && !Application::hasActiveEvent())
     {
         if (SDL_WaitEventTimeout(&event, (int)(brls::Application::getDeactivatedFrameTime() * 1000))
-            && !processEvent(this, &event))
+            && !processEvent(&event))
         {
             return false;
         }
     }
-
     return true;
 }
 
@@ -221,6 +227,10 @@ VideoContext* SDLPlatform::getVideoContext()
 InputManager* SDLPlatform::getInputManager()
 {
     return this->inputManager;
+}
+
+ImeManager* SDLPlatform::getImeManager() {
+    return this->imeManager;
 }
 
 SDLPlatform::~SDLPlatform()
