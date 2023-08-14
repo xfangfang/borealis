@@ -37,8 +37,16 @@
 #pragma warning(disable: 4706)  // assignment within conditional expression
 #endif
 
+#ifdef __PSV__
+#define NVG_INIT_FONTIMAGE_SIZE  240
+#else
 #define NVG_INIT_FONTIMAGE_SIZE  512
+#endif
+#ifdef __PSV__
+#define NVG_MAX_FONTIMAGE_SIZE   960
+#else
 #define NVG_MAX_FONTIMAGE_SIZE   2048
+#endif
 #define NVG_MAX_FONTIMAGES       4
 
 #define NVG_INIT_COMMANDS_SIZE 256
@@ -132,6 +140,7 @@ struct NVGcontext {
 	int fillTriCount;
 	int strokeTriCount;
 	int textTriCount;
+	int textTextureDirty;
 };
 
 static float nvg__sqrtf(float a) { return sqrtf(a); }
@@ -163,6 +172,7 @@ static float nvg__normalize(float *x, float* y)
 	return d;
 }
 
+static void nvg__flushTextTexture(NVGcontext* ctx);
 
 static void nvg__deletePathCache(NVGpathCache* c)
 {
@@ -384,6 +394,7 @@ void nvgBeginFrame(NVGcontext* ctx, float windowWidth, float windowHeight, float
 	ctx->fillTriCount = 0;
 	ctx->strokeTriCount = 0;
 	ctx->textTriCount = 0;
+	ctx->textTextureDirty = 0;
 }
 
 void nvgCancelFrame(NVGcontext* ctx)
@@ -393,6 +404,11 @@ void nvgCancelFrame(NVGcontext* ctx)
 
 void nvgEndFrame(NVGcontext* ctx)
 {
+	if(ctx->textTextureDirty != 0) {
+		nvg__flushTextTexture(ctx);
+		ctx->textTextureDirty=0;
+	}
+
 	ctx->params.renderFlush(ctx->params.userPtr);
 	if (ctx->fontImageIdx != 0) {
 		int fontImage = ctx->fontImages[ctx->fontImageIdx];
@@ -2526,8 +2542,8 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 		}
 	}
 
-	// TODO: add back-end bit to do this just once per frame.
-	nvg__flushTextTexture(ctx);
+	// Back-end bit to do this just once per frame.
+	ctx->textTextureDirty = 1;
 
 	nvg__renderText(ctx, verts, nverts);
 

@@ -22,6 +22,7 @@
 
 #include <borealis/core/event.hpp>
 #include <borealis/core/geometry.hpp>
+#include <borealis/core/time.hpp>
 #include <vector>
 #include <map>
 
@@ -247,6 +248,7 @@ struct ControllerState
 {
     bool buttons[_BUTTON_MAX]; // true: pressed
     float axes[_AXES_MAX]; // from 0.0f to 1.0f
+    Time repeatingButtonStop[_BUTTON_MAX]; // When the pressing time is greater than this value, trigger long press or repeat
 };
 
 struct KeyboardControllerState

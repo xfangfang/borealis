@@ -20,6 +20,14 @@
 #include <borealis/platforms/switch/switch_platform.hpp>
 #endif
 
+#ifdef ANDROID
+#include <borealis/platforms/android/android_platform.hpp>
+#endif
+
+#ifdef __PSV__
+#include <borealis/platforms/psv/psv_platform.hpp>
+#endif
+
 #ifdef __GLFW__
 #include <borealis/platforms/glfw/glfw_platform.hpp>
 #endif
@@ -35,6 +43,10 @@ Platform* Platform::createPlatform()
 {
 #if defined(__SWITCH__)
     return new SwitchPlatform();
+#elif defined(ANDROID)
+    return new AndroidPlatform();
+#elif defined(__PSV__)
+    return new PsvPlatform();
 #elif defined(__SDL2__)
     return new SDLPlatform();
 #elif defined(__GLFW__)

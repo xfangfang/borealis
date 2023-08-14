@@ -47,7 +47,7 @@ namespace brls
 
 // Constants used for scaling as well as
 // creating a window of the right size on PC
-#ifdef __PSV__
+#ifdef PSV_BIG_PICTURE
 constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 960;
 constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 544;
 #else

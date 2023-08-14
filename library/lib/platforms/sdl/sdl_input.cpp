@@ -199,6 +199,29 @@ static const std::map<SDL_Scancode, BrlsKeyboardScancode> brlsKeyboardMap = {
     {SDL_SCANCODE_MENU, BRLS_KBD_KEY_MENU}
 };
 
+std::unordered_map<SDL_JoystickID, SDL_GameController*> controllers;
+
+static int sdlEventWatcher(void* data, SDL_Event* event)
+{
+    if (event->type == SDL_CONTROLLERDEVICEADDED)
+    {
+        SDL_GameController* controller = SDL_GameControllerOpen(event->cdevice.which);
+        if (controller)
+        {
+            SDL_JoystickID jid = SDL_JoystickGetDeviceInstanceID(event->cdevice.which);
+            Logger::info("Controller connected: {}/{}", jid, SDL_GameControllerName(controller));
+            controllers.insert({ jid, controller });
+        }
+    }
+    else if (event->type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        Logger::info("Controller disconnected: {}", event->cdevice.which);
+        controllers.erase(event->cdevice.which);
+    }
+    Application::setActiveEvent(true);
+    return 0;
+}
+
 SDLInputManager::SDLInputManager(SDL_Window* window)
     : window(window)
 {
@@ -212,14 +235,17 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
         brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
     }
 
-    controllerNum = SDL_NumJoysticks();
-    brls::Logger::info("joystick num: {}", controllerNum);
+    int controllersCount = SDL_NumJoysticks();
+    brls::Logger::info("joystick num: {}", controllersCount);
 
-    for (int i = 0; i < controllerNum; i++)
+    for (int i = 0; i < controllersCount; i++)
     {
-        Logger::info("sdl: joystick {} is gamepad: \"{}\"", i, SDL_JoystickNameForIndex(i));
-        controllers.emplace_back(SDL_GameControllerOpen(i));
+        SDL_JoystickID jid = SDL_JoystickGetDeviceInstanceID(i);
+        Logger::info("sdl: joystick {}: \"{}\"", jid, SDL_JoystickNameForIndex(i));
+        controllers.insert({ jid, SDL_GameControllerOpen(i) });
     }
+
+    SDL_AddEventWatch(sdlEventWatcher, window);
 
     Application::getRunLoopEvent()->subscribe([this]()
         {
@@ -236,7 +262,7 @@ SDLInputManager::~SDLInputManager()
 {
     for (auto i : controllers)
     {
-        SDL_GameControllerClose(i);
+        SDL_GameControllerClose(i.second);
     }
 }
 
@@ -266,10 +292,10 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     for (float& axe : state->axes)
         axe = 0;
 
-    for (int j = 0; j < controllerNum; j++)
+    for (auto& c : controllers)
     {
         ControllerState localState {};
-        updateControllerState(&localState, j);
+        updateControllerState(&localState, c.first);
 
         for (size_t i = 0; i < _BUTTON_MAX; i++)
             state->buttons[i] |= localState.buttons[i];
@@ -302,7 +328,7 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
 
 void SDLInputManager::updateControllerState(ControllerState* state, int controller)
 {
-    if (controller >= controllers.size() || controller < 0)
+    if (controllers.find(controller) == controllers.end())
         return;
     SDL_GameController* c = controllers[controller];
 
@@ -414,19 +440,6 @@ void SDLInputManager::controllerAxisCallback(uint8_t axis, int16_t value) {
 
 void SDLInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
-    // Uncomment to enable touch simulation by mouse
-    //    double x, y;
-    //    glfwGetCursorPos(this->window, &x, &y);
-    //
-    //    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    //    {
-    //        RawTouchState state;
-    //        state.fingerId = 0;
-    //        state.pressed = true;
-    //        state.position.x = x / Application::windowScale;
-    //        state.position.y = y / Application::windowScale;
-    //        states->push_back(state);
-    //    }
 }
 
 void SDLInputManager::updateMouseStates(RawMouseState* state)
@@ -455,10 +468,6 @@ void SDLInputManager::updateMouseStates(RawMouseState* state)
 
 void SDLInputManager::setPointerLock(bool lock)
 {
-    //    pointerLocked = lock;
-    //
-    //    int state = lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
-    //    glfwSetInputMode(window, GLFW_CURSOR, state);
 }
 
 void SDLInputManager::runloopStart()

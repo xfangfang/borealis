@@ -20,6 +20,7 @@
 
 #include <fmt/format.h>
 #include <algorithm>
+#include <sstream>
 #include <borealis/core/animation.hpp>
 #include <borealis/core/application.hpp>
 #include <borealis/core/box.hpp>
@@ -28,6 +29,7 @@
 #include <borealis/core/util.hpp>
 #include <borealis/core/view.hpp>
 #include <borealis/views/applet_frame.hpp>
+#include <fstream>
 
 using namespace brls::literals;
 
@@ -1487,7 +1489,11 @@ std::string View::getFilePathXMLAttributeValue(std::string value)
     if (startsWith(value, "@res/"))
     {
         std::string resPath = value.substr(5);
+#ifdef USE_LIBROMFS
+        return resPath;
+#else
         return std::string(BRLS_RESOURCES) + resPath;
+#endif
     }
 
     return value;
@@ -1511,11 +1517,13 @@ bool View::applyXMLAttribute(std::string name, std::string value)
     // File path -> file path
     if (startsWith(value, "@res/"))
     {
-        std::string path = View::getFilePathXMLAttributeValue(value);
-
         if (this->filePathAttributes.count(name) > 0)
         {
-            this->filePathAttributes[name](path);
+#ifdef USE_LIBROMFS
+            this->filePathAttributes[name](value);
+#else
+            this->filePathAttributes[name](View::getFilePathXMLAttributeValue(value));
+#endif
             return true;
         }
         else
@@ -1623,11 +1631,18 @@ bool View::applyXMLAttribute(std::string name, std::string value)
         // #RRGGBB format
         if (value.size() == 7)
         {
-            unsigned char r, g, b;
-            int result = sscanf(value.c_str(), "#%02hhx%02hhx%02hhx", &r, &g, &b);
+            unsigned int r = 0, g = 0, b = 0;
+            std::stringstream sr{value.substr(1,2)};
+            sr >> std::hex >> r;
+            std::stringstream sg{value.substr(3,2)};
+            sg >> std::hex >> g;
+            std::stringstream sb{value.substr(5,2)};
+            sb >> std::hex >> b;
 
-            if (result != 3)
+            if (sr.fail() || sg.fail() || sb.fail())
+            {
                 return false;
+            }
             else if (this->colorAttributes.count(name) > 0)
             {
                 this->colorAttributes[name](nvgRGB(r, g, b));
@@ -1641,11 +1656,20 @@ bool View::applyXMLAttribute(std::string name, std::string value)
         // #RRGGBBAA format
         else if (value.size() == 9)
         {
-            unsigned char r, g, b, a;
-            int result = sscanf(value.c_str(), "#%02hhx%02hhx%02hhx%02hhx", &r, &g, &b, &a);
+            unsigned int r = 0, g = 0, b = 0, a = 0;
+            std::stringstream sr{value.substr(1,2)};
+            sr >> std::hex >> r;
+            std::stringstream sg{value.substr(3,2)};
+            sg >> std::hex >> g;
+            std::stringstream sb{value.substr(5,2)};
+            sb >> std::hex >> b;
+            std::stringstream sa{value.substr(7,2)};
+            sa >> std::hex >> a;
 
-            if (result != 4)
+            if (sr.fail() || sg.fail() || sb.fail() || sa.fail())
+            {
                 return false;
+            }
             else if (this->colorAttributes.count(name) > 0)
             {
                 this->colorAttributes[name](nvgRGBA(r, g, b, a));
@@ -1736,13 +1760,23 @@ bool View::isXMLAttributeValid(std::string attributeName)
 
 View* View::createFromXMLResource(std::string name)
 {
+    // Check if custom xml file exists
+    if (!View::CUSTOM_RESOURCES_PATH.empty() && std::ifstream { View::CUSTOM_RESOURCES_PATH + "xml/" + name }.good())
+    {
+        return View::createFromXMLFile(View::CUSTOM_RESOURCES_PATH + "xml/" + name);
+    }
+
+#ifdef USE_LIBROMFS
+    return View::createFromXMLString(romfs::get("xml/" + name).string());
+#else
     return View::createFromXMLFile(std::string(BRLS_RESOURCES) + "xml/" + name);
+#endif
 }
 
-View* View::createFromXMLString(std::string xml)
+View* View::createFromXMLString(std::string_view xml)
 {
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
-    tinyxml2::XMLError error        = document->Parse(xml.c_str());
+    tinyxml2::XMLError error        = document->Parse(xml.data());
 
     if (error != tinyxml2::XMLError::XML_SUCCESS)
         fatal("Invalid XML when creating View from XML: error " + std::to_string(error));
@@ -1794,9 +1828,17 @@ View* View::createFromXMLElement(tinyxml2::XMLElement* element)
         const tinyxml2::XMLAttribute* xmlAttribute = element->FindAttribute("xml");
 
         if (xmlAttribute)
+        {
+#ifdef USE_LIBROMFS
+            view = View::createFromXMLString(romfs::get(View::getFilePathXMLAttributeValue(xmlAttribute->Value())).string());
+#else
             view = View::createFromXMLFile(View::getFilePathXMLAttributeValue(xmlAttribute->Value()));
+#endif
+        }
         else
+        {
             fatal("brls:View XML tag must have an \"xml\" attribute");
+        }
     }
     // Otherwise look in the register
     else

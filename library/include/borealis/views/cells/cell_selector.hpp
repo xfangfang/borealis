@@ -51,7 +51,7 @@ class SelectorCell : public DetailCell
 
     static View* create();
 
-  private:
+  protected:
     int selection;
     std::vector<std::string> data;
 

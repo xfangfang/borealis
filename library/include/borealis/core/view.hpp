@@ -38,6 +38,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#ifdef USE_LIBROMFS
+#include <romfs/romfs.hpp>
+#endif
 
 // Registers an "enum" XML attribute, which is just a string attribute with a map string -> enum inside
 // When using this macro please use the same (wonky) formatting as what you see in Box.cpp or View.cpp
@@ -165,7 +168,11 @@ struct AppletFrameItem {
 
     void setIconFromRes(std::string name)
     {
+#ifdef USE_LIBROMFS
+        iconPath = "@res/" + name;
+#else
         iconPath = std::string(BRLS_RESOURCES) + name;
+#endif
     }
 
     void setIconFromFile(std::string path)
@@ -366,6 +373,8 @@ class View
 
   public:
     static constexpr float AUTO = NAN;
+
+    inline static std::string CUSTOM_RESOURCES_PATH;
 
     View();
     virtual ~View();
@@ -933,7 +942,7 @@ class View
      * Use registerXMLView() to add your own views to the table so that
      * you can use them in your own XML files.
      */
-    static View* createFromXMLString(std::string xml);
+    static View* createFromXMLString(std::string_view xml);
 
     /**
      * Creates a view from the given XML element (node and attributes).

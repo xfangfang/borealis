@@ -21,6 +21,7 @@
 #include <borealis/core/box.hpp>
 #include <borealis/core/util.hpp>
 #include <cmath>
+#include <fstream>
 
 namespace brls
 {
@@ -459,11 +460,11 @@ std::vector<View*>& Box::getChildren()
     return this->children;
 }
 
-void Box::inflateFromXMLString(std::string xml)
+void Box::inflateFromXMLString(std::string_view xml)
 {
     // Load XML
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
-    tinyxml2::XMLError error        = document->Parse(xml.c_str());
+    tinyxml2::XMLError error        = document->Parse(xml.data());
 
     this->bindXMLDocument(document);
 
@@ -478,12 +479,22 @@ void Box::inflateFromXMLString(std::string xml)
     return Box::inflateFromXMLElement(element);
 }
 
-void Box::inflateFromXMLRes(std::string name)
+void Box::inflateFromXMLRes(const std::string& name)
 {
+    // Check if custom xml file exists
+    if (!View::CUSTOM_RESOURCES_PATH.empty() && std::ifstream { View::CUSTOM_RESOURCES_PATH + name }.good())
+    {
+        return Box::inflateFromXMLFile(View::CUSTOM_RESOURCES_PATH + name);
+    }
+
+#ifdef USE_LIBROMFS
+    return Box::inflateFromXMLString(romfs::get(name).string());
+#else
     return Box::inflateFromXMLFile(std::string(BRLS_RESOURCES) + name);
+#endif
 }
 
-void Box::inflateFromXMLFile(std::string path)
+void Box::inflateFromXMLFile(const std::string& path)
 {
     // Load XML
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();

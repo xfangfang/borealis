@@ -17,6 +17,14 @@
 
 #pragma once
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
+#ifdef __PSV__
+#include <psp2/kernel/clib.h>
+#endif
+
 #include <fmt/core.h>
 
 #include <borealis/core/event.hpp>
@@ -34,6 +42,20 @@ enum class LogLevel
     LOG_DEBUG,
     LOG_VERBOSE
 };
+
+#ifdef IOS
+#define BRLS_ERROR_COLOR "🔴"
+#define BRLS_WARNING_COLOR "🟠"
+#define BRLS_INFO_COLOR "🔵"
+#define BRLS_DEBUG_COLOR "🟢"
+#define BRLS_VERBOSE_COLOR "⚪️"
+#else
+#define BRLS_ERROR_COLOR "[0;31m"
+#define BRLS_WARNING_COLOR "[0;33m"
+#define BRLS_INFO_COLOR "[0;34m"
+#define BRLS_DEBUG_COLOR "[0;32m"
+#define BRLS_VERBOSE_COLOR "[0;37m"
+#endif
 
 static inline std::string print(const unsigned char* str)
 {
@@ -58,16 +80,22 @@ class Logger
         auto now    = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
             - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
-        time_t tt    = std::chrono::system_clock::to_time_t(now);
-        auto time_tm = localtime(&tt);
+        time_t tt       = std::chrono::system_clock::to_time_t(now);
+        auto time_tm    = localtime(&tt);
+        std::string log = fmt::format(format, std::forward<Args>(args)...);
 
         try
         {
-            fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m ", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix);
-            fmt::print(format, std::forward<Args>(args)...);
-            fmt::print("\n");
+#ifdef IOS
+            fmt::print("{:02d}:{:02d}:{:02d}.{:03d} {} {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, log);
+#elif defined(ANDROID)
+            __android_log_print(6 - (int)level, "borealis", "%s\n", log.c_str());
+#elif defined(__PSV__)
+            sceClibPrintf("%02d:%02d:%02d.%03d\033%s[%s]\033[0m %s\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color.c_str(), prefix.c_str(), log.c_str());
+#else
+            fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix, log);
+#endif
 
-            std::string log = fmt::format(format, std::forward<Args>(args)...);
             logEvent.fire(log);
         }
         catch (const std::exception& e)
@@ -84,31 +112,31 @@ class Logger
     template <typename... Args>
     inline static void error(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_ERROR, "ERROR", "[0;31m", format, std::forward<Args>(args)...);
+        Logger::log(LogLevel::LOG_ERROR, "ERROR", BRLS_ERROR_COLOR, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void warning(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_WARNING, "WARNING", "[0;33m", format, std::forward<Args>(args)...);
+        Logger::log(LogLevel::LOG_WARNING, "WARNING", BRLS_WARNING_COLOR, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void info(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_INFO, "INFO", "[0;34m", format, std::forward<Args>(args)...);
+        Logger::log(LogLevel::LOG_INFO, "INFO", BRLS_INFO_COLOR, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void debug(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_DEBUG, "DEBUG", "[0;32m", format, std::forward<Args>(args)...);
+        Logger::log(LogLevel::LOG_DEBUG, "DEBUG", BRLS_DEBUG_COLOR, format, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline static void verbose(fmt::format_string<Args...> format, Args&&... args)
     {
-        Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", "[0;37m", format, std::forward<Args>(args)...);
+        Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", BRLS_VERBOSE_COLOR, format, std::forward<Args>(args)...);
     }
 
     static Event<std::string>* getLogEvent()

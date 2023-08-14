@@ -20,8 +20,8 @@
 #include <switch.h>
 #endif
 
-#ifdef __PSV__
-#include <borealis/platforms/psv/vita_debug.h>
+#if defined(ANDROID) || defined(IOS)
+#include <SDL2/SDL_main.h>
 #endif
 
 #include <borealis.hpp>
@@ -47,13 +47,7 @@ int main(int argc, char* argv[])
     // Set log level
     // We recommend to use INFO for real apps
     brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
-
-#ifdef __PSV__
-//    startDebug();
-//    brls::Logger::getLogEvent()->subscribe([](const std::string& log) {
-//            debug("%s\n", log.c_str());
-//    });
-#endif
+    brls::Application::setFPSStatus(true);
 
     // Init the app and i18n
     if (!brls::Application::init())
@@ -63,6 +57,8 @@ int main(int argc, char* argv[])
     }
 
     brls::Application::createWindow("demo/title"_i18n);
+
+    brls::Application::getPlatform()->setThemeVariant(brls::ThemeVariant::DARK);
 
     // Have the application register an action on every activity that will quit when you press BUTTON_START
     brls::Application::setGlobalQuit(false);
@@ -90,9 +86,6 @@ int main(int argc, char* argv[])
     while (brls::Application::mainLoop())
         ;
 
-#ifdef __PSV__
-//    cleanupDebug();
-#endif
     // Exit
     return EXIT_SUCCESS;
 }

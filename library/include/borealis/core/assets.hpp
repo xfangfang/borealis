@@ -20,4 +20,8 @@
 #ifndef BRLS_RESOURCES
 #error BRLS_RESOURCES define missing
 #endif
+#ifdef USE_LIBROMFS
+#define BRLS_ASSET(_str) "@res/" _str
+#else
 #define BRLS_ASSET(_str) BRLS_RESOURCES _str
+#endif

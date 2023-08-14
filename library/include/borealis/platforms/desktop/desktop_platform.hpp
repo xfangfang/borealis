@@ -20,10 +20,11 @@
 #include <borealis/core/platform.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
 #include <borealis/platforms/desktop/desktop_ime.hpp>
-#ifdef __linux__
+#if defined(__linux__) and not defined(ANDROID)
 #include <dbus/dbus.h>
+#elif IOS
 #elif __APPLE__
-#import <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
 #endif
 
 namespace brls
@@ -49,6 +50,7 @@ class DesktopPlatform : public Platform
     bool isBatteryCharging() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
+    bool hasEthernetConnection() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
     bool isScreenDimmingDisabled() override;
     std::string getIpAddress() override;
@@ -70,6 +72,7 @@ class DesktopPlatform : public Platform
     bool screenDimmingDisabled = false;
 #ifdef __linux__
     uint32_t inhibitCookie = 0;
+#elif IOS
 #elif __APPLE__
     IOPMAssertionID assertionID = 0;
 #endif

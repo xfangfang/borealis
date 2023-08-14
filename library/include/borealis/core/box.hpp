@@ -249,7 +249,7 @@ class Box : public View
      * Each child node in the root brls::Box will be treated as a view and added
      * as a child of the Box.
      */
-    void inflateFromXMLString(std::string xml);
+    void inflateFromXMLString(std::string_view xml);
 
     /**
      * Inflates the Box with the given XML element.
@@ -271,7 +271,7 @@ class Box : public View
      * Each child node in the root brls::Box will be treated as a view and added
      * as a child of the Box.
      */
-    void inflateFromXMLRes(std::string res);
+    void inflateFromXMLRes(const std::string& res);
 
     /**
      * Inflates the Box with the given XML file path.
@@ -282,7 +282,7 @@ class Box : public View
      * Each child node in the root brls::Box will be treated as a view and added
      * as a child of the Box.
      */
-    void inflateFromXMLFile(std::string path);
+    void inflateFromXMLFile(const std::string& path);
 
     /**
      * Handles a child XML element.

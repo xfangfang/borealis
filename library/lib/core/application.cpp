@@ -58,14 +58,17 @@
 #include <set>
 #include <thread>
 
-#define BUTTON_REPEAT_DELAY 15
-#define BUTTON_REPEAT_CADENCY 5
+#define BUTTOM_REPEAT_TRIGGER 250000 // 250ms
+#define BUTTON_REPEAT_DELAY   100000 // 100 ms
 
 namespace brls
 {
 
 bool Application::init()
 {
+    Application::inited        = false;
+    Application::quitRequested = false;
+
     // Init platform
     Application::platform = Platform::createPlatform();
 
@@ -234,7 +237,7 @@ void Application::processInput()
     static ControllerState oldControllerState = {};
 
     // Input
-    ControllerState controllerState = {};
+    static ControllerState controllerState = {};
     std::vector<RawTouchState> rawTouch;
     RawMouseState rawMouse;
 
@@ -355,33 +358,28 @@ void Application::processInput()
     }
 
     // Trigger controller events
-    bool anyButtonPressed           = false;
     bool repeating                  = false;
-    static Time buttonPressTime     = 0;
-    static int repeatingButtonTimer = 0;
+    Time cpuTime = getCPUTimeUsec();
 
-    controllerState.buttons[BUTTON_A] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
     controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
 
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
         if (controllerState.buttons[i])
         {
-            anyButtonPressed = true;
-            repeating        = (repeatingButtonTimer > BUTTON_REPEAT_DELAY && repeatingButtonTimer % BUTTON_REPEAT_CADENCY == 0);
+            repeating = controllerState.repeatingButtonStop[i] > 0 && cpuTime > controllerState.repeatingButtonStop[i];
+            
+            if (repeating)
+                controllerState.repeatingButtonStop[i] = cpuTime + BUTTON_REPEAT_DELAY;
+            
+            if (!oldControllerState.buttons[i])
+                controllerState.repeatingButtonStop[i] = cpuTime + BUTTOM_REPEAT_TRIGGER;
 
             if (!oldControllerState.buttons[i] || repeating)
                 Application::onControllerButtonPressed((enum ControllerButton)i, repeating);
+        } else {
+            controllerState.repeatingButtonStop[i] = 0;
         }
-
-        if (controllerState.buttons[i] != oldControllerState.buttons[i])
-            buttonPressTime = repeatingButtonTimer = 0;
-    }
-
-    if (anyButtonPressed && getCPUTimeUsec() - buttonPressTime > 1000)
-    {
-        buttonPressTime = getCPUTimeUsec();
-        repeatingButtonTimer++; // Increased once every ~1ms
     }
 
     oldControllerState = controllerState;
@@ -711,15 +709,10 @@ void Application::frame()
     NVGcolor backgroundColor = frameContext.theme["brls/background"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
-    float scaleFactor = frameContext.pixelRatio;
-#if defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
-    // metal 用 frameContext.pixelRatio 会无法铺满窗口，改用 scaleFactor
-    // d3d11 用  文字有明显的锯齿，改用 scaleFactor
-    scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
-#endif
+    float scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
 
-    nvgBeginFrame(Application::getNVGContext(), Application::windowWidth, Application::windowHeight, scaleFactor);
-    nvgScale(Application::getNVGContext(), Application::windowScale, Application::windowScale);
+    nvgBeginFrame(frameContext.vg, Application::windowWidth, Application::windowHeight, scaleFactor);
+    nvgScale(frameContext.vg, Application::windowScale, Application::windowScale);
 
     std::vector<View*> viewsToDraw;
 
@@ -1141,7 +1134,7 @@ void Application::onWindowReposition(int x, int y)
 {
     static size_t iter = 0;
     brls::cancelDelay(iter);
-    iter = brls::delay(100, [x, y]()
+    iter = brls::delay(500, [x, y]()
         {
             Logger::info("Window position changed to {}x{}", x, y);
             Application::setWindowPosition(x, y); });

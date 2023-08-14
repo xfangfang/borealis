@@ -87,7 +87,7 @@ class Image : public View
      * See Image class documentation for the list of supported
      * image formats.
      */
-    void setImageFromRes(std::string name);
+    void setImageFromRes(const std::string& name);
 
     /**
      * Sets the image from the given file path.
@@ -95,7 +95,7 @@ class Image : public View
      * See Image class documentation for the list of supported
      * image formats.
      */
-    void setImageFromFile(std::string path);
+    void setImageFromFile(const std::string& path);
 
     /**
      * Sets the image from memory.
@@ -152,6 +152,7 @@ class Image : public View
 
     void invalidateImageBounds();
     int getImageFlags();
+    size_t checkCache(const std::string& path);
 
     float originalImageWidth  = 0;
     float originalImageHeight = 0;

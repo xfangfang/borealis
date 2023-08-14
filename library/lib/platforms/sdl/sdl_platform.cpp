@@ -21,12 +21,39 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
+#include <unordered_map>
+
+#ifdef IOS
+#include <sys/utsname.h>
+
+static bool isIPad()
+{
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    return strncmp(systemInfo.machine, "iPad", 4) == 0;
+}
+#endif
 
 namespace brls
 {
 
 SDLPlatform::SDLPlatform()
 {
+#ifdef ANDROID
+    // Enable Fullscreen on Android
+    VideoContext::FULLSCREEN = true;
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#elif defined(IOS)
+    // Enable Fullscreen on iOS
+    VideoContext::FULLSCREEN = true;
+    if (!isIPad())
+    {
+        SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    }
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#endif
+
     // Init sdl
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_TIMER) < 0)
     {
@@ -36,6 +63,36 @@ SDLPlatform::SDLPlatform()
 
     // Platform impls
     this->audioPlayer = new NullAudioPlayer();
+
+    // override local
+    if (Platform::APP_LOCALE_DEFAULT == LOCALE_AUTO)
+    {
+        SDL_Locale* locales = SDL_GetPreferredLocales();
+        if (locales != nullptr && locales->language != nullptr)
+        {
+            std::unordered_map<std::string, std::string> sdl2brls = {
+                { "zh_CN", LOCALE_ZH_HANS },
+                { "zh_TW", LOCALE_ZH_HANT },
+                { "ja_JP", LOCALE_JA },
+                { "ko_KR", LOCALE_Ko },
+            };
+            std::string lang = std::string { locales->language };
+            if (locales->country)
+            {
+                lang += "_" + std::string { locales->country };
+            }
+            if (sdl2brls.count(lang) > 0)
+            {
+                this->locale = sdl2brls[lang];
+            }
+            else
+            {
+                this->locale = LOCALE_EN_US;
+            }
+            brls::Logger::info("Set app locale: {}", this->locale);
+            SDL_free(locales);
+        }
+    }
 }
 
 void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
@@ -81,6 +138,23 @@ void SDLPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, in
     }
 }
 
+void SDLPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
+{
+    if (disable)
+    {
+        SDL_DisableScreenSaver();
+    }
+    else
+    {
+        SDL_EnableScreenSaver();
+    }
+}
+
+bool SDLPlatform::isScreenDimmingDisabled()
+{
+    return !SDL_IsScreenSaverEnabled();
+}
+
 std::string SDLPlatform::getName()
 {
     return "SDL";
@@ -105,17 +179,36 @@ bool SDLPlatform::processEvent(SDL_Event* event)
             event->key.state,
             event->key.repeat,
             event->key.keysym.mod);
-    } else if (event->type == SDL_CONTROLLERBUTTONDOWN || event->type == SDL_CONTROLLERBUTTONUP) {
+    }
+    else if (event->type == SDL_CONTROLLERBUTTONDOWN || event->type == SDL_CONTROLLERBUTTONUP)
+    {
         this->inputManager->controllerCallback(
             event->cbutton.button,
             event->cbutton.state);
-    } else if (event->type == SDL_CONTROLLERAXISMOTION) {
+    }
+    else if (event->type == SDL_CONTROLLERAXISMOTION)
+    {
         this->inputManager->controllerAxisCallback(
             event->caxis.axis,
             event->caxis.value);
-    } else if (event->type == SDL_CONTROLLERDEVICEADDED || event->type == SDL_CONTROLLERDEVICEREMOVED) {
+    }
+    else if (event->type == SDL_CONTROLLERDEVICEADDED || event->type == SDL_CONTROLLERDEVICEREMOVED)
+    {
         this->inputManager->updateControllers();
-    } else if (event->type != SDL_POLLSENTINEL) {
+    }
+#ifdef IOS
+    else if (event->type == SDL_APP_WILLENTERBACKGROUND)
+    {
+        brls::Application::getWindowFocusChangedEvent()->fire(false);
+    }
+    else if (event->type == SDL_APP_WILLENTERFOREGROUND)
+    {
+        brls::Application::getWindowFocusChangedEvent()->fire(true);
+
+    }
+#endif
+    else if (event->type != SDL_POLLSENTINEL)
+    {
         // 其它没有处理的事件
         this->otherEvent.fire(event);
     }

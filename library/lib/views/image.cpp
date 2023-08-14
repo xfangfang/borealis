@@ -156,8 +156,10 @@ Image::Image()
             { "nearest", ImageInterpolation::NEAREST },
         });
 
-    this->registerFilePathXMLAttribute("image", [this](std::string value)
-        { this->setImageFromFile(value); });
+    this->registerFilePathXMLAttribute("image", [this](const std::string& value)
+        { this->setImageFromFile(value); }
+
+    );
 
     setClipsToBounds(true);
 }
@@ -267,9 +269,39 @@ void Image::invalidateImageBounds()
     this->paint    = nvgImagePattern(vg, 0, 0, this->imageWidth, this->imageHeight, 0, this->texture, 1.0f);
 }
 
-void Image::setImageFromRes(std::string name)
+size_t Image::checkCache(const std::string& path)
 {
-    this->setImageFromFile(std::string(BRLS_RESOURCES) + name);
+    if (this->texture > 0)
+    {
+        brls::TextureCache::instance().removeCache(this->texture);
+        brls::Logger::verbose("cache remove: {} {}", path, this->texture);
+    }
+
+    int tex = brls::TextureCache::instance().getCache(path);
+    if (tex > 0)
+    {
+        brls::Logger::verbose("cache hit: {} {}", path, tex);
+        this->innerSetImage(tex);
+        return tex;
+    }
+
+    return 0;
+}
+
+void Image::setImageFromRes(const std::string& path)
+{
+    // Let TextureCache to manage when to delete texture
+    this->setFreeTexture(false);
+
+#ifdef USE_LIBROMFS
+    if (checkCache("@res/" + path) > 0)
+        return;
+    auto image = romfs::get(path);
+    this->setImageFromMem((unsigned char*)image.string().data(), (int)image.size());
+    TextureCache::instance().addCache("@res/" + path, this->texture);
+#else
+    this->setImageFromFile(std::string(BRLS_RESOURCES) + path);
+#endif
 }
 
 void Image::setInterpolation(ImageInterpolation interpolation)
@@ -285,21 +317,20 @@ int Image::getImageFlags()
     return 0;
 }
 
-void Image::setImageFromFile(std::string path)
+void Image::setImageFromFile(const std::string& path)
 {
     // Let TextureCache to manage when to delete texture
     this->setFreeTexture(false);
 
-    int tex = TextureCache::instance().getCache(path);
-    if (tex > 0)
-    {
-        // Load texture from cache
-        innerSetImage(tex);
+#ifdef USE_LIBROMFS
+    if (path.rfind("@res/", 0) == 0)
+        return this->setImageFromRes(path.substr(5));
+#endif
+    if (checkCache(path) > 0)
         return;
-    }
 
     // Load texture
-    tex = nvgCreateImage(Application::getNVGContext(), path.c_str(), this->getImageFlags());
+    int tex = nvgCreateImage(Application::getNVGContext(), path.c_str(), this->getImageFlags());
     innerSetImage(tex);
 
     // Save cache

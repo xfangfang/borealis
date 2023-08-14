@@ -16,13 +16,30 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/thread.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 #ifdef BOREALIS_USE_OPENGL
+#ifdef __PSV__
+#include <GLES2/gl2.h>
+extern "C"
+{
+#include <gpu_es4/psp2_pvr_hint.h>
+#include <psp2/kernel/modulemgr.h>
+}
+#define NANOVG_GLES2_IMPLEMENTATION
+#else
 #include <glad/glad.h>
+#ifdef USE_GLES2
+#define NANOVG_GLES2_IMPLEMENTATION
+#elif USE_GLES3
+#define NANOVG_GLES3_IMPLEMENTATION
+#else
 #define NANOVG_GL3_IMPLEMENTATION
+#endif
+#endif
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_D3D11)
 #include <borealis/platforms/driver/d3d11.hpp>
@@ -44,7 +61,14 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
 #ifdef BOREALIS_USE_OPENGL
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
+#if defined(ANDROID)
+    // On Android, doing this is to ensure that glViewport is called from the main thread
+    brls::sync([fWidth, fHeight](){
+        glViewport(0, 0, fWidth, fHeight);
+    });
+#else
     glViewport(0, 0, fWidth, fHeight);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
     fWidth = width;
     fHeight = height;
@@ -102,19 +126,78 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
 
 SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
+#ifdef __PSV__
+#define MAX_PATH 256
+    /// Huge thanks to SonicMastr for his kindness help and contribution in psv homebrew.
+
+    windowWidth  = 960;
+    windowHeight = 544;
+
+    /* Disable Back Touchpad to prevent "misclicks" */
+    SDL_setenv("VITA_DISABLE_TOUCH_BACK", "1", 1);
+
+    /* We need to use some custom hints */
+    SDL_setenv("VITA_PVR_SKIP_INIT", "yeet", 1);
+
+    PVRSRV_PSP2_APPHINT hint;
+    char target_path[MAX_PATH];
+    const char* default_path = "app0:module";
+
+    /* Load Modules */
+    sceKernelLoadStartModule("vs0:sys/external/libfios2.suprx", 0, NULL, 0, NULL, NULL);
+    sceKernelLoadStartModule("vs0:sys/external/libc.suprx", 0, NULL, 0, NULL, NULL);
+    snprintf(target_path, MAX_PATH, "%s/%s", default_path, "libgpu_es4_ext.suprx");
+    sceKernelLoadStartModule(target_path, 0, NULL, 0, NULL, NULL);
+    snprintf(target_path, MAX_PATH, "%s/%s", default_path, "libIMGEGL.suprx");
+    sceKernelLoadStartModule(target_path, 0, NULL, 0, NULL, NULL);
+
+    /* Set PVR Hints */
+    PVRSRVInitializeAppHint(&hint);
+    snprintf(hint.szGLES1, MAX_PATH, "%s/%s", default_path, "libGLESv1_CM.suprx");
+    snprintf(hint.szGLES2, MAX_PATH, "%s/%s", default_path, "libGLESv2.suprx");
+    snprintf(hint.szWindowSystem, MAX_PATH, "%s/%s", default_path, "libpvrPSP2_WSEGL.suprx");
+
+    hint.ui32SwTexOpCleanupDelay = 32000; // Set to 32 milliseconds to prevent a pool of unfreed memory
+    PVRSRVCreateVirtualAppHint(&hint);
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         Logger::error("sdl: failed to initialize");
         return;
     }
+
     // Create window
     Uint32 windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 #ifdef BOREALIS_USE_OPENGL
 #ifdef __SWITCH__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#elif defined(USE_GLES2)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#elif defined(USE_GLES3)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -168,8 +251,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     SDL_AddEventWatch(sdlEventWatcher, window);
 #ifdef BOREALIS_USE_OPENGL
+#ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
+#endif
     SDL_GL_SetSwapInterval(1);
 
     Logger::info("sdl: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
@@ -177,11 +262,20 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Logger::info("sdl: GL Version: {}", (const char*)glGetString(GL_VERSION));
 
     // Initialize nanovg
+#ifdef __PSV__
+    this->nvgContext = nvgCreateGLES2(0);
+#elif USE_GLES2
+    this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#elif USE_GLES3
+    this->nvgContext = nvgCreateGLES3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
     Logger::info("sdl: use d3d11");
     D3D11_CONTEXT = std::make_shared<D3D11Context>();
-    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
+    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight))
+    {
         fatal("sdl: unable to init d3d11");
         return;
     }
@@ -189,8 +283,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     if (!this->nvgContext)
     {
-        brls::fatal("glfw: unable to init nanovg");
-        return;
+        brls::fatal("sdl: unable to init nanovg");
     }
 
     // Setup window state
@@ -202,6 +295,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_GetDrawableSize(window, &fWidth, &fHeight);
     scaleFactor = fWidth * 1.0 / width;
     Application::setWindowSize(fWidth, fHeight);
+    glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
     scaleFactor      = D3D11_CONTEXT->GetDpi();
     fWidth           = width;
@@ -276,9 +370,16 @@ SDLVideoContext::~SDLVideoContext()
 {
     try
     {
-        if (this->nvgContext) {
+        if (this->nvgContext)
+        {
 #ifdef BOREALIS_USE_OPENGL
+#ifdef USE_GLES2
+            nvgDeleteGLES2(this->nvgContext);
+#elif USE_GLES3
+            nvgDeleteGLES3(this->nvgContext);
+#else
             nvgDeleteGL3(this->nvgContext);
+#endif
 #elif defined(BOREALIS_USE_D3D11)
             nvgDeleteD3D11(this->nvgContext);
             D3D11_CONTEXT = nullptr;

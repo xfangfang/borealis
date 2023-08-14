@@ -11,3 +11,4 @@ builddir
 .DS_Store
 psv/module/
 psv/sce_sys/
+libromfs-generator

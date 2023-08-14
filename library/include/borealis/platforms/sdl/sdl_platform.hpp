@@ -40,6 +40,8 @@ class SDLPlatform : public DesktopPlatform
     virtual void setWindowSizeLimits(uint32_t windowMinWidth, uint32_t windowMinHeight, uint32_t windowMaxWidth, uint32_t windowMaxHeight) override;
     virtual void setWindowPosition(int windowXPos, int windowYPos) override;
     virtual void setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) override;
+    void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
+    bool isScreenDimmingDisabled() override;
 
     bool mainLoopIteration() override;
 
@@ -48,7 +50,7 @@ class SDLPlatform : public DesktopPlatform
     InputManager* getInputManager() override;
     ImeManager* getImeManager() override;
     bool processEvent(SDL_Event* event);
-  private:
+protected:
     NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;

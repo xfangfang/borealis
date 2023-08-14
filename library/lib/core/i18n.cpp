@@ -17,7 +17,13 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/assets.hpp>
 #include <borealis/core/i18n.hpp>
+#ifdef USE_BOOST_FILESYSTEM
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+#else
 #include <filesystem>
+namespace fs = std::filesystem;
+#endif
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -40,23 +46,46 @@ static bool endsWith(const std::string& str, const std::string& suffix)
 
 static void loadLocale(std::string locale, nlohmann::json* target)
 {
+    if (locale.empty())
+        return;
+#ifdef USE_LIBROMFS
+    auto localePath = romfs::list("i18n/" + locale);
+    if (localePath.empty())
+    {
+        Logger::error("Cannot load locale {}: directory i18n/{} doesn't exist", locale, locale);
+        return;
+    }
+    for (auto& entry : localePath)
+    {
+        std::string path = entry.string();
+        std::string name = entry.filename().string();
+        if (!endsWith(name, ".json"))
+            continue;
+
+        (*target)[name.substr(0, name.length() - 5)] = nlohmann::json::parse(romfs::get(path).string());
+    }
+#else
     std::string localePath = BRLS_ASSET("i18n/" + locale);
 
-    if (!std::filesystem::exists(localePath))
+    if (!fs::exists(localePath))
     {
         Logger::error("Cannot load locale {}: directory {} doesn't exist", locale, localePath);
         return;
     }
-    else if (!std::filesystem::is_directory(localePath))
+    else if (!fs::is_directory(localePath))
     {
         Logger::error("Cannot load locale {}: {} isn't a directory", locale, localePath);
         return;
     }
 
     // Iterate over all JSON files in the directory
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(localePath))
+    for (const fs::directory_entry& entry : fs::directory_iterator(localePath))
     {
+#if USE_BOOST_FILESYSTEM
+        if (fs::is_directory(entry))
+#else
         if (entry.is_directory())
+#endif
             continue;
 
         std::string name = entry.path().filename().string();
@@ -84,6 +113,7 @@ static void loadLocale(std::string locale, nlohmann::json* target)
 
         (*target)[name.substr(0, name.length() - 5)] = strings;
     }
+#endif /* USE_LIBROMFS */
 }
 
 void loadTranslations()

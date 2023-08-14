@@ -51,6 +51,9 @@ SettingsTab::SettingsTab()
         },
         "Hint");
 
+    ipAddress->setDetailText(brls::Application::getPlatform()->getIpAddress());
+    dnsServer->setDetailText(brls::Application::getPlatform()->getDnsServer());
+
     input->registerAction("hints/open"_i18n, brls::BUTTON_X, [](brls::View* view) {
         brls::DetailCell *cell = dynamic_cast<brls::DetailCell *>(view);
         brls::Application::getPlatform()->openBrowser(cell->detail->getFullText());

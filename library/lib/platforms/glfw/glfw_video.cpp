@@ -26,17 +26,22 @@
 #include <glad/glad.h>
 #ifdef USE_GL2
 #define NANOVG_GL2_IMPLEMENTATION
+#elif defined(USE_GLES2)
+#define NANOVG_GLES2_IMPLEMENTATION
+#elif defined(USE_GLES3)
+#define NANOVG_GLES3_IMPLEMENTATION
 #else
 #define NANOVG_GL3_IMPLEMENTATION
 #endif /* USE_GL2 */
 #endif /* __PSV__ */
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_METAL)
-static void *METAL_CONTEXT = nullptr;
+static void* METAL_CONTEXT = nullptr;
 #include <borealis/platforms/glfw/driver/metal.hpp>
 #elif defined(BOREALIS_USE_D3D11)
-#include <borealis/platforms/driver/d3d11.hpp>
 #include <nanovg_d3d11.h>
+
+#include <borealis/platforms/driver/d3d11.hpp>
 static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #endif
 
@@ -44,8 +49,12 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 #include "stb_image.h"
 #endif
 
+#ifdef USE_LIBROMFS
+#include <romfs/romfs.hpp>
+#endif
+
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace brls
@@ -176,9 +185,13 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
     // Create window
 #ifdef BOREALIS_USE_OPENGL
-#if defined(__PSV__)
+#if defined(USE_GLES2)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#elif defined(USE_GLES3)
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #elif defined(__SWITCH__)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -248,7 +261,12 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #if defined(__linux__) || defined(_WIN32)
     // Set window icon
     GLFWimage images[1];
+#ifdef USE_LIBROMFS
+    auto icon = romfs::get("icon/icon.png").string();
+    images[0].pixels = stbi_load_from_memory((stbi_uc*)icon.data(), icon.size(), &images[0].width, &images[0].height, 0, 4);
+#else
     images[0].pixels = stbi_load(BRLS_ASSET("icon/icon.png"), &images[0].width, &images[0].height, 0, 4);
+#endif
     glfwSetWindowIcon(this->window, 1, images);
 #endif
 
@@ -302,8 +320,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
     // Initialize nanovg
 #ifdef BOREALIS_USE_OPENGL
-#ifdef __PSV__
+#ifdef USE_GLES2
     this->nvgContext = nvgCreateGLES2(0);
+#elif defined(USE_GLES3)
+    this->nvgContext = nvgCreateGLES3(0);
 #elif defined(USE_GL2)
     this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
@@ -437,8 +457,10 @@ GLFWVideoContext::~GLFWVideoContext()
     {
         if (this->nvgContext)
 #ifdef BOREALIS_USE_OPENGL
-#ifdef __PSV__
+#ifdef USE_GLES2
             nvgDeleteGLES2(this->nvgContext);
+#elif defined(USE_GLES3)
+            nvgDeleteGLES3(this->nvgContext);
 #elif defined(USE_GL2)
             nvgDeleteGL2(this->nvgContext);
 #else
