@@ -220,6 +220,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     windowFlags |= SDL_WINDOW_OPENGL;
 #endif
+    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
     if (isnan(windowXPos) || isnan(windowYPos))
     {
