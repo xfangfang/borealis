@@ -238,6 +238,7 @@ SDLPlatform::~SDLPlatform()
     delete this->audioPlayer;
     delete this->videoContext;
     delete this->inputManager;
+    delete this->imeManager;
 }
 
 } // namespace brls

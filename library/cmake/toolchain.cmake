@@ -89,11 +89,6 @@ else ()
     add_definitions(-D__GLFW__)
 endif ()
 
-# PSV Big Picture Mode
-if (PSV_BIG_PICTURE)
-    add_definitions(-DPSV_BIG_PICTURE)
-endif ()
-
 # todo: Remove this once https://github.com/xfangfang/wiliwili/pull/173 is merged
 function(main_target var1 var2 var3)
     if (WIN32)

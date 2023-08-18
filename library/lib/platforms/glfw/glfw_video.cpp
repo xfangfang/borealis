@@ -225,8 +225,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     {
         windowX      = NAN;
         windowY      = NAN;
-        windowWidth  = ORIGINAL_WINDOW_WIDTH;
-        windowHeight = ORIGINAL_WINDOW_HEIGHT;
+        windowWidth  = Application::ORIGINAL_WINDOW_WIDTH;
+        windowHeight = Application::ORIGINAL_WINDOW_HEIGHT;
         monitor      = glfwGetPrimaryMonitor();
     }
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -535,8 +535,8 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
-            int width = ORIGINAL_WINDOW_WIDTH;
-            int height = ORIGINAL_WINDOW_HEIGHT;
+            int width = Application::ORIGINAL_WINDOW_WIDTH;
+            int height = Application::ORIGINAL_WINDOW_HEIGHT;
             // If the window appears outside the screen, using the default settings
             glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - width) / 2,
                 fabs(mode->height - height) / 2, width, height, GLFW_DONT_CARE);

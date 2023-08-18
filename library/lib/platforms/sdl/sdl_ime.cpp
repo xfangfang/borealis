@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#pragma once
-
 #include <borealis/platforms/sdl/sdl_ime.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/core/event.hpp>

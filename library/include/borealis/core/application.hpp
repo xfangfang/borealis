@@ -45,16 +45,6 @@
 namespace brls
 {
 
-// Constants used for scaling as well as
-// creating a window of the right size on PC
-#ifdef PSV_BIG_PICTURE
-constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 960;
-constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 544;
-#else
-constexpr uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
-constexpr uint32_t ORIGINAL_WINDOW_HEIGHT = 720;
-#endif
-
 // Input types for entire app
 enum class InputType
 {
@@ -67,6 +57,10 @@ typedef std::function<View*(void)> XMLViewCreator;
 class Application
 {
   public:
+
+    static inline uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
+    static inline uint32_t ORIGINAL_WINDOW_HEIGHT = 720;
+
     /**
      * Inits the borealis application.
      * Returns true if it succeeded, false otherwise.

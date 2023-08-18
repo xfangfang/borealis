@@ -89,9 +89,7 @@ void DesktopFontLoader::loadFonts()
     std::vector<std::string> koreanFonts = {
         "/System/Library/Fonts/AppleSDGothicNeo",
     };
-    std::vector<std::string> simplifiedChineseFonts = {
-        "/System/Library/Fonts/PingFang",
-    };
+    std::vector<std::string> simplifiedChineseFonts;
 #elif defined(_WIN32)
     std::string prefix = "C:\\Windows\\Fonts\\";
     char* winDir = getenv("systemroot");
