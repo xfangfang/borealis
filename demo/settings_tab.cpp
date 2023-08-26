@@ -36,7 +36,10 @@ SettingsTab::SettingsTab()
     boolean->title->setText("Switcher");
 
     selector->init("Selector", { "Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8", "Test 9", "Test 10", "Test 11", "Test 12", "Test 13" }, 0, [](int selected) {
-
+    }, [](int selected) {
+        auto dialog = new brls::Dialog(fmt::format("selected {}", selected));
+        dialog->addButton("hints/ok"_i18n, []() {});
+        dialog->open();
     });
 
     input->init(
