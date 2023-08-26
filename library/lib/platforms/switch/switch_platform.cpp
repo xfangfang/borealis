@@ -54,9 +54,11 @@ static void on_applet_hook(AppletHookType hook, void* arg)
                     break;
             }
             break;
+#ifdef BOREALIS_USE_DEKO3D
         case AppletHookType_OnOperationMode:
             ((SwitchVideoContext*)platform->getVideoContext())->appletCallback(hook);
             break;
+#endif
         default:
             break;
     }
