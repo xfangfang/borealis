@@ -29,18 +29,18 @@ SelectorCell::SelectorCell()
         Dropdown* dropdown = new Dropdown(
             this->title->getFullText(), data, [this](int selected) {
                 this->setSelection(selected, false);
-            },
-            selection);
+            }, selection, this->dismissCb);
         Application::pushActivity(new Activity(dropdown));
         return true;
     });
 }
 
-void SelectorCell::init(std::string title, std::vector<std::string> data, int selected, Event<int>::Callback callback)
+void SelectorCell::init(std::string title, std::vector<std::string> data, int selected, Event<int>::Callback callback, Event<int>::Callback dismissCb)
 {
     this->title->setText(title);
     this->data      = data;
     this->selection = selected;
+    this->dismissCb = dismissCb;
     this->event.subscribe(callback);
     updateUI();
 }

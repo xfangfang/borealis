@@ -31,7 +31,7 @@ class SelectorCell : public DetailCell
   public:
     SelectorCell();
 
-    void init(std::string title, std::vector<std::string> data, int selected, Event<int>::Callback callback);
+    void init(std::string title, std::vector<std::string> data, int selected, Event<int>::Callback callback, Event<int>::Callback dismissCb = [](int){});
 
     void setData(std::vector<std::string> data)
     {
@@ -56,6 +56,7 @@ class SelectorCell : public DetailCell
     std::vector<std::string> data;
 
     Event<int> event;
+    Event<int>::Callback dismissCb;
     void updateUI();
 };
 
