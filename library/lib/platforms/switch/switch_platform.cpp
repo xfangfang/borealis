@@ -54,6 +54,9 @@ static void on_applet_hook(AppletHookType hook, void* arg)
                     break;
             }
             break;
+        case AppletHookType_OnOperationMode:
+            ((SwitchVideoContext*)platform->getVideoContext())->appletCallback(hook);
+            break;
         default:
             break;
     }
@@ -97,9 +100,9 @@ SwitchPlatform::SwitchPlatform()
     }
 
     // Init platform impls
-    this->audioPlayer  = new SwitchAudioPlayer();
-    this->fontLoader   = new SwitchFontLoader();
-    this->imeManager   = new SwitchImeManager();
+    this->audioPlayer = new SwitchAudioPlayer();
+    this->fontLoader  = new SwitchFontLoader();
+    this->imeManager  = new SwitchImeManager();
 
     appletHook(&applet_hook_cookie, on_applet_hook, this);
     appletSetFocusHandlingMode(AppletFocusHandlingMode_NoSuspend);
@@ -107,7 +110,9 @@ SwitchPlatform::SwitchPlatform()
 
 void SwitchPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
-#ifdef __SDL2__
+#ifdef BOREALIS_USE_DEKO3D
+    this->videoContext = new SwitchVideoContext();
+#elif defined(__SDL2__)
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, 0, 0);
 #else
     this->videoContext = new GLFWVideoContext(windowTitle, windowWidth, windowHeight);
@@ -267,6 +272,9 @@ ThemeVariant SwitchPlatform::getThemeVariant()
 void SwitchPlatform::setThemeVariant(ThemeVariant theme)
 {
     this->themeVariant = theme;
+#ifdef BOREALIS_USE_DEKO3D
+    this->videoContext->recordStaticCommands();
+#endif
 }
 
 SwitchPlatform::~SwitchPlatform()
