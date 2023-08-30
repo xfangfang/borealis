@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <borealis/core/application.hpp>
 #include <borealis/platforms/switch/switch_video.hpp>
+#include <utility>
 
 // nanovg implementation
 #include <nanovg_dk.h>
@@ -31,6 +32,8 @@ limitations under the License.
 #define IMAGES_POOL_SIZE 4 * 1024 * 1024
 #define CODE_POOL_SIZE 128 * 1024
 #define DATA_POOL_SIZE 1 * 1024 * 1024
+
+extern "C" u32 __nx_applet_type;
 
 namespace brls
 {
@@ -53,8 +56,11 @@ SwitchVideoContext::SwitchVideoContext()
     this->updateWindowSize();
 
     // Init deko
-    this->device = dk::DeviceMaker {}.create();
-    this->queue  = dk::QueueMaker { this->device }.setFlags(DkQueueFlags_Graphics).create();
+    auto saved_applet_type = std::exchange(__nx_applet_type, AppletType_LibraryApplet);
+    this->device           = dk::DeviceMaker {}.create();
+    __nx_applet_type       = saved_applet_type;
+
+    this->queue = dk::QueueMaker { this->device }.setFlags(DkQueueFlags_Graphics).create();
 
     this->imagesPool.emplace(device, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image, IMAGES_POOL_SIZE);
     this->codePool.emplace(device, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code, CODE_POOL_SIZE);
