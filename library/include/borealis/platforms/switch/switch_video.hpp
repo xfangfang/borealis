@@ -59,6 +59,8 @@ class SwitchVideoContext : public VideoContext
 
     void queueSignalFence(DkFence* fence, bool flash = false);
 
+    void queueFlush();
+
   private:
     _LibNXEvent defaultDisplayResolutionChangeEvent;
     bool displayResolutionChangeEventReady = true;

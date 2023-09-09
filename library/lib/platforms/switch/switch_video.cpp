@@ -298,4 +298,9 @@ void SwitchVideoContext::queueSignalFence(DkFence* fence, bool flash)
     dkQueueSignalFence(this->queue, fence, flash);
 }
 
+void SwitchVideoContext::queueFlush()
+{
+    dkQueueFlush(this->queue);
+}
+
 } // namespace brls
