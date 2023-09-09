@@ -73,6 +73,8 @@ SwitchPlatform::SwitchPlatform()
     ColorSetId colorSetId;
     setsysGetColorSetId(&colorSetId);
 
+    appletSetWirelessPriorityMode(AppletWirelessPriorityMode_OptimizedForWlan);
+
     if (colorSetId == ColorSetId_Dark)
         this->themeVariant = ThemeVariant::DARK;
     else
