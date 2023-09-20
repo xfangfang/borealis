@@ -665,6 +665,7 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
             nvgBeginPath(vg);
             nvgRect(vg, x, y, width, height);
             nvgFill(vg);
+            break;
         }
         case ViewBackground::SHAPE_COLOR:
         {
@@ -677,6 +678,7 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
                 nvgRect(vg, x, y, width, height);
 
             nvgFill(vg);
+            break;
         }
         case ViewBackground::NONE:
             break;
