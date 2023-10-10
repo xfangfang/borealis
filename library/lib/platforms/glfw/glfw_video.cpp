@@ -151,7 +151,7 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     if (D3D11_CONTEXT == nullptr) {
         return;
     }
-    float scaleFactor = D3D11_CONTEXT->GetDpi();
+    scaleFactor = D3D11_CONTEXT->GetDpi();
     int wWidth = width, wHeight = height;
     D3D11_CONTEXT->ResizeFramebufferSize(width, height);
 #endif

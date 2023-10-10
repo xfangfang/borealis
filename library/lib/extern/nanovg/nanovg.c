@@ -53,7 +53,10 @@
 #define NVG_INIT_POINTS_SIZE 128
 #define NVG_INIT_PATHS_SIZE 16
 #define NVG_INIT_VERTS_SIZE 256
+
+#ifndef NVG_MAX_STATES
 #define NVG_MAX_STATES 32
+#endif
 
 #define NVG_KAPPA90 0.5522847493f	// Length proportional to radius of a cubic bezier handle for 90deg arcs.
 
@@ -981,6 +984,11 @@ void nvgScissor(NVGcontext* ctx, float x, float y, float w, float h)
 
 	w = nvg__maxf(0.0f, w);
 	h = nvg__maxf(0.0f, h);
+	/* 消除着色器精度不够引起的漏出颜色的问题 */
+	if (w == 0.0f || h == 0.0f) {
+		w = 0.0f;
+		h = 0.0f;
+	}
 
 	nvgTransformIdentity(state->scissor.xform);
 	state->scissor.xform[4] = x+w*0.5f;

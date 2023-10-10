@@ -65,7 +65,7 @@ namespace brls {
             D3D_FEATURE_LEVEL_9_1,   // Direct3D 9.1  SM 2
         };
 
-        for (int driver = 0; driver < ARRAYSIZE(driverAttempts); driver++)
+        for (size_t driver = 0; driver < ARRAYSIZE(driverAttempts); driver++)
         {
             hr = D3D11CreateDevice(
                 NULL,
