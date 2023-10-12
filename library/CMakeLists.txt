@@ -10,10 +10,6 @@ if (NOT BRLS_RESOURCES_DIR)
     set(BRLS_RESOURCES_DIR ".")
 endif ()
 
-set(BOREALIS_USE_OPENGL ON CACHE BOOL "Default")
-set(BOREALIS_USE_METAL OFF CACHE BOOL "only for macOS")
-set(BOREALIS_USE_D3D11 OFF CACHE BOOL "only for Windows")
-
 # fmt
 if (USE_SYSTEM_FMT)
   find_package(fmt REQUIRED)

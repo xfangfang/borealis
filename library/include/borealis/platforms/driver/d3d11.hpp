@@ -14,17 +14,8 @@ namespace brls
 {
     class D3D11Context {
         public:
-            D3D11Context():
-            device(nullptr),
-            deviceContext(nullptr),
-            swapChain(nullptr),
-            renderTargetView(nullptr),
-            depthStencil(nullptr),
-            depthStencilView(nullptr),
-            tearingSupport(false){}
-            ~D3D11Context() {
-                this->UnInitializeDX();
-            }
+            D3D11Context() = default;
+            ~D3D11Context() { this->UnInitializeDX(); }
         private:
             bool InitializeDXInternal(HWND window, IUnknown *coreWindow, int width, int height);
             static const int SwapChainBufferCount = 2;
@@ -45,18 +36,16 @@ namespace brls
             float GetDpi();
             bool ResizeFramebufferSize(int width, int height, bool init = false);
             void ClearWithColor(NVGcolor color);
+            void SetRenderTarget();
             void Present();
-            ID3D11Device* GetDevice() {
-                return this->device;
-            }
+            ID3D11Device* GetDevice() { return this->device; }
+            IDXGISwapChain* GetSwapChain() { return this->swapChain; }
         private:
-            ID3D11Device* device;
-            ID3D11DeviceContext* deviceContext;
-            IDXGISwapChain1* swapChain;
-            ID3D11RenderTargetView* renderTargetView;
-            ID3D11Texture2D* depthStencil;
-            ID3D11DepthStencilView* depthStencilView;
-            D3D_FEATURE_LEVEL featureLevel;
+            ID3D11Device* device = nullptr;
+            ID3D11DeviceContext* deviceContext = nullptr;
+            IDXGISwapChain1* swapChain = nullptr;
+            ID3D11RenderTargetView* renderTargetView = nullptr;
+            ID3D11DepthStencilView* depthStencilView = nullptr;
             DXGI_SAMPLE_DESC sampleDesc;
             bool tearingSupport;
     };

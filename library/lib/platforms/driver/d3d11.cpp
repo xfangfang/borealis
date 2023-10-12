@@ -43,9 +43,9 @@ namespace brls {
     bool D3D11Context::InitializeDXInternal(HWND hWndMain, IUnknown *coreWindow, int width, int height) {
         HRESULT hr = S_OK;
         UINT deviceFlags = 0;
-        IDXGIDevice *pDXGIDevice = NULL;
-        IDXGIAdapter *pAdapter = NULL;
-        IDXGIFactory2 *pDXGIFactory = NULL;
+        IDXGIDevice *pDXGIDevice = nullptr;
+        IDXGIAdapter *pAdapter = nullptr;
+        IDXGIFactory2 *pDXGIFactory = nullptr;
         static const D3D_DRIVER_TYPE driverAttempts[] =
         {
             D3D_DRIVER_TYPE_HARDWARE,
@@ -68,26 +68,25 @@ namespace brls {
         for (size_t driver = 0; driver < ARRAYSIZE(driverAttempts); driver++)
         {
             hr = D3D11CreateDevice(
-                NULL,
+                nullptr,
                 driverAttempts[driver],
-                NULL,
+                nullptr,
                 deviceFlags,
                 levelAttempts,
                 ARRAYSIZE(levelAttempts),
                 D3D11_SDK_VERSION,
                 &this->device,
-                &this->featureLevel,
+                nullptr,
                 &this->deviceContext);
 
             if (SUCCEEDED(hr))
             {
-                // printf("feature level: 0x%X\n", this->featureLevel);
                 break;
             }
         }
         if (SUCCEEDED(hr))
         {
-            hr = this->device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&pDXGIDevice));
+            hr = this->device->QueryInterface(IID_PPV_ARGS(&pDXGIDevice));
         }
         if (SUCCEEDED(hr))
         {
@@ -95,13 +94,13 @@ namespace brls {
         }
         if (SUCCEEDED(hr))
         {
-            hr = pAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)&pDXGIFactory);
+            hr = pAdapter->GetParent(IID_PPV_ARGS(&pDXGIFactory));
         }
 #if defined(__ALLOW_TEARING__)
         IDXGIFactory6* factory6;
         if (SUCCEEDED(hr))
         {
-            hr = pAdapter->GetParent(__uuidof(IDXGIFactory6), (void**)&factory6);
+            hr = pAdapter->GetParent(IID_PPV_ARGS(&factory6));
         }
         if (SUCCEEDED(hr)) {
             BOOL allowTearing = FALSE;
@@ -144,19 +143,19 @@ namespace brls {
             // this->swapDesc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
             if (coreWindow) {
                 hr = pDXGIFactory->CreateSwapChainForCoreWindow(
-                    (IUnknown*)this->device,
+                    this->device,
                     coreWindow,
                     &swapDesc,
-                    NULL,
+                    nullptr,
                     &this->swapChain
                 );
             } else {
                 hr = pDXGIFactory->CreateSwapChainForHwnd(
-                    (IUnknown*)this->device,
+                    this->device,
                     hWndMain,
                     &swapDesc,
-                    NULL,
-                    NULL,
+                    nullptr,
+                    nullptr,
                     &this->swapChain
                 );
             }
@@ -164,9 +163,8 @@ namespace brls {
         D3D_API_RELEASE(pDXGIDevice);
         D3D_API_RELEASE(pAdapter);
         D3D_API_RELEASE(pDXGIFactory);
-        if (!SUCCEEDED(hr))
+        if (FAILED(hr))
         {
-            // Fail
             this->UnInitializeDX();
             return FALSE;
         }
@@ -178,14 +176,13 @@ namespace brls {
         // Detach RTs
         if (this->deviceContext)
         {
-            ID3D11RenderTargetView *viewList[1] = { NULL };
-            this->deviceContext->OMSetRenderTargets(1, viewList, NULL);
+            ID3D11RenderTargetView *viewList[1] = { nullptr };
+            this->deviceContext->OMSetRenderTargets(1, viewList, nullptr);
         }
         D3D_API_RELEASE(this->deviceContext);
         D3D_API_RELEASE(this->device);
         D3D_API_RELEASE(this->swapChain);
         D3D_API_RELEASE(this->renderTargetView);
-        D3D_API_RELEASE(this->depthStencil);
         D3D_API_RELEASE(this->depthStencilView);
     }
 
@@ -205,14 +202,12 @@ namespace brls {
     }
 
     bool D3D11Context::ResizeFramebufferSize(int width, int height, bool init) {
-        D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
-        ID3D11RenderTargetView *viewList[1] = { NULL };
+        ID3D11RenderTargetView *viewList[1] = { nullptr };
         HRESULT hr = S_OK;
 
-        ID3D11Resource *pBackBufferResource = NULL;
-        D3D11_TEXTURE2D_DESC texDesc;
-        D3D11_DEPTH_STENCIL_VIEW_DESC depthViewDesc;
-        this->deviceContext->OMSetRenderTargets(1, viewList, NULL);
+        ID3D11Texture2D *backBuffer = nullptr;
+        ID3D11Texture2D* depthStencil = nullptr;
+        this->deviceContext->OMSetRenderTargets(1, viewList, nullptr);
 
         D3D_API_RELEASE(this->renderTargetView);
         D3D_API_RELEASE(this->depthStencilView);
@@ -229,29 +224,27 @@ namespace brls {
             }
         }
 
-        hr = this->swapChain->GetBuffer(
-            0,
-            __uuidof(ID3D11Texture2D),
-            (void**)&pBackBufferResource
-        );
+        hr = this->swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
         if (FAILED(hr))
         {
             return false;
         }
+        D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
         renderDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
         renderDesc.ViewDimension = (this->sampleDesc.Count>1) ?
             D3D11_RTV_DIMENSION_TEXTURE2DMS:
             D3D11_RTV_DIMENSION_TEXTURE2D;
         renderDesc.Texture2D.MipSlice = 0;
         hr = this->device->CreateRenderTargetView(
-            pBackBufferResource,
+            backBuffer,
             &renderDesc,
             &this->renderTargetView);
-        D3D_API_RELEASE(pBackBufferResource);
+        D3D_API_RELEASE(backBuffer);
         if (FAILED(hr))
         {
             return false;
         }
+        D3D11_TEXTURE2D_DESC texDesc;
         texDesc.ArraySize = 1;
         texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
         texDesc.CPUAccessFlags = 0;
@@ -263,15 +256,15 @@ namespace brls {
         texDesc.SampleDesc.Count = this->sampleDesc.Count;
         texDesc.SampleDesc.Quality = this->sampleDesc.Quality;
         texDesc.Usage = D3D11_USAGE_DEFAULT;
-        D3D_API_RELEASE(this->depthStencil);
         hr = this->device->CreateTexture2D(
             &texDesc,
-            NULL,
-            &this->depthStencil);
+            nullptr,
+            &depthStencil);
         if (FAILED(hr))
         {
             return false;
         }
+        D3D11_DEPTH_STENCIL_VIEW_DESC depthViewDesc;
         depthViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
         depthViewDesc.ViewDimension = (this->sampleDesc.Count>1) ?
             D3D11_DSV_DIMENSION_TEXTURE2DMS:
@@ -279,9 +272,10 @@ namespace brls {
         depthViewDesc.Flags = 0;
         depthViewDesc.Texture2D.MipSlice = 0;
         hr = this->device->CreateDepthStencilView(
-            (ID3D11Resource*)this->depthStencil,
+            depthStencil,
             &depthViewDesc,
             &this->depthStencilView);
+        D3D_API_RELEASE(depthStencil);
         if (FAILED(hr))
         {
             return false;
@@ -295,6 +289,10 @@ namespace brls {
         viewport.TopLeftY = 0.0f;
         this->deviceContext->RSSetViewports(1, &viewport);
         return true;
+    }
+
+    void D3D11Context::SetRenderTarget() {
+        this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
     }
 
     void D3D11Context::ClearWithColor(NVGcolor color) {
@@ -311,8 +309,7 @@ namespace brls {
         this->deviceContext->ClearDepthStencilView(
             this->depthStencilView,
             D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-            0.0f,
-            (UINT8)0);
+            0.0f, 0);
     }
 
     void D3D11Context::Present() {
