@@ -17,7 +17,7 @@
 #include <type_traits>
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
-#define FMT_VERSION 90101
+#define FMT_VERSION 100000
 
 #if defined(__clang__) && !defined(__ibmxl__)
 #  define FMT_CLANG_VERSION (__clang_major__ * 100 + __clang_minor__)
@@ -175,7 +175,7 @@
 #ifndef FMT_BEGIN_NAMESPACE
 #  define FMT_BEGIN_NAMESPACE \
     namespace fmt {           \
-    inline namespace v9 {
+    inline namespace v10 {
 #  define FMT_END_NAMESPACE \
     }                       \
     }
@@ -394,6 +394,7 @@ FMT_CONSTEXPR inline auto is_utf8() -> bool {
   compiled with a different ``-std`` option than the client code (which is not
   recommended).
  */
+FMT_MODULE_EXPORT
 template <typename Char> class basic_string_view {
  private:
   const Char* data_;
@@ -496,9 +497,11 @@ template <typename Char> class basic_string_view {
   }
 };
 
+FMT_MODULE_EXPORT
 using string_view = basic_string_view<char>;
 
 /** Specifies if ``T`` is a character type. Can be specialized by users. */
+FMT_MODULE_EXPORT
 template <typename T> struct is_char : std::false_type {};
 template <> struct is_char<char> : std::true_type {};
 
@@ -646,6 +649,7 @@ template <typename S> using char_t = typename detail::char_t_impl<S>::type;
   You can use the ``format_parse_context`` type alias for ``char`` instead.
   \endrst
  */
+FMT_MODULE_EXPORT
 template <typename Char> class basic_format_parse_context {
  private:
   basic_string_view<Char> format_str_;
@@ -711,6 +715,7 @@ template <typename Char> class basic_format_parse_context {
   FMT_CONSTEXPR void check_dynamic_spec(int arg_id);
 };
 
+FMT_MODULE_EXPORT
 using format_parse_context = basic_format_parse_context<char>;
 
 namespace detail {
@@ -775,11 +780,12 @@ FMT_CONSTEXPR void basic_format_parse_context<Char>::check_dynamic_spec(
   }
 }
 
-template <typename Context> class basic_format_arg;
-template <typename Context> class basic_format_args;
-template <typename Context> class dynamic_format_arg_store;
+FMT_MODULE_EXPORT template <typename Context> class basic_format_arg;
+FMT_MODULE_EXPORT template <typename Context> class basic_format_args;
+FMT_MODULE_EXPORT template <typename Context> class dynamic_format_arg_store;
 
 // A formatter for objects of type T.
+FMT_MODULE_EXPORT
 template <typename T, typename Char = char, typename Enable = void>
 struct formatter {
   // A deleted default constructor indicates a disabled formatter.
@@ -1553,6 +1559,7 @@ template <typename Context> class basic_format_arg {
   ``vis(value)`` will be called with the value of type ``double``.
   \endrst
  */
+FMT_MODULE_EXPORT
 template <typename Visitor, typename Context>
 FMT_CONSTEXPR FMT_INLINE auto visit_format_arg(
     Visitor&& vis, const basic_format_arg<Context>& arg) -> decltype(vis(0)) {
@@ -1664,22 +1671,22 @@ constexpr auto encode_types() -> unsigned long long {
 
 template <typename Context, typename T>
 FMT_CONSTEXPR FMT_INLINE auto make_value(T&& val) -> value<Context> {
-  const auto& arg = arg_mapper<Context>().map(FMT_FORWARD(val));
+  auto&& arg = arg_mapper<Context>().map(FMT_FORWARD(val));
+  using arg_type = remove_cvref_t<decltype(arg)>;
 
   constexpr bool formattable_char =
-      !std::is_same<decltype(arg), const unformattable_char&>::value;
+      !std::is_same<arg_type, unformattable_char>::value;
   static_assert(formattable_char, "Mixing character types is disallowed.");
 
   // Formatting of arbitrary pointers is disallowed. If you want to format a
   // pointer cast it to `void*` or `const void*`. In particular, this forbids
   // formatting of `[const] volatile char*` printed as bool by iostreams.
   constexpr bool formattable_pointer =
-      !std::is_same<decltype(arg), const unformattable_pointer&>::value;
+      !std::is_same<arg_type, unformattable_pointer>::value;
   static_assert(formattable_pointer,
                 "Formatting of non-void pointers is disallowed.");
 
-  constexpr bool formattable =
-      !std::is_same<decltype(arg), const unformattable&>::value;
+  constexpr bool formattable = !std::is_same<arg_type, unformattable>::value;
   static_assert(
       formattable,
       "Cannot format an argument. To make type T formattable provide a "
@@ -1710,6 +1717,7 @@ FMT_CONSTEXPR inline auto make_arg(T&& value) -> basic_format_arg<Context> {
   return make_arg<Context>(value);
 }
 }  // namespace detail
+FMT_BEGIN_EXPORT
 
 // Formatting context.
 template <typename OutputIt, typename Char> class basic_format_context {
@@ -1852,6 +1860,7 @@ inline auto arg(const Char* name, const T& arg) -> detail::named_arg<Char, T> {
   static_assert(!detail::is_named_arg<T>(), "nested named arguments");
   return {name, arg};
 }
+FMT_END_EXPORT
 
 /**
   \rst
@@ -1977,7 +1986,7 @@ template <typename Context> class basic_format_args {
 /** An alias to ``basic_format_args<format_context>``. */
 // A separate type would result in shorter symbols but break ABI compatibility
 // between clang and gcc on ARM (#1919).
-using format_args = basic_format_args<format_context>;
+FMT_MODULE_EXPORT using format_args = basic_format_args<format_context>;
 
 // We cannot use enum classes as bit fields because of a gcc bug, so we put them
 // in namespaces instead (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414).
@@ -2486,9 +2495,6 @@ FMT_CONSTEXPR auto parse_replacement_field(const Char* begin, const Char* end,
 template <bool IS_CONSTEXPR, typename Char, typename Handler>
 FMT_CONSTEXPR FMT_INLINE void parse_format_string(
     basic_string_view<Char> format_str, Handler&& handler) {
-  // Workaround a name-lookup bug in MSVC's modules implementation.
-  using detail::find;
-
   auto begin = format_str.data();
   auto end = begin + format_str.size();
   if (end - begin < 32) {

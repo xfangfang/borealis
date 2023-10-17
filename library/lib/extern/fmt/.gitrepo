@@ -5,8 +5,8 @@
 ;
 [subrepo]
 	remote = https://github.com/fmtlib/fmt
-	branch = master
-	commit = 8ec94ac6a5cb1a7f8ee8a86bebc1100fd7b212ca
-	parent = 4a05453004314b85e5c6597cee16f37b02a7f6ab
+	branch = 10.0.0
+	commit = a0b8a92e3d1532361c2f7feb63babc5c18d00ef2
+	parent = 6bd1f3b835a69e4a18680ec0d2c7c8f4f884edab
 	method = merge
-	cmdver = 0.4.5
+	cmdver = 0.4.6

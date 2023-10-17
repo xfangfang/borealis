@@ -225,7 +225,8 @@ inline auto clzll(uint64_t x) -> int {
   _BitScanReverse64(&r, x);
 #  else
   // Scan the high 32 bits.
-  if (_BitScanReverse(&r, static_cast<uint32_t>(x >> 32))) return 63 ^ (r + 32);
+  if (_BitScanReverse(&r, static_cast<uint32_t>(x >> 32)))
+    return 63 ^ static_cast<int>(r + 32);
   // Scan the low 32 bits.
   _BitScanReverse(&r, static_cast<uint32_t>(x));
 #  endif
@@ -1038,12 +1039,12 @@ template <typename T, size_t SIZE, typename Allocator>
 struct is_contiguous<basic_memory_buffer<T, SIZE, Allocator>> : std::true_type {
 };
 
+FMT_END_EXPORT
 namespace detail {
-#ifdef _WIN32
 FMT_API bool write_console(std::FILE* f, string_view text);
-#endif
 FMT_API void print(std::FILE*, string_view);
 }  // namespace detail
+FMT_BEGIN_EXPORT
 
 // Suppress a misleading warning in older versions of clang.
 #if FMT_CLANG_VERSION
@@ -1415,6 +1416,68 @@ class utf8_to_utf16 {
   auto size() const -> size_t { return buffer_.size() - 1; }
   auto c_str() const -> const wchar_t* { return &buffer_[0]; }
   auto str() const -> std::wstring { return {&buffer_[0], size()}; }
+};
+
+// A converter from UTF-16/UTF-32 (host endian) to UTF-8.
+template <typename WChar, typename Buffer = memory_buffer>
+class unicode_to_utf8 {
+ private:
+  Buffer buffer_;
+
+ public:
+  unicode_to_utf8() {}
+  explicit unicode_to_utf8(basic_string_view<WChar> s) {
+    static_assert(sizeof(WChar) == 2 || sizeof(WChar) == 4,
+                  "Expect utf16 or utf32");
+
+    if (!convert(s))
+      FMT_THROW(std::runtime_error(sizeof(WChar) == 2 ? "invalid utf16"
+                                                      : "invalid utf32"));
+  }
+  operator string_view() const { return string_view(&buffer_[0], size()); }
+  size_t size() const { return buffer_.size() - 1; }
+  const char* c_str() const { return &buffer_[0]; }
+  std::string str() const { return std::string(&buffer_[0], size()); }
+
+  // Performs conversion returning a bool instead of throwing exception on
+  // conversion error. This method may still throw in case of memory allocation
+  // error.
+  bool convert(basic_string_view<WChar> s) {
+    if (!convert(buffer_, s)) return false;
+    buffer_.push_back(0);
+    return true;
+  }
+  static bool convert(Buffer& buf, basic_string_view<WChar> s) {
+    for (auto p = s.begin(); p != s.end(); ++p) {
+      uint32_t c = static_cast<uint32_t>(*p);
+      if (sizeof(WChar) == 2 && c >= 0xd800 && c <= 0xdfff) {
+        // surrogate pair
+        ++p;
+        if (p == s.end() || (c & 0xfc00) != 0xd800 || (*p & 0xfc00) != 0xdc00) {
+          return false;
+        }
+        c = (c << 10) + static_cast<uint32_t>(*p) - 0x35fdc00;
+      }
+      if (c < 0x80) {
+        buf.push_back(static_cast<char>(c));
+      } else if (c < 0x800) {
+        buf.push_back(static_cast<char>(0xc0 | (c >> 6)));
+        buf.push_back(static_cast<char>(0x80 | (c & 0x3f)));
+      } else if ((c >= 0x800 && c <= 0xd7ff) || (c >= 0xe000 && c <= 0xffff)) {
+        buf.push_back(static_cast<char>(0xe0 | (c >> 12)));
+        buf.push_back(static_cast<char>(0x80 | ((c & 0xfff) >> 6)));
+        buf.push_back(static_cast<char>(0x80 | (c & 0x3f)));
+      } else if (c >= 0x10000 && c <= 0x10ffff) {
+        buf.push_back(static_cast<char>(0xf0 | (c >> 18)));
+        buf.push_back(static_cast<char>(0x80 | ((c & 0x3ffff) >> 12)));
+        buf.push_back(static_cast<char>(0x80 | ((c & 0xfff) >> 6)));
+        buf.push_back(static_cast<char>(0x80 | (c & 0x3f)));
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 // Computes 128-bit result of multiplication of two 64-bit unsigned integers.
@@ -1964,16 +2027,14 @@ auto write_escaped_cp(OutputIt out, const find_escape_result<Char>& escape)
     *out++ = static_cast<Char>('\\');
     break;
   default:
-    if (is_utf8()) {
-      if (escape.cp < 0x100) {
-        return write_codepoint<2, Char>(out, 'x', escape.cp);
-      }
-      if (escape.cp < 0x10000) {
-        return write_codepoint<4, Char>(out, 'u', escape.cp);
-      }
-      if (escape.cp < 0x110000) {
-        return write_codepoint<8, Char>(out, 'U', escape.cp);
-      }
+    if (escape.cp < 0x100) {
+      return write_codepoint<2, Char>(out, 'x', escape.cp);
+    }
+    if (escape.cp < 0x10000) {
+      return write_codepoint<4, Char>(out, 'u', escape.cp);
+    }
+    if (escape.cp < 0x110000) {
+      return write_codepoint<8, Char>(out, 'U', escape.cp);
     }
     for (Char escape_char : basic_string_view<Char>(
              escape.begin, to_unsigned(escape.end - escape.begin))) {
@@ -4492,18 +4553,6 @@ FMT_BEGIN_DETAIL_NAMESPACE
 template <typename Char>
 void vformat_to(buffer<Char>& buf, basic_string_view<Char> fmt,
                 typename vformat_args<Char>::type args, locale_ref loc) {
-  // workaround for msvc bug regarding name-lookup in module
-  // link names into function scope
-  using detail::arg_formatter;
-  using detail::buffer_appender;
-  using detail::custom_formatter;
-  using detail::default_arg_formatter;
-  using detail::get_arg;
-  using detail::locale_ref;
-  using detail::parse_format_specs;
-  using detail::to_unsigned;
-  using detail::type;
-  using detail::write;
   auto out = buffer_appender<Char>(buf);
   if (fmt.size() == 2 && equal2(fmt.data(), "{}")) {
     auto arg = args.get(0);
