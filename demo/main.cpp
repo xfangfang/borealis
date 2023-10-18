@@ -20,6 +20,10 @@
 #include <switch.h>
 #endif
 
+#ifdef PS4
+extern "C" int sceSystemServiceLoadExec(const char *path, const char *args[]);
+#endif
+
 #if defined(ANDROID) || defined(IOS)
 #include <SDL2/SDL_main.h>
 #endif
@@ -42,6 +46,16 @@ int main(int argc, char* argv[])
     // Enable recording for Twitter memes
 #ifdef __SWITCH__
     appletInitializeGamePlayRecording();
+#endif
+
+#ifdef PS4
+    // Workaround for the PS4
+    // Logic window size: 1280x720
+    brls::Application::ORIGINAL_WINDOW_WIDTH  = 1280;
+    brls::Application::ORIGINAL_WINDOW_HEIGHT = 720;
+    // Real window size: 1920x1080
+    VideoContext::sizeW        = 1920;
+    VideoContext::sizeH        = 1080;
 #endif
 
     // Set log level
@@ -85,6 +99,11 @@ int main(int argc, char* argv[])
     // Run the app
     while (brls::Application::mainLoop())
         ;
+
+#ifdef __PS4__
+    sceSystemServiceLoadExec((char *) "exit", nullptr);
+    while (true) {}
+#endif
 
     // Exit
     return EXIT_SUCCESS;

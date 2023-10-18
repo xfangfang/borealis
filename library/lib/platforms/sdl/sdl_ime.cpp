@@ -124,8 +124,10 @@ namespace brls
         float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
         // 更新输入法条位置
         dialog->getLayoutEvent()->subscribe([this, scale](Point p) {
+#ifndef PS4
             const SDL_Rect rect = {(int)(p.x* scale), (int)(p.y * scale), 100, 20};
             SDL_SetTextInputRect(&rect);
+#endif
         });
         auto eventID1 = event->subscribe([this, updateTextAndCursor, updateText, updateTextCursor](SDL_Event *e) {
             switch (e->type) {

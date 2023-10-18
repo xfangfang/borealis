@@ -9,6 +9,9 @@
 
 #ifdef __cplusplus
 
+#ifdef PS4
+#include <cstdlib>
+#endif
 #include <cmath>
 #include <limits>
 #include "Yoga-internal.h"

@@ -30,6 +30,9 @@ extern "C"
 #include <psp2/kernel/modulemgr.h>
 }
 #define NANOVG_GLES2_IMPLEMENTATION
+#elif defined(PS4)
+#include <orbis/Pigletv2VSH.h>
+#define NANOVG_GLES2_IMPLEMENTATION
 #else
 #include <glad/glad.h>
 #ifdef USE_GLES2
@@ -242,7 +245,6 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     if (!this->window)
     {
         fatal("sdl: failed to create window");
-        return;
     }
 #ifdef BOREALIS_USE_OPENGL
     // Configure window
@@ -251,7 +253,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     SDL_AddEventWatch(sdlEventWatcher, window);
 #ifdef BOREALIS_USE_OPENGL
-#ifndef __PSV__
+#if !defined(__PSV__) && !defined(PS4)
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
 #endif
@@ -264,6 +266,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     // Initialize nanovg
 #ifdef __PSV__
     this->nvgContext = nvgCreateGLES2(0);
+#elif PS4
+    // Same as GLES2, but with pre-compiled shaders, so the flags must be "NVG_STENCIL_STROKES | NVG_ANTIALIAS" now
+    this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #elif USE_GLES2
     this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #elif USE_GLES3

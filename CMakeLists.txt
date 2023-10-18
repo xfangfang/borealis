@@ -28,8 +28,8 @@ set(VERSION_MINOR "0")
 set(VERSION_ALTER "0")
 set(VERSION_BUILD "0")
 set(PACKAGE_NAME "com.borealis.demo")
-set(VITA_TITLEID  "BOREALIS0")
-set(VITA_VERSION  "01.00")
+set(PSN_TITLE_ID  "BRLS00000")
+set(PSN_VERSION  "01.00")
 set(PROJECT_AUTHOR "borealis")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/img/demo_icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
@@ -98,21 +98,31 @@ elseif (PLATFORM_PSV)
     set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
     if (USE_LIBROMFS)
-        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-            VERSION ${VITA_VERSION}
+        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
+            VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
             FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
         )
     else()
-        vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-            VERSION ${VITA_VERSION}
+        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
+            VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
             FILE ${CMAKE_SOURCE_DIR}/resources resources
             FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
             FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
         )
     endif()
+elseif (PLATFORM_PS4)
+    if (PS4)
+        add_self(${PROJECT_NAME})
+        add_pkg(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/ps4 ${PSN_TITLE_ID} "Borealis DEMO" ${PSN_VERSION})
+    endif()
+    add_custom_target(${PROJECT_NAME}.data
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_SOURCE_DIR}/ps4 ${CMAKE_BINARY_DIR}/ps4
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/ps4/resources
+    )
+    add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}.data)
 elseif (PLATFORM_SWITCH)
     add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
         COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp --titleid=${PROJECT_TITLEID}

@@ -99,6 +99,10 @@ enum NVGimageFlagsGL {
 	NVG_IMAGE_NODELETE			= 1<<16,	// Do not delete GL texture handle.
 };
 
+#ifdef PS4
+#include <nanovg_ps4.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif
@@ -441,6 +445,10 @@ static int glnvg__createShader(GLNVGshader* shader, const char* name, const char
 	prog = glCreateProgram();
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
+#ifdef PS4
+        glShaderBinary(1, &vert, 2, PS4_SHADER_VERT, PS4_SHADER_VERT_LENGTH);
+        glShaderBinary(1, &frag, 2, PS4_SHADER_FRAG, PS4_SHADER_FRAG_LENGTH);
+#else
 	str[2] = vshader;
 	glShaderSource(vert, 3, str, 0);
 	str[2] = fshader;
@@ -459,6 +467,7 @@ static int glnvg__createShader(GLNVGshader* shader, const char* name, const char
 		glnvg__dumpShaderError(frag, name, "frag");
 		return 0;
 	}
+#endif
 
 	glAttachShader(prog, vert);
 	glAttachShader(prog, frag);
