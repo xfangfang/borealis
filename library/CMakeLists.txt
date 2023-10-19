@@ -129,7 +129,13 @@ elseif(PLATFORM_PS4)
     list(APPEND BOREALIS_INCLUDE /opt/OpenOrbis-PS4-Toolchain/include)
     list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2-static SceNetCtl)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DPS4 -DUSE_GLES2)
-    set(BRLS_PLATFORM_RESOURCES_PATH "\"/app0/resources/\"")
+    if (LIBJBC)
+        list(APPEND BRLS_PLATFORM_LIBS jbc)
+        list(APPEND BRLS_PLATFORM_OPTION -DUSE_JBC)
+        set(BRLS_PLATFORM_RESOURCES_PATH "\"/mnt/sandbox/${PSN_TITLE_ID}_000/app0/resources/\"")
+    else ()
+        set(BRLS_PLATFORM_RESOURCES_PATH "\"/app0/resources/\"")
+    endif ()
 elseif(PLATFORM_ANDROID)
     find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
@@ -193,7 +199,7 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
         ${BOREALIS_PATH}/lib/extern/nanovg-gl
         )
-if (PLATFORM_PSV)
+if (PLATFORM_PSV OR PLATFORM_PS4)
         list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
 endif ()
 foreach (lib ${BOREALIS_SOURCE})

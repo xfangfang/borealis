@@ -25,7 +25,8 @@ class Ps4Platform : public SDLPlatform
 {
   public:
     Ps4Platform();
-    ~Ps4Platform();
+    ~Ps4Platform() override;
+    void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos) override;
     bool canShowWirelessLevel() override;
     bool hasWirelessConnection() override;
     int getWirelessLevel() override;
@@ -38,6 +39,13 @@ class Ps4Platform : public SDLPlatform
     int loadStartModuleFromSandbox(const std::string& name);
     int loadStartModule(const std::string& path);
     int moduleDlsym(int handle, const std::string& name, void** func);
+
+#ifdef USE_JBC
+  private:
+    static void grantRootAccess();
+    static void exitRootAccess();
+    static bool hasRootAccess();
+#endif
 };
 
 } // namespace brls

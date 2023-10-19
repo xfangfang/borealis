@@ -19,6 +19,9 @@ cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON "WI
 # Linux Only
 cmake_dependent_option(INSTALL "Install to system." OFF "UNIX;NOT APPLE" OFF)
 
+# PS4 Only
+cmake_dependent_option(LIBJBC "Root access enabled" OFF "PLATFORM_PS4" OFF)
+
 # iOS Only (If empty then not sign)
 set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")
 set(IOS_GUI_IDENTIFIER "" CACHE STRING "Package name.")

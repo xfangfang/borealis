@@ -15,38 +15,56 @@ limitations under the License.
 */
 
 #include <SDL2/SDL.h>
+#include <orbis/NetCtl.h>
+#include <orbis/Sysmodule.h>
+#include <orbis/UserService.h>
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/thread.hpp>
 #include <borealis/platforms/ps4/ps4_platform.hpp>
-#include <orbis/Sysmodule.h>
-#include <orbis/NetCtl.h>
-#include <orbis/UserService.h>
+#ifdef USE_JBC
+#include <libjbc.h>
+#endif
 
-extern "C" int sceSystemServiceLoadExec(const char *path, const char *args[]);
+extern "C" int sceSystemServiceLoadExec(const char* path, const char* args[]);
 
 namespace brls
 {
 
-int (*sceRtcGetTick)(const OrbisDateTime *inOrbisDateTime, OrbisTick *outTick);
-int (*sceRtcSetTick)(OrbisDateTime *outOrbisDateTime, const OrbisTick *inputTick);
-int (*sceRtcConvertLocalTimeToUtc)(const OrbisTick *local_time, OrbisTick *utc);
-int (*sceRtcConvertUtcToLocalTime)(const OrbisTick *utc, OrbisTick *local_time);
-int (*sceRtcGetCurrentClockLocalTime)(OrbisDateTime *time);
-int (*sceShellUIUtilLaunchByUri)(const char *uri, SceShellUIUtilLaunchByUriParam *param);
+int (*sceRtcGetTick)(const OrbisDateTime* inOrbisDateTime, OrbisTick* outTick);
+int (*sceRtcSetTick)(OrbisDateTime* outOrbisDateTime, const OrbisTick* inputTick);
+int (*sceRtcConvertLocalTimeToUtc)(const OrbisTick* local_time, OrbisTick* utc);
+int (*sceRtcConvertUtcToLocalTime)(const OrbisTick* utc, OrbisTick* local_time);
+int (*sceRtcGetCurrentClockLocalTime)(OrbisDateTime* time);
+int (*sceShellUIUtilLaunchByUri)(const char* uri, SceShellUIUtilLaunchByUriParam* param);
 int (*sceShellUIUtilInitialize)();
 
 #define GET_MODULE_SYMBOL(handle, symbol) moduleDlsym(handle, #symbol, reinterpret_cast<void**>(&symbol))
+#ifdef USE_JBC
+#define LOAD_SYS_MODULE(name) loadStartModule("/system/common/lib/" name)
+#else
+#define LOAD_SYS_MODULE(name) loadStartModuleFromSandbox(name)
+#endif
 
 Ps4Platform::Ps4Platform()
 {
+#ifdef USE_JBC
+    // init SDL video as early as possible to avoid sandbox path invalid after getting root access
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+        Logger::error("sdl: failed to initialize video");
+    }
+
+    Ps4Platform::grantRootAccess();
+#endif
 
     // NetCtl
     sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NETCTL);
     sceNetCtlInit();
 
     // SceRtc
-    int handle = loadStartModuleFromSandbox("libSceRtc.sprx");
+    int handle = LOAD_SYS_MODULE("libSceRtc.sprx");
     GET_MODULE_SYMBOL(handle, sceRtcGetTick);
     GET_MODULE_SYMBOL(handle, sceRtcSetTick);
     GET_MODULE_SYMBOL(handle, sceRtcConvertLocalTimeToUtc);
@@ -54,18 +72,39 @@ Ps4Platform::Ps4Platform()
     GET_MODULE_SYMBOL(handle, sceRtcGetCurrentClockLocalTime);
 
     // OpenBrowser
-    handle = loadStartModuleFromSandbox("libSceShellUIUtil.sprx");
+    handle = LOAD_SYS_MODULE("libSceShellUIUtil.sprx");
     GET_MODULE_SYMBOL(handle, sceShellUIUtilInitialize);
     GET_MODULE_SYMBOL(handle, sceShellUIUtilLaunchByUri);
     if (sceShellUIUtilInitialize && sceShellUIUtilInitialize() < 0)
         brls::Logger::error("sceShellUIUtilInitialize failed");
 
-    atexit([](){
-        sceSystemServiceLoadExec("exit", NULL);
-    });
+    atexit([]()
+        {
+#ifdef USE_JBC
+        Ps4Platform::exitRootAccess();
+#endif
+        sceSystemServiceLoadExec("exit", NULL); });
 }
 
 Ps4Platform::~Ps4Platform() = default;
+
+void Ps4Platform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
+{
+    if (sceKernelIsNeoMode())
+    {
+        windowWidth  = 3840;
+        windowHeight = 2160;
+    }
+    else
+    {
+        windowWidth  = 1920;
+        windowHeight = 1080;
+    }
+
+    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, NAN, NAN);
+    this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
+    this->imeManager   = new SDLImeManager(&this->otherEvent);
+}
 
 bool Ps4Platform::canShowWirelessLevel()
 {
@@ -135,15 +174,15 @@ void Ps4Platform::openBrowser(std::string url)
 {
     SceShellUIUtilLaunchByUriParam param;
     param.size = sizeof(SceShellUIUtilLaunchByUriParam);
-    sceUserServiceGetForegroundUser((int *)&param.userId);
+    sceUserServiceGetForegroundUser((int*)&param.userId);
 
-    std::string launch_uri = std::string{"pswebbrowser:search?url="} + url;
-    int ret = sceShellUIUtilLaunchByUri(launch_uri.c_str(), &param);
+    std::string launch_uri = std::string { "pswebbrowser:search?url=" } + url;
+    int ret                = sceShellUIUtilLaunchByUri(launch_uri.c_str(), &param);
 }
 
 int Ps4Platform::loadStartModuleFromSandbox(const std::string& name)
 {
-    std::string modulePath{sceKernelGetFsSandboxRandomWord()};
+    std::string modulePath { sceKernelGetFsSandboxRandomWord() };
     modulePath = "/" + modulePath + "/common/lib/" + name;
 
     return loadStartModule(modulePath);
@@ -151,8 +190,9 @@ int Ps4Platform::loadStartModuleFromSandbox(const std::string& name)
 
 int Ps4Platform::loadStartModule(const std::string& path)
 {
-    int handle = sceKernelLoadStartModule( path.c_str(), 0, NULL, 0, NULL, NULL);
-    if (handle == 0) {
+    int handle = sceKernelLoadStartModule(path.c_str(), 0, NULL, 0, NULL, NULL);
+    if (handle == 0)
+    {
         Logger::error("Failed to load module: {}", path);
     }
     return handle;
@@ -161,10 +201,60 @@ int Ps4Platform::loadStartModule(const std::string& path)
 int Ps4Platform::moduleDlsym(int handle, const std::string& name, void** func)
 {
     int ret = sceKernelDlsym(handle, name.c_str(), func);
-    if (func == nullptr) {
+    if (func == nullptr)
+    {
         Logger::error("Failed to dlsym: {}", name);
     }
     return ret;
 }
+
+#ifdef USE_JBC
+// Variables for (un)jailbreaking
+static jbc_cred g_Cred;
+static jbc_cred g_RootCreds;
+
+void Ps4Platform::grantRootAccess()
+{
+    if (Ps4Platform::hasRootAccess())
+    {
+        brls::Logger::warning("Already has root access");
+        return;
+    }
+
+    jbc_get_cred(&g_Cred);
+    g_RootCreds = g_Cred;
+    jbc_jailbreak_cred(&g_RootCreds);
+    jbc_set_cred(&g_RootCreds);
+
+    if (Ps4Platform::hasRootAccess())
+    {
+        brls::Logger::info("Root access granted");
+    }
+    else
+    {
+        brls::Logger::error("Failed to grant root access");
+    }
+}
+
+void Ps4Platform::exitRootAccess()
+{
+    if (!Ps4Platform::hasRootAccess())
+        return;
+
+    jbc_set_cred(&g_Cred);
+}
+
+bool Ps4Platform::hasRootAccess()
+{
+    FILE* s_FilePointer = fopen("/user/.jailbreak", "w");
+
+    if (!s_FilePointer)
+        return false;
+
+    fclose(s_FilePointer);
+    remove("/user/.jailbreak");
+    return true;
+}
+#endif
 
 } // namespace brls
