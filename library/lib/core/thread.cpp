@@ -154,6 +154,7 @@ void Threading::performSyncTasks()
 
 void Threading::start()
 {
+    task_loop_active = true;
     start_task_loop();
 }
 

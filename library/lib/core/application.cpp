@@ -70,6 +70,11 @@ bool Application::init()
     Application::inited        = false;
     Application::quitRequested = false;
 
+    if (Application::ORIGINAL_WINDOW_WIDTH == 0)
+        Application::ORIGINAL_WINDOW_WIDTH = 1280;
+    if (Application::ORIGINAL_WINDOW_HEIGHT == 0)
+        Application::ORIGINAL_WINDOW_HEIGHT = 720;
+
     // Init platform
     Application::platform = Platform::createPlatform();
 
