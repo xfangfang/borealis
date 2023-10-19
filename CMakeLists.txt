@@ -114,9 +114,23 @@ elseif (PLATFORM_PSV)
         )
     endif()
 elseif (PLATFORM_PS4)
+    # There is no `add_self` and `add_pkg` functions without pacbrew toolchain.
+    # We can install the OpenOrbits SDK so that the IDE can provide some basic code prompts,
+    # but compilation is done through the pacbrew Docker container as pacbrew only supports Linux.
     if (PS4)
+        # Defined by pacbrew toolchain
         add_self(${PROJECT_NAME})
-        add_pkg(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/ps4 ${PSN_TITLE_ID} "Borealis DEMO" ${PSN_VERSION})
+        add_pkg(${PROJECT_NAME}
+                # Put all the resources inside `<build dir>/ps4` directory, and access through `/app0/...`
+                # eg: `cmake-build/ps4/resources/icon.png` -> `/app0/resources/icon.png`
+                ${CMAKE_BINARY_DIR}/ps4
+                ${PSN_TITLE_ID}
+                "Borealis DEMO"
+                ${PSN_VERSION}
+                # https://psdevwiki.com/ps4/param.sfo#ATTRIBUTE
+                # Support ps4 pro
+                8388608
+        )
     endif()
     add_custom_target(${PROJECT_NAME}.data
         COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_SOURCE_DIR}/ps4 ${CMAKE_BINARY_DIR}/ps4

@@ -164,6 +164,16 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     PVRSRVCreateVirtualAppHint(&hint);
 #endif
 
+#ifdef PS4
+    if (sceKernelIsNeoMode()) {
+        windowWidth  = 3840;
+        windowHeight = 2160;
+    } else {
+        windowWidth  = 1920;
+        windowHeight = 1080;
+    }
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         Logger::error("sdl: failed to initialize");
