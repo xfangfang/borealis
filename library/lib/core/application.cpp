@@ -47,6 +47,7 @@
 #include <borealis/views/widgets/account.hpp>
 #include <borealis/views/widgets/battery.hpp>
 #include <borealis/views/widgets/wireless.hpp>
+#include <borealis/views/debug_layer.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -171,7 +172,7 @@ bool Application::mainLoop()
     }
     else
     {
-        Logger::debug("input blocked (tokens={})", Application::blockInputsTokens);
+        Logger::verbose("input blocked (tokens={})", Application::blockInputsTokens);
         if (!muteSounds)
             Application::getAudioPlayer()->play(Sound::SOUND_CLICK_ERROR);
     }

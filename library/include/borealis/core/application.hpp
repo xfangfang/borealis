@@ -30,7 +30,6 @@
 #include <borealis/core/style.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/view.hpp>
-#include <borealis/views/debug_layer.hpp>
 #include <borealis/views/label.hpp>
 #include <unordered_map>
 #include <vector>
@@ -51,6 +50,8 @@ enum class InputType
     GAMEPAD, // Gamepad or keyboard
     TOUCH, // Touch screen
 };
+
+class DebugLayer;
 
 typedef std::function<View*(void)> XMLViewCreator;
 
