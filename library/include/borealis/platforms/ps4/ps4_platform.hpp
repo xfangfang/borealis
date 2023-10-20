@@ -34,6 +34,7 @@ class Ps4Platform : public SDLPlatform
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     void openBrowser(std::string url) override;
+    ImeManager* getImeManager() override;
 
     // ps4 specific
     int loadStartModuleFromSandbox(const std::string& name);
@@ -46,6 +47,9 @@ class Ps4Platform : public SDLPlatform
     static void exitRootAccess();
     static bool hasRootAccess();
 #endif
+
+  private:
+    ImeManager* imeManager = nullptr;
 };
 
 } // namespace brls

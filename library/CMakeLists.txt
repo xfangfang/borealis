@@ -127,7 +127,7 @@ elseif(PLATFORM_PS4)
             ${BOREALIS_PATH}/lib/platforms/ps4
             ${BOREALIS_PATH}/lib/extern/nanovg/ps4)
     list(APPEND BOREALIS_INCLUDE /opt/OpenOrbis-PS4-Toolchain/include)
-    list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2-static SceNetCtl)
+    list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2-static SceNetCtl SceImeDialog SceCommonDialog)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DPS4 -DUSE_GLES2)
     if (LIBJBC)
         list(APPEND BRLS_PLATFORM_LIBS jbc)

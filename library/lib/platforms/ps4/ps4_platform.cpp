@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <SDL2/SDL.h>
+#include <orbis/CommonDialog.h>
 #include <orbis/NetCtl.h>
 #include <orbis/Sysmodule.h>
 #include <orbis/UserService.h>
@@ -23,6 +24,7 @@ limitations under the License.
 #include <borealis/core/logger.hpp>
 #include <borealis/core/thread.hpp>
 #include <borealis/platforms/ps4/ps4_platform.hpp>
+#include <borealis/platforms/ps4/ps4_ime.hpp>
 #ifdef USE_JBC
 #include <libjbc.h>
 #endif
@@ -49,19 +51,26 @@ int (*sceShellUIUtilInitialize)();
 
 Ps4Platform::Ps4Platform()
 {
-#ifdef USE_JBC
-    // init SDL video as early as possible to avoid sandbox path invalid after getting root access
+    // Initialize here for loading the system modules
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         Logger::error("sdl: failed to initialize video");
     }
 
+#ifdef USE_JBC
+    // Obtain root privileges after SDL initialization, as the sandbox path is used within SDL
     Ps4Platform::grantRootAccess();
 #endif
 
     // NetCtl
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NETCTL);
-    sceNetCtlInit();
+    if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NETCTL) < 0 || sceNetCtlInit() < 0)
+        brls::Logger::error("sceNetCtlInit() failed");
+
+    // Dialogs
+    if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_MESSAGE_DIALOG) < 0 || sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_IME_DIALOG) < 0)
+        Logger::error("Load ime dialog module failed");
+    if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_COMMON_DIALOG) < 0 || sceCommonDialogInitialize() < 0)
+        brls::Logger::error("sceCommonDialogInitialize() failed");
 
     // SceRtc
     int handle = LOAD_SYS_MODULE("libSceRtc.sprx");
@@ -103,7 +112,7 @@ void Ps4Platform::createWindow(std::string windowTitle, uint32_t windowWidth, ui
 
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, NAN, NAN);
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
-    this->imeManager   = new SDLImeManager(&this->otherEvent);
+    this->imeManager   = new Ps4ImeManager();
 }
 
 bool Ps4Platform::canShowWirelessLevel()
@@ -179,6 +188,12 @@ void Ps4Platform::openBrowser(std::string url)
     std::string launch_uri = std::string { "pswebbrowser:search?url=" } + url;
     int ret                = sceShellUIUtilLaunchByUri(launch_uri.c_str(), &param);
 }
+
+ImeManager* Ps4Platform::getImeManager()
+{
+    return this->imeManager;
+}
+
 
 int Ps4Platform::loadStartModuleFromSandbox(const std::string& name)
 {
