@@ -7,6 +7,7 @@
         height="auto"
         axis="column"
         alignItems="stretch"
+        scrollingBehavior="centered"
         grow="1.0" >
         
         <brls:Box
@@ -41,21 +42,19 @@
             <brls:DetailCell
                 title="DNS"
                 id="dnsServer"/>
+
+            <brls:BooleanCell
+                id="debug"/>
+
+            <brls:BooleanCell
+                id="bottomBar"/>
+
+            <brls:BooleanCell
+                id="fps"/>
                 
             <brls:RadioCell/>
             <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            <brls:RadioCell/>
-            
-            
+
         </brls:Box>
 
     </brls:ScrollingFrame>

@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
     // Set log level
     // We recommend to use INFO for real apps
     brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
-    brls::Application::setFPSStatus(true);
 
     // Init the app and i18n
     if (!brls::Application::init())

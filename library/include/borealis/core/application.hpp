@@ -273,6 +273,11 @@ class Application
         debuggingViewEnabled = enable;
     }
 
+    inline static bool isDebuggingViewEnabled()
+    {
+        return debuggingViewEnabled;
+    }
+
     static void setSwapInputKeys(bool swap);
 
     inline static bool isSwapInputKeys()
