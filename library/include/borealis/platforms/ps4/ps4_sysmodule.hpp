@@ -28,6 +28,8 @@ extern int (*sceRtcConvertLocalTimeToUtc)(const OrbisTick* local_time, OrbisTick
 extern int (*sceRtcConvertUtcToLocalTime)(const OrbisTick* utc, OrbisTick* local_time);
 extern int (*sceRtcGetCurrentClockLocalTime)(OrbisDateTime* time);
 
+extern int32_t sceTimezone;
+
 typedef struct
 {
     unsigned int size;

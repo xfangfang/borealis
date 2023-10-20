@@ -19,6 +19,7 @@ limitations under the License.
 #include <orbis/NetCtl.h>
 #include <orbis/Sysmodule.h>
 #include <orbis/UserService.h>
+#include <orbis/SystemService.h>
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
@@ -41,6 +42,8 @@ int (*sceRtcConvertUtcToLocalTime)(const OrbisTick* utc, OrbisTick* local_time);
 int (*sceRtcGetCurrentClockLocalTime)(OrbisDateTime* time);
 int (*sceShellUIUtilLaunchByUri)(const char* uri, SceShellUIUtilLaunchByUriParam* param);
 int (*sceShellUIUtilInitialize)();
+
+int32_t sceTimezone;
 
 #define GET_MODULE_SYMBOL(handle, symbol) moduleDlsym(handle, #symbol, reinterpret_cast<void**>(&symbol))
 #ifdef USE_JBC
@@ -86,6 +89,41 @@ Ps4Platform::Ps4Platform()
     GET_MODULE_SYMBOL(handle, sceShellUIUtilLaunchByUri);
     if (sceShellUIUtilInitialize && sceShellUIUtilInitialize() < 0)
         brls::Logger::error("sceShellUIUtilInitialize failed");
+
+    int32_t ret = 0;
+
+    // Locale
+    if (Platform::APP_LOCALE_DEFAULT == LOCALE_AUTO || Platform::APP_LOCALE_DEFAULT.empty())
+    {
+        sceSystemServiceParamGetInt(ORBIS_SYSTEM_SERVICE_PARAM_ID_LANG, &ret);
+        switch (ret)
+        {
+            case ORBIS_SYSTEM_PARAM_LANG_CHINESE_S:
+                this->locale = LOCALE_ZH_HANS;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_CHINESE_T:
+                this->locale = LOCALE_ZH_HANT;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_JAPANESE:
+                this->locale = LOCALE_JA;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_KOREAN:
+                this->locale = LOCALE_Ko;
+                break;
+            default:
+                this->locale = LOCALE_DEFAULT;
+        }
+        brls::Logger::info("App locale: {}", this->locale);
+    }
+
+    // timezone
+    sceSystemServiceParamGetInt(ORBIS_SYSTEM_SERVICE_PARAM_ID_LANG, &sceTimezone);
+    brls::Logger::info("System timezone: {}", sceTimezone);
+
+    // swap a/b/x/y
+    sceSystemServiceParamGetInt(ORBIS_SYSTEM_SERVICE_PARAM_ID_ENTER_BUTTON_ASSIGN, &ret);
+    if (ret == ORBIS_SYSTEM_PARAM_ENTER_BUTTON_ASSIGN_CIRCLE)
+        brls::Application::setSwapInputKeys(true);
 
     atexit([]()
         {
