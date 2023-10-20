@@ -105,17 +105,21 @@ echo launch BOREALIS0 | nc 192.168.1.140 1338
 
 ## Building the demo for PS4
 
-使用 [PacBrew](https://github.com/PacBrew/pacbrew-packages) 配置开发环境（PacBrew 提供的 SDL2 支持 OpenGL ES2）
+You need install [pacbrew-packages](https://github.com/PacBrew/pacbrew-packages)（SDL2 provided by pacbrew-packages supports OpenGL ES2）
 
 ```shell
 source /opt/pacbrew/ps4/openorbis/ps4vars.sh
-openorbis-cmake -B build_psv -DPLATFORM_PS4=ON
+openorbis-cmake -B build_ps4 -DPLATFORM_PS4=ON
 make -C build_ps4 -j$(nproc)
 ```
 
-> 快速把pkg发送到 ps4 的方法
-> `make -j$(nproc) && curl --ftp-method nocwd -T *.pkg ftp://<your_ps4_ip>:2121/data/pkg/`
-> 在 ps4 的 GlodHen 菜单中开启 klog 重定向，可以在电脑上查看日志  
+> There is a docker image for building ps4 homebrew: [xfangfang/pacbrew:231021](https://hub.docker.com/r/xfangfang/pacbrew)  
+> `docker run --rm -v $(pwd):/src/ xfangfang/pacbrew:231021 "openorbis-cmake -B build_ps4 -DPLATFORM_PS4=ON && make -C build_ps4 -j$(nproc)"`   
+> 
+> Sending pkg to ps4:  
+> `make -j$(nproc) && curl --ftp-method nocwd -T *.pkg ftp://<your_ps4_ip>:2121/data/pkg/`  
+>   
+> Enable klog TTY Redirect in GoldHEN, then connect to ps4 klog:  
 > `nc <your_ps4_ip> 3232`
 
 
