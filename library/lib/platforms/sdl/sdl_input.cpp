@@ -25,6 +25,7 @@ namespace brls
 #define SDL_GAMEPAD_BUTTON_NONE SIZE_MAX
 #define SDL_GAMEPAD_BUTTON_MAX 15
 #define SDL_GAMEPAD_AXIS_MAX 4
+#define SDL_STICKY 2
 
 // LT and RT do not exist here because they are axes
 static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
@@ -72,6 +73,21 @@ static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
 
 std::unordered_map<SDL_JoystickID, SDL_GameController*> controllers;
 
+static int mouseButtons[3] = { 0 };
+
+static inline int getMouseButtonState(int buttonIndex)
+{
+    if (mouseButtons[buttonIndex - 1] == SDL_STICKY)
+    {
+        mouseButtons[buttonIndex - 1] = SDL_RELEASED;
+        return SDL_PRESSED;
+    }
+    else
+    {
+        return mouseButtons[buttonIndex - 1];
+    }
+}
+
 static int sdlEventWatcher(void* data, SDL_Event* event)
 {
     if (event->type == SDL_CONTROLLERDEVICEADDED)
@@ -88,6 +104,16 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
     {
         Logger::info("Controller disconnected: {}", event->cdevice.which);
         controllers.erase(event->cdevice.which);
+    }
+    else if (event->type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (event->button.button <= 3)
+            mouseButtons[event->button.button - 1] = SDL_PRESSED;
+    }
+    else if (event->type == SDL_MOUSEBUTTONUP)
+    {
+        if (event->button.button <= 3)
+            mouseButtons[event->button.button - 1] = SDL_STICKY;
     }
     Application::setActiveEvent(true);
     return 0;
@@ -116,7 +142,7 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
         controllers.insert({ jid, SDL_GameControllerOpen(i) });
     }
 
-    SDL_AddEventWatch(sdlEventWatcher, window);
+    SDL_AddEventWatch(sdlEventWatcher, this->window);
 
     Application::getRunLoopEvent()->subscribe([this]()
         {
@@ -232,16 +258,16 @@ void SDLInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 void SDLInputManager::updateMouseStates(RawMouseState* state)
 {
     int x, y;
-    Uint32 buttons = SDL_GetMouseState(&x, &y);
+    SDL_GetMouseState(&x, &y);
 
-    state->leftButton   = buttons & SDL_BUTTON_LEFT;
-    state->middleButton = buttons & SDL_BUTTON_MIDDLE;
-    state->rightButton  = buttons & SDL_BUTTON_RIGHT;
+    state->leftButton   = getMouseButtonState(SDL_BUTTON_LEFT);
+    state->middleButton = getMouseButtonState(SDL_BUTTON_MIDDLE);
+    state->rightButton  = getMouseButtonState(SDL_BUTTON_RIGHT);
 
 #ifdef BOREALIS_USE_D3D11
     // d3d11 scaleFactor 不计算在点击事件里
-    state->position.x  = x / Application::windowScale;
-    state->position.y  = y / Application::windowScale;
+    state->position.x = x / Application::windowScale;
+    state->position.y = y / Application::windowScale;
 #else
     double scaleFactor = brls::Application::getPlatform()->getVideoContext()->getScaleFactor();
     state->position.x  = x * scaleFactor / Application::windowScale;
