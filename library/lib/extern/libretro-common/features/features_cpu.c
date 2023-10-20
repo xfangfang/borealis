@@ -65,6 +65,10 @@
 #include <psp2/rtc.h>
 #endif
 
+#if defined(PS4) || defined(ORBIS)
+#include <orbis/libkernel.h>
+#endif
+
 #if defined(PS2)
 #include <kernel.h>
 #include <timer.h>
@@ -234,6 +238,8 @@ retro_time_t cpu_features_get_time_usec(void)
    return ticks_to_us(OSGetSystemTime());
 #elif defined(SWITCH) || defined(HAVE_LIBNX)
    return (svcGetSystemTick() * 10) / 192;
+#elif defined(PS4) || defined(ORBIS)
+   return sceKernelGetProcessTime();
 #elif defined(_POSIX_MONOTONIC_CLOCK) || defined(__QNX__) || defined(ANDROID) || defined(__MACH__)
    struct timespec tv = {0};
    if (ra_clock_gettime(CLOCK_MONOTONIC, &tv) < 0)

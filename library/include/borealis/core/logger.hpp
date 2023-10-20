@@ -25,6 +25,11 @@
 #include <psp2/kernel/clib.h>
 #endif
 
+#ifdef PS4
+#include <orbis/libkernel.h>
+#include <borealis/platforms/ps4/ps4_sysmodule.hpp>
+#endif
+
 #include <fmt/core.h>
 
 #include <borealis/core/event.hpp>
@@ -92,11 +97,16 @@ class Logger
             __android_log_print(6 - (int)level, "borealis", "%s\n", log.c_str());
 #elif defined(__PSV__)
             sceClibPrintf("%02d:%02d:%02d.%03d\033%s[%s]\033[0m %s\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color.c_str(), prefix.c_str(), log.c_str());
+#elif defined(PS4)
+            OrbisDateTime lt{};
+            if (sceRtcGetCurrentClockLocalTime)
+                sceRtcGetCurrentClockLocalTime(&lt);
+            sceKernelDebugOutText(0, fmt::format("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", lt.hour, lt.minute, lt.second, (int)ms, color, prefix, log).c_str());
 #else
             fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix, log);
 #endif
 
-            logEvent.fire(log);
+            logEvent.fire(level, log);
         }
         catch (const std::exception& e)
         {
@@ -139,14 +149,14 @@ class Logger
         Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", BRLS_VERBOSE_COLOR, format, std::forward<Args>(args)...);
     }
 
-    static Event<std::string>* getLogEvent()
+    static Event<LogLevel, std::string>* getLogEvent()
     {
         return &logEvent;
     }
 
   private:
     inline static LogLevel logLevel = LogLevel::LOG_INFO;
-    inline static Event<std::string> logEvent;
+    inline static Event<LogLevel, std::string> logEvent;
 };
 
 } // namespace brls

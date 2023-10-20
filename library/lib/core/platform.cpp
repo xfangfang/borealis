@@ -28,6 +28,10 @@
 #include <borealis/platforms/psv/psv_platform.hpp>
 #endif
 
+#ifdef PS4
+#include <borealis/platforms/ps4/ps4_platform.hpp>
+#endif
+
 #ifdef __GLFW__
 #include <borealis/platforms/glfw/glfw_platform.hpp>
 #endif
@@ -47,6 +51,8 @@ Platform* Platform::createPlatform()
     return new AndroidPlatform();
 #elif defined(__PSV__)
     return new PsvPlatform();
+#elif defined(PS4)
+    return new Ps4Platform();
 #elif defined(__SDL2__)
     return new SDLPlatform();
 #elif defined(__GLFW__)

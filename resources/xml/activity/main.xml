@@ -9,34 +9,38 @@
         <brls:Tab label="@i18n/demo/tabs/components" >
             <ComponentsTab />
         </brls:Tab>
-        
-        <brls:Tab label="@i18n/demo/tabs/scroll" >
-            <brls:View xml="@res/xml/tabs/scroll_test.xml" />
-        </brls:Tab>
 
         <!-- Static tab linking to another XML -->
         <brls:Tab label="@i18n/demo/tabs/layout" >
             <brls:View xml="@res/xml/tabs/layout.xml" />
         </brls:Tab>
 
+        <brls:Separator />
+
+        <brls:Tab label="@i18n/demo/tabs/scroll" >
+            <brls:View xml="@res/xml/tabs/scroll_test.xml" />
+        </brls:Tab>
+
         <brls:Tab label="@i18n/demo/tabs/pokedex">
             <RecyclingListTab />
         </brls:Tab>
-        
+
+        <brls:Separator />
+
         <brls:Tab label="@i18n/demo/tabs/settings">
             <SettingsTab />
         </brls:Tab>
 
-        <brls:Separator />
+<!--        <brls:Separator />-->
 
-        <brls:Tab label="@i18n/demo/tabs/popups" />
-        <brls:Tab label="@i18n/demo/tabs/hos_layout" />
+<!--        <brls:Tab label="@i18n/demo/tabs/popups" />-->
+<!--        <brls:Tab label="@i18n/demo/tabs/hos_layout" />-->
 
-        <brls:Separator />
+<!--        <brls:Separator />-->
 
-        <brls:Tab label="@i18n/demo/tabs/misc_layouts" />
-        <brls:Tab label="@i18n/demo/tabs/misc_components" />
-        <brls:Tab label="@i18n/demo/tabs/misc_tools" />
+<!--        <brls:Tab label="@i18n/demo/tabs/misc_layouts" />-->
+<!--        <brls:Tab label="@i18n/demo/tabs/misc_components" />-->
+<!--        <brls:Tab label="@i18n/demo/tabs/misc_tools" />-->
 
         <brls:Separator />
 

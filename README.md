@@ -103,6 +103,25 @@ echo launch BOREALIS0 | nc 192.168.1.140 1338
 >  192.168.1.140 is the ip address of my psv  
 >  BOREALIS0 is the demo app ID
 
+## Building the demo for PS4
+
+You need install [pacbrew-packages](https://github.com/PacBrew/pacbrew-packages)（SDL2 provided by pacbrew-packages supports OpenGL ES2）
+
+```shell
+source /opt/pacbrew/ps4/openorbis/ps4vars.sh
+openorbis-cmake -B build_ps4 -DPLATFORM_PS4=ON
+make -C build_ps4 -j$(nproc)
+```
+
+> There is a docker image for building ps4 homebrew: [xfangfang/pacbrew:231021](https://hub.docker.com/r/xfangfang/pacbrew)  
+> `docker run --rm -v $(pwd):/src/ xfangfang/pacbrew:231021 "openorbis-cmake -B build_ps4 -DPLATFORM_PS4=ON && make -C build_ps4 -j$(nproc)"`   
+> 
+> Sending pkg to ps4:  
+> `make -j$(nproc) && curl --ftp-method nocwd -T *.pkg ftp://<your_ps4_ip>:2121/data/pkg/`  
+>   
+> Enable klog TTY Redirect in GoldHEN, then connect to ps4 klog:  
+> `nc <your_ps4_ip> 3232`
+
 
 ## Building the demo for Android
 

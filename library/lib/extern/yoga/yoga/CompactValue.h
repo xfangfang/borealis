@@ -24,6 +24,9 @@
 #endif
 #include "YGValue.h"
 #include "YGMacros.h"
+#ifdef PS4
+#include <cstdlib>
+#endif
 #include <cmath>
 #include <cstdint>
 #include <limits>

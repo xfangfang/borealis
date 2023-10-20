@@ -26,7 +26,7 @@
         id="close_button"
         width="auto"
         height="auto"
-        text="Закрыть"
+        text="@i18n/hints/back"
         marginTop="24px"/>
 
 </brls:Box>

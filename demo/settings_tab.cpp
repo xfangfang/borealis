@@ -35,6 +35,29 @@ SettingsTab::SettingsTab()
 
     boolean->title->setText("Switcher");
 
+    debug->init("Debug Layer", brls::Application::isDebuggingViewEnabled(), [](bool value){
+        brls::Application::enableDebuggingView(value);
+        brls::sync([value](){
+            brls::Logger::info((value ? "Open" : "Close") + std::string{" the debug layer"});
+        });
+    });
+
+    bottomBar->init("Bottom Bar", !brls::AppletFrame::HIDE_BOTTOM_BAR, [](bool value){
+        brls::AppletFrame::HIDE_BOTTOM_BAR = !value;
+        auto stack = brls::Application::getActivitiesStack();
+        for (auto& activity : stack) {
+            auto* frame = dynamic_cast<brls::AppletFrame*>(
+                activity->getContentView());
+            if (!frame) continue;
+            frame->setFooterVisibility(!value ? brls::Visibility::GONE
+                                             : brls::Visibility::VISIBLE);
+        }
+    });
+
+    fps->init("FPS", brls::Application::getFPSStatus(), [](bool value){
+        brls::Application::setFPSStatus(value);
+    });
+
     selector->init("Selector", { "Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8", "Test 9", "Test 10", "Test 11", "Test 12", "Test 13" }, 0, [](int selected) {
     }, [](int selected) {
         auto dialog = new brls::Dialog(fmt::format("selected {}", selected));

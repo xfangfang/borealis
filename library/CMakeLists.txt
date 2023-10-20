@@ -119,6 +119,23 @@ elseif (PLATFORM_PSV)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -D__PSV__ -DUSE_GLES2)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
     set_target_properties(yogacore PROPERTIES POSITION_INDEPENDENT_CODE OFF)
+elseif(PLATFORM_PS4)
+    find_package(SDL2 REQUIRED)
+    list(APPEND BOREALIS_SOURCE
+            ${BOREALIS_PATH}/lib/platforms/sdl
+            ${BOREALIS_PATH}/lib/platforms/desktop
+            ${BOREALIS_PATH}/lib/platforms/ps4
+            ${BOREALIS_PATH}/lib/extern/nanovg/ps4)
+    list(APPEND BOREALIS_INCLUDE /opt/OpenOrbis-PS4-Toolchain/include)
+    list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2-static SceNetCtl SceImeDialog SceCommonDialog)
+    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DPS4 -DUSE_GLES2)
+    if (LIBJBC)
+        list(APPEND BRLS_PLATFORM_LIBS jbc)
+        list(APPEND BRLS_PLATFORM_OPTION -DUSE_JBC)
+        set(BRLS_PLATFORM_RESOURCES_PATH "\"/mnt/sandbox/${PSN_TITLE_ID}_000/app0/resources/\"")
+    else ()
+        set(BRLS_PLATFORM_RESOURCES_PATH "\"/app0/resources/\"")
+    endif ()
 elseif(PLATFORM_ANDROID)
     find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
@@ -167,7 +184,8 @@ endif ()
 list(APPEND BOREALIS_INCLUDE
         ${BOREALIS_PATH}/include
         ${BOREALIS_PATH}/include/borealis/extern
-        ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl
+        ${BOREALIS_PATH}/include/borealis/extern/nanovg
+        ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl // remove this once deko3d branch is merged
         )
 list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/core
@@ -181,7 +199,7 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
         ${BOREALIS_PATH}/lib/extern/nanovg-gl
         )
-if (PLATFORM_PSV)
+if (PLATFORM_PSV OR PLATFORM_PS4)
         list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
 endif ()
 foreach (lib ${BOREALIS_SOURCE})

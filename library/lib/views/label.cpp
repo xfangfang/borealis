@@ -504,7 +504,6 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
                     cursorX = nextX;
                 }
             }
-            int cursorY = textX;
             nvgBeginPath(vg);
             nvgRect(vg, cursorX, y, 1, lineh);
             nvgFill(vg);

@@ -47,6 +47,7 @@
 #include <borealis/views/widgets/account.hpp>
 #include <borealis/views/widgets/battery.hpp>
 #include <borealis/views/widgets/wireless.hpp>
+#include <borealis/views/debug_layer.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -68,6 +69,11 @@ bool Application::init()
 {
     Application::inited        = false;
     Application::quitRequested = false;
+
+    if (Application::ORIGINAL_WINDOW_WIDTH == 0)
+        Application::ORIGINAL_WINDOW_WIDTH = 1280;
+    if (Application::ORIGINAL_WINDOW_HEIGHT == 0)
+        Application::ORIGINAL_WINDOW_HEIGHT = 720;
 
     // Init platform
     Application::platform = Platform::createPlatform();
@@ -171,7 +177,7 @@ bool Application::mainLoop()
     }
     else
     {
-        Logger::debug("input blocked (tokens={})", Application::blockInputsTokens);
+        Logger::verbose("input blocked (tokens={})", Application::blockInputsTokens);
         if (!muteSounds)
             Application::getAudioPlayer()->play(Sound::SOUND_CLICK_ERROR);
     }

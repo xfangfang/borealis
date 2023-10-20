@@ -15,11 +15,6 @@
     limitations under the License.
 */
 
-// Switch include only necessary for demo videos recording
-#ifdef __SWITCH__
-#include <switch.h>
-#endif
-
 #if defined(ANDROID) || defined(IOS)
 #include <SDL2/SDL_main.h>
 #endif
@@ -39,15 +34,9 @@ using namespace brls::literals; // for _i18n
 
 int main(int argc, char* argv[])
 {
-    // Enable recording for Twitter memes
-#ifdef __SWITCH__
-    appletInitializeGamePlayRecording();
-#endif
-
     // Set log level
     // We recommend to use INFO for real apps
     brls::Logger::setLogLevel(brls::LogLevel::LOG_DEBUG);
-    brls::Application::setFPSStatus(true);
 
     // Init the app and i18n
     if (!brls::Application::init())

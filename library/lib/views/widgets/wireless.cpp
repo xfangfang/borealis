@@ -89,7 +89,7 @@ void WirelessWidget::updateState()
 {
     static Time time = 0;
     Time now         = getCPUTimeUsec();
-    if ((now - time) > 5000000)
+    if ((now - time) > 5000000 || time == 0)
     {
         brls::Logger::verbose("hasWirelessConnection: {}; wifiLevel: {}", hasWirelessConnection, wifiLevel);
 #ifdef ANDROID

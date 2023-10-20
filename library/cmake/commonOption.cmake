@@ -10,6 +10,7 @@ option(PLATFORM_DESKTOP "build for desktop (Linux, macOS, Windows)" OFF)
 option(PLATFORM_IOS "build for iOS" OFF)
 option(PLATFORM_ANDROID "build for Android" OFF)
 option(PLATFORM_PSV "build for psv" OFF)
+option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
 
 # Windows Only
@@ -17,6 +18,9 @@ cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON "WI
 
 # Linux Only
 cmake_dependent_option(INSTALL "Install to system." OFF "UNIX;NOT APPLE" OFF)
+
+# PS4 Only
+cmake_dependent_option(LIBJBC "Root access enabled" OFF "PLATFORM_PS4" OFF)
 
 # iOS Only (If empty then not sign)
 set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")

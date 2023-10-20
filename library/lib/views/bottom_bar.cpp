@@ -20,6 +20,10 @@
 #include <iomanip>
 #include <sstream>
 
+#ifdef PS4
+#include <borealis/platforms/ps4/ps4_sysmodule.hpp>
+#endif
+
 namespace brls
 {
 
@@ -101,11 +105,21 @@ void BottomBar::draw(NVGcontext* vg, float x, float y, float width, float height
 
 void BottomBar::updateText()
 {
+#ifdef PS4
+    OrbisDateTime lt{};
+    if (sceRtcGetCurrentClockLocalTime)
+        sceRtcGetCurrentClockLocalTime(&lt);
+    tm tm{};
+    tm.tm_hour = lt.hour;
+    tm.tm_min = lt.minute;
+    tm.tm_sec = lt.second;
+#else
     auto timeNow   = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(timeNow);
-
+    auto tm = *std::localtime(&in_time_t);
+#endif
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
+    ss << std::put_time(&tm, "%H:%M:%S");
     if (ss.str() != bottomText)
     {
         bottomText = ss.str();
