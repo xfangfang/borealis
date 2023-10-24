@@ -85,8 +85,14 @@ class Logger
         auto now    = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
             - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
+#ifdef PS4
+        OrbisDateTime lt{};
+        if (sceRtcGetCurrentClockLocalTime)
+            sceRtcGetCurrentClockLocalTime(&lt);
+#else
         time_t tt       = std::chrono::system_clock::to_time_t(now);
         auto time_tm    = localtime(&tt);
+#endif
         std::string log = fmt::format(format, std::forward<Args>(args)...);
 
         try
@@ -98,9 +104,6 @@ class Logger
 #elif defined(__PSV__)
             sceClibPrintf("%02d:%02d:%02d.%03d\033%s[%s]\033[0m %s\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color.c_str(), prefix.c_str(), log.c_str());
 #elif defined(PS4)
-            OrbisDateTime lt{};
-            if (sceRtcGetCurrentClockLocalTime)
-                sceRtcGetCurrentClockLocalTime(&lt);
             sceKernelDebugOutText(0, fmt::format("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", lt.hour, lt.minute, lt.second, (int)ms, color, prefix, log).c_str());
 #else
             fmt::print("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms, color, prefix, log);

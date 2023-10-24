@@ -163,9 +163,7 @@ elseif(PLATFORM_SWITCH)
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfwsd
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/player
             )
-    file(GLOB_RECURSE SWITCH_PLATFORM_SRC
-            "${BOREALIS_PATH}/lib/platforms/switch/*.cpp"
-            "${BOREALIS_PATH}/lib/platforms/switch/*.c")
+    file(GLOB_RECURSE SWITCH_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/switch/*.cpp")
     list(APPEND BOREALIS_SRC ${SWITCH_PLATFORM_SRC})
     list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/lib/extern/switch-libpulsar/include)
     list(APPEND BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -D__SWITCH__ -DSTBI_NO_THREAD_LOCALS)

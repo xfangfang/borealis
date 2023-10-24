@@ -18,7 +18,6 @@ limitations under the License.
 
 #include <borealis/core/application.hpp>
 #include <borealis/platforms/switch/switch_video.hpp>
-#include <utility>
 
 // nanovg implementation
 #include <nanovg_dk.h>
@@ -32,8 +31,6 @@ limitations under the License.
 #define IMAGES_POOL_SIZE 4 * 1024 * 1024
 #define CODE_POOL_SIZE 128 * 1024
 #define DATA_POOL_SIZE 1 * 1024 * 1024
-
-extern "C" u32 __nx_applet_type;
 
 namespace brls
 {

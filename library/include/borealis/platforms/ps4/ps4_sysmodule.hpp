@@ -36,7 +36,7 @@ typedef struct
     uint32_t userId;
 } SceShellUIUtilLaunchByUriParam;
 
-extern int (*sceShellUIUtilLaunchByUri)(const char *uri, SceShellUIUtilLaunchByUriParam *param);
+extern int (*sceShellUIUtilLaunchByUri)(const char* uri, SceShellUIUtilLaunchByUriParam* param);
 extern int (*sceShellUIUtilInitialize)();
 
 } // namespace brls
