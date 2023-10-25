@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
-apply plugin: 'com.android.library'
+plugins {
+    id("com.android.library")
+    id("publish")
+}
 
 android {
     namespace 'com.facebook.yoga'
@@ -28,7 +30,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            version rootProject.cmakeVersion
             path 'CMakeLists.txt'
         }
     }
@@ -45,6 +46,14 @@ android {
             res.srcDirs = ['res']
         }
     }
+
+    publishing {
+        multipleVariants {
+            withSourcesJar()
+            withJavadocJar()
+            includeBuildTypeValues('debug', 'release')
+        }
+    }
 }
 
 dependencies {
@@ -52,5 +61,3 @@ dependencies {
     implementation 'com.facebook.soloader:soloader:0.10.4'
     testImplementation 'junit:junit:4.12'
 }
-
-apply plugin: 'com.vanniktech.maven.publish'

@@ -7,7 +7,6 @@
 
 const DEFAULT_EXPERIMENTS = [
   'AbsolutePercentageAgainstPaddingEdge',
-  'FixAbsoluteTrailingColumnMargin',
 ];
 
 window.onload = function() {
@@ -23,13 +22,6 @@ window.onload = function() {
   printTest(
       new JavaEmitter(),
       'java',
-      document.body.children[0],
-      document.body.children[1],
-      document.body.children[2]);
-
-  printTest(
-      new CSEmitter(),
-      'cs',
       document.body.children[0],
       document.body.children[1],
       document.body.children[2]);
@@ -68,7 +60,11 @@ function printTest(e, ext, LTRContainer, RTLContainer, genericContainer) {
 
 
   for (var i = 0; i < genericLayoutTree.length; i++) {
-    e.emitTestPrologue(genericLayoutTree[i].name, genericLayoutTree[i].experiments);
+    e.emitTestPrologue(
+      genericLayoutTree[i].name,
+      genericLayoutTree[i].experiments,
+      genericLayoutTree[i].disabled
+    );
 
     if (genericLayoutTree[i].name == 'wrap_column') {
       // Modify width and left values due to both safari and chrome not abiding by the
@@ -475,9 +471,10 @@ function calculateTree(root, roundToPixelGrid) {
       style: getYogaStyle(child),
       declaredStyle: child.style,
       rawStyle: child.getAttribute('style'),
-      experiments: child.getAttribute('experiments')
-          ? child.getAttribute('experiments').split(' ')
+      experiments: child.dataset.experiments
+          ? child.dataset.experiments.split(' ')
           : DEFAULT_EXPERIMENTS,
+      disabled: child.dataset.disabled === 'true',
     };
 
     var size = getRoundedSize(child);

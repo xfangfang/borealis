@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-apply plugin: 'com.android.library'
+plugins {
+    id("com.android.library")
+    id("publish")
+}
 
 android {
     namespace 'com.facebook.yoga.android'
@@ -23,16 +26,16 @@ android {
         targetCompatibility rootProject.targetCompatibilityVersion
         sourceCompatibility rootProject.sourceCompatibilityVersion
     }
+
+    publishing {
+        multipleVariants {
+            withSourcesJar()
+            withJavadocJar()
+            includeBuildTypeValues('debug', 'release')
+        }
+    }
 }
 
 dependencies {
     api project(':yoga')
 }
-
-// We don't build Javadoc at this time as we can't disable "BUCK" files
-// from mistakenly getting parsed as Java.
-tasks.withType(Javadoc).all {
-  enabled = false
-}
-
-apply plugin: 'com.vanniktech.maven.publish'
