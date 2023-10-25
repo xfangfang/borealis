@@ -11,6 +11,7 @@ package com.facebook.yoga;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,7 +29,6 @@ public class YGDimensionTest {
   public void test_wrap_child() {
     YogaConfig config = YogaConfigFactory.create();
     config.setExperimentalFeatureEnabled(YogaExperimentalFeature.ABSOLUTE_PERCENTAGE_AGAINST_PADDING_EDGE, true);
-    config.setExperimentalFeatureEnabled(YogaExperimentalFeature.FIX_ABSOLUTE_TRAILING_COLUMN_MARGIN, true);
 
     final YogaNode root = createNode(config);
 
@@ -67,7 +67,6 @@ public class YGDimensionTest {
   public void test_wrap_grandchild() {
     YogaConfig config = YogaConfigFactory.create();
     config.setExperimentalFeatureEnabled(YogaExperimentalFeature.ABSOLUTE_PERCENTAGE_AGAINST_PADDING_EDGE, true);
-    config.setExperimentalFeatureEnabled(YogaExperimentalFeature.FIX_ABSOLUTE_TRAILING_COLUMN_MARGIN, true);
 
     final YogaNode root = createNode(config);
 

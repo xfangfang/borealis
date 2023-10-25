@@ -134,7 +134,7 @@ void Application::createWindow(std::string windowTitle)
 
     // Init yoga
     YGConfig* defaultConfig       = YGConfigGetDefault();
-    defaultConfig->useWebDefaults = true;
+    defaultConfig->setUseWebDefaults(true);
     using namespace facebook;
 
     facebook::yoga::Event::subscribe([](const YGNode& node, facebook::yoga::Event::Type eventType, facebook::yoga::Event::Data eventData)

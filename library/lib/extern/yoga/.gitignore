@@ -64,7 +64,11 @@ Carthage/Build
 
 # Gradle
 .gradle
+local.properties
 
 # NDK/CMake
 .cxx
 .externalNativeBuild
+
+# Docusarus build
+.docusaurus

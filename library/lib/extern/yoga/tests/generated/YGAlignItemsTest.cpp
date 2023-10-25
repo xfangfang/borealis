@@ -14,7 +14,6 @@
 TEST(YogaTest, align_items_stretch) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetWidth(root, 100);
@@ -55,7 +54,6 @@ TEST(YogaTest, align_items_stretch) {
 TEST(YogaTest, align_items_center) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignCenter);
@@ -98,7 +96,6 @@ TEST(YogaTest, align_items_center) {
 TEST(YogaTest, align_items_flex_start) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignFlexStart);
@@ -141,7 +138,6 @@ TEST(YogaTest, align_items_flex_start) {
 TEST(YogaTest, align_items_flex_end) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignFlexEnd);
@@ -184,7 +180,6 @@ TEST(YogaTest, align_items_flex_end) {
 TEST(YogaTest, align_baseline) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -243,7 +238,6 @@ TEST(YogaTest, align_baseline) {
 TEST(YogaTest, align_baseline_child) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -317,7 +311,6 @@ TEST(YogaTest, align_baseline_child) {
 TEST(YogaTest, align_baseline_child_multiline) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -438,7 +431,6 @@ TEST(YogaTest, align_baseline_child_multiline) {
 TEST(YogaTest, align_baseline_child_multiline_override) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -561,7 +553,6 @@ TEST(YogaTest, align_baseline_child_multiline_override) {
 TEST(YogaTest, align_baseline_child_multiline_no_override_on_secondline) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -683,7 +674,6 @@ TEST(YogaTest, align_baseline_child_multiline_no_override_on_secondline) {
 TEST(YogaTest, align_baseline_child_top) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -758,7 +748,6 @@ TEST(YogaTest, align_baseline_child_top) {
 TEST(YogaTest, align_baseline_child_top2) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -833,7 +822,6 @@ TEST(YogaTest, align_baseline_child_top2) {
 TEST(YogaTest, align_baseline_double_nested_child) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -922,7 +910,6 @@ TEST(YogaTest, align_baseline_double_nested_child) {
 TEST(YogaTest, align_baseline_column) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignBaseline);
@@ -980,7 +967,6 @@ TEST(YogaTest, align_baseline_column) {
 TEST(YogaTest, align_baseline_child_margin) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -1062,7 +1048,6 @@ TEST(YogaTest, align_baseline_child_margin) {
 TEST(YogaTest, align_baseline_child_padding) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -1144,7 +1129,6 @@ TEST(YogaTest, align_baseline_child_padding) {
 TEST(YogaTest, align_baseline_multiline) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -1262,9 +1246,10 @@ TEST(YogaTest, align_baseline_multiline) {
 }
 
 TEST(YogaTest, align_baseline_multiline_column) {
+  GTEST_SKIP();
+
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignBaseline);
@@ -1350,7 +1335,7 @@ TEST(YogaTest, align_baseline_multiline_column) {
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetWidth(root_child0));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetHeight(root_child0));
 
-  ASSERT_FLOAT_EQ(70, YGNodeLayoutGetLeft(root_child1));
+  ASSERT_FLOAT_EQ(50, YGNodeLayoutGetLeft(root_child1));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetTop(root_child1));
   ASSERT_FLOAT_EQ(30, YGNodeLayoutGetWidth(root_child1));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetHeight(root_child1));
@@ -1360,7 +1345,7 @@ TEST(YogaTest, align_baseline_multiline_column) {
   ASSERT_FLOAT_EQ(20, YGNodeLayoutGetWidth(root_child1_child0));
   ASSERT_FLOAT_EQ(20, YGNodeLayoutGetHeight(root_child1_child0));
 
-  ASSERT_FLOAT_EQ(10, YGNodeLayoutGetLeft(root_child2));
+  ASSERT_FLOAT_EQ(0, YGNodeLayoutGetLeft(root_child2));
   ASSERT_FLOAT_EQ(0, YGNodeLayoutGetTop(root_child2));
   ASSERT_FLOAT_EQ(40, YGNodeLayoutGetWidth(root_child2));
   ASSERT_FLOAT_EQ(70, YGNodeLayoutGetHeight(root_child2));
@@ -1381,9 +1366,10 @@ TEST(YogaTest, align_baseline_multiline_column) {
 }
 
 TEST(YogaTest, align_baseline_multiline_column2) {
+  GTEST_SKIP();
+
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignBaseline);
@@ -1469,7 +1455,7 @@ TEST(YogaTest, align_baseline_multiline_column2) {
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetWidth(root_child0));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetHeight(root_child0));
 
-  ASSERT_FLOAT_EQ(70, YGNodeLayoutGetLeft(root_child1));
+  ASSERT_FLOAT_EQ(50, YGNodeLayoutGetLeft(root_child1));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetTop(root_child1));
   ASSERT_FLOAT_EQ(30, YGNodeLayoutGetWidth(root_child1));
   ASSERT_FLOAT_EQ(50, YGNodeLayoutGetHeight(root_child1));
@@ -1479,7 +1465,7 @@ TEST(YogaTest, align_baseline_multiline_column2) {
   ASSERT_FLOAT_EQ(20, YGNodeLayoutGetWidth(root_child1_child0));
   ASSERT_FLOAT_EQ(20, YGNodeLayoutGetHeight(root_child1_child0));
 
-  ASSERT_FLOAT_EQ(10, YGNodeLayoutGetLeft(root_child2));
+  ASSERT_FLOAT_EQ(0, YGNodeLayoutGetLeft(root_child2));
   ASSERT_FLOAT_EQ(0, YGNodeLayoutGetTop(root_child2));
   ASSERT_FLOAT_EQ(40, YGNodeLayoutGetWidth(root_child2));
   ASSERT_FLOAT_EQ(70, YGNodeLayoutGetHeight(root_child2));
@@ -1502,7 +1488,6 @@ TEST(YogaTest, align_baseline_multiline_column2) {
 TEST(YogaTest, align_baseline_multiline_row_and_column) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetFlexDirection(root, YGFlexDirectionRow);
@@ -1622,7 +1607,6 @@ TEST(YogaTest, align_baseline_multiline_row_and_column) {
 TEST(YogaTest, align_items_center_child_with_margin_bigger_than_parent) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetJustifyContent(root, YGJustifyCenter);
@@ -1682,7 +1666,6 @@ TEST(YogaTest, align_items_center_child_with_margin_bigger_than_parent) {
 TEST(YogaTest, align_items_flex_end_child_with_margin_bigger_than_parent) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetJustifyContent(root, YGJustifyCenter);
@@ -1742,7 +1725,6 @@ TEST(YogaTest, align_items_flex_end_child_with_margin_bigger_than_parent) {
 TEST(YogaTest, align_items_center_child_without_margin_bigger_than_parent) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetJustifyContent(root, YGJustifyCenter);
@@ -1800,7 +1782,6 @@ TEST(YogaTest, align_items_center_child_without_margin_bigger_than_parent) {
 TEST(YogaTest, align_items_flex_end_child_without_margin_bigger_than_parent) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetJustifyContent(root, YGJustifyCenter);
@@ -1858,7 +1839,6 @@ TEST(YogaTest, align_items_flex_end_child_without_margin_bigger_than_parent) {
 TEST(YogaTest, align_center_should_size_based_on_content) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetAlignItems(root, YGAlignCenter);
@@ -1932,7 +1912,6 @@ TEST(YogaTest, align_center_should_size_based_on_content) {
 TEST(YogaTest, align_stretch_should_size_based_on_parent) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetMargin(root, YGEdgeTop, 20);
@@ -2005,7 +1984,6 @@ TEST(YogaTest, align_stretch_should_size_based_on_parent) {
 TEST(YogaTest, align_flex_start_with_shrinking_children) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetWidth(root, 500);
@@ -2076,7 +2054,6 @@ TEST(YogaTest, align_flex_start_with_shrinking_children) {
 TEST(YogaTest, align_flex_start_with_stretching_children) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetWidth(root, 500);
@@ -2146,7 +2123,6 @@ TEST(YogaTest, align_flex_start_with_stretching_children) {
 TEST(YogaTest, align_flex_start_with_shrinking_children_with_stretch) {
   const YGConfigRef config = YGConfigNew();
   YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-  YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 
   const YGNodeRef root = YGNodeNewWithConfig(config);
   YGNodeStyleSetWidth(root, 500);
