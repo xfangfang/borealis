@@ -26,6 +26,9 @@ cmake_dependent_option(LIBJBC "Root access enabled" OFF "PLATFORM_PS4" OFF)
 set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "The code sign identity to use when building the IPA.")
 set(IOS_GUI_IDENTIFIER "" CACHE STRING "Package name.")
 
+# Nintendo Switch Only
+cmake_dependent_option(USE_DEKO3D "Using deko3d instead of OpenGL." OFF "PLATFORM_SWITCH" OFF)
+
 option(USE_BOOST_FILESYSTEM "Whether to use the boost::filesystem instead of std::filesystem" OFF)
 
 # Do not use it until you know what you are doing.

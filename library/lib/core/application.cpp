@@ -715,6 +715,9 @@ void Application::exit()
     Application::deletionPool.clear();
 
     Threading::stop();
+
+    exitDoneEvent.fire();
+
     delete Application::platform;
 }
 
@@ -1107,6 +1110,11 @@ VoidEvent* Application::getRunLoopEvent()
 VoidEvent* Application::getExitEvent()
 {
     return &Application::exitEvent;
+}
+
+VoidEvent* Application::getExitDoneEvent()
+{
+    return &Application::exitDoneEvent;
 }
 
 VoidEvent* Application::getWindowSizeChangedEvent()

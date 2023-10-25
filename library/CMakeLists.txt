@@ -155,7 +155,6 @@ elseif(PLATFORM_IOS)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS -DUSE_GLES3)
 elseif(PLATFORM_SWITCH)
     list(APPEND BOREALIS_SOURCE
-            ${BOREALIS_PATH}/lib/platforms/switch
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/archive
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfgrp
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfsar
@@ -164,14 +163,20 @@ elseif(PLATFORM_SWITCH)
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/bfwsd
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/player
             )
+    file(GLOB_RECURSE SWITCH_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/switch/*.cpp")
+    list(APPEND BOREALIS_SRC ${SWITCH_PLATFORM_SRC})
     list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/lib/extern/switch-libpulsar/include)
     list(APPEND BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -D__SWITCH__ -DSTBI_NO_THREAD_LOCALS)
     find_package(PkgConfig REQUIRED)
 
-    if (USE_SDL2)
+    if (BOREALIS_USE_DEKO3D)
+        list(APPEND BRLS_PLATFORM_LIBS deko3d nx m)
+    elseif (USE_SDL2)
+        list(REMOVE_ITEM BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/switch_video.cpp)
         list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/sdl/sdl_video.cpp)
         list(APPEND BRLS_PLATFORM_LIBS sdl2 EGL glapi drm_nouveau nx m)
     else ()
+        list(REMOVE_ITEM BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/switch_video.cpp)
         list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/glfw/glfw_video.cpp)
         list(APPEND BRLS_PLATFORM_LIBS glfw3 EGL glapi drm_nouveau nx m)
     endif ()
@@ -185,7 +190,6 @@ list(APPEND BOREALIS_INCLUDE
         ${BOREALIS_PATH}/include
         ${BOREALIS_PATH}/include/borealis/extern
         ${BOREALIS_PATH}/include/borealis/extern/nanovg
-        ${BOREALIS_PATH}/include/borealis/extern/nanovg-gl // remove this once deko3d branch is merged
         )
 list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/core
@@ -197,11 +201,19 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/compat
         ${BOREALIS_PATH}/lib/extern/libretro-common/encodings
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
-        ${BOREALIS_PATH}/lib/extern/nanovg-gl
         )
 if (PLATFORM_PSV OR PLATFORM_PS4)
         list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
 endif ()
+
+# nanovg
+list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/extern/nanovg/nanovg.c)
+if (PLATFORM_SWITCH AND BOREALIS_USE_DEKO3D)
+    file(GLOB_RECURSE NANOVG_PLATFORM_SRC ${BOREALIS_PATH}/lib/extern/nanovg/*.cpp)
+    list(APPEND BOREALIS_SRC ${NANOVG_PLATFORM_SRC})
+endif ()
+message(STATUS "BOREALIS_SOURCE: ${BOREALIS_SOURCE}")
+
 foreach (lib ${BOREALIS_SOURCE})
     file(GLOB_RECURSE TEMP_SRC "${lib}/*.cpp" "${lib}/*.c")
     list(APPEND BOREALIS_SRC ${TEMP_SRC})
@@ -213,6 +225,8 @@ if (BOREALIS_USE_METAL)
     set(BOREALIS_DRIVER BOREALIS_USE_METAL)
 elseif (BOREALIS_USE_D3D11)
     set(BOREALIS_DRIVER BOREALIS_USE_D3D11)
+elseif (BOREALIS_USE_DEKO3D)
+    set(BOREALIS_DRIVER BOREALIS_USE_DEKO3D)
 endif ()
 list(APPEND BRLS_PLATFORM_OPTION -D${BOREALIS_DRIVER})
 message(STATUS "borealis driver ${BOREALIS_DRIVER}")

@@ -48,6 +48,8 @@ void userAppInit()
 {
     printf("userAppInit\n");
     appletLockExit();
+
+    // Init network
     SocketInitConfig cfg = *(socketGetDefaultInitConfig());
     // Set the version number to 4 to make multicast working
     // https://github.com/switchbrew/libnx/issues/551#issuecomment-1747001108

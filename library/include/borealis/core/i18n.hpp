@@ -44,7 +44,12 @@ const std::string LOCALE_RU      = "ru";
 const std::string LOCALE_ES_419  = "es-419";
 
 /// custom locale
+// Rename ja-RYU to RYU, as there may be a bug in PkgTool that not allow dirs with same prefix exist.
+#ifdef PS4
+const std::string LOCALE_RYU  = "RYU";
+#else
 const std::string LOCALE_RYU  = "ja-RYU";
+#endif
 const std::string LOCALE_AUTO = "auto";
 
 const std::string LOCALE_DEFAULT = LOCALE_EN_US;
