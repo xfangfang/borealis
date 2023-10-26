@@ -136,7 +136,7 @@ void Threading::performSyncTasks()
 #ifdef PS4
         uint64_t duration = sceKernelGetProcessTime() - d.startPoint;
 #else
-        auto timeNow  = std::chrono::steady_clock::now();
+        auto timeNow  = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
 #endif
 
