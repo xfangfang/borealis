@@ -24,6 +24,10 @@
 #include <thread>
 #endif
 
+#ifdef PS4
+#include <orbis/libkernel.h>
+#endif
+
 namespace brls
 {
 
@@ -74,8 +78,13 @@ size_t Threading::delay(long milliseconds, const std::function<void()>& func)
 {
     std::lock_guard<std::mutex> guard(m_delay_mutex);
     DelayOperation operation;
+#ifdef PS4
+    operation.startPoint        = sceKernelGetProcessTime();
+    operation.delayMilliseconds = milliseconds * 1000;
+#else
     operation.startPoint        = std::chrono::high_resolution_clock::now();
     operation.delayMilliseconds = milliseconds;
+#endif
     operation.func              = func;
     operation.index             = ++m_delay_index;
     m_delay_tasks.push_back(operation);
@@ -124,8 +133,12 @@ void Threading::performSyncTasks()
         }
         m_delay_mutex.unlock();
 
-        auto timeNow  = std::chrono::high_resolution_clock::now();
+#ifdef PS4
+        uint64_t duration = sceKernelGetProcessTime() - d.startPoint;
+#else
+        auto timeNow  = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - d.startPoint).count();
+#endif
 
         if (duration >= d.delayMilliseconds)
         {

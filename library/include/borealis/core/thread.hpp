@@ -30,7 +30,11 @@ namespace brls
 
 struct DelayOperation
 {
+#ifdef PS4
+    uint64_t startPoint;
+#else
     std::chrono::high_resolution_clock::time_point startPoint;
+#endif
     long delayMilliseconds;
     size_t index;
     std::function<void()> func;
