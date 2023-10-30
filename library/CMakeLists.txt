@@ -124,8 +124,9 @@ elseif(PLATFORM_PS4)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop
-            ${BOREALIS_PATH}/lib/platforms/ps4
             ${BOREALIS_PATH}/lib/extern/nanovg/ps4)
+    file(GLOB_RECURSE PS4_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/ps4/*.cpp")
+    list(APPEND BOREALIS_SRC ${PS4_PLATFORM_SRC})
     list(APPEND BOREALIS_INCLUDE /opt/OpenOrbis-PS4-Toolchain/include)
     list(APPEND BRLS_PLATFORM_LIBS SDL2::SDL2-static SceNetCtl SceImeDialog SceCommonDialog)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DPS4 -DUSE_GLES2)

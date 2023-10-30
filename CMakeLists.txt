@@ -60,6 +60,9 @@ elseif (PLATFORM_SWITCH)
         nx m
     )
     list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/switch/switch_wrapper.c)
+elseif (PLATFORM_PS4)
+    # Show backtrace when app crash
+    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/ps4/crashlog.c)
 elseif (PLATFORM_PSV)
     add_definitions(-D__psp2__ -D__PSV__)
 endif ()
