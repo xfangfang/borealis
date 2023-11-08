@@ -51,10 +51,7 @@ void userAppInit()
 
     // Init network
     SocketInitConfig cfg = *(socketGetDefaultInitConfig());
-    // Set the version number to 4 to make multicast working
-    // https://github.com/switchbrew/libnx/issues/551#issuecomment-1747001108
-    cfg.bsdsockets_version = 4;
-    AppletType at = appletGetAppletType();
+    AppletType at        = appletGetAppletType();
     if (at == AppletType_Application || at == AppletType_SystemApplication)
     {
         cfg.num_bsd_sessions = 12; // default is 3
