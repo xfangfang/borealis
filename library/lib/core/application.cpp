@@ -828,7 +828,13 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
     // Hide animation (and show previous activity, if any)
     last->hide([last, cb, free]()
         {
-        Application::activitiesStack.pop_back();
+        // last is not always the top of the stack, for example, during the animation, another activity is pushed
+        for (auto i = activitiesStack.begin(); i != activitiesStack.end(); ++i) {
+            if ( *i == last ) {
+                Application::activitiesStack.erase(i);
+                break;
+            }
+        }
         cb();
         brls::Logger::debug("Start delete top activity");
         if(free) delete last;
