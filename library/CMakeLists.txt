@@ -22,7 +22,11 @@ else()
 endif()
 
 # tweeny
-add_subdirectory(${BOREALIS_PATH}/lib/extern/tweeny EXCLUDE_FROM_ALL)
+if (USE_SYSTEM_TWEENY)
+  find_package(Tweeny REQUIRED)
+else()
+  add_subdirectory(${BOREALIS_PATH}/lib/extern/tweeny EXCLUDE_FROM_ALL)
+endif()
 
 # yoga
 add_subdirectory(${BOREALIS_PATH}/lib/extern/yoga/yoga EXCLUDE_FROM_ALL)
