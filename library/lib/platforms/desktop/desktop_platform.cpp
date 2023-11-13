@@ -659,6 +659,7 @@ std::string DesktopPlatform::getIpAddress()
     {
         for (auto addr = interfaces; addr != nullptr; addr = addr->ifa_next)
         {
+            if (!addr->ifa_addr) continue;
             if (addr->ifa_addr->sa_family == AF_INET)
             {
                 ipaddr = inet_ntoa(reinterpret_cast<struct sockaddr_in*>(addr->ifa_addr)->sin_addr);
