@@ -18,6 +18,13 @@
 
 #include "borealis/core/thread.hpp"
 
+#ifdef __SWITCH__
+extern "C"
+{
+#include <switch/services/nifm.h>
+}
+#endif
+
 namespace brls
 {
 
@@ -101,9 +108,32 @@ void WirelessWidget::updateState()
         brls::async([ASYNC_TOKEN]()
             {
                 ASYNC_RELEASE
+#ifdef __SWITCH__
+                // Reduce service calls
+                // and fix support for emulator (Ryujinx) as it doesn't support :
+                // nifmIsWirelessCommunicationEnabled() / nifmIsEthernetCommunicationEnabled().
+                NifmInternetConnectionType type;
+                u32 wifiSignal;
+                NifmInternetConnectionStatus status;
+                Result ret            = nifmGetInternetConnectionStatus(&type, &wifiSignal, &status);
+                hasEthernetConnection = type == NifmInternetConnectionType_Ethernet;
+                hasWirelessConnection = type == NifmInternetConnectionType_WiFi;
+                if (ret != 0)
+                {
+                    hasEthernetConnection = false;
+                    hasWirelessConnection = false;
+                    wifiLevel             = 0;
+                }
+                else
+                {
+                    wifiLevel = (int)wifiSignal;
+                }
+#else
                 hasEthernetConnection = Application::getPlatform()->hasEthernetConnection();
                 hasWirelessConnection = Application::getPlatform()->hasWirelessConnection();
-                wifiLevel             = Application::getPlatform()->getWirelessLevel(); });
+                wifiLevel             = Application::getPlatform()->getWirelessLevel();
+#endif
+            });
 #endif
         time = now;
     }

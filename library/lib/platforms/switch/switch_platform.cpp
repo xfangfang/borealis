@@ -154,11 +154,9 @@ bool SwitchPlatform::hasWirelessConnection()
 
 bool SwitchPlatform::hasEthernetConnection()
 {
-    NifmInternetConnectionType type;
-    u32 wifiSignal;
-    NifmInternetConnectionStatus status;
-    nifmGetInternetConnectionStatus(&type, &wifiSignal, &status);
-    return type == NifmInternetConnectionType_Ethernet;
+    bool res = false;
+    nifmIsEthernetCommunicationEnabled(&res);
+    return res;
 }
 
 int SwitchPlatform::getWirelessLevel()
