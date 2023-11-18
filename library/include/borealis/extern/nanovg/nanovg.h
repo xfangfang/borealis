@@ -142,6 +142,8 @@ enum NVGimageFlags {
 	NVG_IMAGE_FLIPY				= 1<<3,		// Flips (inverses) image in Y direction when rendered.
 	NVG_IMAGE_PREMULTIPLIED		= 1<<4,		// Image data has premultiplied alpha.
 	NVG_IMAGE_NEAREST			= 1<<5,		// Image interpolation is Nearest instead Linear
+	NVG_IMAGE_STREAMING  		= 1<<6,		// Image d3d11 flags Usage = D3D11_USAGE_DYNAMIC,CPUAccessFlags = D3D11_CPU_ACCESS_WRITE.
+	NVG_IMAGE_COPY_SWAP 		= 1<<7,		// Image d3d11 flags UpdateTexture use swap texture.
 };
 
 // Begin drawing a new frame

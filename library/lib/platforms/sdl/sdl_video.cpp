@@ -47,7 +47,7 @@ extern "C"
 #elif defined(BOREALIS_USE_D3D11)
 #include <borealis/platforms/driver/d3d11.hpp>
 #include <nanovg_d3d11.h>
-static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
+std::unique_ptr<brls::D3D11Context> D3D11_CONTEXT;
 #endif
 
 namespace brls
@@ -271,7 +271,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
 #elif defined(BOREALIS_USE_D3D11)
     Logger::info("sdl: use d3d11");
-    D3D11_CONTEXT = std::make_shared<D3D11Context>();
+    D3D11_CONTEXT = std::make_unique<D3D11Context>();
     if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight))
     {
         fatal("sdl: unable to init d3d11");

@@ -42,7 +42,7 @@ static void* METAL_CONTEXT = nullptr;
 #include <nanovg_d3d11.h>
 
 #include <borealis/platforms/driver/d3d11.hpp>
-static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
+std::unique_ptr<brls::D3D11Context> D3D11_CONTEXT;
 #endif
 
 #if defined(__linux__) || defined(_WIN32)
@@ -152,7 +152,7 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     if (D3D11_CONTEXT == nullptr) {
         return;
     }
-    float scaleFactor = D3D11_CONTEXT->GetDpi();
+    scaleFactor = D3D11_CONTEXT->GetDpi();
     int wWidth = width, wHeight = height;
     D3D11_CONTEXT->ResizeFramebufferSize(width, height);
 #endif
@@ -349,7 +349,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     scaleFactor = GetMetalScaleFactor(ctx);
 #elif defined(BOREALIS_USE_D3D11)
     Logger::info("glfw: use d3d11");
-    D3D11_CONTEXT = std::make_shared<D3D11Context>();
+    D3D11_CONTEXT = std::make_unique<D3D11Context>();
     if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
         Logger::error("glfw: unable to init d3d11");
         glfwTerminate();
