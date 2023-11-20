@@ -45,8 +45,9 @@ extern "C"
 #endif
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_D3D11)
-#include <borealis/platforms/driver/d3d11.hpp>
 #include <nanovg_d3d11.h>
+
+#include <borealis/platforms/driver/d3d11.hpp>
 std::unique_ptr<brls::D3D11Context> D3D11_CONTEXT;
 #endif
 
@@ -66,17 +67,16 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
     scaleFactor = fWidth * 1.0 / width;
 #if defined(ANDROID)
     // On Android, doing this is to ensure that glViewport is called from the main thread
-    brls::sync([fWidth, fHeight](){
-        glViewport(0, 0, fWidth, fHeight);
-    });
+    brls::sync([fWidth, fHeight]()
+        { glViewport(0, 0, fWidth, fHeight); });
 #else
     glViewport(0, 0, fWidth, fHeight);
 #endif
 #elif defined(BOREALIS_USE_D3D11)
-    fWidth = width;
-    fHeight = height;
-    scaleFactor = D3D11_CONTEXT->GetDpi();
-    D3D11_CONTEXT->ResizeFramebufferSize(fWidth, fHeight);
+    fWidth      = width;
+    fHeight     = height;
+    scaleFactor = D3D11_CONTEXT->getScaleFactor();
+    D3D11_CONTEXT->onFramebufferSize(fWidth, fHeight);
 #endif
 
     Application::onWindowResized(fWidth, fHeight);
@@ -226,7 +226,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
             windowWidth,
             windowHeight,
             windowFlags);
-    } else {
+    }
+    else
+    {
         this->window = SDL_CreateWindow(windowTitle.c_str(),
             windowXPos > 0 ? windowXPos : SDL_WINDOWPOS_UNDEFINED,
             windowYPos > 0 ? windowYPos : SDL_WINDOWPOS_UNDEFINED,
@@ -270,14 +272,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif
 #elif defined(BOREALIS_USE_D3D11)
-    Logger::info("sdl: use d3d11");
-    D3D11_CONTEXT = std::make_unique<D3D11Context>();
-    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight))
-    {
-        fatal("sdl: unable to init d3d11");
-        return;
-    }
-    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    Logger::info("sdl: USE_D3D11");
+    D3D11_CONTEXT    = std::make_unique<D3D11Context>(this->window, windowWidth, windowHeight);
+    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->getDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 #endif
     if (!this->nvgContext)
     {
@@ -295,7 +292,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Application::setWindowSize(fWidth, fHeight);
     glViewport(0, 0, fWidth, fHeight);
 #elif defined(BOREALIS_USE_D3D11)
-    scaleFactor      = D3D11_CONTEXT->GetDpi();
+    scaleFactor      = D3D11_CONTEXT->getScaleFactor();
     fWidth           = width;
     fHeight          = height;
     Application::setWindowSize(width, height);
@@ -318,6 +315,9 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 
 void SDLVideoContext::beginFrame()
 {
+#if defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->beginFrame();
+#endif
 }
 
 void SDLVideoContext::endFrame()
@@ -325,7 +325,7 @@ void SDLVideoContext::endFrame()
 #ifdef BOREALIS_USE_OPENGL
     SDL_GL_SwapWindow(this->window);
 #elif defined(BOREALIS_USE_D3D11)
-    D3D11_CONTEXT->Present();
+    D3D11_CONTEXT->endFrame();
 #endif
 }
 
@@ -340,7 +340,7 @@ void SDLVideoContext::clear(NVGcolor color)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #elif defined(BOREALIS_USE_D3D11)
-    D3D11_CONTEXT->ClearWithColor(nvgRGBAf(
+    D3D11_CONTEXT->clear(nvgRGBAf(
         color.r,
         color.g,
         color.b,
@@ -402,14 +402,15 @@ SDL_Window* SDLVideoContext::getSDLWindow()
     return this->window;
 }
 
-void SDLVideoContext::fullScreen(bool fs) {
+void SDLVideoContext::fullScreen(bool fs)
+{
 #ifdef __WINRT__
     // win32 会很模糊，而且点击事件貌似也错位了，只给 winrt 使用。
     static unsigned int flag = SDL_WINDOW_FULLSCREEN;
 #else
     static unsigned int flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 #endif
-    SDL_SetWindowFullscreen(this->window, fs? flag : 0);
+    SDL_SetWindowFullscreen(this->window, fs ? flag : 0);
 }
 
 } // namespace brls

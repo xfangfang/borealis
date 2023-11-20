@@ -152,9 +152,9 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     if (D3D11_CONTEXT == nullptr) {
         return;
     }
-    scaleFactor = D3D11_CONTEXT->GetDpi();
+    scaleFactor = D3D11_CONTEXT->getScaleFactor();
     int wWidth = width, wHeight = height;
-    D3D11_CONTEXT->ResizeFramebufferSize(width, height);
+    D3D11_CONTEXT->onFramebufferSize(width, height);
 #endif
 
     Application::onWindowResized(width, height);
@@ -194,6 +194,11 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#elif defined(USE_GL2)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #elif defined(__SWITCH__)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -205,14 +210,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE);
 #endif
-
-#ifdef USE_GL2
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-#endif
-#elif defined(BOREALIS_USE_METAL) || defined(BOREALIS_USE_D3D11)
+#else
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 
@@ -252,12 +250,10 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #endif
     }
     else
+#endif
     {
         this->window = glfwCreateWindow((int)windowWidth, (int)windowHeight, windowTitle.c_str(), nullptr, nullptr);
     }
-#else
-    this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
-#endif
 
     if (!this->window)
     {
@@ -311,13 +307,11 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Make the touchpad click normally
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 #endif
-#ifdef BOREALIS_USE_OPENGL
-    glfwMakeContextCurrent(window);
-#endif
     glfwSetFramebufferSizeCallback(window, glfwWindowFramebufferSizeCallback);
     glfwSetWindowPosCallback(window, glfwWindowPositionCallback);
 
 #ifdef BOREALIS_USE_OPENGL
+    glfwMakeContextCurrent(window);
 #ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -342,21 +336,16 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif
 #elif defined(BOREALIS_USE_METAL)
-    Logger::info("glfw: use metal");
-    void *ctx = CreateMetalContext(window);
-    METAL_CONTEXT = ctx;
+    Logger::info("glfw: USE_METAL");
+    void* ctx        = CreateMetalContext(window);
+    METAL_CONTEXT    = ctx;
     this->nvgContext = nvgCreateMTL(GetMetalLayer(ctx), NVG_STENCIL_STROKES | NVG_ANTIALIAS);
-    scaleFactor = GetMetalScaleFactor(ctx);
+    scaleFactor      = GetMetalScaleFactor(ctx);
 #elif defined(BOREALIS_USE_D3D11)
-    Logger::info("glfw: use d3d11");
-    D3D11_CONTEXT = std::make_unique<D3D11Context>();
-    if (!D3D11_CONTEXT->InitializeDX(window, windowWidth, windowHeight)) {
-        Logger::error("glfw: unable to init d3d11");
-        glfwTerminate();
-        return;
-    }
-    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->GetDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    scaleFactor = D3D11_CONTEXT->GetDpi();
+    Logger::info("glfw: USE_D3D11");
+    D3D11_CONTEXT    = std::make_unique<D3D11Context>(this->window, windowWidth, windowHeight);
+    this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->getDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    scaleFactor = D3D11_CONTEXT->getScaleFactor();
 #endif
     if (!this->nvgContext)
     {
@@ -409,6 +398,8 @@ void GLFWVideoContext::beginFrame()
 
         glfwSetWindowSize(window, r->width, r->height);
     }
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->beginFrame();
 #endif
 }
 
@@ -417,7 +408,7 @@ void GLFWVideoContext::endFrame()
 #ifdef BOREALIS_USE_OPENGL
     glfwSwapBuffers(this->window);
 #elif defined(BOREALIS_USE_D3D11)
-    D3D11_CONTEXT->Present();
+    D3D11_CONTEXT->endFrame();
 #endif
 }
 
@@ -439,7 +430,7 @@ void GLFWVideoContext::clear(NVGcolor color)
         color.b,
         1.0f));
 #elif defined(BOREALIS_USE_D3D11)
-    D3D11_CONTEXT->ClearWithColor(nvgRGBAf(
+    D3D11_CONTEXT->clear(nvgRGBAf(
         color.r,
         color.g,
         color.b,

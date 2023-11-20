@@ -81,7 +81,6 @@ target("borealis")
         if get_config("winrt") then
             add_defines("SDL_VIDEO_DRIVER_WINRT")
             add_packages("cppwinrt")
-            add_files("library/lib/platforms/driver/winrt.cpp")
         end
         add_defines("__SDL2__")
     end
