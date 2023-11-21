@@ -47,10 +47,11 @@ static std::shared_ptr<brls::D3D11Context> D3D11_CONTEXT = nullptr;
 
 #if defined(__linux__) || defined(_WIN32)
 #include "stb_image.h"
-#endif
-
 #ifdef USE_LIBROMFS
 #include <romfs/romfs.hpp>
+#else
+#include <unistd.h>
+#endif
 #endif
 
 #ifdef _WIN32
@@ -258,24 +259,35 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     this->window = glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr);
 #endif
 
-#if defined(__linux__) || defined(_WIN32)
-    // Set window icon
-    GLFWimage images[1];
-#ifdef USE_LIBROMFS
-    auto icon = romfs::get("icon/icon.png").string();
-    images[0].pixels = stbi_load_from_memory((stbi_uc*)icon.data(), icon.size(), &images[0].width, &images[0].height, 0, 4);
-#else
-    images[0].pixels = stbi_load(BRLS_ASSET("icon/icon.png"), &images[0].width, &images[0].height, 0, 4);
-#endif
-    glfwSetWindowIcon(this->window, 1, images);
-#endif
-
     if (!this->window)
     {
         glfwTerminate();
         fatal("glfw: Failed to create window");
         return;
     }
+
+#if defined(__linux__) || defined(_WIN32)
+    // Set window icon
+    GLFWimage images[1];
+#ifdef USE_LIBROMFS
+    try
+    {
+        auto& icon       = romfs::get("icon/icon.png");
+        images[0].pixels = stbi_load_from_memory((stbi_uc*)icon.data(), icon.size(), &images[0].width, &images[0].height, 0, 4);
+        glfwSetWindowIcon(this->window, 1, images);
+    }
+    catch (...)
+    {
+    }
+#else
+    const char* icon_path = BRLS_ASSET("icon/icon.png");
+    if (access(icon_path, F_OK) != -1)
+    {
+        images[0].pixels = stbi_load(icon_path, &images[0].width, &images[0].height, 0, 4);
+        glfwSetWindowIcon(this->window, 1, images);
+    }
+#endif
+#endif
 
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
     // Set window position
@@ -456,6 +468,7 @@ GLFWVideoContext::~GLFWVideoContext()
     try
     {
         if (this->nvgContext)
+        {
 #ifdef BOREALIS_USE_OPENGL
 #ifdef USE_GLES2
             nvgDeleteGLES2(this->nvgContext);
@@ -473,6 +486,7 @@ GLFWVideoContext::~GLFWVideoContext()
             nvgDeleteD3D11(this->nvgContext);
             D3D11_CONTEXT = nullptr;
 #endif
+        }
     }
     catch (...)
     {
