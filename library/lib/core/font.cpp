@@ -48,8 +48,12 @@ bool FontLoader::loadFontFromFile(std::string fontName, std::string filePath)
 bool FontLoader::loadMaterialFromResources()
 {
 #ifdef USE_LIBROMFS
-    auto font = romfs::get(MATERIAL_ICONS);
-    return Application::loadFontFromMemory(FONT_MATERIAL_ICONS, (void*)font.string().data(), font.string().size(), false);
+    auto& font = romfs::get(MATERIAL_ICONS);
+    if (!font.valid())
+    {
+        return false;
+    }
+    return Application::loadFontFromMemory(FONT_MATERIAL_ICONS, (void*)font.data(), font.size(), false);
 #else
     return this->loadFontFromFile(FONT_MATERIAL_ICONS, MATERIAL_ICONS_PATH);
 #endif

@@ -427,10 +427,9 @@ void SwitchInputManager::initCursor(NVGcontext* vg)
     {
 #ifdef USE_LIBROMFS
         auto image          = romfs::get("img/sys/cursor.png");
-        this->cursorTexture = nvgCreateImageMem(vg, NVG_IMAGE_NEAREST, (unsigned char*)image.string().data(), image.size());
+        this->cursorTexture = nvgCreateImageMem(vg, NVG_IMAGE_NEAREST, (unsigned char*)image.data(), image.size());
 #else
-        std::string pointerIcon = std::string(BRLS_RESOURCES) + "img/sys/cursor.png";
-        this->cursorTexture     = nvgCreateImage(vg, pointerIcon.c_str(), NVG_IMAGE_NEAREST);
+        this->cursorTexture = nvgCreateImage(vg, BRLS_ASSET("img/sys/cursor.png"), NVG_IMAGE_NEAREST);
 #endif
 
         int width, height;

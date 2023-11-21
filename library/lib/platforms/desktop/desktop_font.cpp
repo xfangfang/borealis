@@ -65,20 +65,22 @@ void DesktopFontLoader::loadFonts()
 
         // Add internal font as fallback
 #ifdef USE_LIBROMFS
-        auto font = romfs::get(INTER_FONT);
-        Application::loadFontFromMemory("default", (void*)font.string().data(), font.string().size(), false);
+        auto& font = romfs::get(INTER_FONT);
+        if (font.valid() && Application::loadFontFromMemory("default", (void*)font.data(), font.size(), false))
 #else
-        this->loadFontFromFile("default", INTER_FONT_PATH);
+        if (this->loadFontFromFile("default", INTER_FONT_PATH))
 #endif
-        nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("default"));
+        {
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont("default"));
+        }
     }
     else
     {
         brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
         brls::Logger::info("Using internal font: {}", INTER_FONT_PATH);
 #ifdef USE_LIBROMFS
-        auto font = romfs::get(INTER_FONT);
-        Application::loadFontFromMemory(FONT_REGULAR, (void*)font.string().data(), font.string().size(), false);
+        auto& font = romfs::get(INTER_FONT);
+        Application::loadFontFromMemory(FONT_REGULAR, (void*)font.data(), font.size(), false);
 #else
         this->loadFontFromFile(FONT_REGULAR, INTER_FONT_PATH);
 #endif
@@ -138,11 +140,16 @@ void DesktopFontLoader::loadFonts()
     bool loaded = false;
     if (USER_ICON_PATH.rfind("@res/", 0) == 0)
     {
-        auto icon = romfs::get(USER_ICON_PATH.substr(5));
-        if (icon.valid())
+        try
         {
-            Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.string().data(), icon.string().size(), false);
-            loaded = true;
+            auto& icon = romfs::get(USER_ICON_PATH.substr(5));
+            if (icon.valid())
+            {
+                loaded = Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.data(), icon.size(), false);
+            }
+        }
+        catch (...)
+        {
         }
     }
 
@@ -160,20 +167,19 @@ void DesktopFontLoader::loadFonts()
 #ifdef USE_LIBROMFS
         // If you do not want to put a default icons in your own application,
         // you can leave an empty icon file in the resource folder to avoid errors reported by libromfs.
-        auto icon = romfs::get(INTER_ICON);
+        auto& icon = romfs::get(INTER_ICON);
         // Determine if the file is empty
-        if (icon.valid()) {
-            Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.string().data(), icon.string().size(), false);
-            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
-        }
+        if (icon.valid() && Application::loadFontFromMemory(FONT_SWITCH_ICONS, (void*)icon.data(), icon.size(), false))
+        {
 #else
         if (access(INTER_ICON_PATH, F_OK) != -1 && this->loadFontFromFile(FONT_SWITCH_ICONS, INTER_ICON_PATH))
         {
-            brls::Logger::info("Using internal icon: {}", INTER_ICON);
-            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
-        }
 #endif
-        else {
+            nvgAddFallbackFontId(vg, Application::getFont(FONT_REGULAR), Application::getFont(FONT_SWITCH_ICONS));
+            brls::Logger::info("Using internal icon: {}", INTER_ICON_PATH);
+        }
+        else
+        {
             Logger::warning("Icons may not be displayed, for more information please refer to: https://github.com/xfangfang/wiliwili/discussions/38");
         }
     }

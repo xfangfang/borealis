@@ -297,7 +297,7 @@ void Image::setImageFromRes(const std::string& path)
     if (checkCache("@res/" + path) > 0)
         return;
     auto image = romfs::get(path);
-    this->setImageFromMem((unsigned char*)image.string().data(), (int)image.size());
+    this->setImageFromMem((unsigned char*)image.data(), (int)image.size());
     TextureCache::instance().addCache("@res/" + path, this->texture);
 #else
     this->setImageFromFile(std::string(BRLS_RESOURCES) + path);
