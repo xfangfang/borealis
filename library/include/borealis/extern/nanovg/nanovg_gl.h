@@ -169,6 +169,8 @@ enum GLNVGcallType {
 	GLNVG_CONVEXFILL,
 	GLNVG_STROKE,
 	GLNVG_TRIANGLES,
+	GLNVG_CONVEXFILL_STENCIL,
+	GLNVG_CONVEXFILL_STENCIL_CLEAR,
 };
 
 struct GLNVGcall {
@@ -659,6 +661,7 @@ static int glnvg__renderCreate(void* uptr)
 		"#else\n"
 		"		vec4 color = texture2D(tex, pt);\n"
 		"#endif\n"
+		"		if (texType == 3 && color.a == 0) discard;"
 		"		if (texType == 1) color = vec4(color.xyz*color.w,color.w);"
 		"		if (texType == 2) color = vec4(color.x);"
 		"		// Apply color tint and alpha.\n"
@@ -964,12 +967,18 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 
 		#if NANOVG_GL_USE_UNIFORMBUFFER
 		if (tex->type == NVG_TEXTURE_RGBA)
-			frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0 : 1;
+			if (scissor->stencilEnabled)
+				frag->texType = 3;
+			else
+				frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0 : 1;
 		else
 			frag->texType = 2;
 		#else
 		if (tex->type == NVG_TEXTURE_RGBA)
-			frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0.0f : 1.0f;
+			if (scissor->stencilEnabled)
+				frag->texType = 3.0f;
+			else
+				frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0.0f : 1.0f;
 		else
 			frag->texType = 2.0f;
 		#endif
@@ -1076,6 +1085,26 @@ static void glnvg__convexFill(GLNVGcontext* gl, GLNVGcall* call)
 			glDrawArrays(GL_TRIANGLE_STRIP, paths[i].strokeOffset, paths[i].strokeCount);
 		}
 	}
+}
+
+static void glnvg__convexFillStencil(GLNVGcontext* gl, GLNVGcall* call)
+{
+	glEnable(GL_STENCIL_TEST);
+	glnvg__stencilFunc(gl, GL_EQUAL, 1, 0xFF);
+	glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	glnvg__convexFill(gl, call);
+
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+}
+
+static void glnvg__convexFillStencilClear(GLNVGcontext* gl, GLNVGcall* call)
+{
+	glClear(GL_STENCIL_BUFFER_BIT);
+	glDisable(GL_STENCIL_TEST);
 }
 
 static void glnvg__stroke(GLNVGcontext* gl, GLNVGcall* call)
@@ -1255,6 +1284,10 @@ static void glnvg__renderFlush(void* uptr)
 				glnvg__stroke(gl, call);
 			else if (call->type == GLNVG_TRIANGLES)
 				glnvg__triangles(gl, call);
+			else if (call->type == GLNVG_CONVEXFILL_STENCIL)
+				glnvg__convexFillStencil(gl, call);
+			else if (call->type == GLNVG_CONVEXFILL_STENCIL_CLEAR)
+				glnvg__convexFillStencilClear(gl, call);
 		}
 
 		glDisableVertexAttribArray(0);
@@ -1383,7 +1416,12 @@ static void glnvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperation
 
 	if (npaths == 1 && paths[0].convex)
 	{
-		call->type = GLNVG_CONVEXFILL;
+		if (scissor->stencilEnabled == 0)
+			call->type = GLNVG_CONVEXFILL;
+		else if (scissor->stencilEnabled == 1)
+			call->type = GLNVG_CONVEXFILL_STENCIL;
+		else if (scissor->stencilEnabled == 2)
+			call->type = GLNVG_CONVEXFILL_STENCIL_CLEAR;
 		call->triangleCount = 0;	// Bounding box fill quad not needed for convex fill
 	}
 

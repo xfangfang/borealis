@@ -2550,6 +2550,23 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 	return iter.nextx / scale;
 }
 
+void nvgStencil(NVGcontext* ctx)
+{
+	NVGstate* state = nvg__getState(ctx);
+	state->scissor.stencilEnabled = 1;
+	nvgFill(ctx);
+	state->scissor.stencilEnabled = 0;
+}
+
+void nvgStencilClear(NVGcontext* ctx)
+{
+	NVGstate* state = nvg__getState(ctx);
+	state->scissor.stencilEnabled = 2;
+	nvgFill(ctx);
+	state->scissor.stencilEnabled = 0;
+}
+
+
 void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const char* string, const char* end)
 {
 	NVGstate* state = nvg__getState(ctx);
