@@ -1097,7 +1097,6 @@ static void glnvg__convexFillStencil(GLNVGcontext* gl, GLNVGcall* call)
 	glnvg__convexFill(gl, call);
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 
