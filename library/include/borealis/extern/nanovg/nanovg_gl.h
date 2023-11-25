@@ -663,7 +663,7 @@ static int glnvg__renderCreate(void* uptr)
 		"#endif\n"
 		"		if (texType == 1) color = vec4(color.xyz*color.w,color.w);"
 		"		if (texType == 2) color = vec4(color.x);"
-		"		if (texType == 3 && color.a == 0) discard;"
+		"		if (texType == 3 && color.a == 0.0) discard;"
 		"		// Apply color tint and alpha.\n"
 		"		color *= innerCol;\n"
 		"		// Combine alpha\n"
