@@ -53,8 +53,6 @@ void userAppInit()
     setInitialize();
     psmInitialize();
     nifmInitialize(NifmServiceType_User);
-
-    appletUnlockExit();
 }
 
 void userAppExit()
@@ -78,4 +76,6 @@ void userAppExit()
         close(nxlink_sock);
 
     socketExit();
+
+    appletUnlockExit();
 }

@@ -975,7 +975,7 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 			frag->texType = 2;
 		#else
 		if (tex->type == NVG_TEXTURE_RGBA)
-			if (scissor->stencilEnabled)
+			if (scissor->stencilFlag)
 				frag->texType = 3.0f;
 			else
 				frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0.0f : 1.0f;
