@@ -2553,17 +2553,17 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 void nvgStencil(NVGcontext* ctx)
 {
 	NVGstate* state = nvg__getState(ctx);
-	state->scissor.stencilEnabled = 1;
+	state->scissor.stencilFlag = NVG_STENCIL_ENABLE;
 	nvgFill(ctx);
-	state->scissor.stencilEnabled = 0;
+	state->scissor.stencilFlag = NVG_STENCIL_DEFAULT;
 }
 
 void nvgStencilClear(NVGcontext* ctx)
 {
 	NVGstate* state = nvg__getState(ctx);
-	state->scissor.stencilEnabled = 2;
+	state->scissor.stencilFlag = NVG_STENCIL_CLEAR;
 	nvgFill(ctx);
-	state->scissor.stencilEnabled = 0;
+	state->scissor.stencilFlag = NVG_STENCIL_DEFAULT;
 }
 
 

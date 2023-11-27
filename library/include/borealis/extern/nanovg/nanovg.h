@@ -144,6 +144,12 @@ enum NVGimageFlags {
 	NVG_IMAGE_NEAREST			= 1<<5,		// Image interpolation is Nearest instead Linear
 };
 
+enum NVGstencilFlags {
+	NVG_STENCIL_DEFAULT	= 0,
+	NVG_STENCIL_ENABLE	= 1<<0,
+	NVG_STENCIL_CLEAR	= 1<<1,
+};
+
 // Begin drawing a new frame
 // Calls to nanovg drawing API should be wrapped in nvgBeginFrame() & nvgEndFrame()
 // nvgBeginFrame() defines the size of the window to render to in relation currently
@@ -643,7 +649,7 @@ enum NVGtexture {
 struct NVGscissor {
 	float xform[6];
 	float extent[2];
-	int stencilEnabled;
+	int stencilFlag;
 };
 typedef struct NVGscissor NVGscissor;
 

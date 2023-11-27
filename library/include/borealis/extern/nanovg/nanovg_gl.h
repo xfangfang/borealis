@@ -967,7 +967,7 @@ static int glnvg__convertPaint(GLNVGcontext* gl, GLNVGfragUniforms* frag, NVGpai
 
 		#if NANOVG_GL_USE_UNIFORMBUFFER
 		if (tex->type == NVG_TEXTURE_RGBA)
-			if (scissor->stencilEnabled)
+			if (scissor->stencilFlag)
 				frag->texType = 3;
 			else
 				frag->texType = (tex->flags & NVG_IMAGE_PREMULTIPLIED) ? 0 : 1;
@@ -1415,11 +1415,11 @@ static void glnvg__renderFill(void* uptr, NVGpaint* paint, NVGcompositeOperation
 
 	if (npaths == 1 && paths[0].convex)
 	{
-		if (scissor->stencilEnabled == 0)
+		if (scissor->stencilFlag == NVG_STENCIL_DEFAULT)
 			call->type = GLNVG_CONVEXFILL;
-		else if (scissor->stencilEnabled == 1)
+		else if (scissor->stencilFlag == NVG_STENCIL_ENABLE)
 			call->type = GLNVG_CONVEXFILL_STENCIL;
-		else if (scissor->stencilEnabled == 2)
+		else if (scissor->stencilFlag == NVG_STENCIL_CLEAR)
 			call->type = GLNVG_CONVEXFILL_STENCIL_CLEAR;
 		call->triangleCount = 0;	// Bounding box fill quad not needed for convex fill
 	}
