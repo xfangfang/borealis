@@ -216,6 +216,14 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
 #endif
     windowFlags |= SDL_WINDOW_OPENGL;
 #endif
+    if (VideoContext::FULLSCREEN)
+    {
+#ifdef __WINRT__
+        windowFlags |= SDL_WINDOW_FULLSCREEN;
+#else
+        windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
+    }
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
     if (isnan(windowXPos) || isnan(windowYPos))
@@ -295,7 +303,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     scaleFactor      = D3D11_CONTEXT->getScaleFactor();
     fWidth           = width;
     fHeight          = height;
-    Application::setWindowSize(width, height);
+    Application::setWindowSize(fWidth, fHeight);
+    D3D11_CONTEXT->onFramebufferSize(fWidth, fHeight);
 #endif
 
     int xPos, yPos;
@@ -308,8 +317,6 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
         VideoContext::sizeH = height;
         VideoContext::posX  = (float)xPos;
         VideoContext::posY  = (float)yPos;
-    } else {
-        this->fullScreen(true);
     }
 }
 
