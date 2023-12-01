@@ -324,9 +324,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #endif
     glfwSwapInterval(1);
 
-    Logger::info("glfw: GL Vendor: {}", print(glGetString(GL_VENDOR)));
-    Logger::info("glfw: GL Renderer: {}", print(glGetString(GL_RENDERER)));
-    Logger::info("glfw: GL Version: {}", print(glGetString(GL_VERSION)));
+    Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
+    Logger::info("glfw: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
+    Logger::info("glfw: GL Version: {}", (const char*)glGetString(GL_VERSION));
 #endif
     Logger::info("glfw: GLFW Version: {}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 

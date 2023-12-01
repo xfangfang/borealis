@@ -62,19 +62,14 @@ enum class LogLevel
 #define BRLS_VERBOSE_COLOR "[0;37m"
 #endif
 
-static inline std::string print(const unsigned char* str)
-{
-    if (str)
-    {
-        return std::string { (const char*)str };
-    }
-    return "";
-}
-
 class Logger
 {
   public:
+    using TimePoint = std::chrono::system_clock::time_point;
+
     static void setLogLevel(LogLevel logLevel);
+
+    static void setLogOutput(std::FILE *logOut);
 
     template <typename... Args>
     inline static void log(LogLevel level, std::string prefix, std::string color, fmt::format_string<Args...> format, Args&&... args)
@@ -82,7 +77,7 @@ class Logger
         if (Logger::logLevel < level)
             return;
 
-        auto now    = std::chrono::system_clock::now();
+        TimePoint now = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(
             now.time_since_epoch()).count() % 1000;
 #ifdef PS4
@@ -97,7 +92,7 @@ class Logger
         try
         {
 #ifdef IOS
-            fmt::print("{:%H:%M:%S}.{:03d} {} {}\n", time_tm, (int)ms, color, log);
+            fmt::print(logOut, "{:%H:%M:%S}.{:03d} {} {}\n", time_tm, (int)ms, color, log);
 #elif defined(ANDROID)
             __android_log_print(6 - (int)level, "borealis", "%s\n", log.c_str());
 #elif defined(__PSV__)
@@ -105,10 +100,10 @@ class Logger
 #elif defined(PS4)
             sceKernelDebugOutText(0, fmt::format("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", lt.hour, lt.minute, lt.second, (int)ms, color, prefix, log).c_str());
 #else
-            fmt::print("{:%H:%M:%S}.{:03d}\033{}[{}]\033[0m {}\n", time_tm, (int)ms, color, prefix, log);
+            fmt::print(logOut, "{:%H:%M:%S}.{:03d}\033{}[{}]\033[0m {}\n", time_tm, (int)ms, color, prefix, log);
 #endif
 
-            logEvent.fire(level, log);
+            logEvent.fire(now, level, log);
         }
         catch (const std::exception& e)
         {
@@ -117,7 +112,7 @@ class Logger
         }
 
 #ifdef __MINGW32__
-        fflush(0);
+        fflush(logOut);
 #endif
     }
 
@@ -151,14 +146,15 @@ class Logger
         Logger::log(LogLevel::LOG_VERBOSE, "VERBOSE", BRLS_VERBOSE_COLOR, format, std::forward<Args>(args)...);
     }
 
-    static Event<LogLevel, std::string>* getLogEvent()
+    static Event<TimePoint, LogLevel, std::string>* getLogEvent()
     {
         return &logEvent;
     }
 
   private:
+    inline static std::FILE *logOut = stdout;
     inline static LogLevel logLevel = LogLevel::LOG_INFO;
-    inline static Event<LogLevel, std::string> logEvent;
+    inline static Event<TimePoint, LogLevel, std::string> logEvent;
 };
 
 } // namespace brls
