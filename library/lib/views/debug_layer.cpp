@@ -41,22 +41,19 @@ DebugLayer::DebugLayer()
     contentView->setPadding(5);
     contentView->setBackgroundColor(RGBA(0, 0, 0, 160));
     YGNodeStyleSetFlexDirection(contentView->getYGNode(), YGFlexDirectionColumnReverse);
-    Logger::getLogEvent()->subscribe([this, contentView](LogLevel level, const std::string& log)
-        { brls::sync([this, level, contentView, log]
+    Logger::getLogEvent()->subscribe([this, contentView](Logger::TimePoint now, LogLevel level, const std::string& log)
+        { brls::sync([this, now, level, contentView, log]
               {
-            std::string timeBase;
-            auto now    = std::chrono::system_clock::now();
-            uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
-                - std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() * 1000;
-            time_t tt       = std::chrono::system_clock::to_time_t(now);
-            auto time_tm    = localtime(&tt);
+            uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()).count() % 1000;
 #ifdef PS4
             OrbisDateTime lt{};
             if (sceRtcGetCurrentClockLocalTime)
                 sceRtcGetCurrentClockLocalTime(&lt);
-            timeBase = fmt::format("{:02d}:{:02d}:{:02d}.{:03d}", lt.hour, lt.minute, lt.second, (int)ms);
+            std::string timeBase = fmt::format("{:02d}:{:02d}:{:02d}.{:03d}", lt.hour, lt.minute, lt.second, (int)ms);
 #else
-            timeBase = fmt::format("{:02d}:{:02d}:{:02d}.{:03d}", time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, (int)ms);
+            std::tm time_tm = fmt::localtime(std::chrono::system_clock::to_time_t(now));
+            std::string timeBase = fmt::format("{:%H:%M:%S}.{:03d}", time_tm, (int)ms);
 #endif
 
             auto box = new Box(Axis::ROW);

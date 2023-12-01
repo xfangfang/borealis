@@ -28,4 +28,9 @@ void Logger::setLogLevel(LogLevel newLogLevel)
     Logger::logLevel = newLogLevel;
 }
 
+void Logger::setLogOutput(std::FILE *newLogOut)
+{
+    Logger::logOut = newLogOut;
+}
+
 } // namespace brls
