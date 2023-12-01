@@ -366,7 +366,9 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwGetWindowPos(window, &xPos, &yPos);
     Application::setWindowPosition(xPos, yPos);
 
-#if defined(BOREALIS_USE_D3D11) || defined(BOREALIS_USE_METAL)
+#if defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->onFramebufferSize(width, height);
+#elif defined(BOREALIS_USE_METAL)
 #else
     scaleFactor      = width * 1.0 / wWidth;
 #endif
@@ -552,7 +554,9 @@ void GLFWVideoContext::fullScreen(bool fs)
             glfwSetWindowMonitor(this->window, nullptr, (int)posX, (int)posY, (int)sizeW, (int)sizeH, mode->refreshRate);
         }
     }
+#ifdef BOREALIS_USE_OPENGL
     glfwSwapInterval(1);
+#endif
 }
 
 GLFWwindow* GLFWVideoContext::getGLFWWindow()

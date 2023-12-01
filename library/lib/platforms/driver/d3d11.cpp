@@ -170,7 +170,7 @@ bool D3D11Context::initDX(HWND hWnd, IUnknown* coreWindow, int width, int height
         return false;
     }
 
-    return this->onFramebufferSize(width, height, true);
+    return true;
 }
 
 void D3D11Context::unInitDX()
