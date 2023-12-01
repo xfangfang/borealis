@@ -648,7 +648,7 @@ void Application::frame()
     NVGcolor backgroundColor = frameContext.theme["brls/background"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
-    float scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor();
+    float scaleFactor = videoContext->getScaleFactor();
 
     nvgBeginFrame(frameContext.vg, Application::windowWidth, Application::windowHeight, scaleFactor);
     nvgScale(frameContext.vg, Application::windowScale, Application::windowScale);

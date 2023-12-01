@@ -1,3 +1,19 @@
+/*
+    Copyright 2023 zeromake
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 #pragma once
 #include <nanovg.h>
 #include <d3d11.h>
@@ -12,52 +28,39 @@
 
 namespace brls
 {
-    class D3D11Context {
-        public:
-            D3D11Context():
-            device(nullptr),
-            deviceContext(nullptr),
-            swapChain(nullptr),
-            renderTargetView(nullptr),
-            depthStencil(nullptr),
-            depthStencilView(nullptr),
-            tearingSupport(false){}
-            ~D3D11Context() {
-                this->UnInitializeDX();
-            }
-        private:
-            bool InitializeDXInternal(HWND window, IUnknown *coreWindow, int width, int height);
-            static const int SwapChainBufferCount = 2;
+
+class D3D11Context
+{
+  public:
 #ifdef __GLFW__
-            GLFWwindow* glfwWindow;
-            HWND hwnd;
+    D3D11Context(GLFWwindow* window, int width, int height);
 #elif defined(__SDL2__)
-            SDL_Window* sdlWindow;
-            HWND hwnd;
+    D3D11Context(SDL_Window* window, int width, int height);
 #endif
-        public:
-#ifdef __GLFW__
-            bool InitializeDX(GLFWwindow* window, int width, int height);
-#elif defined(__SDL2__)
-            bool InitializeDX(SDL_Window* window, int width, int height);
-#endif
-            void UnInitializeDX();
-            float GetDpi();
-            bool ResizeFramebufferSize(int width, int height, bool init = false);
-            void ClearWithColor(NVGcolor color);
-            void Present();
-            ID3D11Device* GetDevice() {
-                return this->device;
-            }
-        private:
-            ID3D11Device* device;
-            ID3D11DeviceContext* deviceContext;
-            IDXGISwapChain1* swapChain;
-            ID3D11RenderTargetView* renderTargetView;
-            ID3D11Texture2D* depthStencil;
-            ID3D11DepthStencilView* depthStencilView;
-            D3D_FEATURE_LEVEL featureLevel;
-            DXGI_SAMPLE_DESC sampleDesc;
-            bool tearingSupport;
-    };
+    ~D3D11Context();
+
+    double getScaleFactor();
+    void clear(NVGcolor color);
+    void beginFrame();
+    void endFrame();
+
+    bool onFramebufferSize(int width, int height, bool init = false);
+
+    ID3D11Device* getDevice() { return this->device; }
+
+    IDXGISwapChain* getSwapChain() { return this->swapChain; }
+
+  private:
+    ID3D11Device* device                     = nullptr;
+    ID3D11DeviceContext* deviceContext       = nullptr;
+    IDXGISwapChain1* swapChain               = nullptr;
+    ID3D11RenderTargetView* renderTargetView = nullptr;
+    ID3D11DepthStencilView* depthStencilView = nullptr;
+
+    HWND hWnd = nullptr;
+
+    bool initDX(HWND window, IUnknown* coreWindow, int width, int height);
+    void unInitDX();
+};
+
 }
