@@ -87,7 +87,7 @@ make -C build_psv borealis_demo.vpk -j$(nproc)
 
 #### My daily development experience on PSV
 
-1. Install [PrincessLog](https://github.com/isage/plog) to psv.(This can help display the log, see the README for more info)  
+1. Install [PrincessLog](https://github.com/isage/plog) to psv.(This can help display the log, see their README for more info)  
 2. Install [vitacompanion](https://github.com/devnoname120/vitacompanion) to psv.(Sending updated files to psv without fully installing a vpk)
 3. Install the `borealis_demo.vpk` we built before.
 4. Run `nc -kl -w 3 9999` in Your computer. (Working as a logging server)
@@ -102,6 +102,7 @@ echo launch BOREALIS0 | nc 192.168.1.140 1338
 
 >  192.168.1.140 is the ip address of my psv  
 >  BOREALIS0 is the demo app ID
+>  For me using [PSMLogUSB](https://github.com/TeamFAPS/PSVita-RE-tools/tree/master/PSMLogUSB) with [psmlogusb-client](https://github.com/isage/psmlogusb-client) is more stable than PrincessLog.
 
 ## Building the demo for PS4
 

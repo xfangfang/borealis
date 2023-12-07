@@ -16,33 +16,11 @@
     limitations under the License.
 */
 
-#include <netinet/in.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <switch.h>
 #include <unistd.h>
 
 static int nxlink_sock = -1;
-
-uint32_t htonl(uint32_t hostlong)
-{
-    return __builtin_bswap32(hostlong);
-}
-
-uint16_t htons(uint16_t hostshort)
-{
-    return __builtin_bswap16(hostshort);
-}
-
-uint32_t ntohl(uint32_t netlong)
-{
-    return __builtin_bswap32(netlong);
-}
-
-uint16_t ntohs(uint16_t netshort)
-{
-    return __builtin_bswap16(netshort);
-}
 
 void userAppInit()
 {
@@ -75,8 +53,6 @@ void userAppInit()
     setInitialize();
     psmInitialize();
     nifmInitialize(NifmServiceType_User);
-
-    appletUnlockExit();
 }
 
 void userAppExit()
@@ -100,4 +76,6 @@ void userAppExit()
         close(nxlink_sock);
 
     socketExit();
+
+    appletUnlockExit();
 }
