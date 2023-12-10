@@ -19,6 +19,8 @@ limitations under the License.
 #include <psp2/net/netctl.h>
 #include <psp2/power.h>
 #include <psp2/rtc.h>
+#include <psp2/apputil.h>
+#include <psp2/system_param.h>
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
@@ -68,6 +70,19 @@ PsvPlatform::PsvPlatform()
     int thid = sceKernelCreateThread("callbackThread", CallbackThread, 0x10000100, 0x10000, 0, 0, NULL);
     if (thid >= 0)
         sceKernelStartThread(thid, 0, NULL);
+
+    // Auto swap X and O buttons
+    int enterButton;
+    SceAppUtilInitParam initParam;
+    SceAppUtilBootParam bootParam;
+    memset(&initParam, 0, sizeof(SceAppUtilInitParam));
+    memset(&bootParam, 0, sizeof(SceAppUtilBootParam));
+    sceAppUtilInit(&initParam, &bootParam);
+    sceAppUtilSystemParamGetInt(SCE_SYSTEM_PARAM_ID_ENTER_BUTTON, &enterButton);
+    sceAppUtilShutdown();
+    if (enterButton == SCE_SYSTEM_PARAM_ENTER_BUTTON_CIRCLE)
+        brls::Application::setSwapInputKeys(true);
+
 }
 
 PsvPlatform::~PsvPlatform()
