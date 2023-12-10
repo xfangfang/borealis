@@ -110,6 +110,9 @@ Ps4Platform::Ps4Platform()
             case ORBIS_SYSTEM_PARAM_LANG_KOREAN:
                 this->locale = LOCALE_Ko;
                 break;
+            case ORBIS_SYSTEM_PARAM_LANG_ITALIAN:
+                this->locale = LOCALE_IT;
+                break;
             default:
                 this->locale = LOCALE_DEFAULT;
         }
