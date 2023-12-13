@@ -196,6 +196,30 @@ namespace nvg {
         return free_image_descriptor;
     }
 
+    int DkRenderer::AllocateImageIndex() {
+        int free_image_descriptor = m_last_image_descriptor + 1;
+        
+        for (int desc = 0; desc <= m_last_image_descriptor; desc++) {
+            /* Update the free image descriptor. */
+            if (m_image_descriptor_mappings[desc] == 0) {
+                free_image_descriptor = desc;
+            }
+        }
+
+        /* No descriptors are free. */
+        if (free_image_descriptor >= static_cast<int>(MaxImages)) {
+            return -1;
+        }
+
+        /* Flush the descriptor cache. */
+        m_dyn_cmd_buf.barrier(DkBarrier_None, DkInvalidateFlags_Descriptors);
+
+        /* Update the map. */
+        m_image_descriptor_mappings[free_image_descriptor] = free_image_descriptor;
+        m_last_image_descriptor = free_image_descriptor;
+        return free_image_descriptor;
+    }
+
     void DkRenderer::FreeImageDescriptor(int image) {
         for (int desc = 0; desc <= m_last_image_descriptor; desc++) {
             if (m_image_descriptor_mappings[desc] == image) {

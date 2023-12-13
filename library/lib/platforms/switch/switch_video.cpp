@@ -282,10 +282,16 @@ double SwitchVideoContext::getScaleFactor()
 
 dk::Device SwitchVideoContext::getDeko3dDevice() { return device; }
 
+dk::Queue SwitchVideoContext::getQueue() { return queue; }
+
 dk::Image* SwitchVideoContext::getFramebuffer()
 {
     return &framebuffers[imageSlot];
 }
+
+CDescriptorSet<4096U> *SwitchVideoContext::getImageDescriptor() { return renderer->GetImageDescriptor(); }
+
+int SwitchVideoContext::allocateImageIndex() { return renderer->AllocateImageIndex(); }
 
 void SwitchVideoContext::queueWaitFence(DkFence* fence)
 {
