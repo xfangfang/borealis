@@ -220,7 +220,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
         {
             if (isEditing) return true;
             if (cursor == (int)CursorPosition::END) {
-                cursor = textBuffer.size() - 1;
+                cursor = textBuffer.empty() ? 0 : (int)textBuffer.size() - 1;
             } else if (cursor > (int)CursorPosition::START) {
                 cursor--;
             }

@@ -156,6 +156,7 @@ namespace brls
                 if (this->isEditing) return true;
                 if (this->cursor == (int)CursorPosition::END) {
                     this->cursor = utf8_len(this->inputBuffer) - 1;
+                    if(this->cursor < 0) this->cursor = 0;
                     updateTextCursor();
                 } else if (this->cursor > (int)CursorPosition::START) {
                     this->cursor--;
