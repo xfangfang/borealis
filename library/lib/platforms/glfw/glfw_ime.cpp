@@ -220,7 +220,7 @@ bool GLFWImeManager::openForText(std::function<void(std::string)> f, std::string
     int kbdDisableBitmask)
 {
     this->openInputDialog([f](const std::string& text)
-        {if(!text.empty()) f(text); },
+        { f(text); },
         headerText, subText, maxStringLength, initialText);
     return true;
 }
