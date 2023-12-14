@@ -20,12 +20,14 @@ limitations under the License.
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/glfw/glfw_ime.hpp>
 #include <borealis/views/dialog.hpp>
-#include <borealis/views/label.hpp>
 #include <borealis/views/edit_text_dialog.hpp>
+#include <borealis/views/label.hpp>
 #include <codecvt>
 #include <cstring>
 #include <iostream>
 #include <locale>
+
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 namespace brls
 {
@@ -130,7 +132,8 @@ void GLFWImeManager::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
     if (!showIME)
         return;
-    textBuffer += codepoint;
+    textBuffer.insert(textBuffer.begin() + cursor, (wchar_t)codepoint);
+    cursor++;
 }
 
 GLFWImeManager::GLFWImeManager(GLFWwindow* window)
@@ -151,9 +154,11 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
     glfwSetInputMode(window, GLFW_IME, GLFW_TRUE);
     showIME                = true;
     textBuffer             = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(initialText);
-    EditTextDialog* dialog = new EditTextDialog();
-    dialog->setHintText(subText);
+    auto dialog = new EditTextDialog();
     dialog->setText(initialText);
+    cursor = -1;
+    dialog->setCursor(cursor);
+    dialog->setHintText(subText);
     dialog->setHeaderText(headerText);
     dialog->setCountText("0/" + std::to_string(maxStringLength));
     float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
@@ -173,12 +178,26 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
                     dialog->setText("");
                 } else{
                     dialog->setText(getInputText());
+                    dialog->setCursor(cursor);
                 }
                 dialog->setCountText(std::to_string(textBuffer.size()) + "/" + std::to_string(maxStringLength));
                 lastPreeditText.clear();
                 preeditTextBuffer.clear();
+                isEditing = false;
             } else if(lastPreeditText != preeditTextBuffer){
-                dialog->setText(getInputText() + preeditTextBuffer);
+                lastPreeditText = preeditTextBuffer;
+                if (preeditTextBuffer.empty()) {
+                    isEditing = false;
+                    dialog->setText(getInputText());
+                    dialog->setCursor(cursor);
+                    return ;
+                }
+                isEditing = true;
+                if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
+                auto left = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(0, cursor));
+                auto right = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(cursor, textBuffer.size()));
+                dialog->setText(left + preeditTextBuffer + right);
+                dialog->setCursor(cursor + preeditTextBuffer.size());
             } });
 
     // delete text
@@ -186,10 +205,37 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
         "hints/delete"_i18n, BUTTON_B, [dialog](...)
         {
             if(textBuffer.empty()) return true;
-            textBuffer.erase(textBuffer.size()-1, 1);
-            dialog->setText(getInputText());
+            if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
+            if (cursor > 0 && cursor <= textBuffer.size()) {
+                textBuffer.erase(cursor - 1, 1);
+                cursor--;
+                dialog->setCursor(cursor);
+            }
             return true; },
         true, true);
+
+    dialog->registerAction(
+        "hints/left"_i18n, BUTTON_LEFT, [dialog](...)
+        {
+            if (isEditing) return true;
+            if (cursor == (int)CursorPosition::END) {
+                cursor = textBuffer.size() - 1;
+            } else if (cursor > (int)CursorPosition::START) {
+                cursor--;
+            }
+            dialog->setCursor(cursor);
+            return true; }, true, true);
+    dialog->registerAction(
+        "hints/right"_i18n, BUTTON_RIGHT, [dialog](...)
+        {
+            if (isEditing) return true;
+            if (cursor >= (int)CursorPosition::START) {
+                if (cursor < textBuffer.size()) {
+                    cursor++;
+                    dialog->setCursor(cursor);
+                }
+            }
+            return true; }, true, true);
 
     // cancel
     dialog->getCancelEvent()->subscribe([this, eventID]()

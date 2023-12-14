@@ -64,6 +64,8 @@ static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
 };
 
+static int keyboardKeys[16] = {0};
+
 static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
     LEFT_X,
     LEFT_Y,
@@ -85,6 +87,19 @@ static inline int getMouseButtonState(int buttonIndex)
     else
     {
         return mouseButtons[buttonIndex - 1];
+    }
+}
+
+static inline int getKeyboardKeys(int index)
+{
+    if (keyboardKeys[index] == SDL_STICKY)
+    {
+        keyboardKeys[index] = SDL_RELEASED;
+        return SDL_PRESSED;
+    }
+    else
+    {
+        return keyboardKeys[index];
     }
 }
 
@@ -114,6 +129,20 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
     {
         if (event->button.button <= 3)
             mouseButtons[event->button.button - 1] = SDL_STICKY;
+    }
+    else if (event->type == SDL_KEYDOWN)
+    {
+        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            keyboardKeys[0] = SDL_PRESSED;
+        else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
+            keyboardKeys[1] = SDL_PRESSED;
+    }
+    else if (event->type == SDL_KEYUP)
+    {
+        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            keyboardKeys[0] = SDL_STICKY;
+        else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
+            keyboardKeys[1] = SDL_STICKY;
     }
     Application::setActiveEvent(true);
     return 0;
@@ -242,11 +271,11 @@ bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
     // todo: 完整映射
     if (key == BRLS_KBD_KEY_ESCAPE)
     {
-        return SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE];
+        return getKeyboardKeys(0);
     }
     if (key == BRLS_KBD_KEY_ENTER)
     {
-        return SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN];
+        return getKeyboardKeys(1);
     }
     return false;
 }

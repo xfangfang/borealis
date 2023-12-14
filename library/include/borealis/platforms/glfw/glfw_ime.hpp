@@ -46,6 +46,8 @@ class GLFWImeManager : public ImeManager
     inline static bool showIME;
     inline static std::wstring textBuffer;
     inline static std::string preeditTextBuffer;
+    inline static int cursor{};
+    inline static bool isEditing{};
     static void ime_callback(GLFWwindow* window);
     static void preedit_callback(GLFWwindow* window, int preeditCount, unsigned int* preeditString,
         int blockCount, int* blockSizes, int focusedBlock, int caret);
