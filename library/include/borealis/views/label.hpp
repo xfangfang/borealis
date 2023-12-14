@@ -46,7 +46,7 @@ enum class VerticalAlign
 enum class CursorPosition
 {
     UNSET = -2,
-    END = -1,
+    END   = -1,
     START = 0,
 };
 
@@ -167,10 +167,11 @@ class Label : public View
     bool singleLine = false;
     bool isWrapping = false;
 
-    bool autoAnimate = true;
-    bool animated    = false; // should it animate?
-    bool animating   = false; // currently animating?
-    int cursor = -2;
+    bool autoAnimate  = true;
+    bool animated     = false; // should it animate?
+    bool animating    = false; // currently animating?
+    int cursor        = -2;
+    Time cursor_blink = 0;
 
     Timer scrollingTimer;
     Animatable scrollingAnimation;

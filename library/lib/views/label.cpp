@@ -200,6 +200,7 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
 
 void Label::setCursor(int cursor) {
     this->cursor = cursor;
+    this->cursor_blink = brls::getCPUTimeUsec();
 }
 
 Label::Label()
@@ -480,9 +481,15 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
         else if (vertAlign == NVG_ALIGN_BOTTOM)
             textY += height;
 
-        // 绘制编辑游标
         float nextX = nvgText(vg, textX, textY, this->truncatedText.c_str(), nullptr);
+
+        // 绘制编辑游标
         if (this->cursor >= (int)CursorPosition::END) {
+            // blink
+            auto blink = ((brls::getCPUTimeUsec() - cursor_blink) >> 10) % 1000 ;
+            if (blink > 500)
+                return;
+
             nvgSave(vg);
             float lineh;
             nvgTextMetrics(vg, NULL, NULL, &lineh);
