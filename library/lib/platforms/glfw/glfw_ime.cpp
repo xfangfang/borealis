@@ -132,6 +132,7 @@ void GLFWImeManager::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
     if (!showIME)
         return;
+    if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
     textBuffer.insert(textBuffer.begin() + cursor, (wchar_t)codepoint);
     cursor++;
 }
