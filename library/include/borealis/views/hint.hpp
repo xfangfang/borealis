@@ -70,6 +70,7 @@ class Hints : public Box
     void refillHints(View* focusView);
     bool addUnableAButtonAction = true;
     bool allowAButtonTouch      = false;
+    bool forceShown             = false;
 
     VoidEvent::Subscription hintSubscription;
     static bool actionsSortFunc(Action a, Action b);

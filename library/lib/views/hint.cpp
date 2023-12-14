@@ -128,17 +128,19 @@ Hints::Hints()
 
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]()
         {
-            if (!AppletFrame::HIDE_BOTTOM_BAR)
+            if (!AppletFrame::HIDE_BOTTOM_BAR || forceShown)
             {
                 refillHints(Application::getCurrentFocus());
-            }
-        });
+            } });
 
     this->registerBoolXMLAttribute("addBaseAction", [this](bool value)
         { this->setAddUnableAButtonAction(value); });
 
     this->registerBoolXMLAttribute("allowAButtonTouch", [this](bool value)
         { this->setAllowAButtonTouch(value); });
+
+    this->registerBoolXMLAttribute("forceShown", [this](bool value)
+        { this->forceShown = value; });
 }
 
 Hints::~Hints()

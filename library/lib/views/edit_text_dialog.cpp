@@ -53,6 +53,7 @@ namespace brls
 
             <brls:Hints
                 allowAButtonTouch="true"
+                forceShown="true"
                 addBaseAction="false"
                 marginBottom="20"
                 marginRight="10"
@@ -165,6 +166,7 @@ namespace brls
         {
             label->setTextColor(Application::getTheme().getColor("brls/text_disabled"));
             label->setText(hint);
+            label->setCursor((int)CursorPosition::START);
         }
         else
         {
