@@ -22,6 +22,8 @@
 
 #ifdef BOREALIS_USE_STD_THREAD
 #include <thread>
+#else
+#include <pthread.h>
 #endif
 
 #ifdef PS4
