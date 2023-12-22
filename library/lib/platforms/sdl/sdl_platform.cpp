@@ -237,9 +237,9 @@ ImeManager* SDLPlatform::getImeManager() {
 SDLPlatform::~SDLPlatform()
 {
     delete this->audioPlayer;
-    delete this->videoContext;
     delete this->inputManager;
     delete this->imeManager;
+    delete this->videoContext;
 }
 
 } // namespace brls

@@ -166,9 +166,9 @@ ImeManager* GLFWPlatform::getImeManager()
 GLFWPlatform::~GLFWPlatform()
 {
     delete this->audioPlayer;
-    delete this->videoContext;
     delete this->inputManager;
     delete this->imeManager;
+    delete this->videoContext;
 }
 
 } // namespace brls
