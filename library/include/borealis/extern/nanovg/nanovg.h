@@ -635,6 +635,8 @@ void nvgTextMetrics(NVGcontext* ctx, float* ascender, float* descender, float* l
 // Words longer than the max width are slit at nearest character (i.e. no hyphenation).
 int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, float breakRowWidth, NVGtextRow* rows, int maxRows);
 
+void nvgFontQuality(NVGcontext* ctx, float quality);
+
 // Work like nvgFill, but only supports drawing image with alpha channels.
 // The image is used to create a stencil buffer, which will be used for subsequent drawing operations,
 // and only the content corresponding to the non-transparent part of the stencil buffer will be displayed.

@@ -96,11 +96,13 @@ class Label : public View
     void setVerticalAlign(VerticalAlign align);
 
     void setFontSize(float value);
+    void setFontQuality(float value);
     void setLineHeight(float value);
     void setTextColor(NVGcolor color);
 
     int getFont();
     float getFontSize();
+    float getFontQuality();
     float getLineHeight();
     NVGcolor getTextColor();
 
@@ -157,6 +159,7 @@ class Label : public View
     int font;
     float fontSize;
     float lineHeight;
+    float fontQuality;
 
     NVGcolor textColor;
 

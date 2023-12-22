@@ -213,6 +213,7 @@ Label::Label()
     this->fontSize   = style["brls/label/default_font_size"];
     this->lineHeight = style["brls/label/default_line_height"];
     this->textColor  = theme["brls/text"];
+    this->fontQuality= 1.0f;
 
     this->setHighlightPadding(style["brls/label/highlight_padding"]);
 
@@ -230,6 +231,9 @@ Label::Label()
 
     this->registerFloatXMLAttribute("fontSize", [this](float value)
         { this->setFontSize(value); });
+
+    this->registerFloatXMLAttribute("fontQuality", [this](float value)
+        { this->setFontQuality(value); });
 
     this->registerColorXMLAttribute("textColor", [this](NVGcolor color)
         { this->setTextColor(color); });
@@ -381,6 +385,13 @@ void Label::setFontSize(float value)
     this->invalidate();
 }
 
+void Label::setFontQuality(float value)
+{
+    this->fontQuality = value;
+
+    this->invalidate();
+}
+
 void Label::setLineHeight(float value)
 {
     this->lineHeight = value;
@@ -439,6 +450,7 @@ void Label::draw(NVGcontext* vg, float x, float y, float width, float height, St
     nvgFontSize(vg, this->fontSize);
     nvgTextAlign(vg, horizAlign | vertAlign);
     nvgFontFaceId(vg, this->font);
+    nvgFontQuality(vg, this->fontQuality);
     nvgTextLineHeight(vg, this->lineHeight);
     nvgFillColor(vg, a(this->textColor));
 
@@ -647,6 +659,11 @@ int Label::getFont()
 float Label::getFontSize()
 {
     return this->fontSize;
+}
+
+float Label::getFontQuality()
+{
+    return this->fontQuality;
 }
 
 float Label::getLineHeight()
