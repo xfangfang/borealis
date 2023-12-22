@@ -37,17 +37,25 @@
 #pragma warning(disable: 4706)  // assignment within conditional expression
 #endif
 
-#ifdef __PSV__
-#define NVG_INIT_FONTIMAGE_SIZE  240
-#else
-#define NVG_INIT_FONTIMAGE_SIZE  512
+#ifndef NVG_INIT_FONTIMAGE_SIZE
+#	ifdef __PSV__
+#		define NVG_INIT_FONTIMAGE_SIZE  240
+#	else
+#		define NVG_INIT_FONTIMAGE_SIZE 512
+#	endif
 #endif
-#ifdef __PSV__
-#define NVG_MAX_FONTIMAGE_SIZE   960
-#else
-#define NVG_MAX_FONTIMAGE_SIZE   2048
+
+#ifndef NVG_MAX_FONTIMAGE_SIZE
+#	ifdef __PSV__
+#		define NVG_MAX_FONTIMAGE_SIZE 960
+#	else
+#		define NVG_MAX_FONTIMAGE_SIZE 4096
+#	endif
 #endif
-#define NVG_MAX_FONTIMAGES       4
+
+#ifndef NVG_MAX_FONTIMAGES
+#	define NVG_MAX_FONTIMAGES 4
+#endif
 
 #define NVG_INIT_COMMANDS_SIZE 256
 #define NVG_INIT_POINTS_SIZE 128
