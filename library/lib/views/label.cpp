@@ -209,11 +209,11 @@ Label::Label()
     Theme theme = Application::getTheme();
 
     // Default attributes
-    this->font       = Application::getDefaultFont();
-    this->fontSize   = style["brls/label/default_font_size"];
-    this->lineHeight = style["brls/label/default_line_height"];
-    this->textColor  = theme["brls/text"];
-    this->fontQuality= 1.0f;
+    this->font        = Application::getDefaultFont();
+    this->fontSize    = style["brls/label/default_font_size"];
+    this->lineHeight  = style["brls/label/default_line_height"];
+    this->textColor   = theme["brls/text"];
+    this->fontQuality = 1.0f;
 
     this->setHighlightPadding(style["brls/label/highlight_padding"]);
 
