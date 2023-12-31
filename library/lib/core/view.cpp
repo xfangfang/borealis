@@ -172,7 +172,7 @@ void View::frame(FrameContext* ctx)
     if (this->alpha > 0.0f && this->collapseState != 0.0f)
     {
         // Draw background
-        this->drawBackground(ctx->vg, ctx, style);
+        this->drawBackground(ctx->vg, ctx, style, frame);
 
         // Draw shadow
         if (this->shadowType != ShadowType::NONE && (this->showShadow || Application::getInputType() == InputType::TOUCH))
@@ -612,12 +612,12 @@ void View::setBackground(ViewBackground background)
     this->background = background;
 }
 
-void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style)
+void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style, Rect frame)
 {
-    float x      = this->getX();
-    float y      = this->getY();
-    float width  = this->getWidth();
-    float height = this->getHeight();
+    float x      = frame.getMinX();
+    float y      = frame.getMinY();
+    float width  = frame.getWidth();
+    float height = frame.getHeight();
 
     Theme theme = ctx->theme;
 
