@@ -138,7 +138,8 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     glfwGetWindowSize(window, &wWidth, &wHeight);
     scaleFactor = width * 1.0 / wWidth;
 #elif defined(BOREALIS_USE_METAL)
-    if (METAL_CONTEXT == nullptr) {
+    if (METAL_CONTEXT == nullptr)
+    {
         return;
     }
     scaleFactor = GetMetalScaleFactor(METAL_CONTEXT);
@@ -146,10 +147,11 @@ static void glfwWindowFramebufferSizeCallback(GLFWwindow* window, int width, int
     int wWidth, wHeight;
     glfwGetWindowSize(window, &wWidth, &wHeight);
     // cocoa 画布大小和窗口一致
-    width = wWidth;
+    width  = wWidth;
     height = wHeight;
 #elif defined(BOREALIS_USE_D3D11)
-    if (D3D11_CONTEXT == nullptr) {
+    if (D3D11_CONTEXT == nullptr)
+    {
         return;
     }
     scaleFactor = D3D11_CONTEXT->getScaleFactor();
@@ -289,14 +291,32 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Set window position
     if (!VideoContext::FULLSCREEN)
     {
-        if (!isnan(windowX) && !isnan(windowY))
+        if (mode->width >= windowWidth && mode->height >= windowHeight)
         {
-            glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
+            if (!isnan(windowX) && !isnan(windowY))
+            {
+                glfwSetWindowPos(this->window, (int)windowX, (int)windowY);
+            }
+            else
+            {
+                // When there is no specified window position, center the window
+                glfwSetWindowPos(this->window, (int)(mode->width - windowWidth) / 2,
+                    (int)(mode->height - windowHeight) / 2);
+            }
         }
         else
         {
-            glfwSetWindowPos(this->window, fabs(mode->width - windowWidth) / 2,
-                fabs(mode->height - windowHeight) / 2);
+            // When the window size is too large, reduce the size and center it
+            float maxAllowedWidth  = (float)mode->width * 0.8f;
+            float maxAllowedHeight = (float)mode->height * 0.8f;
+            float scale     = std::min(maxAllowedWidth / (float)windowWidth, maxAllowedHeight / (float)windowHeight);
+            float newWidth  = (float)windowWidth * scale;
+            float newHeight = (float)windowHeight * scale;
+
+            glfwSetWindowSize(this->window, (int)newWidth, (int)newHeight);
+
+            glfwSetWindowPos(this->window, (mode->width - newWidth) / 2,
+                (mode->height - newHeight) / 2);
         }
     }
 #endif
@@ -345,7 +365,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     Logger::info("glfw: USE_D3D11");
     D3D11_CONTEXT    = std::make_unique<D3D11Context>(this->window, windowWidth, windowHeight);
     this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->getDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    scaleFactor = D3D11_CONTEXT->getScaleFactor();
+    scaleFactor      = D3D11_CONTEXT->getScaleFactor();
 #endif
     if (!this->nvgContext)
     {
@@ -370,7 +390,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     D3D11_CONTEXT->onFramebufferSize(width, height);
 #elif defined(BOREALIS_USE_METAL)
 #else
-    scaleFactor      = width * 1.0 / wWidth;
+    scaleFactor = width * 1.0 / wWidth;
 #endif
 
     if (!VideoContext::FULLSCREEN)
@@ -426,11 +446,7 @@ void GLFWVideoContext::clear(NVGcolor color)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #elif defined(BOREALIS_USE_METAL)
-    nvgClearWithColor(nvgContext, nvgRGBAf(
-        color.r,
-        color.g,
-        color.b,
-        1.0f));
+    nvgClearWithColor(nvgContext, nvgRGBAf(color.r, color.g, color.b, 1.0f));
 #elif defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->clear(nvgRGBAf(
         color.r,
@@ -542,7 +558,7 @@ void GLFWVideoContext::fullScreen(bool fs)
 
         if (sizeW == 0 || sizeH == 0 || posX < monitorX || posY < monitorY || posX + sizeW > mode->width + monitorX || posY + sizeH > mode->height + monitorY)
         {
-            int width = Application::ORIGINAL_WINDOW_WIDTH;
+            int width  = Application::ORIGINAL_WINDOW_WIDTH;
             int height = Application::ORIGINAL_WINDOW_HEIGHT;
             // If the window appears outside the screen, using the default settings
             glfwSetWindowMonitor(this->window, nullptr, fabs(mode->width - width) / 2,
