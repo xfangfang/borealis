@@ -284,9 +284,16 @@ bool GLFWImeManager::openForNumber(std::function<void(long)> f, std::string head
             {
                 f(stoll(text));
             }
+            catch (const std::invalid_argument& e)
+            {
+                Logger::error("Could not parse input, did you enter a valid integer? {}", e.what());
+            }
+            catch (const std::out_of_range& e) {
+                Logger::error("Out of range: {}", e.what());
+            }
             catch (const std::exception& e)
             {
-                Logger::error("Could not parse input, did you enter a valid integer?");
+                Logger::error("Unexpected error occurred: {}", e.what());
             } },
         headerText, subText, maxStringLength, initialText);
     return true;
