@@ -1,6 +1,5 @@
 /*
-    Copyright 2019-2021 natinusala
-    Copyright 2019 p-sam
+    Copyright 2023 xfangfang
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,46 +19,27 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/bind.hpp>
 #include <borealis/core/box.hpp>
-#include <borealis/views/label.hpp>
-#include <borealis/views/rectangle.hpp>
+#include <borealis/views/cells/cell_detail.hpp>
+#include <borealis/views/recycler.hpp>
+#include <borealis/views/slider.hpp>
 
 namespace brls
 {
 
-class Slider : public Box
+class SliderCell : public DetailCell
 {
   public:
-    Slider();
+    SliderCell();
 
-    void onLayout() override;
-    View* getDefaultFocus() override;
-    void draw(NVGcontext* vg, float x, float y, float width, float height, Style style, FrameContext* ctx) override;
+    void init(const std::string& title, float init, const std::function<void(float)>& callback);
 
-    void setProgress(float progress);
-
-    float getProgress();
-
-    Event<float>* getProgressEvent();
-
-    void setStep(float step);
-
-    void setPointerSize(float size);
+    Event<float>* getEvent();
 
     static View* create();
 
-  private:
-    InputManager* input;
-    Rectangle* line;
-    Rectangle* lineEmpty;
-    Rectangle* pointer;
+    View* getDefaultFocus() override;
 
-    Event<float> progressEvent;
-
-    float progress = 1;
-    float step = 0.5f;
-
-    void buttonsProcessing();
-    void updateUI();
+    Slider* slider;
 };
 
 } // namespace brls

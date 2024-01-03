@@ -70,6 +70,7 @@
 #include <borealis/views/cells/cell_input.hpp>
 #include <borealis/views/cells/cell_radio.hpp>
 #include <borealis/views/cells/cell_selector.hpp>
+#include <borealis/views/cells/cell_slider.hpp>
 
 // Gestures
 #include <borealis/core/touch/pan_gesture.hpp>

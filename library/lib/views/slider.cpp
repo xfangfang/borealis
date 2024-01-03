@@ -142,7 +142,7 @@ void Slider::buttonsProcessing()
 
         if (state.buttons[BUTTON_NAV_RIGHT])
         {
-            setProgress(progress += 0.5f / Application::getFPS());
+            setProgress(progress += step / Application::getFPS());
             if (progress >= 1 && !repeat)
             {
                 repeat = true;
@@ -153,7 +153,7 @@ void Slider::buttonsProcessing()
 
         if (state.buttons[BUTTON_NAV_LEFT])
         {
-            setProgress(progress -= 0.5f / Application::getFPS());
+            setProgress(progress -= step / Application::getFPS());
             if (progress <= 0 && !repeat)
             {
                 repeat = true;
@@ -203,10 +203,32 @@ void Slider::updateUI()
     line->setDetachedPosition(lineStart, lineYPos);
     line->setWidth(lineStartWidth);
 
-    lineEmpty->setDetachedPosition(lineEnd, lineYPos);
+    lineEmpty->setDetachedPosition(round(lineEnd), lineYPos);
     lineEmpty->setWidth(lineEndWidth);
 
     pointer->setDetachedPosition(lineEnd - pointer->getWidth() / 2, getHeight() / 2 - pointer->getHeight() / 2);
+}
+
+float Slider::getProgress()
+{
+    return progress;
+}
+
+Event<float>* Slider::getProgressEvent()
+{
+    return &progressEvent;
+}
+
+void Slider::setStep(float step)
+{
+    this->step = step;
+}
+
+void Slider::setPointerSize(float size)
+{
+    this->pointer->setWidth(size);
+    this->pointer->setHeight(size);
+    this->updateUI();
 }
 
 View* Slider::create()

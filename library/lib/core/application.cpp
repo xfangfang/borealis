@@ -34,6 +34,7 @@
 #include <borealis/views/cells/cell_input.hpp>
 #include <borealis/views/cells/cell_radio.hpp>
 #include <borealis/views/cells/cell_selector.hpp>
+#include <borealis/views/cells/cell_slider.hpp>
 #include <borealis/views/h_scrolling_frame.hpp>
 #include <borealis/views/header.hpp>
 #include <borealis/views/hint.hpp>
@@ -1199,6 +1200,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:SelectorCell", SelectorCell::create);
     Application::registerXMLView("brls:InputCell", InputCell::create);
     Application::registerXMLView("brls:InputNumericCell", InputNumericCell::create);
+    Application::registerXMLView("brls:SliderCell", SliderCell::create);
 
     // Widgets
     Application::registerXMLView("brls:Account", AccountWidget::create);

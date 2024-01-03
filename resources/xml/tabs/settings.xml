@@ -51,7 +51,10 @@
 
             <brls:BooleanCell
                 id="fps"/>
-                
+
+            <brls:SliderCell
+                    id="slider"/>
+
             <brls:RadioCell/>
             <brls:RadioCell/>
 
