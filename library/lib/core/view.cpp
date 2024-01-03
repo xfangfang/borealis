@@ -1214,6 +1214,11 @@ GenericEvent* View::getFocusEvent()
     return &this->focusEvent;
 }
 
+GenericEvent* View::getFocusLostEvent()
+{
+    return &this->focusLostEvent;
+}
+
 void View::onFocusLost()
 {
     this->focused = false;
@@ -1223,6 +1228,8 @@ void View::onFocusLost()
     this->highlightAlpha.reset();
     this->highlightAlpha.addStep(0.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
     this->highlightAlpha.start();
+
+    this->focusLostEvent.fire(this);
 
     if (this->hasParent())
         this->getParent()->onChildFocusLost(this, this);

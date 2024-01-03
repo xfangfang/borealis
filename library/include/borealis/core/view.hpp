@@ -333,6 +333,7 @@ class View
     Box* parent              = nullptr;
 
     GenericEvent focusEvent;
+    GenericEvent focusLostEvent;
 
     YGNode* ygNode;
 
@@ -1450,6 +1451,7 @@ class View
     }
 
     GenericEvent* getFocusEvent();
+    GenericEvent* getFocusLostEvent();
 
     Animatable alpha = 1.0f;
 
