@@ -103,7 +103,7 @@ class Image : public View
      * See Image class documentation for the list of supported
      * image formats.
      */
-    void setImageFromMem(unsigned char* data, int size);
+    void setImageFromMem(const unsigned char* data, int size);
 
     virtual void innerSetImage(int texture);
 
