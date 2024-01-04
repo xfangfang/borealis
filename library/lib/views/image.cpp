@@ -337,12 +337,12 @@ void Image::setImageFromFile(const std::string& path)
     TextureCache::instance().addCache(path, tex);
 }
 
-void Image::setImageFromMem(unsigned char* data, int size)
+void Image::setImageFromMem(const unsigned char* data, int size)
 {
     NVGcontext* vg = Application::getNVGContext();
 
     // Load texture
-    innerSetImage(nvgCreateImageMem(vg, 0, data, size));
+    innerSetImage(nvgCreateImageMem(vg, 0, const_cast<unsigned char*>(data), size));
 }
 
 void Image::setImageAsync(std::function<void(std::function<void(const std::string&, size_t length)>)> cb)
