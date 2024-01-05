@@ -117,7 +117,7 @@ static YGSize labelMeasureFunc(YGNodeRef node, float width, YGMeasureMode widthM
 
     // Measure the needed width for the fullText
     nvgTextBounds(vg, 0, 0, fullText.c_str(), nullptr, bounds);
-    float requiredWidth = bounds[2] - bounds[0];
+    float requiredWidth = bounds[2] - bounds[0] - 0.01f;
     label->setRequiredWidth(requiredWidth);
 
     // XXX: This is an approximation since the given width here may not match the actual final width of the view
