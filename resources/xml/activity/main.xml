@@ -15,6 +15,10 @@
             <brls:View xml="@res/xml/tabs/layout.xml" />
         </brls:Tab>
 
+        <brls:Tab label="@i18n/demo/tabs/transform" >
+            <TransformTab />
+        </brls:Tab>
+
         <brls:Separator />
 
         <brls:Tab label="@i18n/demo/tabs/scroll" >

@@ -25,6 +25,7 @@
 
 #include "captioned_image.hpp"
 #include "components_tab.hpp"
+#include "transform_tab.hpp"
 #include "main_activity.hpp"
 #include "pokemon_view.hpp"
 #include "recycling_list_tab.hpp"
@@ -64,6 +65,8 @@ int main(int argc, char* argv[])
     brls::Application::registerXMLView("CaptionedImage", CaptionedImage::create);
     brls::Application::registerXMLView("RecyclingListTab", RecyclingListTab::create);
     brls::Application::registerXMLView("ComponentsTab", ComponentsTab::create);
+    brls::Application::registerXMLView("TransformTab", TransformTab::create);
+    brls::Application::registerXMLView("TransformBox", TransformBox::create);
     brls::Application::registerXMLView("PokemonView", PokemonView::create);
     brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
 

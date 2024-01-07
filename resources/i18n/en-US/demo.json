@@ -3,6 +3,7 @@
 
     "tabs": {
         "components": "Basic components",
+        "transform": "Transform test",
         "scroll": "Scroll test",
         "layout": "Layout and alignment",
         "pokedex": "Pokedex",
