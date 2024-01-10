@@ -91,6 +91,12 @@
 
 #define ASYNC_TOKEN this, token, tokenCounter
 
+// Avoid conflicts with macro definitions in windows.h
+#undef RGB
+#undef TRANSPARENT
+#undef RELATIVE
+#undef ABSOLUTE
+
 namespace brls
 {
 
