@@ -70,6 +70,8 @@ SwitchVideoContext::SwitchVideoContext()
     // Create renderer and nvg context
     this->renderer.emplace(this->framebufferWidth, this->framebufferHeight, this->device, this->queue, *this->imagesPool, *this->codePool, *this->dataPool);
     this->nvgContext = nvgCreateDk(&*this->renderer, NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+
+    Application::setWindowSize(this->framebufferWidth, this->framebufferHeight);
 }
 
 void SwitchVideoContext::createFramebufferResources()
