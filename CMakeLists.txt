@@ -41,6 +41,8 @@ endif ()
 
 add_subdirectory(library)
 
+find_package(Threads REQUIRED)
+list(APPEND APP_PLATFORM_LIB ${CMAKE_THREAD_LIBS_INIT})
 
 # setting src and include
 file(GLOB_RECURSE MAIN_SRC demo/*.cpp)
@@ -54,7 +56,7 @@ if (PLATFORM_DESKTOP)
         list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/borealis.icns)
     endif ()
 elseif (PLATFORM_SWITCH)
-    set(PLATFORM_LIBS
+    set(APP_PLATFORM_LIB
         # needed by borealis
         glfw3 EGL glapi drm_nouveau
         # base lib
