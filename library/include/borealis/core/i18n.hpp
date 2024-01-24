@@ -84,6 +84,7 @@ std::string getStr(std::string stringName, Args&&... args)
  * Must be called before trying to get a translation!
  */
 void loadTranslations();
+void loadTranslations(const std::string& locale);
 
 inline namespace literals
 {
