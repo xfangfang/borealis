@@ -19,6 +19,7 @@
 #include <borealis/core/thread.hpp>
 #include <borealis/platforms/sdl/sdl_video.hpp>
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 #ifdef BOREALIS_USE_OPENGL

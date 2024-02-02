@@ -22,8 +22,11 @@
 #include <borealis/platforms/desktop/desktop_ime.hpp>
 #if defined(__linux__) and not defined(ANDROID)
 #include <dbus/dbus.h>
-#elif IOS
-#elif __APPLE__
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#elif defined(IOS)
+#elif defined(__APPLE__)
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #endif
 
@@ -75,8 +78,10 @@ class DesktopPlatform : public Platform
     bool screenDimmingDisabled = false;
 #ifdef __linux__
     uint32_t inhibitCookie = 0;
-#elif IOS
-#elif __APPLE__
+#elif defined(_WIN32)
+    HANDLE hLCD;
+#elif defined(IOS)
+#elif defined(__APPLE__)
     IOPMAssertionID assertionID = 0;
 #endif
 };

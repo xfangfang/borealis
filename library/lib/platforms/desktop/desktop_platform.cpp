@@ -31,6 +31,9 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <wlanapi.h>
+#include <shellapi.h>
+#include <winioctl.h>
+#include <Ntddvdeo.h>
 #elif IOS
 #elif __APPLE__
 #include <IOKit/ps/IOPSKeys.h>
@@ -439,6 +442,11 @@ DesktopPlatform::DesktopPlatform()
         brls::Logger::info("Set app locale: {}", this->locale);
     }
 
+#if defined(__WINRT__)
+#elif defined(_WIN32)
+    this->hLCD = ::CreateFileA("\\\\.\\LCD", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+#endif
+
     // Platform impls
     this->fontLoader = new DesktopFontLoader();
     this->imeManager = new DesktopImeManager();
@@ -650,16 +658,54 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 
 void DesktopPlatform::setBacklightBrightness(float brightness)
 {
+#if defined(__WINRT__)
+#elif defined(_WIN32)
+    DISPLAY_BRIGHTNESS db = {
+        .ucDisplayPolicy = DISPLAYPOLICY_BOTH,
+        .ucACBrightness = (UCHAR)std::floor(brightness * 100),
+        .ucDCBrightness = (UCHAR)std::floor(brightness * 100),
+    };
+    DeviceIoControl(this->hLCD, IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS,
+        &db, sizeof(db), NULL, 0, NULL, NULL);
+#else
     (void)brightness;
+#endif
+    
 }
 
 float DesktopPlatform::getBacklightBrightness()
 {
+#if defined(__WINRT__)
+#elif defined(_WIN32)
+    DISPLAY_BRIGHTNESS db;
+    DeviceIoControl(this->hLCD, IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS,
+        NULL, 0, &db, sizeof(db), NULL, NULL);
+    return db.ucACBrightness / 100.0f;
+#else
     return 0.0f;
+#endif
 }
 
 bool DesktopPlatform::canSetBacklightBrightness()
 {
+#if defined(__WINRT__)
+#elif defined(_WIN32)
+    UCHAR abLevels[256];
+    DWORD bytesReturned = 0;
+    DeviceIoControl(
+        this->hLCD,
+        IOCTL_VIDEO_QUERY_SUPPORTED_BRIGHTNESS,
+        NULL,
+        0,
+        abLevels,
+        sizeof(abLevels),
+        &bytesReturned,
+        NULL);
+
+    for (DWORD i = 0; i < bytesReturned; i++) {
+        if (abLevels[i]) return true;
+    }
+#endif
     return false;
 }
 
@@ -910,6 +956,11 @@ std::string DesktopPlatform::getLocale()
 
 DesktopPlatform::~DesktopPlatform()
 {
+#if defined(__WINRT__)
+#elif defined(_WIN32)
+    if (this->hLCD) ::CloseHandle(this->hLCD);
+#endif
+
     delete this->fontLoader;
     delete this->imeManager;
 }
