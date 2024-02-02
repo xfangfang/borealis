@@ -61,6 +61,9 @@ class SwitchPlatform : public Platform
     int getWirelessLevel() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
     bool isScreenDimmingDisabled() override;
+    void setBacklightBrightness(float brightness) override;
+    float getBacklightBrightness() override;
+    bool canSetBacklightBrightness() override;
     std::string getIpAddress() override;
     std::string getDnsServer() override;
     bool isApplicationMode() override;

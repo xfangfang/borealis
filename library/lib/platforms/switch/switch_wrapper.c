@@ -53,21 +53,24 @@ void userAppInit()
     setInitialize();
     psmInitialize();
     nifmInitialize(NifmServiceType_User);
+    lblInitialize();
 }
 
 void userAppExit()
 {
     printf("userAppExit\n");
 
-    // 网络状态
+    // backlight
+    lblExit();
+    // network state
     nifmExit();
-    // 电源状态
+    // power state
     psmExit();
-    // 设置（比如当前语言）
+    // system language...
     setExit();
-    // 系统设置（比如系统当前语言）
+    // system theme, system version...
     setsysExit();
-    // 系统字体
+    // system font
     plExit();
 
     romfsExit();

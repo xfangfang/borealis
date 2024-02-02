@@ -179,6 +179,25 @@ bool SwitchPlatform::isScreenDimmingDisabled()
     return false;
 }
 
+void SwitchPlatform::setBacklightBrightness(float brightness)
+{
+    if (brightness < 0) brightness = 0.0f;
+    if (brightness > 1) brightness = 1.0f;
+    lblSetCurrentBrightnessSetting(brightness);
+}
+
+float SwitchPlatform::getBacklightBrightness()
+{
+    float brightness = 0.0f;
+    lblGetCurrentBrightnessSetting(&brightness);
+    return brightness;
+}
+
+bool SwitchPlatform::canSetBacklightBrightness()
+{
+    return true;
+}
+
 std::string SwitchPlatform::getIpAddress()
 {
     u32 ip;

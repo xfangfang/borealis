@@ -144,6 +144,24 @@ class Platform
     virtual bool isScreenDimmingDisabled() = 0;
 
     /**
+     * Set the backlight brightness
+     *
+     * @param brightness 0.0 to 1.0
+     */
+    virtual void setBacklightBrightness(float brightness) = 0;
+
+    /**
+     * Get the backlight brightness
+     * @return 0.0 to 1.0
+     */
+    virtual float getBacklightBrightness() = 0;
+
+    /**
+     * Returns true if the platform can set/get the backlight brightness
+     */
+    virtual bool canSetBacklightBrightness() = 0;
+
+    /**
      * Called at every iteration of the main loop.
      * Must return false if the app should continue running
      * (for example, return false if the X button was pressed on the window).

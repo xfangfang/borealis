@@ -648,6 +648,21 @@ bool DesktopPlatform::isScreenDimmingDisabled()
     return this->screenDimmingDisabled;
 }
 
+void DesktopPlatform::setBacklightBrightness(float brightness)
+{
+    (void)brightness;
+}
+
+float DesktopPlatform::getBacklightBrightness()
+{
+    return 0.0f;
+}
+
+bool DesktopPlatform::canSetBacklightBrightness()
+{
+    return false;
+}
+
 std::string DesktopPlatform::getIpAddress()
 {
     std::string ipaddr = "-";
