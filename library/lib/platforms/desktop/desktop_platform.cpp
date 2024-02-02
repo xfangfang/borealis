@@ -659,6 +659,7 @@ bool DesktopPlatform::isScreenDimmingDisabled()
 void DesktopPlatform::setBacklightBrightness(float brightness)
 {
 #if defined(__WINRT__)
+    (void)brightness;
 #elif defined(_WIN32)
     DISPLAY_BRIGHTNESS db = {
         .ucDisplayPolicy = DISPLAYPOLICY_BOTH,
@@ -676,6 +677,7 @@ void DesktopPlatform::setBacklightBrightness(float brightness)
 float DesktopPlatform::getBacklightBrightness()
 {
 #if defined(__WINRT__)
+    return 0.0f;
 #elif defined(_WIN32)
     DISPLAY_BRIGHTNESS db;
     DeviceIoControl(this->hLCD, IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS,

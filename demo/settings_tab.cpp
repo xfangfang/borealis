@@ -38,7 +38,7 @@ SettingsTab::SettingsTab()
     debug->init("Debug Layer", brls::Application::isDebuggingViewEnabled(), [](bool value){
         brls::Application::enableDebuggingView(value);
         brls::sync([value](){
-            brls::Logger::info((value ? "Open" : "Close") + std::string{" the debug layer"});
+            brls::Logger::info("{} the debug layer", value ? "Open" : "Close");
         });
     });
 
