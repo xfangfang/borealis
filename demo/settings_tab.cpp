@@ -86,10 +86,12 @@ SettingsTab::SettingsTab()
         return true;
     }, false, false, brls::SOUND_CLICK);
 
-    slider->setDetailText("0.50");
-    slider->init("slider", 0.5, [this](float value){
+    float brightness = brls::Application::getPlatform()->getBacklightBrightness();
+    slider->init("Brightness", brightness, [this](float value){
+        brls::Application::getPlatform()->setBacklightBrightness(value);
         slider->setDetailText(fmt::format("{:.2f}", value));
     });
+    slider->setDetailText(fmt::format("{:.2f}", brightness));
 }
 
 brls::View* SettingsTab::create()
