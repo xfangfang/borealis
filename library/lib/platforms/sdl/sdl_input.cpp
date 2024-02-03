@@ -339,6 +339,8 @@ void SDLInputManager::updateMouseStates(RawMouseState* state)
 
 void SDLInputManager::setPointerLock(bool lock)
 {
+    pointerLocked = lock;
+    SDL_ShowCursor(lock ? SDL_FALSE : SDL_TRUE);
 }
 
 void SDLInputManager::runloopStart()
@@ -355,6 +357,18 @@ void SDLInputManager::sendRumble(unsigned short controller, unsigned short lowFr
     SDL_GameController* c = controllers[controller];
 
     SDL_GameControllerRumble(c, lowFreqMotor, highFreqMotor, 30000);
+}
+
+void SDLInputManager::updateMouseMotion(SDL_MouseMotionEvent event)
+{
+    if (pointerLocked && SDL_ShowCursor(SDL_QUERY) == SDL_DISABLE)
+    {
+        getMouseCusorOffsetChanged()->fire(Point(float(event.xrel), float(event.yrel)));
+
+        int width, height;
+        SDL_GetWindowSize(window, &width, &height);
+        SDL_WarpMouseInWindow(window, width/2, height/2);
+    }
 }
 
 void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
