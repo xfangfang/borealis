@@ -913,16 +913,14 @@ void DesktopPlatform::forceEnableGamePlayRecording()
 void DesktopPlatform::openBrowser(std::string url)
 {
     brls::Logger::debug("open url: {}", url);
-#if defined(IOS)
+#if __SDL2__
+    SDL_OpenURL(url.c_str());
 #elif __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
-#elif ANDROID
 #elif __linux__
     std::string cmd = "xdg-open \"" + url + "\"";
     system(cmd.c_str());
-#elif __SDL2__
-    SDL_OpenURL(url.c_str());
 #elif defined(_WIN32) and !defined(__WINRT__)
     shell_open(url.c_str());
 #endif
