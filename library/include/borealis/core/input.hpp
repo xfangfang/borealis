@@ -218,10 +218,11 @@ enum ControllerAxis
     LEFT_X,
     LEFT_Y,
 
-    // No Z axis, LT and RT are in the buttons enum for the sake of simplicity
-
     RIGHT_X, // also called 5th axis
     RIGHT_Y, // also called 4th axis
+
+    LEFT_Z, // LT
+    RIGHT_Z, // RT
 
     _AXES_MAX,
 };

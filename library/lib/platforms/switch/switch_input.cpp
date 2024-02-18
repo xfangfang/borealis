@@ -227,6 +227,9 @@ void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadS
         state->axes[RIGHT_Y] = 0;
     }
 
+    state->axes[LEFT_Z] = 0;  // SWITCH NOT SUPPORT ZL AXIS
+    state->axes[RIGHT_Z] = 0; // SWITCH NOT SUPPORT ZR AXIS
+
     state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
     state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
     state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);

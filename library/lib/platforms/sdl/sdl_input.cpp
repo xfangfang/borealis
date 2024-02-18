@@ -24,7 +24,7 @@ namespace brls
 
 #define SDL_GAMEPAD_BUTTON_NONE SIZE_MAX
 #define SDL_GAMEPAD_BUTTON_MAX 15
-#define SDL_GAMEPAD_AXIS_MAX 4
+#define SDL_GAMEPAD_AXIS_MAX 6
 #define SDL_STICKY 2
 
 // LT and RT do not exist here because they are axes
@@ -71,6 +71,8 @@ static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
     LEFT_Y,
     RIGHT_X,
     RIGHT_Y,
+    LEFT_Z,
+    RIGHT_Z,
 };
 
 std::unordered_map<SDL_JoystickID, SDL_GameController*> controllers;

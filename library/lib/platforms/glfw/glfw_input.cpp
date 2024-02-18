@@ -29,7 +29,7 @@ namespace brls
 
 #define GLFW_GAMEPAD_BUTTON_NONE SIZE_MAX
 #define GLFW_GAMEPAD_BUTTON_MAX 15
-#define GLFW_GAMEPAD_AXIS_MAX 4
+#define GLFW_GAMEPAD_AXIS_MAX 6
 
 // LT and RT do not exist here because they are axes
 static const size_t GLFW_BUTTONS_MAPPING[GLFW_GAMEPAD_BUTTON_MAX] = {
@@ -73,6 +73,8 @@ static const size_t GLFW_AXIS_MAPPING[GLFW_GAMEPAD_AXIS_MAX] = {
     LEFT_Y,
     RIGHT_X,
     RIGHT_Y,
+    LEFT_Z,
+    RIGHT_Z,
 };
 
 static short controllersCount = 0;
