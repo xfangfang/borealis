@@ -64,7 +64,7 @@ static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
 };
 
-static std::unordered_map<SDL_Scancode, int> keyboardKeys{};
+static std::unordered_map<SDL_Scancode, int> keyboardKeys {};
 
 static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
     LEFT_X,
@@ -132,7 +132,7 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
         if (event->button.button <= 3)
             mouseButtons[event->button.button - 1] = SDL_STICKY;
     }
-    else if (event->type == SDL_KEYDOWN)
+    else if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP)
     {
         switch (event->key.keysym.scancode)
         {
@@ -140,21 +140,21 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             case SDL_SCANCODE_RETURN:
             case SDL_SCANCODE_MENU:
             case SDL_SCANCODE_AC_BACK:
-                keyboardKeys[event->key.keysym.scancode] = SDL_PRESSED;
-                break;
-            default:
-                break;
-        }
-    }
-    else if (event->type == SDL_KEYUP)
-    {
-        switch (event->key.keysym.scancode)
-        {
-            case SDL_SCANCODE_ESCAPE:
-            case SDL_SCANCODE_RETURN:
-            case SDL_SCANCODE_MENU:
-            case SDL_SCANCODE_AC_BACK:
-                keyboardKeys[event->key.keysym.scancode] = SDL_STICKY;
+            case SDL_SCANCODE_BACKSPACE:
+            case SDL_SCANCODE_X:
+            case SDL_SCANCODE_Y:
+            case SDL_SCANCODE_F1:
+            case SDL_SCANCODE_UNKNOWN:
+            case SDL_SCANCODE_F2:
+            case SDL_SCANCODE_Q:
+            case SDL_SCANCODE_P:
+            case SDL_SCANCODE_L:
+            case SDL_SCANCODE_R:
+            case SDL_SCANCODE_UP:
+            case SDL_SCANCODE_DOWN:
+            case SDL_SCANCODE_LEFT:
+            case SDL_SCANCODE_RIGHT:
+                keyboardKeys[event->key.keysym.scancode] = event->type == SDL_KEYDOWN ? SDL_PRESSED : SDL_STICKY;
                 break;
             default:
                 break;
@@ -241,14 +241,17 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    const Uint8* keyboard = SDL_GetKeyboardState(nullptr);
     for (size_t i = 0; i < SDL_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
         size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
         if (key != SDL_SCANCODE_UNKNOWN)
-            state->buttons[brlsButton] |= keyboard[key] != 0;
+            state->buttons[brlsButton] |= getKeyboardKeys((SDL_Scancode)key);
     }
+    // Android tv remote control
+    state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
+    state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
+
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
     state->buttons[BUTTON_NAV_DOWN] |= state->buttons[BUTTON_DOWN];
@@ -268,9 +271,6 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
         state->buttons[brlsButton] = (bool)SDL_GameControllerGetButton(c, (SDL_GameControllerButton)i);
     }
 
-    state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
-    state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
-
     state->buttons[BUTTON_LT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 3276.7f;
     state->buttons[BUTTON_RT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 3276.7f;
 
@@ -287,7 +287,8 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
 
 bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    switch(key){
+    switch (key)
+    {
         case BRLS_KBD_KEY_ESCAPE:
             return getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         case BRLS_KBD_KEY_ENTER:
