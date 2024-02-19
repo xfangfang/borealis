@@ -256,9 +256,9 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
 
     // pc shortcuts
-    state->buttons[BUTTON_SPACE] |= getKeyboardKeys(SDL_SCANCODE_SPACE);
-    state->buttons[BUTTON_BACKSPACE] |= getKeyboardKeys(SDL_SCANCODE_BACKSPACE);
-    state->buttons[BUTTON_F] |= getKeyboardKeys(SDL_SCANCODE_F);
+    state->buttons[BUTTON_SPACE] = getKeyboardKeys(SDL_SCANCODE_SPACE);
+    state->buttons[BUTTON_BACKSPACE] = getKeyboardKeys(SDL_SCANCODE_BACKSPACE);
+    state->buttons[BUTTON_F] = getKeyboardKeys(SDL_SCANCODE_F);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
