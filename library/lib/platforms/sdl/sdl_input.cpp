@@ -136,6 +136,8 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             keyboardKeys[0] = SDL_PRESSED;
         else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
             keyboardKeys[1] = SDL_PRESSED;
+        else if (event->key.keysym.scancode == SDL_SCANCODE_MENU)
+            keyboardKeys[2] = SDL_PRESSED;
     }
     else if (event->type == SDL_KEYUP)
     {
@@ -143,6 +145,8 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             keyboardKeys[0] = SDL_STICKY;
         else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
             keyboardKeys[1] = SDL_STICKY;
+        else if (event->key.keysym.scancode == SDL_SCANCODE_MENU)
+            keyboardKeys[2] = SDL_STICKY;
     }
     Application::setActiveEvent(true);
     return 0;
@@ -252,6 +256,8 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
         state->buttons[brlsButton] = (bool)SDL_GameControllerGetButton(c, (SDL_GameControllerButton)i);
     }
 
+    state->buttons[BUTTON_X] |= getKeyboardKeyState(BRLS_KBD_KEY_MENU);
+
     state->buttons[BUTTON_LT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 3276.7f;
     state->buttons[BUTTON_RT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 3276.7f;
 
@@ -268,14 +274,15 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
 
 bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    // todo: 完整映射
-    if (key == BRLS_KBD_KEY_ESCAPE)
-    {
-        return getKeyboardKeys(0);
-    }
-    if (key == BRLS_KBD_KEY_ENTER)
-    {
-        return getKeyboardKeys(1);
+    switch(key){
+        case BRLS_KBD_KEY_ESCAPE:
+            return getKeyboardKeys(0);
+        case BRLS_KBD_KEY_ENTER:
+            return getKeyboardKeys(1);
+        case BRLS_KBD_KEY_MENU:
+            return getKeyboardKeys(2);
+        default:
+            return false;
     }
     return false;
 }

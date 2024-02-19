@@ -163,7 +163,7 @@ elseif(PLATFORM_ANDROID)
             ${BOREALIS_PATH}/lib/platforms/desktop
             ${BOREALIS_PATH}/lib/platforms/android)
     list(APPEND BRLS_PLATFORM_LIBS SDL2 SDL2main)
-    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DANDROID -DUSE_GLES2)
+    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DANDROID)
 elseif(PLATFORM_IOS)
     set(BUILD_SHARED_LIBS OFF)
     add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL)
@@ -172,7 +172,7 @@ elseif(PLATFORM_IOS)
             ${BOREALIS_PATH}/lib/platforms/sdl
             ${BOREALIS_PATH}/lib/platforms/desktop)
     list(APPEND BRLS_PLATFORM_LIBS SDL2-static SDL2main)
-    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS -DUSE_GLES3)
+    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS)
 elseif(PLATFORM_SWITCH)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/archive
