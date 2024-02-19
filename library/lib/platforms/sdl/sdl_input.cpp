@@ -64,7 +64,7 @@ static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
 };
 
-static int keyboardKeys[16] = {0};
+static std::unordered_map<SDL_Scancode, int> keyboardKeys{};
 
 static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
     LEFT_X,
@@ -90,16 +90,18 @@ static inline int getMouseButtonState(int buttonIndex)
     }
 }
 
-static inline int getKeyboardKeys(int index)
+static inline int getKeyboardKeys(SDL_Scancode code)
 {
-    if (keyboardKeys[index] == SDL_STICKY)
+    if (keyboardKeys.find(code) == keyboardKeys.end())
+        return SDL_RELEASED;
+    if (keyboardKeys[code] == SDL_STICKY)
     {
-        keyboardKeys[index] = SDL_RELEASED;
+        keyboardKeys[code] = SDL_RELEASED;
         return SDL_PRESSED;
     }
     else
     {
-        return keyboardKeys[index];
+        return keyboardKeys[code];
     }
 }
 
@@ -132,21 +134,31 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
     }
     else if (event->type == SDL_KEYDOWN)
     {
-        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            keyboardKeys[0] = SDL_PRESSED;
-        else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
-            keyboardKeys[1] = SDL_PRESSED;
-        else if (event->key.keysym.scancode == SDL_SCANCODE_MENU)
-            keyboardKeys[2] = SDL_PRESSED;
+        switch (event->key.keysym.scancode)
+        {
+            case SDL_SCANCODE_ESCAPE:
+            case SDL_SCANCODE_RETURN:
+            case SDL_SCANCODE_MENU:
+            case SDL_SCANCODE_AC_BACK:
+                keyboardKeys[event->key.keysym.scancode] = SDL_PRESSED;
+                break;
+            default:
+                break;
+        }
     }
     else if (event->type == SDL_KEYUP)
     {
-        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            keyboardKeys[0] = SDL_STICKY;
-        else if (event->key.keysym.scancode == SDL_SCANCODE_RETURN)
-            keyboardKeys[1] = SDL_STICKY;
-        else if (event->key.keysym.scancode == SDL_SCANCODE_MENU)
-            keyboardKeys[2] = SDL_STICKY;
+        switch (event->key.keysym.scancode)
+        {
+            case SDL_SCANCODE_ESCAPE:
+            case SDL_SCANCODE_RETURN:
+            case SDL_SCANCODE_MENU:
+            case SDL_SCANCODE_AC_BACK:
+                keyboardKeys[event->key.keysym.scancode] = SDL_STICKY;
+                break;
+            default:
+                break;
+        }
     }
     Application::setActiveEvent(true);
     return 0;
@@ -256,7 +268,8 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
         state->buttons[brlsButton] = (bool)SDL_GameControllerGetButton(c, (SDL_GameControllerButton)i);
     }
 
-    state->buttons[BUTTON_X] |= getKeyboardKeyState(BRLS_KBD_KEY_MENU);
+    state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
+    state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
 
     state->buttons[BUTTON_LT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 3276.7f;
     state->buttons[BUTTON_RT] = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 3276.7f;
@@ -276,11 +289,9 @@ bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
     switch(key){
         case BRLS_KBD_KEY_ESCAPE:
-            return getKeyboardKeys(0);
+            return getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         case BRLS_KBD_KEY_ENTER:
-            return getKeyboardKeys(1);
-        case BRLS_KBD_KEY_MENU:
-            return getKeyboardKeys(2);
+            return getKeyboardKeys(SDL_SCANCODE_RETURN);
         default:
             return false;
     }
