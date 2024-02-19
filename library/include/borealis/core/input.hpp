@@ -205,6 +205,10 @@ enum ControllerButton
     BUTTON_NAV_DOWN,
     BUTTON_NAV_LEFT,
 
+    BUTTON_SPACE,
+    BUTTON_F,
+    BUTTON_BACKSPACE,
+
     _BUTTON_MAX,
 };
 

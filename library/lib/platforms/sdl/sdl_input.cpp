@@ -48,7 +48,7 @@ static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
 
 static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RETURN, // SDL_CONTROLLER_BUTTON_A
-    SDL_SCANCODE_BACKSPACE, // SDL_CONTROLLER_BUTTON_B
+    SDL_SCANCODE_RCTRL, // SDL_CONTROLLER_BUTTON_B
     SDL_SCANCODE_X, // SDL_CONTROLLER_BUTTON_X
     SDL_SCANCODE_Y, // SDL_CONTROLLER_BUTTON_Y
     SDL_SCANCODE_F1, // SDL_CONTROLLER_BUTTON_BACK
@@ -137,6 +137,7 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
         switch (event->key.keysym.scancode)
         {
             case SDL_SCANCODE_ESCAPE:
+            case SDL_SCANCODE_RCTRL:
             case SDL_SCANCODE_RETURN:
             case SDL_SCANCODE_MENU:
             case SDL_SCANCODE_AC_BACK:
@@ -154,6 +155,8 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             case SDL_SCANCODE_DOWN:
             case SDL_SCANCODE_LEFT:
             case SDL_SCANCODE_RIGHT:
+            case SDL_SCANCODE_SPACE:
+            case SDL_SCANCODE_F:
                 keyboardKeys[event->key.keysym.scancode] = event->type == SDL_KEYDOWN ? SDL_PRESSED : SDL_STICKY;
                 break;
             default:
@@ -251,6 +254,11 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     // Android tv remote control
     state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
     state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
+
+    // pc shortcuts
+    state->buttons[BUTTON_SPACE] |= getKeyboardKeys(SDL_SCANCODE_SPACE);
+    state->buttons[BUTTON_BACKSPACE] |= getKeyboardKeys(SDL_SCANCODE_BACKSPACE);
+    state->buttons[BUTTON_F] |= getKeyboardKeys(SDL_SCANCODE_F);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];

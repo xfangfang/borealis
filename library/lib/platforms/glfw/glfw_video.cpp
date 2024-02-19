@@ -240,7 +240,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #endif
 
 // create window
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__linux__) || defined(_WIN32) || defined(__APPLE__)
     if (VideoContext::FULLSCREEN)
     {
         glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
@@ -552,6 +552,9 @@ void GLFWVideoContext::fullScreen(bool fs)
     else
     {
         GLFWmonitor* monitor    = glfwGetWindowMonitor(this->window);
+        // already in windowed mode
+        if (monitor == nullptr)
+            return;
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         int monitorX, monitorY;
         glfwGetMonitorPos(monitor, &monitorX, &monitorY);

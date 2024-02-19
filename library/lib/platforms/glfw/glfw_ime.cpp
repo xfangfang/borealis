@@ -132,7 +132,8 @@ void GLFWImeManager::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
     if (!showIME)
         return;
-    if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
+    if (cursor < 0 || cursor > textBuffer.size())
+        cursor = textBuffer.size();
     textBuffer.insert(textBuffer.begin() + cursor, (wchar_t)codepoint);
     cursor++;
 }
@@ -153,8 +154,8 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
 {
     preeditTextBuffer.clear();
     glfwSetInputMode(window, GLFW_IME, GLFW_TRUE);
-    showIME                = true;
-    textBuffer             = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(initialText);
+    showIME     = true;
+    textBuffer  = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(initialText);
     auto dialog = new EditTextDialog();
     dialog->setText(initialText);
     cursor = -1;
@@ -202,8 +203,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
             } });
 
     // delete text
-    dialog->registerAction(
-        "hints/delete"_i18n, BUTTON_B, [dialog](...)
+    dialog->getBackspaceEvent()->subscribe([dialog](...)
         {
             if(textBuffer.empty()) return true;
             if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
@@ -212,8 +212,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
                 cursor--;
                 dialog->setCursor(cursor);
             }
-            return true; },
-        true, true);
+            return true; });
 
     dialog->registerAction(
         "hints/left"_i18n, BUTTON_LEFT, [dialog](...)

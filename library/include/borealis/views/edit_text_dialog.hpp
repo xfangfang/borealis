@@ -17,6 +17,7 @@ class EditTextDialog : public Box
     bool isTranslucent() override;
     void onLayout() override;
     Event<Point>* getLayoutEvent();
+    Event<>* getBackspaceEvent();
     Event<>* getCancelEvent();
     Event<>* getSubmitEvent();
     void updateUI();
@@ -24,7 +25,7 @@ class EditTextDialog : public Box
     std::string content;
     std::string hint;
     Event<Point> layoutEvent;
-    Event<> cancelEvent, summitEvent;
+    Event<> backspaceEvent, cancelEvent, summitEvent;
     bool init = false;
 
     BRLS_BIND(brls::Label, header, "brls/dialog/header");

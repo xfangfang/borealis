@@ -70,29 +70,37 @@ namespace brls
 
         // submit text
         this->registerAction(
-            "hints/submit"_i18n, BUTTON_START, [this](...)
+            "hints/ok"_i18n, BUTTON_A, [this](...)
             {
                 Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->summitEvent.fire();
                     });
                 return true; });
         this->registerAction(
-            "hints/ok"_i18n, BUTTON_A, [this](...)
+            "hints/ok"_i18n, BUTTON_START, [this](...)
             {
                 Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->summitEvent.fire();
-                });
-                return true; },
-            true);
+                    });
+                return true; }, true);
+
+        // backspace
+        this->registerAction("hints/delete"_i18n, BUTTON_BACKSPACE, [this](...)
+            {
+                this->backspaceEvent.fire();
+                return true; }, true, true);
+        this->registerAction("hints/delete"_i18n, BUTTON_BACK, [this](...)
+            {
+                this->backspaceEvent.fire();
+                return true; }, true, true);
 
         // cancel input
         this->registerAction(
-            "hints/back"_i18n, BUTTON_BACK, [this](...)
+            "hints/back"_i18n, BUTTON_B, [this](...)
             {
                 Application::popActivity(TransitionAnimation::FADE, [this](){
                         this->cancelEvent.fire();
                     });
-
                 return true; });
 
         this->init = true;
@@ -148,6 +156,11 @@ namespace brls
     Event<Point>* EditTextDialog::getLayoutEvent()
     {
         return &this->layoutEvent;
+    }
+
+    Event<>* EditTextDialog::getBackspaceEvent()
+    {
+        return &this->backspaceEvent;
     }
 
     Event<>* EditTextDialog::getCancelEvent()

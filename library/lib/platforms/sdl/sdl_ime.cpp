@@ -179,11 +179,9 @@ namespace brls
         );
 
         // delete text
-        dialog->registerAction("hints/delete"_i18n, BUTTON_B, [this, updateText, updateTextCursor](...) {
+        dialog->getBackspaceEvent()->subscribe([this, updateText, updateTextCursor](...) {
             if(inputBuffer.empty()) return true;
-            if (this->cursor == (int)CursorPosition::START) {
-                return true;
-            }
+            if (this->cursor == (int)CursorPosition::START) return true;
             if (this->cursor > (int)CursorPosition::START) {
                 int start = utf8_find_next(inputBuffer, 0, this->cursor-1);
                 int n = utf8_find_next(inputBuffer, start, 1);
@@ -196,7 +194,7 @@ namespace brls
             }
             updateText();
             return true;
-        },true, true);
+        });
 
         // cancel
         dialog->getCancelEvent()->subscribe([this, eventID1]() {
