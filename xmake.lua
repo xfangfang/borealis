@@ -40,7 +40,6 @@ add_requires("yoga")
 add_requires("stb")
 add_requires("nanovg")
 add_requires("nlohmann_json")
-add_requires("glad")
 add_requires("fmt")
 add_requires("tweeny")
 
@@ -48,6 +47,10 @@ add_defines(
     'BRLS_RESOURCES="./resources/"',
     "YG_ENABLE_EVENTS"
 )
+
+if get_config("driver") == "opengl" then
+    add_requires("glad")
+end
 
 if get_config("window") == "sdl" then
     if get_config("winrt") then
