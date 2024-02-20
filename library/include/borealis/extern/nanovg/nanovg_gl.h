@@ -664,7 +664,7 @@ static int glnvg__renderCreate(void* uptr)
 		"		if (texType == 1) color = vec4(color.xyz*color.w,color.w);"
 		"		if (texType == 2) color = vec4(color.x);"
 #ifndef __PSV__
-		"		if (texType == 3 && color.a == 0.0) discard;"
+		"		if (texType == 3 && color.a == 1.0) discard;"
 #endif
 		"		// Apply color tint and alpha.\n"
 		"		color *= innerCol;\n"
@@ -1092,13 +1092,20 @@ static void glnvg__convexFill(GLNVGcontext* gl, GLNVGcall* call)
 static void glnvg__convexFillStencil(GLNVGcontext* gl, GLNVGcall* call)
 {
 	glEnable(GL_STENCIL_TEST);
-	glnvg__stencilFunc(gl, GL_EQUAL, 1, 0xFF);
-	glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+	glnvg__stencilFunc(gl, GL_ALWAYS, 1, 0xFF);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 	glnvg__convexFill(gl, call);
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	#ifdef PS4
+		// todo: update ps4 shader
+		// I'm currently unable to update the ps4 prebuilt shader, so just keep it as before
+		glnvg__stencilFunc(gl, GL_EQUAL, 1, 0xFF);
+	#else
+		glnvg__stencilFunc(gl, GL_EQUAL, 0, 0xFF);
+	#endif
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 

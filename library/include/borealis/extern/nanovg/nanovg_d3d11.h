@@ -1050,7 +1050,7 @@ static void D3Dnvg__convexFillStencil(struct D3DNVGcontext* D3D, struct D3DNVGca
 	D3Dnvg__convexFill(D3D, call);
 
 	D3D_API_3(D3D->pDeviceContext, OMSetBlendState, D3D->pBSBlend, NULL, 0xFFFFFFFF);
-	D3D_API_2(D3D->pDeviceContext, OMSetDepthStencilState, D3D->pDepthStencilDrawAA, 1);
+	D3D_API_2(D3D->pDeviceContext, OMSetDepthStencilState, D3D->pDepthStencilDrawAA, 0);
 }
 
 static void D3Dnvg__convexFillStencilClear(struct D3DNVGcontext* D3D, struct D3DNVGcall* call)

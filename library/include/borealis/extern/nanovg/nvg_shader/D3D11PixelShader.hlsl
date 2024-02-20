@@ -81,7 +81,7 @@ float4 D3D11PixelShader_Main(PS_INPUT input) : SV_TARGET
         float4 color = g_texture.Sample(g_sampler, pt);
         if (texType == 1) color = float4(color.xyz*color.w,color.w);
 		if (texType == 2) color = float4(color.x, color.x, color.x, color.x);
-        if (texType == 3 && color.w == 0.0) discard;
+        if (texType == 3 && color.w == 1.0) discard;
 		
         // Apply color tint and alpha.
         color *= innerCol;
