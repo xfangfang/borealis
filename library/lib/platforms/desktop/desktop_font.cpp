@@ -140,6 +140,7 @@ void DesktopFontLoader::loadFonts()
     bool loaded = false;
     if (USER_ICON_PATH.rfind("@res/", 0) == 0)
     {
+        // USER_ICON_PATH is inside the romfs
         try
         {
             auto& icon = romfs::get(USER_ICON_PATH.substr(5));
@@ -151,6 +152,9 @@ void DesktopFontLoader::loadFonts()
         catch (...)
         {
         }
+    } else if (access(USER_ICON_PATH.c_str(), F_OK) != -1) {
+        // USER_ICON_PATH is an external path
+        loaded = this->loadFontFromFile(FONT_SWITCH_ICONS, USER_ICON_PATH);
     }
 
     if (loaded)
