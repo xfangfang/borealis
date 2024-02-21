@@ -168,6 +168,8 @@ class Platform
      */
     virtual bool mainLoopIteration() = 0;
 
+    virtual bool runLoop(const std::function<bool()>& runLoopImpl) { return runLoopImpl(); }
+
     /**
      * Can be called at anytime to get the current system theme variant.
      *

@@ -132,8 +132,10 @@ int win32_wlan_quality()
 }
 #elif IOS
 extern ThemeVariant ios_theme();
+extern bool darwin_runloop(const std::function<bool()>& runLoopImpl);
 #elif __APPLE__
 extern int darwin_wlan_quality();
+extern bool darwin_runloop(const std::function<bool()>& runLoopImpl);
 
 /// @return low 7bit is current capacity
 int darwin_get_powerstate()
@@ -651,6 +653,14 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
         SetThreadExecutionState(ES_CONTINUOUS);
 #endif
     }
+}
+
+bool DesktopPlatform::runLoop(const std::function<bool()>& runLoopImpl) {
+#if __APPLE__
+    return darwin_runloop(runLoopImpl);
+#else
+    return runLoopImpl();
+#endif
 }
 
 bool DesktopPlatform::isScreenDimmingDisabled()

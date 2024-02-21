@@ -325,6 +325,7 @@ class Application
     inline static InputType inputType = InputType::GAMEPAD;
 
     inline static void processInput();
+    inline static bool internalMainLoop();
 
     inline static void updateFPS();
 
