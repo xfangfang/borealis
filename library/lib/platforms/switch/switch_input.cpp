@@ -606,6 +606,9 @@ BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
         case KBD_KP0:
             return BRLS_KBD_KEY_KP_0;
 
+        case KBD_102ND:
+            return BRLS_KBD_KEY_WORLD_1;
+
         // case KBD_HASHTILDE: return GLFW_HASHTILDE;
         default:
             return BRLS_KBD_KEY_UNKNOWN;
