@@ -40,4 +40,10 @@ int darwin_wlan_quality() {
     }
 }
 
+bool darwin_runloop(const std::function<bool()>& runLoopImpl) {
+    @autoreleasepool {
+        return runLoopImpl();
+    }
+}
+
 }

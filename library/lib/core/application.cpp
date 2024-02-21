@@ -159,6 +159,11 @@ void Application::createWindow(std::string windowTitle)
 
 bool Application::mainLoop()
 {
+    return Application::platform->runLoop(internalMainLoop);
+}
+
+bool Application::internalMainLoop()
+{
     Application::updateFPS();
     Application::frameStartTime = getCPUTimeUsec();
     Application::setActiveEvent(false);

@@ -55,6 +55,7 @@ class DesktopPlatform : public Platform
     int getWirelessLevel() override;
     bool hasEthernetConnection() override;
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
+    bool runLoop(const std::function<bool()>& runLoopImpl) override;
     bool isScreenDimmingDisabled() override;
     void setBacklightBrightness(float brightness) override;
     float getBacklightBrightness() override;

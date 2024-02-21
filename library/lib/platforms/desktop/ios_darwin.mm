@@ -10,4 +10,10 @@ ThemeVariant ios_theme() {
     else
         return ThemeVariant::LIGHT;
 }
+
+bool darwin_runloop(const std::function<bool()>& runLoopImpl) {
+    @autoreleasepool {
+        return runLoopImpl();
+    }
+}
 };
