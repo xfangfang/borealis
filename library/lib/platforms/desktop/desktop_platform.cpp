@@ -131,6 +131,7 @@ int win32_wlan_quality()
     return quality;
 }
 #elif IOS
+extern ThemeVariant ios_theme();
 #elif __APPLE__
 extern int darwin_wlan_quality();
 
@@ -388,6 +389,7 @@ DesktopPlatform::DesktopPlatform()
     if (themeEnv == nullptr)
     {
 #if defined(IOS)
+        this->themeVariant = ios_theme();
 #elif __APPLE__
         CFPropertyListRef propertyList = CFPreferencesCopyValue(
             CFSTR("AppleInterfaceStyle"),
