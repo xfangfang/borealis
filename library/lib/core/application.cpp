@@ -196,8 +196,9 @@ bool Application::mainLoop()
     // Trigger RunLoop subscribers
     runLoopEvent.fire();
 
-    // Free views deletion pool
-    std::set<View*> undeletedViews;
+    // Free views deletion pool.
+    // A view deletion might inserts other views to deletionPool
+    std::deque<View*> undeletedViews;
     for (auto view : Application::deletionPool)
     {
         if (!view->isPtrLocked())
@@ -206,7 +207,7 @@ bool Application::mainLoop()
         }
         else
         {
-            undeletedViews.insert(view);
+            undeletedViews.push_back(view);
             brls::Logger::verbose("Application: will delete view: {}", view->describe());
         }
     }
@@ -939,7 +940,12 @@ std::string Application::getLocale()
 void Application::addToFreeQueue(View* view)
 {
     brls::Logger::verbose("Application::addToFreeQueue {}", view->describe());
-    deletionPool.insert(view);
+    
+    for (brls::View* viewToDelete : Application::deletionPool)
+        if (viewToDelete == view)
+            return;
+
+    Application::deletionPool.push_back(view);
 }
 
 void Application::tryDeinitFirstResponder(View* view)
