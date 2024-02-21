@@ -35,6 +35,8 @@ class SDLInputManager : public InputManager
 
     void updateMouseWheel(SDL_MouseWheelEvent event);
 
+    void updateControllerSensorsUpdate(SDL_ControllerSensorEvent event);
+
   private:
     Point scrollOffset;
     Point pointerOffset;
