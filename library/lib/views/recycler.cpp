@@ -205,8 +205,8 @@ RecyclerFrame::RecyclerFrame()
 
 RecyclerFrame::~RecyclerFrame()
 {
-    //    if (this->dataSource)
-    //        delete dataSource;
+    if (this->dataSource)
+        delete dataSource;
 
     for (auto it : queueMap)
     {
