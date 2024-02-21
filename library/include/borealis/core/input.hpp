@@ -233,6 +233,21 @@ struct KeyState
     bool pressed;
 };
 
+enum class SensorEventType
+{
+    GYRO,
+    ACCEL
+};
+
+// Represents the state of the controller's sensor
+struct SensorEvent
+{
+    int controllerIndex;
+    SensorEventType type;
+    float data[3];
+    uint32_t timestamp;
+};
+
 // Represents the state of the controller (a gamepad or a keyboard) in the current frame
 struct ControllerState
 {
@@ -342,6 +357,10 @@ class InputManager
         return &mouseScrollOffsetChanged;
     }
 
+    inline Event<SensorEvent>* getControllerSensorStateChanged() {
+        return &controllerSensorStateChanged;
+    }
+
     inline Event<KeyState>* getKeyboardKeyStateChanged()
     {
         return &keyboardKeyStateChanged;
@@ -363,6 +382,7 @@ class InputManager
     Event<Point> mouseCusorOffsetChanged;
     Event<Point> mouseScrollOffsetChanged;
     Event<KeyState> keyboardKeyStateChanged;
+    Event<SensorEvent> controllerSensorStateChanged;
 };
 
 }; // namespace brls

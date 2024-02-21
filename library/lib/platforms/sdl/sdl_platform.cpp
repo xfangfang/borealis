@@ -172,6 +172,12 @@ bool SDLPlatform::processEvent(SDL_Event* event)
         if (manager)
             manager->updateMouseWheel(event->wheel);
     }
+    else if (event->type == SDL_CONTROLLERSENSORUPDATE)
+    {
+        auto* manager = this->inputManager;
+        if (manager)
+            manager->updateControllerSensorsUpdate(event->csensor);
+    }
 #ifdef IOS
     else if (event->type == SDL_APP_WILLENTERBACKGROUND)
     {

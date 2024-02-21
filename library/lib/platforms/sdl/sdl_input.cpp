@@ -348,6 +348,11 @@ void SDLInputManager::runloopStart()
 
 void SDLInputManager::sendRumble(unsigned short controller, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
+    if (controllers.find(controller) == controllers.end())
+        return;
+    SDL_GameController* c = controllers[controller];
+
+    SDL_GameControllerRumble(c, lowFreqMotor, highFreqMotor, 30000);
 }
 
 void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
@@ -361,6 +366,25 @@ void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
 #endif
 
     this->getMouseScrollOffsetChanged()->fire(Point(event.x, event.y));
+}
+
+void SDLInputManager::updateControllerSensorsUpdate(SDL_ControllerSensorEvent event)
+{
+    auto id = event.which;
+    SensorEvent state;
+
+    switch (event.sensor) {
+        case SDL_SENSOR_ACCEL:
+            state = SensorEvent { id, SensorEventType::ACCEL, {event.data[0], event.data[1], event.data[2]}, event.timestamp };
+            getControllerSensorStateChanged()->fire(state);
+            Application::setActiveEvent(true);
+            break;
+        case SDL_SENSOR_GYRO:
+            state = SensorEvent { id, SensorEventType::GYRO, {event.data[0], event.data[1], event.data[2]}, event.timestamp };
+            getControllerSensorStateChanged()->fire(state);
+            Application::setActiveEvent(true);
+            break;
+    }
 }
 
 };

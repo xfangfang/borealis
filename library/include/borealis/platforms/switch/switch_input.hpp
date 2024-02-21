@@ -72,12 +72,14 @@ class SwitchInputManager : public InputManager
     u32 padsStyleSet[GAMEPADS_MAX];
     bool pointerLocked = false;
     HidMouseState currentMouseState;
+    HidSixAxisSensorHandle m_six_axis_sensor_handle[4]; // All for player 1, player 2 not supported
 
     std::vector<bool> m_hid_keyboard_state;
 
     void initCursor(NVGcontext* vg);
     void handleMouse();
     void handleKeyboard();
+    void handleControllerSensors();
     void upToDateMouseState();
     BrlsKeyboardScancode switchKeyToGlfwKey(int key);
     int glfwKeyToVKKey(BrlsKeyboardScancode key);
