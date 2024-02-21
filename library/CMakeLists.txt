@@ -173,6 +173,7 @@ elseif(PLATFORM_IOS)
             ${BOREALIS_PATH}/lib/platforms/desktop)
     list(APPEND BRLS_PLATFORM_LIBS SDL2-static SDL2main)
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -DIOS)
+    list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/desktop/ios_darwin.mm)
 elseif(PLATFORM_SWITCH)
     list(APPEND BOREALIS_SOURCE
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/archive
