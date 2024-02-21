@@ -31,6 +31,7 @@ class StyleValues
     StyleValues(std::initializer_list<std::pair<std::string, float>> list);
 
     void addMetric(std::string name, float value);
+    void setMetric(std::string name, float value);
     float getMetric(std::string name);
 
   private:
@@ -45,6 +46,7 @@ class Style
     float operator[](std::string name);
 
     void addMetric(std::string name, float value);
+    void setMetric(std::string name, float value);
     float getMetric(std::string name);
 
   private:

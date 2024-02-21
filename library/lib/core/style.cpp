@@ -159,6 +159,14 @@ void StyleValues::addMetric(std::string name, float metric)
     this->values.insert(std::make_pair(name, metric));
 }
 
+void StyleValues::setMetric(std::string name, float value)
+{
+    if (this->values.count(name) == 0)
+        fatal("Unknown style metric \"" + name + "\"");
+
+    this->values.at(name) = value;
+}
+
 float StyleValues::getMetric(std::string name)
 {
     if (this->values.count(name) == 0) {
@@ -182,6 +190,11 @@ float Style::getMetric(std::string name)
 void Style::addMetric(std::string name, float metric)
 {
     return this->values->addMetric(name, metric);
+}
+
+void Style::setMetric(std::string name, float metric)
+{
+    return this->values->setMetric(name, metric);
 }
 
 float Style::operator[](std::string name)
