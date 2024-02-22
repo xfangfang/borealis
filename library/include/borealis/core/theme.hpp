@@ -37,8 +37,8 @@ class ThemeValues
   public:
     ThemeValues(std::initializer_list<std::pair<std::string, NVGcolor>> list);
 
-    void addColor(std::string name, NVGcolor color);
-    NVGcolor getColor(std::string name);
+    void addColor(const std::string&, NVGcolor color);
+    NVGcolor getColor(const std::string&);
 
   private:
     std::unordered_map<std::string, NVGcolor> values;
@@ -49,10 +49,10 @@ class Theme
 {
   public:
     Theme(ThemeValues* values);
-    NVGcolor operator[](std::string name);
+    NVGcolor operator[](const std::string& name);
 
-    void addColor(std::string name, NVGcolor color);
-    NVGcolor getColor(std::string name);
+    void addColor(const std::string&, NVGcolor color);
+    NVGcolor getColor(const std::string& name);
 
     static Theme& getLightTheme();
     static Theme& getDarkTheme();

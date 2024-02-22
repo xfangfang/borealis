@@ -154,12 +154,12 @@ StyleValues::StyleValues(std::initializer_list<std::pair<std::string, float>> li
         this->values.insert(metric);
 }
 
-void StyleValues::addMetric(std::string name, float metric)
+void StyleValues::addMetric(const std::string& name, float metric)
 {
-    this->values.insert(std::make_pair(name, metric));
+    this->values[name] = metric;
 }
 
-float StyleValues::getMetric(std::string name)
+float StyleValues::getMetric(const std::string& name)
 {
     if (this->values.count(name) == 0) {
         brls::Logger::error("Unknown style metric {} in size: {}", name, std::to_string(this->values.size()));
@@ -174,17 +174,17 @@ Style::Style(StyleValues* values)
 {
 }
 
-float Style::getMetric(std::string name)
+float Style::getMetric(const std::string& name)
 {
     return this->values->getMetric(name);
 }
 
-void Style::addMetric(std::string name, float metric)
+void Style::addMetric(const std::string& name, float metric)
 {
     return this->values->addMetric(name, metric);
 }
 
-float Style::operator[](std::string name)
+float Style::operator[](const std::string& name)
 {
     return this->getMetric(name);
 }
