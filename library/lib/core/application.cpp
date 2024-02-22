@@ -189,7 +189,9 @@ bool Application::internalMainLoop()
     }
 
     // Animations
+#ifndef SIMPLE_HIGHLIGHT
     updateHighlightAnimation();
+#endif
     Ticking::updateTickings();
 
     // Render
@@ -380,10 +382,10 @@ void Application::processInput()
         if (controllerState.buttons[i])
         {
             repeating = controllerState.repeatingButtonStop[i] > 0 && cpuTime > controllerState.repeatingButtonStop[i];
-            
+
             if (repeating)
                 controllerState.repeatingButtonStop[i] = cpuTime + BUTTON_REPEAT_DELAY;
-            
+
             if (!oldControllerState.buttons[i])
                 controllerState.repeatingButtonStop[i] = cpuTime + BUTTOM_REPEAT_TRIGGER;
 

@@ -542,6 +542,14 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
     }
     else
     {
+#ifdef SIMPLE_HIGHLIGHT
+        // Border
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, a(theme["brls/highlight/color1"]));
+        nvgStrokeWidth(vg, style["brls/highlight/stroke_width"]);
+        nvgRoundedRect(vg, x, y, width, height, cornerRadius);
+        nvgStroke(vg);
+#else
         float shadowOffset = style["brls/highlight/shadow_offset"];
 
         // Shadow
@@ -602,6 +610,7 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
         nvgStrokeWidth(vg, strokeWidth);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
+#endif
     }
 
     nvgRestore(vg);
