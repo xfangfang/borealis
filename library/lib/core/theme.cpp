@@ -24,6 +24,7 @@ namespace brls
 
 static ThemeValues lightThemeValues = {
     // Generic values
+    { "brls/clear", nvgRGB(235, 235, 235) },
     { "brls/background", nvgRGB(235, 235, 235) },
     { "brls/text", nvgRGB(45, 45, 45) },
     { "brls/text_disabled", nvgRGB(140, 140, 140) },
@@ -82,6 +83,7 @@ static ThemeValues lightThemeValues = {
 
 static ThemeValues darkThemeValues = {
     // Generic values
+    { "brls/clear", nvgRGB(45, 45, 45) },
     { "brls/background", nvgRGB(45, 45, 45) },
     { "brls/text", nvgRGB(255, 255, 255) },
     { "brls/text_disabled", nvgRGB(80, 80, 80) },

@@ -443,17 +443,17 @@ void GLFWVideoContext::clear(NVGcolor color)
         color.r,
         color.g,
         color.b,
-        1.0f);
+        color.a);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 #elif defined(BOREALIS_USE_METAL)
-    nvgClearWithColor(nvgContext, nvgRGBAf(color.r, color.g, color.b, 1.0f));
+    nvgClearWithColor(nvgContext, nvgRGBAf(color.r, color.g, color.b, color.a));
 #elif defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->clear(nvgRGBAf(
         color.r,
         color.g,
         color.b,
-        1.0f));
+        color.a));
 #endif
 }
 
