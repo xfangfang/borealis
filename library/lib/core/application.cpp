@@ -653,7 +653,7 @@ void Application::frame()
     frameContext.theme      = Application::getTheme();
 
     // Begin frame and clear
-    NVGcolor backgroundColor = frameContext.theme["brls/background"];
+    NVGcolor backgroundColor = frameContext.theme["brls/clear"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
     float scaleFactor = videoContext->getScaleFactor();
