@@ -38,12 +38,6 @@ namespace brls
 static nlohmann::json defaultLocale = {};
 static nlohmann::json currentLocale = {};
 
-static bool endsWith(const std::string& str, const std::string& suffix)
-{
-    // if I wanted to write my own endsWith I would have made borealis in PHP
-    return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
-}
-
 static void loadLocale(std::string locale, nlohmann::json* target)
 {
     if (locale.empty())

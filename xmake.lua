@@ -108,6 +108,12 @@ target("borealis")
     end
     add_packages("tinyxml2", "nlohmann_json", "nanovg", "fmt", "tweeny", "yoga", "stb")
     add_defines("BOREALIS_USE_STD_THREAD")
+    if is_plat("macosx") then
+        add_frameworks("SystemConfiguration", "CoreWlan")
+        add_files("library/lib/platforms/desktop/desktop_darwin.mm")
+    end
+    add_rules("c++.unity_build", {batchsize = 16})
+    add_rules("c.unity_build", {batchsize = 16})
 
 
 target("demo")
@@ -152,3 +158,4 @@ target("demo")
         end
     end
     set_rundir("$(projectdir)")
+    add_rules("c++.unity_build", {batchsize = 16})
