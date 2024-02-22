@@ -50,6 +50,9 @@ option(USE_GLES3 "using OpenGL ES 3.0" OFF)
 # or if you do not want others to modify the resource files, you can also enable this option
 option(USE_LIBROMFS "using libromfs to bundle resources" OFF)
 
+# Disable highlight border animation (Useful for low-end devices like PSVita)
+option(SIMPLE_HIGHLIGHT "Simple highlight" OFF)
+
 
 if (NOT DEFINED APP_PLATFORM_INCLUDE)
     set(APP_PLATFORM_INCLUDE)

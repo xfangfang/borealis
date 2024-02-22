@@ -113,6 +113,11 @@ else ()
     add_definitions(-D__GLFW__)
 endif ()
 
+if (SIMPLE_HIGHLIGHT)
+    message(STATUS "Enable SIMPLE_HIGHLIGHT")
+    add_definitions(-DSIMPLE_HIGHLIGHT)
+endif ()
+
 function(program_target target source)
     if (WIN32 AND NOT WIN32_TERMINAL)
         add_executable(${target} WIN32 ${source})
