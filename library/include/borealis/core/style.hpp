@@ -30,8 +30,8 @@ class StyleValues
   public:
     StyleValues(std::initializer_list<std::pair<std::string, float>> list);
 
-    void addMetric(std::string name, float value);
-    float getMetric(std::string name);
+    void addMetric(const std::string&, float value);
+    float getMetric(const std::string& name);
 
   private:
     std::unordered_map<std::string, float> values;
@@ -42,10 +42,10 @@ class Style
 {
   public:
     Style(StyleValues* values);
-    float operator[](std::string name);
+    float operator[](const std::string& name);
 
-    void addMetric(std::string name, float value);
-    float getMetric(std::string name);
+    void addMetric(const std::string& name, float value);
+    float getMetric(const std::string& name);
 
   private:
     StyleValues* values;
