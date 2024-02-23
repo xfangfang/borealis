@@ -16,4 +16,13 @@ bool darwin_runloop(const std::function<bool()>& runLoopImpl) {
         return runLoopImpl();
     }
 }
+
+uint8_t ios_battery_status() {
+    UIDevice.currentDevice.batteryMonitoringEnabled = true;
+    return UIDevice.currentDevice.batteryState;
+}
+
+float ios_battery() {
+    return UIDevice.currentDevice.batteryLevel;
+}
 };

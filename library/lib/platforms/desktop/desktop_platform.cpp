@@ -132,6 +132,8 @@ int win32_wlan_quality()
 }
 #elif IOS
 extern ThemeVariant ios_theme();
+extern uint8_t ios_battery_status();
+extern float ios_battery();
 extern bool darwin_runloop(const std::function<bool()>& runLoopImpl);
 #elif __APPLE__
 extern int darwin_wlan_quality();
@@ -459,6 +461,7 @@ DesktopPlatform::DesktopPlatform()
 bool DesktopPlatform::canShowBatteryLevel()
 {
 #if defined(IOS)
+    return ios_battery_status() != 0;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() >= 0;
 #elif defined(_WIN32)
@@ -486,6 +489,7 @@ bool DesktopPlatform::canShowWirelessLevel()
 int DesktopPlatform::getBatteryLevel()
 {
 #if defined(IOS)
+    return ios_battery() * 100;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x7F;
 #elif defined(_WIN32)
@@ -501,6 +505,7 @@ int DesktopPlatform::getBatteryLevel()
 bool DesktopPlatform::isBatteryCharging()
 {
 #if defined(IOS)
+    return ios_battery_status() == 2;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x80;
 #elif defined(_WIN32)
