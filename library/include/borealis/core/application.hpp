@@ -32,7 +32,6 @@
 #include <borealis/core/view.hpp>
 #include <borealis/views/label.hpp>
 #include <deque>
-#include <unordered_map>
 #include <vector>
 
 #ifdef __WINRT__

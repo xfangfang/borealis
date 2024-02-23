@@ -939,11 +939,10 @@ std::string Application::getLocale()
 
 void Application::addToFreeQueue(View* view)
 {
-    brls::Logger::verbose("Application::addToFreeQueue {}", view->describe());
+    if (std::binary_search(deletionPool.cbegin(), deletionPool.cend(), view))
+        return;
     
-    for (brls::View* viewToDelete : Application::deletionPool)
-        if (viewToDelete == view)
-            return;
+    brls::Logger::verbose("Application::addToFreeQueue {}", view->describe());
 
     Application::deletionPool.push_back(view);
 }
