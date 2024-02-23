@@ -35,16 +35,6 @@ using namespace brls::literals;
 namespace brls
 {
 
-static bool endsWith(const std::string& data, const std::string& suffix)
-{
-    return data.find(suffix, data.size() - suffix.size()) != std::string::npos;
-}
-
-static bool startsWith(const std::string& data, const std::string& prefix)
-{
-    return data.rfind(prefix, 0) == 0;
-}
-
 void AppletFrameItem::setHintView(View* hintView)
 {
     this->hintView = hintView;

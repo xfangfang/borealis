@@ -33,6 +33,8 @@ class SDLInputManager : public InputManager
 
     void setPointerLock(bool lock) override;
 
+    void updateMouseMotion(SDL_MouseMotionEvent event);
+
     void updateMouseWheel(SDL_MouseWheelEvent event);
 
     void updateControllerSensorsUpdate(SDL_ControllerSensorEvent event);
@@ -43,6 +45,7 @@ class SDLInputManager : public InputManager
     Point scrollOffset;
     Point pointerOffset;
     Point pointerOffsetBuffer;
+    bool pointerLocked = false;
 
     SDL_Window* window;
 };
