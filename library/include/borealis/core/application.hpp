@@ -31,7 +31,7 @@
 #include <borealis/core/theme.hpp>
 #include <borealis/core/view.hpp>
 #include <borealis/views/label.hpp>
-#include <unordered_map>
+#include <deque>
 #include <vector>
 
 #ifdef __WINRT__
@@ -313,7 +313,7 @@ class Application
 
     inline static std::vector<Activity*> activitiesStack;
     inline static std::vector<View*> focusStack;
-    inline static std::set<View*> deletionPool;
+    inline static std::deque<View*> deletionPool;
 
     inline static View* currentFocus = nullptr;
     inline static std::vector<TouchState> currentTouchState;

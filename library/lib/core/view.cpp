@@ -43,8 +43,12 @@ void AppletFrameItem::setHintView(View* hintView)
 
 AppletFrameItem::~AppletFrameItem()
 {
-    if (hintView)
-        delete hintView;
+    if (hintView) {
+        if (!hintView->isPtrLocked())
+            delete hintView;
+        else
+            hintView->freeView();
+    }
 }
 
 View::View()
