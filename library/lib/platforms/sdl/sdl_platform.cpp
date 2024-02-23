@@ -171,6 +171,7 @@ bool SDLPlatform::processEvent(SDL_Event* event)
         auto* manager = this->inputManager;
         if (manager)
             manager->updateKeyboardState(event->key);
+    }
     else if (event->type == SDL_MOUSEMOTION)
     {
         auto* manager = this->inputManager;
