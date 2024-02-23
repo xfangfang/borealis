@@ -51,7 +51,7 @@
         if (enumMap.count(value) > 0)                                                    \
             method(enumMap[value]);                                                      \
         else                                                                             \
-            fatal("Illegal value \"" + value + "\" for XML attribute \"" + name + "\""); \
+            brls::fatal("Illegal value \"" + value + "\" for XML attribute \"" + name + "\""); \
     })
 
 // Shortcut to register an A key action (generic click) on a view given its id, that calls any function or method

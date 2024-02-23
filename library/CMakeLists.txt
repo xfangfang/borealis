@@ -254,7 +254,12 @@ message(STATUS "borealis driver ${BOREALIS_DRIVER}")
 
 # borealis Library
 add_library(borealis STATIC ${BOREALIS_SRC})
-set_property(TARGET borealis PROPERTY CXX_STANDARD 17)
+set_target_properties(borealis PROPERTIES
+        CXX_STANDARD 17
+        UNITY_BUILD ${BRLS_UNITY_BUILD}
+)
+set_source_files_properties(${BOREALIS_PATH}/lib/platforms/desktop/desktop_darwin.mm PROPERTIES
+        SKIP_UNITY_BUILD_INCLUSION ON)
 target_include_directories(borealis PUBLIC ${BOREALIS_INCLUDE})
 target_link_libraries(borealis fmt tweeny yogacore ${BRLS_PLATFORM_LIBS})
 target_compile_options(borealis PUBLIC
