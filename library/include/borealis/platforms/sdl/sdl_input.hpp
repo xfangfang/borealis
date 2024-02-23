@@ -39,6 +39,8 @@ class SDLInputManager : public InputManager
 
     void updateControllerSensorsUpdate(SDL_ControllerSensorEvent event);
 
+    void updateKeyboardState(SDL_KeyboardEvent event);
+
   private:
     Point scrollOffset;
     Point pointerOffset;
