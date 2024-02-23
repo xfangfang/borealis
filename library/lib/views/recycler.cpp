@@ -205,8 +205,8 @@ RecyclerFrame::RecyclerFrame()
 
 RecyclerFrame::~RecyclerFrame()
 {
-    //    if (this->dataSource)
-    //        delete dataSource;
+    if (this->dataSource && this->deleteDataSource)
+        delete dataSource;
 
     for (auto it : queueMap)
     {
@@ -216,12 +216,13 @@ RecyclerFrame::~RecyclerFrame()
     }
 }
 
-void RecyclerFrame::setDataSource(RecyclerDataSource* source)
+void RecyclerFrame::setDataSource(RecyclerDataSource* source, bool deleteDataSource)
 {
-    if (this->dataSource)
+    if (this->dataSource && this->deleteDataSource)
         delete this->dataSource;
 
     this->dataSource = source;
+    this->deleteDataSource = deleteDataSource;
     if (layouted)
         reloadData();
 }

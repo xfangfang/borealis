@@ -118,7 +118,7 @@ Dropdown::Dropdown(std::string title, std::vector<std::string> values, ValueSele
         cell->title->setFontSize(Application::getStyle()["brls/dropdown/listItemTextSize"]);
         return cell; });
     recycler->setDefaultCellFocus(IndexPath(0, selected));
-    recycler->setDataSource(this);
+    recycler->setDataSource(this, false);
 
     Style style = Application::getStyle();
 
