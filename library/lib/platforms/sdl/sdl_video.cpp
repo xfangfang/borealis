@@ -100,7 +100,7 @@ static void sdlWindowPositionCallback(SDL_Window* window, int windowXPos, int wi
     }
 }
 
-static int sdlEventWatcher(void* data, SDL_Event* event)
+static int sdlWindowEventWatcher(void* data, SDL_Event* event)
 {
     if (event->type == SDL_WINDOWEVENT)
     {
@@ -265,7 +265,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
 #endif
-    SDL_AddEventWatch(sdlEventWatcher, window);
+    SDL_AddEventWatch(sdlWindowEventWatcher, window);
 #ifdef BOREALIS_USE_OPENGL
 #if !defined(__PSV__) && !defined(PS4)
     // Load OpenGL routines using glad
