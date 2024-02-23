@@ -1,3 +1,4 @@
+#pragma once
 #include <borealis/core/box.hpp>
 #include <borealis/views/label.hpp>
 #include <borealis/core/bind.hpp>

@@ -21,7 +21,9 @@
 
 namespace brls
 {
+bool endsWith(const std::string& data, const std::string& suffix);
 
+bool startsWith(const std::string& data, const std::string& prefix);
 /**
  * Prints the given error message message and throws a std::logic_error.
  */
