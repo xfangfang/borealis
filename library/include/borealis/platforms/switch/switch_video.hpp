@@ -53,7 +53,13 @@ class SwitchVideoContext : public VideoContext
 
     dk::Device getDeko3dDevice();
 
+    dk::Queue getQueue();
+
     dk::Image* getFramebuffer();
+
+    CDescriptorSet<4096U> *getImageDescriptor();
+
+    int allocateImageIndex();
 
     void queueWaitFence(DkFence* fence);
 

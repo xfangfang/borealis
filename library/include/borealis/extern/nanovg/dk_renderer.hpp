@@ -206,6 +206,9 @@ namespace nvg {
             int GetTextureSize(const DKNVGcontext &ctx, int id, int *w, int *h);
             const DKNVGtextureDescriptor *GetTextureDescriptor(const DKNVGcontext &ctx, int id);
 
+            CDescriptorSet<4096U> *GetImageDescriptor() { return &m_image_descriptor_set; }
+            int AllocateImageIndex();
+
             void Flush(DKNVGcontext &ctx);
     };
 
