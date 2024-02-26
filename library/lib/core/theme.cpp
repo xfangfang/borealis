@@ -79,6 +79,10 @@ static ThemeValues lightThemeValues = {
     // Spinner
     { "brls/spinner/bar_color", nvgRGBA(131, 131, 131, 80) },
 
+    // Progress bar
+    { "brls/progress_bar/empty_bar_color", nvgRGB(207, 207, 207) },
+    { "brls/progress_bar/bar_color", nvgRGB(43, 81, 226) },
+
 };
 
 static ThemeValues darkThemeValues = {
@@ -137,6 +141,10 @@ static ThemeValues darkThemeValues = {
 
     // Spinner
     { "brls/spinner/bar_color", nvgRGBA(192, 192, 192, 80) }, // TODO: get this right
+
+    // Progress bar
+    { "brls/progress_bar/empty_bar_color", nvgRGB(78, 78, 78) },
+    { "brls/progress_bar/bar_color", nvgRGB(88, 195, 169) },
 };
 
 ThemeValues::ThemeValues(std::initializer_list<std::pair<std::string, NVGcolor>> list)

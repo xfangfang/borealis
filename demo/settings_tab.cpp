@@ -15,6 +15,7 @@
 */
 
 #include "settings_tab.hpp"
+#include "progress_view.hpp"
 
 using namespace brls::literals;  // for _i18n
 
@@ -30,6 +31,13 @@ SettingsTab::SettingsTab()
     radio->registerClickAction([this](brls::View* view) {
         radioSelected = !radioSelected;
         this->radio->setSelected(radioSelected);
+        return true;
+    });
+
+    progress->title->setText("Progress cell");
+    progress->setSelected(false);
+    progress->registerClickAction([this](brls::View* view) {
+        this->present(new ProgressBarView());
         return true;
     });
 
@@ -57,6 +65,7 @@ SettingsTab::SettingsTab()
     fps->init("FPS", brls::Application::getFPSStatus(), [](bool value){
         brls::Application::setFPSStatus(value);
     });
+
 
     selector->init("Selector", { "Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8", "Test 9", "Test 10", "Test 11", "Test 12", "Test 13" }, 0, [](int selected) {
     }, [](int selected) {

@@ -40,6 +40,7 @@
 #include <borealis/views/hint.hpp>
 #include <borealis/views/image.hpp>
 #include <borealis/views/progress_spinner.hpp>
+#include <borealis/views/progress_display.hpp>
 #include <borealis/views/rectangle.hpp>
 #include <borealis/views/recycler.hpp>
 #include <borealis/views/sidebar.hpp>
@@ -1204,6 +1205,7 @@ void Application::registerBuiltInXMLViews()
     Application::registerXMLView("brls:Slider", Slider::create);
     Application::registerXMLView("brls:BottomBar", BottomBar::create);
     Application::registerXMLView("brls:ProgressSpinner", ProgressSpinner::create);
+    Application::registerXMLView("brls:ProgressDisplay", ProgressDisplay::create);
 
     // Cells
     Application::registerXMLView("brls:DetailCell", DetailCell::create);

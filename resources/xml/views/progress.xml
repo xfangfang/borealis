@@ -1,0 +1,24 @@
+<brls:Box
+    width="auto"
+    height="auto"
+    axis="column"
+    alignItems="center"
+    paddingTop="50px"
+    paddingBottom="50px"
+    paddingLeft="75px"
+    paddingRight="75px">
+
+    <brls:Label
+        id="label"
+        height="auto"
+        width="40%"
+        grow="1.0"
+        horizontalAlign="center"/>
+
+    <brls:ProgressDisplay
+        id="progress"
+        width="80%"
+        height="50px"
+        grow="1.0"/>
+
+</brls:Box>
