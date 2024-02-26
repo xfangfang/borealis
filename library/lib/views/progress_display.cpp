@@ -31,9 +31,6 @@ void ProgressDisplay::draw(NVGcontext* vg, float x, float y, float width, float 
     NVGcolor emptyBarColor = a(theme["brls/progress_bar/empty_bar_color"]);
     NVGcolor barColor = a(theme["brls/progress_bar/bar_color"]);
 
-    // progressBarX = 600;
-    // progressBarWidth = 400;
-
     nvgBeginPath(vg);
     nvgMoveTo(vg, x, y + height / 2);
     nvgLineTo(vg, x + width, y + height / 2);

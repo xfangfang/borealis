@@ -9,6 +9,10 @@ ProgressBarView::ProgressBarView() {
     this->label->setText("Loading...");
     this->label->setParent(this);
 
+    this->setFocusable(true);
+    this->setHideHighlightBackground(true);
+    this->setHideHighlightBorder(true);
+
     this->registerAction("back", brls::ControllerButton::BUTTON_B, [this](brls::View* view) {
         this->dismiss();
         return true;
@@ -16,8 +20,6 @@ ProgressBarView::ProgressBarView() {
 
     // Démarrer la tâche de chargement
     std::thread loadingThread([this]() {
-        auto start = std::chrono::steady_clock::now();
-
         while (this->progressValue < 1000) {
             this->progressValue += 10;
             brls::sync([this]() { updateProgressOnMainThread(progressValue); }); // Mettre à jour la progression sur le thread principal
