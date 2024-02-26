@@ -14,4 +14,6 @@ class ProgressBarView : public brls::Box {
 
         void updateProgressOnMainThread(int value);
         void finishLoadingOnMainThread();
+
+        bool stopThread = false;
 };

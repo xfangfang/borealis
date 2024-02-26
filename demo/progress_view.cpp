@@ -13,20 +13,28 @@ ProgressBarView::ProgressBarView() {
     this->setHideHighlightBackground(true);
     this->setHideHighlightBorder(true);
 
-    this->registerAction("back", brls::ControllerButton::BUTTON_B, [this](brls::View* view) {
-        this->dismiss();
-        return true;
-    });
-
-    // Démarrer la tâche de chargement
     std::thread loadingThread([this]() {
         while (this->progressValue < 1000) {
+            if (this->stopThread) break;
             this->progressValue += 10;
-            brls::sync([this]() { updateProgressOnMainThread(progressValue); }); // Mettre à jour la progression sur le thread principal
-            std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Attendre 500 millisecondes entre chaque mise à jour
+            ASYNC_RETAIN
+            brls::sync([ASYNC_TOKEN]() { 
+                ASYNC_RELEASE
+                updateProgressOnMainThread(progressValue); 
+            }); 
+            std::this_thread::sleep_for(std::chrono::milliseconds(50)); 
         }
+        ASYNC_RETAIN
+        brls::sync([ASYNC_TOKEN]() { 
+            ASYNC_RELEASE
+            finishLoadingOnMainThread(); 
+        });
+    });
 
-        brls::sync([this]() { finishLoadingOnMainThread(); }); // Signaler la fin du chargement sur le thread principal
+    this->registerAction("back", brls::ControllerButton::BUTTON_B, [this](brls::View* view) {
+        this->stopThread = true;
+        this->dismiss();
+        return true;
     });
 
     loadingThread.detach();
