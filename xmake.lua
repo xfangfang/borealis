@@ -20,6 +20,11 @@ option("winrt")
     set_showmenu(true)
 option_end()
 
+option("unity_build")
+    set_default(false)
+    set_showmenu(true)
+option_end()
+
 if is_plat("windows") then
     set_languages("c++20")
     add_cxflags("/utf-8")
@@ -112,8 +117,10 @@ target("borealis")
         add_frameworks("SystemConfiguration", "CoreWlan")
         add_files("library/lib/platforms/desktop/desktop_darwin.mm")
     end
-    add_rules("c++.unity_build", {batchsize = 16})
-    add_rules("c.unity_build", {batchsize = 16})
+    if get_config("unity_build") then
+        add_rules("c++.unity_build", {batchsize = 16})
+        add_rules("c.unity_build", {batchsize = 16})
+    end
 
 
 target("demo")
@@ -158,4 +165,7 @@ target("demo")
         end
     end
     set_rundir("$(projectdir)")
-    add_rules("c++.unity_build", {batchsize = 16})
+    if get_config("unity_build") then
+        add_rules("c++.unity_build", {batchsize = 16})
+        add_rules("c.unity_build", {batchsize = 16})
+    end
