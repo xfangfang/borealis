@@ -191,6 +191,18 @@ void Slider::setProgress(float progress)
     updateUI();
 }
 
+void Slider::hidePointer() {
+    Theme theme = Application::getTheme();
+    pointer->setColor(theme["brls/slider/line_filled"]);
+    pointer->setTranslationX(-3.5);
+    pointer->setWidth(14);
+    pointer->setHeight(7);
+    pointer->setCornerRadius(3.5);
+    pointer->setBorderThickness(0);
+    pointer->setShadowType(ShadowType::NONE);
+    pointer->setFocusable(false);
+}
+
 void Slider::updateUI()
 {
     float paddingWidth   = getWidth() - pointer->getWidth();

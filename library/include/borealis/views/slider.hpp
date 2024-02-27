@@ -44,6 +44,7 @@ class Slider : public Box
     void setStep(float step);
 
     void setPointerSize(float size);
+    void hidePointer();
 
     static View* create();
 
