@@ -158,21 +158,22 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
     for (size_t i = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
-    for (int i = 0; i < GAMEPADS_MAX; i++)
+    auto connected = getControllersConnectedCount();
+    for (int i = 0; i < connected; i++)
     {
         ControllerState localState;
         updateControllerState(&localState, i);
-        for (size_t i = 0; i < _BUTTON_MAX; i++)
-            state->buttons[i] |= localState.buttons[i];
+        for (size_t j = 0; j < _BUTTON_MAX; j++)
+            state->buttons[j] |= localState.buttons[j];
 
-        for (size_t i = 0; i < _AXES_MAX; i++)
+        for (size_t j = 0; j < _AXES_MAX; j++)
         {
-            state->axes[i] += localState.axes[i];
+            state->axes[j] += localState.axes[j];
 
-            if (state->axes[i] < -1)
-                state->axes[i] = -1;
-            else if (state->axes[i] > 1)
-                state->axes[i] = 1;
+            if (state->axes[j] < -1)
+                state->axes[j] = -1;
+            else if (state->axes[j] > 1)
+                state->axes[j] = 1;
         }
     }
 }
