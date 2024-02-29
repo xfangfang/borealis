@@ -203,6 +203,21 @@ void Slider::hidePointer() {
     pointer->setFocusable(false);
 }
 
+void Slider::showPointer() {
+    Theme theme = Application::getTheme();
+    pointer->setColor(theme["brls/slider/pointer_color"]);
+    pointer->setBorderColor(theme["brls/slider/pointer_border_color"]);
+    pointer->setHeight(38);
+    pointer->setWidth(38);
+    pointer->setCornerRadius(19);
+    pointer->setHighlightCornerRadius(21);
+    pointer->setBorderThickness(4);
+    pointer->setShadowType(ShadowType::GENERIC);
+    pointer->setShadowVisibility(true);
+    pointer->setFocusable(true);
+    this->updateUI();
+}
+
 void Slider::updateUI()
 {
     float paddingWidth   = getWidth() - pointer->getWidth();
