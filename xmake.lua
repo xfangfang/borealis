@@ -102,7 +102,7 @@ target("borealis")
         add_defines("BOREALIS_USE_OPENGL")
         add_packages("glad")
     elseif driver == "d3d11" then
-        add_files("library/lib/platforms/driver/d3d11.cpp")
+        add_files("library/lib/platforms/driver/d3d11.cpp", {unity_group = "d3d11"})
         if get_config("winrt") then
             add_defines("__WINRT__=1")
         end
