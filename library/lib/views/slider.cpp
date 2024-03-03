@@ -200,7 +200,6 @@ void Slider::hidePointer() {
     pointer->setCornerRadius(3.5);
     pointer->setBorderThickness(0);
     pointer->setShadowType(ShadowType::NONE);
-    pointer->setFocusable(false);
 }
 
 void Slider::showPointer() {
@@ -214,7 +213,7 @@ void Slider::showPointer() {
     pointer->setBorderThickness(4);
     pointer->setShadowType(ShadowType::GENERIC);
     pointer->setShadowVisibility(true);
-    pointer->setFocusable(true);
+    pointer->setTranslationX(0);
     this->updateUI();
 }
 
