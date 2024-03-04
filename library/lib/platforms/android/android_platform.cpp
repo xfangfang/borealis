@@ -159,4 +159,49 @@ namespace brls
         env->DeleteLocalRef(jurl);
     }
 
+    float AndroidPlatform::getBacklightBrightness() {
+        auto env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
+
+        jclass utilsClass = env->FindClass("org/libsdl/app/PlatformUtils");
+        if (utilsClass == nullptr)
+            return 0.0f;
+        auto activity = (jobject)SDL_AndroidGetActivity();
+        if (activity == nullptr) {
+            env->DeleteLocalRef(utilsClass);
+            return 0.0f;
+        }
+        jmethodID jmethod = env->GetStaticMethodID(utilsClass, "getAppScreenBrightness",
+                                                   "(Landroid/app/Activity;)F");
+        if (jmethod == nullptr)
+            return 0.0f;
+        jfloat value = env->CallStaticFloatMethod(utilsClass, jmethod, activity);
+        env->DeleteLocalRef(activity);
+        env->DeleteLocalRef(utilsClass);
+        return value;
+    }
+
+    void AndroidPlatform::setBacklightBrightness(float brightness) {
+        auto env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
+        jclass utilsClass = env->FindClass("org/libsdl/app/PlatformUtils");
+        if (utilsClass == nullptr) {
+            return;
+        }
+        jmethodID method = env->GetStaticMethodID(utilsClass, "setAppScreenBrightness",
+                                                             "(Landroid/app/Activity;F)V");
+        if (method == nullptr) return;
+
+        auto activity = (jobject)SDL_AndroidGetActivity();
+        if (activity == nullptr) {
+            env->DeleteLocalRef(utilsClass);
+            return;
+        }
+        env->CallStaticVoidMethod(utilsClass, method, activity, brightness);
+        env->DeleteLocalRef(activity);
+        env->DeleteLocalRef(utilsClass);
+    }
+
+    bool AndroidPlatform::canSetBacklightBrightness() {
+        return true;
+    }
+
 } // namespace brls

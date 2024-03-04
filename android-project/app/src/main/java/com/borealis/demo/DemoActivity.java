@@ -1,8 +1,21 @@
 package com.borealis.demo;
+import android.os.Bundle;
+
+import org.libsdl.app.BorealisHandler;
+import org.libsdl.app.PlatformUtils;
 import org.libsdl.app.SDLActivity;
 
 public class DemoActivity extends SDLActivity
 {
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Currently we use handler to receive brightness changes from borealis
+        PlatformUtils.borealisHandler = new BorealisHandler();
+    }
 
     @Override
     protected void onDestroy() {

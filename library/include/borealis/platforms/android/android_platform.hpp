@@ -34,6 +34,9 @@ class AndroidPlatform : public SDLPlatform
         std::string getIpAddress() override;
         std::string getDnsServer() override;
         void openBrowser(std::string url) override;
+        float getBacklightBrightness() override;
+        void setBacklightBrightness(float brightness) override;
+        bool canSetBacklightBrightness() override;
 };
 
 } // namespace brls
