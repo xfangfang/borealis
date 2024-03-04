@@ -22,7 +22,7 @@ On the Android platform, borealis uses libromfs to package all resource files di
 ./build_libromfs_generator.sh
 ```
 
-After a successful run, `libromfs-generator` will be generated in the `app/jni` directory.
+After a successful run, `libromfs-generator` will be generated in the `android-project/app/jni/borealis` directory.
 
 Then open Android Studio and build the project.
 

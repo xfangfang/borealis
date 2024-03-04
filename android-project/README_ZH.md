@@ -20,7 +20,7 @@ cd android-project
 ./build_libromfs_generator.sh
 ```
 
-在成功运行后，`app/jni` 目录下会生成: `libromfs-generator`
+在成功运行后，`android-project/app/jni/borealis` 目录下会生成: `libromfs-generator`
 
 然后打开 Android Studio 编译即可
 

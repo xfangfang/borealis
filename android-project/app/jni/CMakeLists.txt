@@ -20,7 +20,7 @@ add_subdirectory(SDL)
 
 
 SET(PLATFORM_ANDROID ON CACHE BOOL "")
-SET(LIBROMFS_PREBUILT_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/../../../libromfs-generator" CACHE STRING "")
+SET(LIBROMFS_PREBUILT_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/borealis/libromfs-generator" CACHE STRING "")
 
 if (NOT EXISTS "${LIBROMFS_PREBUILT_GENERATOR}")
     message(FATAL_ERROR "libromfs-generator has not been built, please refer to borealis/build_libromfs_generator.sh for more information")
