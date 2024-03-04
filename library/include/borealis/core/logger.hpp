@@ -34,6 +34,7 @@
 #include <fmt/chrono.h>
 
 #include <borealis/core/event.hpp>
+#include <mutex>
 #include <string>
 
 namespace brls
@@ -71,6 +72,11 @@ class Logger
 
     static void setLogOutput(std::FILE *logOut);
 
+    /**
+     * If sets to true, each log operation will lock a mutex, making the Logger thread-safe.
+     */
+    static void setThreadSafeLogging(bool threadSafeLogging);
+
     template <typename... Args>
     inline static void log(LogLevel level, std::string prefix, std::string color, fmt::format_string<Args...> format, Args&&... args)
     {
@@ -88,6 +94,10 @@ class Logger
         std::tm time_tm = fmt::localtime(std::chrono::system_clock::to_time_t(now));
 #endif
         std::string log = fmt::format(format, std::forward<Args>(args)...);
+
+        std::unique_lock<std::mutex> lock;
+        if (Logger::threadSafeLogging)
+            lock = std::unique_lock { logMtx };
 
         try
         {
@@ -152,9 +162,11 @@ class Logger
     }
 
   private:
+    inline static std::mutex logMtx;
+    inline static bool threadSafeLogging = false;
+    inline static Event<TimePoint, LogLevel, std::string> logEvent;
     inline static std::FILE *logOut = stdout;
     inline static LogLevel logLevel = LogLevel::LOG_INFO;
-    inline static Event<TimePoint, LogLevel, std::string> logEvent;
 };
 
 } // namespace brls
