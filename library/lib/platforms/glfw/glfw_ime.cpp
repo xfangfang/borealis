@@ -18,6 +18,8 @@ limitations under the License.
 
 #include <borealis/core/box.hpp>
 #include <borealis/core/logger.hpp>
+#include <borealis/core/thread.hpp>
+#include <borealis/platforms/desktop/steam_deck.hpp>
 #include <borealis/platforms/glfw/glfw_ime.hpp>
 #include <borealis/views/dialog.hpp>
 #include <borealis/views/edit_text_dialog.hpp>
@@ -152,6 +154,13 @@ GLFWImeManager::GLFWImeManager(GLFWwindow* window)
 void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::string headerText,
     std::string subText, size_t maxStringLength, std::string initialText)
 {
+#ifdef __linux__
+    if (isSteamDeck())
+    {
+        brls::delay(200, []()
+            { runSteamDeckCommand("steam://open/keyboard?Mode=0\n"); });
+    }
+#endif
     preeditTextBuffer.clear();
     glfwSetInputMode(window, GLFW_IME, GLFW_TRUE);
     showIME     = true;

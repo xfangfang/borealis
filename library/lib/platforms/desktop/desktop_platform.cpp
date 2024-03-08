@@ -20,6 +20,7 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/desktop/desktop_platform.hpp>
+#include <borealis/platforms/desktop/steam_deck.hpp>
 #include <memory>
 #include <sstream>
 
@@ -688,7 +689,6 @@ void DesktopPlatform::setBacklightBrightness(float brightness)
 #else
     (void)brightness;
 #endif
-    
 }
 
 float DesktopPlatform::getBacklightBrightness()
@@ -934,8 +934,14 @@ void DesktopPlatform::openBrowser(std::string url)
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
 #elif __linux__
-    std::string cmd = "xdg-open \"" + url + "\"";
-    system(cmd.c_str());
+    if (isSteamDeck())
+    {
+        runSteamDeckCommand(fmt::format("steam://openurl/{}\n", url));
+    } else
+    {
+        std::string cmd = "xdg-open \"" + url + "\"";
+        system(cmd.c_str());
+    }
 #elif defined(_WIN32) and !defined(__WINRT__)
     shell_open(url.c_str());
 #endif
