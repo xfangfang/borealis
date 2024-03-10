@@ -49,6 +49,8 @@ class Slider : public Box
     void hidePointer();
 
     static View* create();
+    
+    Rectangle* getPointer() { return pointer; }
 
   private:
     InputManager* input;
