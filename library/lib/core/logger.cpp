@@ -28,6 +28,11 @@ void Logger::setLogLevel(LogLevel newLogLevel)
     Logger::logLevel = newLogLevel;
 }
 
+LogLevel Logger::getLogLevel()
+{
+    return Logger::logLevel;
+}
+
 void Logger::setLogOutput(std::FILE *newLogOut)
 {
     Logger::logOut = newLogOut;
