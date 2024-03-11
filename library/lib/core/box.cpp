@@ -344,8 +344,11 @@ View* Box::getDefaultFocus()
     if (this->isFocusable())
         return this;
 
-    if (lastFocusedView)
-        return lastFocusedView->getDefaultFocus();
+    if (lastFocusedView) {
+        View* view = lastFocusedView->getDefaultFocus();
+        if (view)
+            return view;
+    }
 
     // Then try default focus
     if (this->defaultFocusedIndex < this->children.size())
@@ -690,9 +693,14 @@ void Box::setDefaultFocusedIndex(int index)
     this->defaultFocusedIndex = index;
 }
 
-size_t Box::getDefaultFocusedIndex()
+size_t Box::getDefaultFocusedIndex() const
 {
     return this->defaultFocusedIndex;
+}
+
+View* Box::getLastFocusedView() const
+{
+    return this->lastFocusedView;
 }
 
 bool Box::isChildFocused()

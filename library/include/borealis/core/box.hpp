@@ -225,7 +225,9 @@ class Box : public View
 
     void setDefaultFocusedIndex(int index);
 
-    size_t getDefaultFocusedIndex();
+    size_t getDefaultFocusedIndex() const;
+
+    View* getLastFocusedView() const;
 
     virtual bool isChildFocused();
 
