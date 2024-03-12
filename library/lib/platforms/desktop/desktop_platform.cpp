@@ -686,6 +686,8 @@ void DesktopPlatform::setBacklightBrightness(float brightness)
     };
     DeviceIoControl(this->hLCD, IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS,
         &db, sizeof(db), NULL, 0, NULL, NULL);
+#elif defined(__linux__)
+    setSteamDeckBrightness(brightness);
 #else
     (void)brightness;
 #endif
@@ -700,6 +702,8 @@ float DesktopPlatform::getBacklightBrightness()
     DeviceIoControl(this->hLCD, IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS,
         NULL, 0, &db, sizeof(db), NULL, NULL);
     return db.ucACBrightness / 100.0f;
+#elif defined(__linux__)
+    return getSteamDeckBrightness();
 #else
     return 0.0f;
 #endif
@@ -724,6 +728,8 @@ bool DesktopPlatform::canSetBacklightBrightness()
     for (DWORD i = 0; i < bytesReturned; i++) {
         if (abLevels[i]) return true;
     }
+#elif defined(__linux__)
+    return isSteamDeckBrightnessSupported();
 #endif
     return false;
 }

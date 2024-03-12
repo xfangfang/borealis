@@ -36,5 +36,11 @@ void runSteamDeckCommand(const std::string& cmd);
  */
 bool isSteamDeck();
 
+bool isSteamDeckBrightnessSupported();
+
+float getSteamDeckBrightness();
+
+void setSteamDeckBrightness(float value);
+
 }
 #endif

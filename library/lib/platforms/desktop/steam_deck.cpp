@@ -21,11 +21,15 @@ limitations under the License.
 namespace brls
 {
 
+#define STREAM_CLIENT_PIPE_PATH "/home/deck/.steam/steam.pipe"
+#define STREAM_DECK_BACKLIGHT_PATH "/sys/class/backlight/amdgpu_bl0/brightness"
+#define STREAM_DECK_MAX_BRIGHTNESS 4095
+
 void runSteamDeckCommand(const std::string& cmd)
 {
     if (!isSteamDeck())
         return ;
-    int fd = open("/home/deck/.steam/steam.pipe", O_WRONLY | O_NONBLOCK);
+    int fd = open(STREAM_CLIENT_PIPE_PATH, O_WRONLY | O_NONBLOCK);
     if (fd < 0)
     {
         Logger::warning("Cannot open steam.pipe");
@@ -40,6 +44,61 @@ void runSteamDeckCommand(const std::string& cmd)
 bool isSteamDeck() {
     static bool isSteamDeck = getenv("SteamDeck");
     return isSteamDeck;
+}
+
+bool isSteamDeckBrightnessSupported() {
+    if(!isSteamDeck()) return false;
+    static bool tested = false, value = false;
+    if (tested) return value;
+    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_RDONLY | O_NONBLOCK);
+    if (fd < 0)
+    {
+        Logger::warning("Backlight control is not supported");
+        tested = true;
+        value = false;
+        return false;
+    }
+    else
+    {
+        close(fd);
+        Logger::info("Backlight control is supported");
+        tested = true;
+        value = true;
+        return true;
+    }
+}
+
+float getSteamDeckBrightness() {
+    if(!isSteamDeck()) return 0.0f;
+    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_RDONLY | O_NONBLOCK);
+    if (fd < 0)
+    {
+        Logger::warning("Backlight control is not supported");
+        return 0.0f;
+    }
+    else
+    {
+        char brightness[16];
+        read(fd, brightness, sizeof(brightness));
+        close(fd);
+        return atoi(brightness) * 1.0f / STREAM_DECK_MAX_BRIGHTNESS;
+    }
+}
+
+void setSteamDeckBrightness(float value) {
+    if(!isSteamDeck()) return;
+    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_WRONLY | O_NONBLOCK);
+    if (fd < 0)
+    {
+        Logger::warning("Backlight control is not supported");
+    }
+    else
+    {
+        int b = value * STREAM_DECK_MAX_BRIGHTNESS;
+        std::string brightness = std::to_string(b);
+        write(fd, brightness.c_str(), brightness.size());
+        close(fd);
+    }
 }
 
 }
