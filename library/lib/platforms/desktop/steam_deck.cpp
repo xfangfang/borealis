@@ -21,15 +21,15 @@ limitations under the License.
 namespace brls
 {
 
-#define STREAM_CLIENT_PIPE_PATH "/home/deck/.steam/steam.pipe"
-#define STREAM_DECK_BACKLIGHT_PATH "/sys/class/backlight/amdgpu_bl0/brightness"
-#define STREAM_DECK_MAX_BRIGHTNESS 4095
+#define STEAM_CLIENT_PIPE_PATH "/home/deck/.steam/steam.pipe"
+#define STEAM_DECK_BACKLIGHT_PATH "/sys/class/backlight/amdgpu_bl0/brightness"
+#define STEAM_DECK_MAX_BRIGHTNESS 4095
 
 void runSteamDeckCommand(const std::string& cmd)
 {
     if (!isSteamDeck())
         return ;
-    int fd = open(STREAM_CLIENT_PIPE_PATH, O_WRONLY | O_NONBLOCK);
+    int fd = open(STEAM_CLIENT_PIPE_PATH, O_WRONLY | O_NONBLOCK);
     if (fd < 0)
     {
         Logger::warning("Cannot open steam.pipe");
@@ -50,7 +50,7 @@ bool isSteamDeckBrightnessSupported() {
     if(!isSteamDeck()) return false;
     static bool tested = false, value = false;
     if (tested) return value;
-    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_RDONLY | O_NONBLOCK);
+    int fd = open(STEAM_DECK_BACKLIGHT_PATH, O_RDWR | O_NONBLOCK);
     if (fd < 0)
     {
         Logger::warning("Backlight control is not supported");
@@ -70,7 +70,7 @@ bool isSteamDeckBrightnessSupported() {
 
 float getSteamDeckBrightness() {
     if(!isSteamDeck()) return 0.0f;
-    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_RDONLY | O_NONBLOCK);
+    int fd = open(STEAM_DECK_BACKLIGHT_PATH, O_RDONLY | O_NONBLOCK);
     if (fd < 0)
     {
         Logger::warning("Backlight control is not supported");
@@ -81,20 +81,20 @@ float getSteamDeckBrightness() {
         char brightness[16];
         read(fd, brightness, sizeof(brightness));
         close(fd);
-        return atoi(brightness) * 1.0f / STREAM_DECK_MAX_BRIGHTNESS;
+        return atoi(brightness) * 1.0f / STEAM_DECK_MAX_BRIGHTNESS;
     }
 }
 
 void setSteamDeckBrightness(float value) {
     if(!isSteamDeck()) return;
-    int fd = open(STREAM_DECK_BACKLIGHT_PATH, O_WRONLY | O_NONBLOCK);
+    int fd = open(STEAM_DECK_BACKLIGHT_PATH, O_WRONLY | O_NONBLOCK);
     if (fd < 0)
     {
         Logger::warning("Backlight control is not supported");
     }
     else
     {
-        int b = value * STREAM_DECK_MAX_BRIGHTNESS;
+        int b = value * STEAM_DECK_MAX_BRIGHTNESS;
         std::string brightness = std::to_string(b);
         write(fd, brightness.c_str(), brightness.size());
         close(fd);
