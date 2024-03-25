@@ -23,7 +23,8 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
 {
     this->tapEvent.subscribe([view, config](TapGestureStatus status, Sound* soundToPlay)
         {
-        Application::giveFocus(view);
+        if (status.state != GestureState::INTERRUPTED && status.state != GestureState::FAILED)
+            Application::giveFocus(view);
         for (auto& action : view->getActions())
         {
             if (action.button != static_cast<enum ControllerButton>(BUTTON_A))
@@ -58,7 +59,8 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, std::function<void()> res
 {
     this->tapEvent.subscribe([view, respond, config](TapGestureStatus status, Sound* soundToPlay)
         {
-        Application::giveFocus(view);
+        if (status.state != GestureState::INTERRUPTED && status.state != GestureState::FAILED)
+            Application::giveFocus(view);
         if (config.highlightOnSelect)
             view->playClickAnimation(status.state != GestureState::UNSURE);
 
