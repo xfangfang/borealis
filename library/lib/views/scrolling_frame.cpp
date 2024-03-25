@@ -346,7 +346,7 @@ void ScrollingFrame::willAppear(bool resetState)
     // to the selected view if needed (only known then)
     if (resetState)
     {
-        this->updateScrollingOnNextFrame = false; // focus may have changed since
+        this->updateScrollingOnNextFrame = true; // focus may have changed since
     }
 
     Box::willAppear(resetState);
