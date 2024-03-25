@@ -151,7 +151,7 @@ void ScrollingFrame::draw(NVGcontext* vg, float x, float y, float width, float h
 
 void ScrollingFrame::naturalScrollingBehaviour()
 {
-    if (behavior != ScrollingBehavior::NATURAL)
+    if (behavior != ScrollingBehavior::NATURAL || Application::getInputType() == InputType::TOUCH)
         return;
 
     if (focused || childFocused)
@@ -183,7 +183,7 @@ void ScrollingFrame::naturalScrollingBehaviour()
 
     if (focused || childFocused)
     {
-        ControllerState state;
+        ControllerState state{};
         input->updateUnifiedControllerState(&state);
         float bottomLimit = this->getContentHeight() - this->getScrollingAreaHeight();
 
@@ -344,10 +344,10 @@ void ScrollingFrame::willAppear(bool resetState)
     // First scroll all the way to the top
     // then wait for the first frame to scroll
     // to the selected view if needed (only known then)
-    //    if (resetState)
-    //    {
-    //        this->updateScrollingOnNextFrame = false; // focus may have changed since
-    //    }
+    if (resetState)
+    {
+        this->updateScrollingOnNextFrame = false; // focus may have changed since
+    }
 
     Box::willAppear(resetState);
 }
@@ -484,8 +484,7 @@ void ScrollingFrame::onChildFocusGained(View* directChild, View* focusedView)
     this->childFocused = true;
 
     // Start scrolling
-    //    if (Application::getInputType() == InputType::GAMEPAD && behavior == ScrollingBehavior::CENTERED)
-    if (behavior == ScrollingBehavior::CENTERED)
+    if (Application::getInputType() == InputType::GAMEPAD && behavior == ScrollingBehavior::CENTERED)
         this->updateScrolling(true);
 }
 
