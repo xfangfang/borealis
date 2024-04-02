@@ -130,6 +130,12 @@ Image::Image()
 {
     YGNodeSetMeasureFunc(this->ygNode, imageMeasureFunc);
 
+    // This view uses a custom measure function, so the node type is automatically set to YGNodeTypeText,
+    // which causes some deviations in the calculation of YGRoundToPixelGrid.
+    // Another solution is to call `defaultConfig->setPointScaleFactor(factor)` in application.cpp.
+    // (factor can be 0.0f or a larger value.)
+    YGNodeSetNodeType(this->ygNode, YGNodeTypeDefault);
+
     BRLS_REGISTER_ENUM_XML_ATTRIBUTE(
         "scalingType", ImageScalingType, this->setScalingType,
         {
