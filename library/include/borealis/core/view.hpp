@@ -317,7 +317,7 @@ class View
     // Background gradient colors for vertical linear style
     NVGcolor backgroundStartColor = TRANSPARENT;
     NVGcolor backgroundEndColor = nvgRGBA(0, 0, 0, 200);
-    // Background corner radius for vertical linear style: top-left, top-right, bottom-left, bottom-right
+    // Background corner radii for vertical linear style: top-left, top-right, bottom-right, bottom-left
     std::vector<float> backgroundRadius{0.0f, 0.0f, 0.0f, 0.0f};
 
     NVGcolor borderColor  = TRANSPARENT;
@@ -1500,6 +1500,14 @@ class View
 
     float getAspectRatio(){
         return this->aspectRatio;
+    }
+
+    /**
+     * Sets the background corner radii of the view. Only for vertical linear style.
+     */
+    void setBackgroundCornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft)
+    {
+        this->backgroundRadius = {topLeft, topRight, bottomRight, bottomLeft};
     }
 
     /**

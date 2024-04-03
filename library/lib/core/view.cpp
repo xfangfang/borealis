@@ -2142,10 +2142,10 @@ void View::registerCommonAttributes()
     this->registerFloatXMLAttribute("backgroundTopRightRadius", [this](float value) {
         this->backgroundRadius[1] = value;
     });
-    this->registerFloatXMLAttribute("backgroundBottomLeftRadius", [this](float value) {
+    this->registerFloatXMLAttribute("backgroundBottomRightRadius", [this](float value) {
         this->backgroundRadius[2] = value;
     });
-    this->registerFloatXMLAttribute("backgroundBottomRightRadius", [this](float value) {
+    this->registerFloatXMLAttribute("backgroundBottomLeftRadius", [this](float value) {
         this->backgroundRadius[3] = value;
     });
 
