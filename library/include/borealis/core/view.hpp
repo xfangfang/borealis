@@ -314,8 +314,11 @@ class View
 
     NVGcolor backgroundColor = TRANSPARENT;
 
+    // Background gradient colors for vertical linear style
     NVGcolor backgroundStartColor = TRANSPARENT;
     NVGcolor backgroundEndColor = nvgRGBA(0, 0, 0, 200);
+    // Background corner radius for vertical linear style: top-left, top-right, bottom-left, bottom-right
+    std::vector<float> backgroundRadius{0.0f, 0.0f, 0.0f, 0.0f};
 
     NVGcolor borderColor  = TRANSPARENT;
     float borderThickness = 0.0f;

@@ -658,7 +658,10 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style, Rect f
             NVGpaint gradient = nvgLinearGradient(vg, x, y, x, y + height, a(backgroundStartColor), a(backgroundEndColor));
             nvgBeginPath(vg);
             nvgFillPaint(vg, gradient);
-            nvgRect(vg, x, y, width, height);
+            if (std::all_of(this->backgroundRadius.begin(), this->backgroundRadius.end(), [](float i) { return i == 0.0f; }))
+                nvgRect(vg, x, y, width, height);
+            else
+                nvgRoundedRectVarying(vg, x, y, width, height, backgroundRadius[0], backgroundRadius[1], backgroundRadius[2], backgroundRadius[3]);
             nvgFill(vg);
             break;
         }
@@ -2124,12 +2127,26 @@ void View::registerCommonAttributes()
             { "vertical_linear", ViewBackground::VERTICAL_LINEAR },
         });
 
+    // background start and end color for vertical linear style
     this->registerColorXMLAttribute("backgroundStartColor", [this](NVGcolor value) {
         this->backgroundStartColor = value;
     });
-
     this->registerColorXMLAttribute("backgroundEndColor", [this](NVGcolor value) {
         this->backgroundEndColor = value;
+    });
+
+    // background corner radius for vertical linear style
+    this->registerFloatXMLAttribute("backgroundTopLeftRadius", [this](float value) {
+        this->backgroundRadius[0] = value;
+    });
+    this->registerFloatXMLAttribute("backgroundTopRightRadius", [this](float value) {
+        this->backgroundRadius[1] = value;
+    });
+    this->registerFloatXMLAttribute("backgroundBottomLeftRadius", [this](float value) {
+        this->backgroundRadius[2] = value;
+    });
+    this->registerFloatXMLAttribute("backgroundBottomRightRadius", [this](float value) {
+        this->backgroundRadius[3] = value;
     });
 
     this->registerBoolXMLAttribute("focusable", [this](bool value) {
