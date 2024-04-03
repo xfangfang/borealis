@@ -530,12 +530,13 @@ View* ScrollingFrame::getParentNavigationDecision(View* from, View* newFocus, Fo
 
 bool ScrollingFrame::updateScrolling(bool animated)
 {
-    if (!this->contentView || !this->childFocused)
+    if (!this->contentView)
         return false;
 
     View* focusedView = getDefaultFocus();
-    float localY      = focusedView->getLocalY();
-    View* parent      = focusedView->getParent();
+    float localY      = focusedView ? focusedView->getLocalY() : 0.0f;
+    float itemHeight  = focusedView ? focusedView->getHeight() : 0.0f;
+    View* parent      = focusedView ? focusedView->getParent() : nullptr;
 
     while (parent && dynamic_cast<ScrollingFrame*>(parent->getParent()) == nullptr)
     {
@@ -543,7 +544,7 @@ bool ScrollingFrame::updateScrolling(bool animated)
         parent = parent->getParent();
     }
 
-    int currentSelectionMiddleOnScreen = localY + focusedView->getHeight() / 2;
+    int currentSelectionMiddleOnScreen = localY + itemHeight / 2;
     float newScroll                    = currentSelectionMiddleOnScreen - this->getHeight() / 2;
 
     float contentHeight = this->getContentHeight();
