@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "pokemon_view.hpp"
+#include "view/pokemon_view.hpp"
 
 #include <borealis/core/i18n.hpp>
 

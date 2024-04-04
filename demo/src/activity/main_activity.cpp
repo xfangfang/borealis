@@ -14,4 +14,4 @@
     limitations under the License.
 */
 
-#include "main_activity.hpp"
+#include "activity/main_activity.hpp"

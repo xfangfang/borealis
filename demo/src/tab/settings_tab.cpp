@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "settings_tab.hpp"
+#include "tab/settings_tab.hpp"
 
 using namespace brls::literals;  // for _i18n
 

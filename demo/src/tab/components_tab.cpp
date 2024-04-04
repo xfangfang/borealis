@@ -14,9 +14,7 @@
     limitations under the License.
 */
 
-#include "components_tab.hpp"
-
-#include "pokemon_view.hpp"
+#include "tab/components_tab.hpp"
 
 ComponentsTab::ComponentsTab()
 {

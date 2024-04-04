@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "captioned_image.hpp"
+#include "view/captioned_image.hpp"
 
 CaptionedImage::CaptionedImage()
 {

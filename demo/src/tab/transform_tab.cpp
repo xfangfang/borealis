@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "transform_tab.hpp"
+#include "tab/transform_tab.hpp"
 
 #define POINTER_SIZE 20
 #define BOX_SIZE 100

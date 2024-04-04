@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#include "recycling_list_tab.hpp"
-#include "pokemon_view.hpp"
+#include "tab/recycling_list_tab.hpp"
+#include "view/pokemon_view.hpp"
 
 std::vector<Pokemon> pokemons;
 
