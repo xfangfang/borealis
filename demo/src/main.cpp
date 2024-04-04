@@ -29,6 +29,7 @@
 #include "tab/transform_tab.hpp"
 #include "tab/recycling_list_tab.hpp"
 #include "tab/settings_tab.hpp"
+#include "tab/text_test_tab.hpp"
 #include "activity/main_activity.hpp"
 
 using namespace brls::literals; // for _i18n
@@ -69,6 +70,7 @@ int main(int argc, char* argv[])
     brls::Application::registerXMLView("TransformBox", TransformBox::create);
     brls::Application::registerXMLView("PokemonView", PokemonView::create);
     brls::Application::registerXMLView("SettingsTab", SettingsTab::create);
+    brls::Application::registerXMLView("TextTestTab", TextTestTab::create);
 
     // Add custom values to the theme
     brls::Theme::getLightTheme().addColor("captioned_image/caption", nvgRGB(2, 176, 183));

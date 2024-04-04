@@ -19,6 +19,10 @@
             <TransformTab />
         </brls:Tab>
 
+        <brls:Tab label="@i18n/demo/tabs/text" >
+            <TextTestTab />
+        </brls:Tab>
+
         <brls:Separator />
 
         <brls:Tab label="@i18n/demo/tabs/scroll" >
