@@ -107,6 +107,11 @@ void SDLPlatform::restoreWindow()
     SDL_RestoreWindow(this->videoContext->getSDLWindow());
 }
 
+void SDLPlatform::setWindowAlwaysOnTop(bool enable)
+{
+    SDL_SetWindowAlwaysOnTop(this->videoContext->getSDLWindow(), enable ? SDL_TRUE : SDL_FALSE);
+}
+
 void SDLPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
     if (windowWidth > 0 && windowHeight > 0) {

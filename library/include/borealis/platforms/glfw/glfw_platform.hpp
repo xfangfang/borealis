@@ -40,6 +40,7 @@ class GLFWPlatform : public DesktopPlatform
     virtual void setWindowPosition(int windowXPos, int windowYPos) override;
     virtual void setWindowState(uint32_t windowWidth, uint32_t windowHeight, int windowXPos, int windowYPos) override;
 
+    void setWindowAlwaysOnTop(bool enable) override;
     bool mainLoopIteration() override;
 
     AudioPlayer* getAudioPlayer() override;
