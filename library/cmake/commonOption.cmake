@@ -13,9 +13,21 @@ option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
 
+# Zig makes cross-compiling easier and ignores glibc version issue
+# target can be: x86_64-macos-none, x86_64-macos.11.0-none, x86_64-windows-gnu, x86_64-linux-gnu, x86_64-linux-gnu.2.17, ...
+# Using `zig targets | jq .libc` to get the list of targets
+option(ZIG_TARGET "Setting a target and using `zig cc/c++` to compile" OFF)
+# example: -DZIG_NIGHTLY="0.12.0-dev.3631+c4587dc9f"
+option(ZIG_NIGHTLY "Download nightly build instead of release version if zig is not in the system path" ON)
+
 # Windows Only
-cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON "WIN32" OFF)
-cmake_dependent_option(USE_D3D11 "Using directx 11 instead of OpenGL." OFF "WIN32" OFF)
+if ((NOT ZIG_TARGET AND WIN32) OR (ZIG_TARGET MATCHES "windows"))
+    set(WIN32_BUILD ON)
+else()
+    set(WIN32_BUILD OFF)
+endif()
+cmake_dependent_option(WIN32_TERMINAL "Show terminal when run on Windows" ON WIN32_BUILD OFF)
+cmake_dependent_option(USE_D3D11 "Using directx 11 instead of OpenGL." OFF WIN32_BUILD OFF)
 
 # Linux Only
 cmake_dependent_option(INSTALL "Install to system." OFF "UNIX;NOT APPLE" OFF)
