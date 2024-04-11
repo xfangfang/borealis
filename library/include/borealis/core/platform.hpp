@@ -162,6 +162,11 @@ class Platform
     virtual bool canSetBacklightBrightness() = 0;
 
     /**
+     * Set the windows always on top
+     */
+    virtual void setWindowAlwaysOnTop(bool enable) {}
+
+    /**
      * Called at every iteration of the main loop.
      * Must return false if the app should continue running
      * (for example, return false if the X button was pressed on the window).

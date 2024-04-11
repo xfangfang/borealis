@@ -50,6 +50,9 @@
                 id="bottomBar"/>
 
             <brls:BooleanCell
+                id="alwaysOnTop"/>
+
+            <brls:BooleanCell
                 id="fps"/>
 
             <brls:SliderCell

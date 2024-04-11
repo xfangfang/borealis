@@ -79,6 +79,11 @@ void GLFWPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, u
     this->imeManager   = new GLFWImeManager(win);
 }
 
+void GLFWPlatform::setWindowAlwaysOnTop(bool enable)
+{
+    glfwSetWindowAttrib(this->videoContext->getGLFWWindow(), GLFW_FLOATING, enable ? GLFW_TRUE : GLFW_FALSE);
+}
+
 void GLFWPlatform::restoreWindow()
 {
     glfwRestoreWindow(this->videoContext->getGLFWWindow());

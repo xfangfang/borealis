@@ -43,6 +43,7 @@ class SDLPlatform : public DesktopPlatform
     void disableScreenDimming(bool disable, const std::string& reason, const std::string& app) override;
     bool isScreenDimmingDisabled() override;
 
+    void setWindowAlwaysOnTop(bool enable) override;
     bool mainLoopIteration() override;
 
     AudioPlayer* getAudioPlayer() override;
