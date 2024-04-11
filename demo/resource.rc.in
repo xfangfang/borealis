@@ -25,4 +25,6 @@ BEGIN
     END
 END
 
+101 ICON DISCARDABLE "${CMAKE_SOURCE_DIR}/demo/borealis.ico"
+
 1 24 "${CMAKE_SOURCE_DIR}/demo/resource.manifest"
