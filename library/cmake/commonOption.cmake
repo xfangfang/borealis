@@ -32,8 +32,10 @@ cmake_dependent_option(USE_DEKO3D "Using deko3d instead of OpenGL." OFF "PLATFOR
 
 option(USE_BOOST_FILESYSTEM "Whether to use the boost::filesystem instead of std::filesystem" OFF)
 
+option(USE_STD_THREAD "Whether to use std::thread instead of pthread" OFF)
+
 # Do not use it until you know what you are doing.
-# You may need this option when packaging a AppImage.
+# You may need this option when packaging to AppImage.
 option(CUSTOM_RESOURCES_DIR "Custom resources dir" "")
 
 option(USE_GLFW "using glfw for input and create window" OFF)
