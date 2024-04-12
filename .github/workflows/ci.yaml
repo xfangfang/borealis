@@ -17,8 +17,8 @@ jobs:
         os: [linux, windows, macos]
         arch: [ x86_64, aarch64, x86 ]
         include:
-          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON", ext: ".exe" }
-          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON" }
+          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=../libromfs-generator", ext: ".exe" }
+          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=../libromfs-generator" }
           - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app"}
         exclude:
           - { os: macos, arch: x86 }
@@ -36,6 +36,9 @@ jobs:
       - name: SSH connection to Actions
         uses: P3TERX/ssh2actions@v1.0.0
         if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
+
+      - name: Build libromfs generator
+        run: ./build_libromfs_generator.sh
 
       - name: Install dependencies
         if: ${{ matrix.os == 'linux' }}
@@ -61,7 +64,7 @@ jobs:
             -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
           make -C build -j$(nproc)
           mv build/borealis_demo${{ matrix.ext }} borealis-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
-          echo "DEMO=borealis-${{ matrix.arch }}-${{ matrix.os }}${{ matrix.ext }}" >> $GITHUB_OUTPUT
+          echo "DEMO=borealis-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}" >> $GITHUB_OUTPUT
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
