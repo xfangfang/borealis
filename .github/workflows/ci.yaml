@@ -63,8 +63,14 @@ jobs:
             -DUSE_STD_THREAD=ON \
             -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
           make -C build -j$(nproc)
-          mv build/borealis_demo${{ matrix.ext }} borealis-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
-          echo "DEMO=borealis-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}" >> $GITHUB_OUTPUT
+          output_dir=borealis-${{ matrix.os }}-${{ matrix.arch }}
+          mkdir -p ${output_dir}
+          mv build/borealis_demo${{ matrix.ext }} ${output_dir}
+          echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
+
+      - name: strip
+        if: ${{ matrix.os == 'linux' }}
+        run: strip ${{ steps.build.outputs.DEMO }}/borealis_demo
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
