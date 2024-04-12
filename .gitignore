@@ -12,3 +12,4 @@ builddir
 psv/module/
 psv/sce_sys/
 libromfs-generator
+!.github/

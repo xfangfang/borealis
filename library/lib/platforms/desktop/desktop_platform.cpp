@@ -34,7 +34,7 @@
 #include <wlanapi.h>
 #include <shellapi.h>
 #include <winioctl.h>
-#include <Ntddvdeo.h>
+#include <ntddvdeo.h>
 #elif IOS
 #elif __APPLE__
 #include <IOKit/ps/IOPSKeys.h>

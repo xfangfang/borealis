@@ -18,7 +18,7 @@ option(PLATFORM_SWITCH "build for switch" OFF)
 # Using `zig targets | jq .libc` to get the list of targets
 option(ZIG_TARGET "Setting a target and using `zig cc/c++` to compile" OFF)
 # example: -DZIG_NIGHTLY="0.12.0-dev.3631+c4587dc9f"
-option(ZIG_NIGHTLY "Download nightly build instead of release version if zig is not in the system path" ON)
+option(ZIG_NIGHTLY "Download nightly build instead of release version if zig is not in the system path" OFF)
 
 # Windows Only
 if ((NOT ZIG_TARGET AND WIN32) OR (ZIG_TARGET MATCHES "windows"))

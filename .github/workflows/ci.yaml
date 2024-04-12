@@ -1,0 +1,70 @@
+name: Build borealis demo
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      ssh_ubuntu:
+        description: 'SSH connection to Ubuntu'
+        required: false
+        default: 'false'
+jobs:
+  build-desktop:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, windows, macos]
+        arch: [ x86_64, aarch64, x86 ]
+        include:
+          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON", ext: ".exe" }
+          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON" }
+          - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app"}
+        exclude:
+          - { os: macos, arch: x86 }
+          - { os: windows, arch: aarch64 }
+          - { os: linux, arch: x86 }
+          - { os: linux, arch: aarch64 }
+      # Don't fail the whole workflow if one architecture fails
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: SSH connection to Actions
+        uses: P3TERX/ssh2actions@v1.0.0
+        if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
+
+      - name: Install dependencies
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          sudo apt update -y
+          sudo apt remove -y libc6-dev
+          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxi-dev --no-install-recommends
+
+      - name: Install dependencies
+        if: ${{ matrix.os == 'windows' }}
+        run: |
+          sudo apt update -y
+          sudo apt install -y binutils-mingw-w64-x86-64 --no-install-recommends
+
+      - name: Build
+        id: build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
+            -DPLATFORM_DESKTOP=ON \
+            -DUSE_STD_THREAD=ON \
+            -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
+          make -C build -j$(nproc)
+          mv build/borealis_demo${{ matrix.ext }} borealis-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
+          echo "DEMO=borealis-${{ matrix.arch }}-${{ matrix.os }}${{ matrix.ext }}" >> $GITHUB_OUTPUT
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.DEMO }}
+          path: "${{ steps.build.outputs.DEMO }}"
