@@ -17,8 +17,8 @@ jobs:
         os: [linux, windows, macos]
         arch: [ x86_64, aarch64, x86 ]
         include:
-          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=../libromfs-generator", ext: ".exe" }
-          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=../libromfs-generator" }
+          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=/home/runner/work/borealis/borealis/libromfs-generator", ext: ".exe" }
+          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=/home/runner/work/borealis/borealis/libromfs-generator" }
           - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app"}
         exclude:
           - { os: macos, arch: x86 }
