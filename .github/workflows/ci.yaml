@@ -135,9 +135,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        driver: [gl, d3d]
+        driver: [gl, d3d11]
         include:
-          - { driver: d3d, cmake: "-DUSE_D3D11=ON" }
+          - { driver: d3d11, cmake: "-DUSE_D3D11=ON" }
     env:
       MSYSTEM: MINGW64
       MSYS2_PATH_TYPE: inherit
@@ -170,6 +170,7 @@ jobs:
           path: build/borealis_demo.exe
 
   linux:
+    name: ${{ matrix.driver }}${{ matrix.ext }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -178,6 +179,8 @@ jobs:
           - { driver: gl2, cmake: "-DUSE_GL2=ON" }
           - { driver: gles2, cmake: "-DUSE_GLES2=ON" }
           - { driver: gles3, cmake: "-DUSE_GLES3=ON" }
+          - { driver: gl3, cmake: "-DUSE_GLFW=ON", ext: "-glfw" }
+          - { driver: gl3, cmake: "-DUSE_SDL2=ON", ext: "-sdl2" }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -196,7 +199,7 @@ jobs:
               -DUSE_LIBROMFS=ON \
               -DX11_X11_LIB=ON
           make -C build -j$(nproc)
-          output_dir=borealis-linux-x86_64-${{ matrix.driver }}
+          output_dir=borealis-linux-x86_64-${{ matrix.driver }}${{ matrix.ext }}
           strip build/borealis_demo
           mkdir -p ${output_dir}
           mv build/borealis_demo ${output_dir}
@@ -204,5 +207,5 @@ jobs:
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: borealis-linux-x86_64-${{ matrix.driver }}
-          path: borealis-linux-x86_64-${{ matrix.driver }}.tar.gz
+          name: borealis-linux-x86_64-${{ matrix.driver }}${{ matrix.ext }}
+          path: borealis-linux-x86_64-${{ matrix.driver }}${{ matrix.ext }}.tar.gz
