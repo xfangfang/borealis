@@ -112,6 +112,12 @@ jobs:
 
   macos:
     runs-on: macos-14
+    name: ${{ matrix.window.name }}
+    strategy:
+      matrix:
+        window:
+          - { name: glfw, cmake: "-DUSE_GLFW=ON" }
+          - { name: sdl2, cmake: "-DUSE_SDL2=ON" }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,16 +125,16 @@ jobs:
           submodules: recursive
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_DESKTOP=ON -DBUNDLE_MACOS_APP=ON
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_DESKTOP=ON -DBUNDLE_MACOS_APP=ON ${{ matrix.window.cmake }}
           make -C build -j$(sysctl -n hw.ncpu)
           mkdir borealis-macos-universal
-          mv build/borealis_demo.app borealis-macos-universal/
-          tar -czvf borealis-macos-universal.tar.gz borealis-macos-universal
+          mv build/borealis_demo.app borealis-macos-${{ matrix.window.name }}/
+          tar -czvf borealis-macos-${{ matrix.window.name }}.tar.gz borealis-macos-${{ matrix.window.name }}
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: borealis-macos-universal
-          path: borealis-macos-universal.tar.gz
+          name: borealis-macos-${{ matrix.window.name }}
+          path: borealis-macos-${{ matrix.window.name }}.tar.gz
 
   windows:
     runs-on: windows-2019
@@ -174,7 +180,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        driver: [gl2, gl3, gles2, gles3]
         include:
           - { driver: gl2, cmake: "-DUSE_GL2=ON" }
           - { driver: gles2, cmake: "-DUSE_GLES2=ON" }
