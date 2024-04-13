@@ -3,12 +3,6 @@ name: Build borealis demo
 on:
   push:
   pull_request:
-  workflow_dispatch:
-    inputs:
-      ssh_ubuntu:
-        description: 'SSH connection to Ubuntu'
-        required: false
-        default: 'false'
 jobs:
   build-ios:
     runs-on: macos-latest
@@ -70,10 +64,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        driver: [ glfw_opengl, sdl_opengl, deko3d ]
+        driver: [ glfw, sdl, deko3d ]
         include:
-          - { driver: glfw_opengl, cmake: "-DUSE_GLFW=ON", ext: "glfw_gl" }
-          - { driver: sdl_opengl, cmake: "-DUSE_SDL2=ON", ext: "sdl_gl" }
+          - { driver: glfw, cmake: "-DUSE_GLFW=ON", ext: "glfw_gl" }
+          - { driver: sdl, cmake: "-DUSE_SDL2=ON", ext: "sdl_gl" }
           - { driver: deko3d, cmake: "-DUSE_DEKO3D=ON", ext: "deko3d" }
     steps:
       - name: Checkout
@@ -116,99 +110,98 @@ jobs:
           name: borealis-android
           path: android-project/app/build/outputs/apk/debug/*.apk
 
-  build-desktop:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [linux, windows, macos]
-        arch: [ x86_64, aarch64, x86 ]
-        window: [glfw, sdl]
-        driver: [ gl2, gl3, gles2, gles3, d3d11]
-        package: [libromfs, no_libromfs]
-        exclude:
-          - { os: macos, arch: x86 }
-          - { os: windows, arch: aarch64 }
-          - { os: linux, arch: x86 }
-          - { os: linux, arch: aarch64 }
-          - { os: linux, driver: d3d11 }
-          - { os: macos, driver: d3d11 }
-          - { os: macos, driver: gles2 }
-          - { os: macos, driver: gles3 }
-          - { os: macos, driver: gl2 }
-          - { os: windows, driver: gles2 }
-          - { os: windows, driver: gles3 }
-          - { os: macos, package: libromfs }
-        include:
-          - { os: windows, libc: "gnu", ext: ".exe" }
-          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON" }
-          - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app" }
-          - { driver: d3d11, cmake_driver: "-DUSE_D3D11=ON" }
-          - { driver: gles2, cmake_driver: "-DUSE_GLES2=ON" }
-          - { driver: gles3, cmake_driver: "-DUSE_GLES3=ON" }
-          - { driver: gl2, cmake_driver: "-DUSE_GL2=ON" }
-          - { driver: gl3, cmake_driver: "-DUSE_GL3=ON" }
-          - { package: libromfs, cmake_pkg: "-DUSE_LIBROMFS=ON", package_ext: "-libromfs" }
-          - { window: glfw, cmake_window: "-DUSE_GLFW=ON" }
-          - { window: sdl, cmake_window: "-DUSE_SDL2=ON" }
-      # Don't fail the whole workflow if one architecture fails
-      fail-fast: false
+  build-macos:
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: SSH connection to Actions
-        uses: P3TERX/ssh2actions@v1.0.0
-        if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
-
-      - name: Build libromfs generator
-        if: ${{ matrix.package == 'libromfs' }}
-        run: ./build_libromfs_generator.sh
-
-      - name: Install dependencies
-        if: ${{ matrix.os == 'linux' }}
-        run: |
-          sudo apt update -y
-          sudo apt remove -y libc6-dev
-          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
-            libxcursor-dev libxi-dev --no-install-recommends
-
-      - name: Install dependencies
-        if: ${{ matrix.os == 'windows' }}
-        run: |
-          sudo apt update -y
-          sudo apt install -y binutils-mingw-w64-x86-64 --no-install-recommends
-
       - name: Build
-        id: build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} ${{ matrix.cmake_driver }} ${{ matrix.cmake_pkg }} ${{ matrix.cmake_window }} \
-            -DPLATFORM_DESKTOP=ON \
-            -DUSE_STD_THREAD=ON \
-            -DLIBROMFS_PREBUILT_GENERATOR=`pwd`/libromfs-generator \
-            -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
-          make -C build -j$(nproc)
-          output_dir=borealis-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.driver }}-${{ matrix.window }}${{ matrix.package_ext }}
-          mkdir -p ${output_dir}
-          mv build/borealis_demo${{ matrix.ext }} ${output_dir}
-          echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
-
-      - name: package resources
-        if: ${{ matrix.package == 'no_libromfs' && matrix.os != 'macos' }}
-        run: cp -r resources ${{ steps.build.outputs.DEMO }}
-
-      - name: strip
-        if: ${{ matrix.os == 'linux' }}
-        run: |
-          strip ${{ steps.build.outputs.DEMO }}/borealis_demo
-
-      - name: package
-        run: tar -czvf ${{ steps.build.outputs.DEMO }}.tar.gz ${{ steps.build.outputs.DEMO }}
-
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_DESKTOP=ON -DBUNDLE_MACOS_APP=ON
+          make -C build -j$(sysctl -n hw.ncpu)
+          mkdir borealis-macos-universal
+          mv build/borealis_demo.app borealis-macos-universal/
+          tar -czvf borealis-macos-universal.tar.gz borealis-macos-universal
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.DEMO }}
-          path: "${{ steps.build.outputs.DEMO }}.tar.gz"
+          name: borealis-macos-universal
+          path: borealis-macos-universal.tar.gz
+
+  build-windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        driver: [gl, d3d]
+        include:
+          - { driver: gl, cmake: "-DUSE_D3D11=ON" }
+    env:
+      MSYSTEM: MINGW64
+      MSYS2_PATH_TYPE: inherit
+    defaults:
+      run:
+        shell: C:\shells\msys2bash.cmd {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependency
+        run: |
+          pacman -S --needed --noconfirm --noprogressbar \
+            ${MINGW_PACKAGE_PREFIX}-gcc \
+            ${MINGW_PACKAGE_PREFIX}-ninja
+      - name: Build
+        run: |
+          cmake -B build -G Ninja ${{ matrix.cmake }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPLATFORM_DESKTOP=ON \
+            -DWIN32_TERMINAL=OFF \
+            -DUSE_LIBROMFS=ON \
+            -DZLIB_USE_STATIC_LIBS=ON
+          cmake --build build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-windows-x86_64-${{ matrix.driver }}
+          path: build/borealis_demo.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        driver: [gl2, gl3, gles2, gles3]
+        include:
+          - { driver: gl2, cmake: "-DUSE_GL2=ON" }
+          - { driver: gles2, cmake: "-DUSE_GLES2=ON" }
+          - { driver: gles3, cmake: "-DUSE_GLES3=ON" }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxi-dev --no-install-recommends
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
+              -DPLATFORM_DESKTOP=ON \
+              -DX11_X11_LIB=ON
+          make -C build -j$(nproc)
+          output_dir=borealis-linux-x86_64-${{ matrix.driver }}
+          strip build/borealis_demo
+          mkdir -p ${output_dir}
+          mv build/borealis_demo ${output_dir}
+          tar -czvf ${output_dir}.tar.gz ${output_dir}
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-linux-x86_64-${{ matrix.driver }}
+          path: borealis-linux-x86_64-${{ matrix.driver }}.tar.gz
