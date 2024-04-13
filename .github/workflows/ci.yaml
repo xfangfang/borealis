@@ -10,6 +10,24 @@ on:
         required: false
         default: 'false'
 jobs:
+  build-psv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
+            "cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
+             cmake --build build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-psv
+          path: build/borealis_demo.vpk
+
   build-switch:
     runs-on: ubuntu-latest
     container:
