@@ -21,13 +21,13 @@ jobs:
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/pacbrew:latest \
             "cmake -B build -DPLATFORM_PS4=ON \
-                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_BUILD_TYPE=Release && \
                 make -C build -j$(nproc)"
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
           name: borealis-ps4
-          path: build/borealis_demo.pkg
+          path: build/*.pkg
 
   build-psv:
     runs-on: ubuntu-latest
@@ -40,13 +40,14 @@ jobs:
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
             "cp -r $VITASDK/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys/ /src/psv/ && \
+             mkdir -p /src/psv/module/ && cp ${VITASDK}/arm-vita-eabi/suprx/*.suprx /src/psv/module/ && \
              cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
              cmake --build build"
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
           name: borealis-psv
-          path: build/borealis_demo.vpk
+          path: build/*.vpk
 
   build-switch:
     runs-on: ubuntu-latest
@@ -90,23 +91,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install ninja-build pkg-config
-      - name: SSH connection to Actions
-        uses: P3TERX/ssh2actions@v1.0.0
-        if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
       - name: Build
         id: build
         run: |
           ./build_libromfs_generator.sh
           cd android-project && ./gradlew assembleDebug
-          output_dir=borealis-android
-          mkdir -p ../${output_dir}
-          mv app/build/outputs/apk/debug/*.apk ../${output_dir}/borealis_demo_debug.apk
-          echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.DEMO }}
-          path: "${{ steps.build.outputs.DEMO }}"
+          name: borealis-android
+          path: android-project/app/build/outputs/apk/debug/*.apk
 
   build-desktop:
     runs-on: ubuntu-latest
