@@ -10,6 +10,23 @@ on:
         required: false
         default: 'false'
 jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0
+          xcodebuild -project build-ios/borealis_demo.xcodeproj -target borealis_demo -configuration Release clean build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-ps4
+          path: build/*.pkg
+
   build-ps4:
     runs-on: ubuntu-latest
     steps:
@@ -39,7 +56,7 @@ jobs:
       - name: Build
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
-            "cp -r /usr/local/vitasdk/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys/ /src/psv/ && \
+            "mv /usr/local/vitasdk/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys /src/psv/ && \
              mkdir -p /src/psv/module/ && cp /usr/local/vitasdk/arm-vita-eabi/suprx/*.suprx /src/psv/module/ && \
              cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
              cmake --build build"
