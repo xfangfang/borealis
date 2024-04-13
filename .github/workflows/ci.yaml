@@ -20,6 +20,10 @@ jobs:
         id: setup_ndk
         with:
           ndk-version: r22b
+      - name: Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build pkg-config
       - name: SSH connection to Actions
         uses: P3TERX/ssh2actions@v1.0.0
         if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
@@ -29,8 +33,8 @@ jobs:
           ./build_libromfs_generator.sh
           cd android-project && ./gradlew assembleDebug
           output_dir=borealis-android
-          mkdir -p ${output_dir}
-          mv android-project/app/build/outputs/apk/debug/*.apk ${output_dir}
+          mkdir -p ../${output_dir}
+          mv app/build/outputs/apk/debug/*.apk ../${output_dir}/borealis_demo_debug.apk
           echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
 
       - name: Upload dist
