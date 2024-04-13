@@ -10,6 +10,32 @@ on:
         required: false
         default: 'false'
 jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: nttld/setup-ndk@v1
+        id: setup_ndk
+        with:
+          ndk-version: r22b
+      - name: Build
+        id: build
+        run: |
+          ./build_libromfs_generator.sh
+          cd android-project && ./gradlew assembleDebug
+          output_dir=borealis-android
+          mkdir -p ${output_dir}
+          mv android-project/app/build/outputs/apk/debug/*.apk ${output_dir}
+          echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.DEMO }}
+          path: "${{ steps.build.outputs.DEMO }}"
+
   build-desktop:
     runs-on: ubuntu-latest
     strategy:
@@ -79,7 +105,7 @@ jobs:
         if: ${{ matrix.os == 'macos' }}
         run: |
           tar -czvf ${{ steps.build.outputs.DEMO }}/borealis_demo.tar.gz ${{ steps.build.outputs.DEMO }}/borealis_demo.app
-          rm ${{ steps.build.outputs.DEMO }}/borealis_demo.app
+          rm -rf ${{ steps.build.outputs.DEMO }}/borealis_demo.app
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
