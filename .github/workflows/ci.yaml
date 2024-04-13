@@ -10,6 +10,32 @@ on:
         required: false
         default: 'false'
 jobs:
+  build-switch:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64
+    strategy:
+      fail-fast: false
+      matrix:
+        driver: [ opengl, deko3d ]
+        include:
+          - { driver: opengl, ext: "gl" }
+          - { driver: deko3d, cmake: "-DUSE_DEKO3D=ON", ext: "deko3d" }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON ${{ matrix.cmake }}
+          make -C build -j$(nproc)
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-switch-${{ matrix.ext }}
+          path: build/borealis_demo.nro
+
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -20,6 +46,7 @@ jobs:
         id: setup_ndk
         with:
           ndk-version: r22b
+          local-cache: true
       - name: Setup
         run: |
           sudo apt-get update
@@ -36,7 +63,6 @@ jobs:
           mkdir -p ../${output_dir}
           mv app/build/outputs/apk/debug/*.apk ../${output_dir}/borealis_demo_debug.apk
           echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
-
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
