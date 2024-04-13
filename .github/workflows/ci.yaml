@@ -10,6 +10,25 @@ on:
         required: false
         default: 'false'
 jobs:
+  build-ps4:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          docker run --rm -v $(pwd):/src/ xfangfang/pacbrew:latest \
+            "cmake -B build -DPLATFORM_PS4=ON \
+                -DCMAKE_BUILD_TYPE=Release \
+                make -C build -j$(nproc)"
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-ps4
+          path: build/borealis_demo.pkg
+
   build-psv:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +39,8 @@ jobs:
       - name: Build
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
-            "cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
+            "cp -r $VITASDK/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys/ /src/psv/ && \
+             cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
              cmake --build build"
       - name: Upload dist
         uses: actions/upload-artifact@v4
