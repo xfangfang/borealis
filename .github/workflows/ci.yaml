@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
 jobs:
-  build-ios:
+  ios:
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -17,7 +17,7 @@ jobs:
           cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0
           xcodebuild -project build-ios/borealis_demo.xcodeproj -target borealis_demo -configuration Release clean build
 
-  build-ps4:
+  ps4:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,7 +36,7 @@ jobs:
           name: borealis-ps4
           path: build/*.pkg
 
-  build-psv:
+  psv:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,7 +57,7 @@ jobs:
           name: borealis-psv
           path: build/*.vpk
 
-  build-switch:
+  switch:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkita64
@@ -84,7 +84,7 @@ jobs:
           name: borealis-switch-${{ matrix.ext }}
           path: build/borealis_demo.nro
 
-  build-android:
+  android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,7 +110,7 @@ jobs:
           name: borealis-android
           path: android-project/app/build/outputs/apk/debug/*.apk
 
-  build-macos:
+  macos:
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -130,14 +130,14 @@ jobs:
           name: borealis-macos-universal
           path: borealis-macos-universal.tar.gz
 
-  build-windows:
+  windows:
     runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
         driver: [gl, d3d]
         include:
-          - { driver: gl, cmake: "-DUSE_D3D11=ON" }
+          - { driver: d3d, cmake: "-DUSE_D3D11=ON" }
     env:
       MSYSTEM: MINGW64
       MSYS2_PATH_TYPE: inherit
@@ -169,7 +169,7 @@ jobs:
           name: borealis-windows-x86_64-${{ matrix.driver }}
           path: build/borealis_demo.exe
 
-  build-linux:
+  linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -193,6 +193,7 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
               -DPLATFORM_DESKTOP=ON \
+              -DUSE_LIBROMFS=ON \
               -DX11_X11_LIB=ON
           make -C build -j$(nproc)
           output_dir=borealis-linux-x86_64-${{ matrix.driver }}
