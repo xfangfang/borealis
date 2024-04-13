@@ -20,6 +20,9 @@ jobs:
         id: setup_ndk
         with:
           ndk-version: r22b
+      - name: SSH connection to Actions
+        uses: P3TERX/ssh2actions@v1.0.0
+        if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
       - name: Build
         id: build
         run: |
