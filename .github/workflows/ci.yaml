@@ -122,15 +122,34 @@ jobs:
       matrix:
         os: [linux, windows, macos]
         arch: [ x86_64, aarch64, x86 ]
-        include:
-          - { os: windows, libc: "gnu", cmake: "-DUSE_D3D11=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=/home/runner/work/borealis/borealis/libromfs-generator", ext: ".exe" }
-          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON -DUSE_LIBROMFS=ON -DLIBROMFS_PREBUILT_GENERATOR=/home/runner/work/borealis/borealis/libromfs-generator" }
-          - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app"}
+        window: [glfw, sdl]
+        driver: [ gl2, gl3, gles2, gles3, d3d11]
+        package: [libromfs, no_libromfs]
         exclude:
           - { os: macos, arch: x86 }
           - { os: windows, arch: aarch64 }
           - { os: linux, arch: x86 }
           - { os: linux, arch: aarch64 }
+          - { os: linux, driver: d3d11 }
+          - { os: macos, driver: d3d11 }
+          - { os: macos, driver: gles2 }
+          - { os: macos, driver: gles3 }
+          - { os: macos, driver: gl2 }
+          - { os: windows, driver: gles2 }
+          - { os: windows, driver: gles3 }
+          - { os: macos, package: libromfs }
+        include:
+          - { os: windows, libc: "gnu", ext: ".exe" }
+          - { os: linux, libc: "gnu", cmake: "-DX11_X11_LIB=ON" }
+          - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app" }
+          - { driver: d3d11, cmake_driver: "-DUSE_D3D11=ON" }
+          - { driver: gles2, cmake_driver: "-DUSE_GLES2=ON" }
+          - { driver: gles3, cmake_driver: "-DUSE_GLES3=ON" }
+          - { driver: gl2, cmake_driver: "-DUSE_GL2=ON" }
+          - { driver: gl3, cmake_driver: "-DUSE_GL3=ON" }
+          - { package: libromfs, cmake_pkg: "-DUSE_LIBROMFS=ON", package_ext: "-libromfs" }
+          - { window: glfw, cmake_window: "-DUSE_GLFW=ON" }
+          - { window: sdl, cmake_window: "-DUSE_SDL2=ON" }
       # Don't fail the whole workflow if one architecture fails
       fail-fast: false
     steps:
@@ -144,6 +163,7 @@ jobs:
         if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
 
       - name: Build libromfs generator
+        if: ${{ matrix.package == 'libromfs' }}
         run: ./build_libromfs_generator.sh
 
       - name: Install dependencies
@@ -164,31 +184,31 @@ jobs:
       - name: Build
         id: build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} ${{ matrix.cmake_driver }} ${{ matrix.cmake_pkg }} ${{ matrix.cmake_window }} \
             -DPLATFORM_DESKTOP=ON \
             -DUSE_STD_THREAD=ON \
+            -DLIBROMFS_PREBUILT_GENERATOR=`pwd`/libromfs-generator \
             -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
           make -C build -j$(nproc)
-          output_dir=borealis-${{ matrix.os }}-${{ matrix.arch }}
+          output_dir=borealis-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.driver }}-${{ matrix.window }}${{ matrix.package_ext }}
           mkdir -p ${output_dir}
           mv build/borealis_demo${{ matrix.ext }} ${output_dir}
           echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
 
-      - name: package linux
+      - name: package resources
+        if: ${{ matrix.package == 'no_libromfs' && matrix.os != 'macos' }}
+        run: cp -r resources ${{ steps.build.outputs.DEMO }}
+
+      - name: strip
         if: ${{ matrix.os == 'linux' }}
         run: |
           strip ${{ steps.build.outputs.DEMO }}/borealis_demo
-          tar -czvf ${{ steps.build.outputs.DEMO }}/borealis_demo.tar.gz ${{ steps.build.outputs.DEMO }}/borealis_demo
-          rm ${{ steps.build.outputs.DEMO }}/borealis_demo
 
-      - name: package macos
-        if: ${{ matrix.os == 'macos' }}
-        run: |
-          tar -czvf ${{ steps.build.outputs.DEMO }}/borealis_demo.tar.gz ${{ steps.build.outputs.DEMO }}/borealis_demo.app
-          rm -rf ${{ steps.build.outputs.DEMO }}/borealis_demo.app
+      - name: package
+        run: tar -czvf ${{ steps.build.outputs.DEMO }}.tar.gz ${{ steps.build.outputs.DEMO }}
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.DEMO }}
-          path: "${{ steps.build.outputs.DEMO }}"
+          path: "${{ steps.build.outputs.DEMO }}.tar.gz"
