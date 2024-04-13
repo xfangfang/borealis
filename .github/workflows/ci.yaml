@@ -21,7 +21,7 @@ jobs:
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
             "cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
-             cmake --build build
+             cmake --build build"
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
