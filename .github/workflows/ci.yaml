@@ -112,7 +112,7 @@ jobs:
 
   macos:
     runs-on: macos-14
-    name: ${{ matrix.window.name }}
+    name: macos (${{ matrix.window.name }})
     strategy:
       matrix:
         window:
@@ -176,7 +176,7 @@ jobs:
           path: build/borealis_demo.exe
 
   linux:
-    name: ${{ matrix.driver }}${{ matrix.ext }}
+    name: linux (${{ matrix.driver }}${{ matrix.ext }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
