@@ -17,9 +17,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        driver: [ opengl, deko3d ]
+        driver: [ glfw_opengl, sdl_opengl, deko3d ]
         include:
-          - { driver: opengl, ext: "gl" }
+          - { driver: glfw_opengl, cmake: "-DUSE_GLFW=ON", ext: "glfw_gl" }
+          - { driver: sdl_opengl, cmake: "-DUSE_SDL2=ON", ext: "sdl_gl" }
           - { driver: deko3d, cmake: "-DUSE_DEKO3D=ON", ext: "deko3d" }
     steps:
       - name: Checkout
@@ -29,7 +30,7 @@ jobs:
       - name: Build
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON ${{ matrix.cmake }}
-          make -C build -j$(nproc)
+          make -C build borealis_demo.nro -j$(nproc)
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
