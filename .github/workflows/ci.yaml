@@ -68,9 +68,18 @@ jobs:
           mv build/borealis_demo${{ matrix.ext }} ${output_dir}
           echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
 
-      - name: strip
+      - name: package linux
         if: ${{ matrix.os == 'linux' }}
-        run: strip ${{ steps.build.outputs.DEMO }}/borealis_demo
+        run: |
+          strip ${{ steps.build.outputs.DEMO }}/borealis_demo
+          tar -czvf ${{ steps.build.outputs.DEMO }}/borealis_demo.tar.gz ${{ steps.build.outputs.DEMO }}/borealis_demo
+          rm ${{ steps.build.outputs.DEMO }}/borealis_demo
+
+      - name: package macos
+        if: ${{ matrix.os == 'macos' }}
+        run: |
+          tar -czvf ${{ steps.build.outputs.DEMO }}/borealis_demo.tar.gz ${{ steps.build.outputs.DEMO }}/borealis_demo.app
+          rm ${{ steps.build.outputs.DEMO }}/borealis_demo.app
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
