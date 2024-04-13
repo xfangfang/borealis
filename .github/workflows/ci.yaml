@@ -52,8 +52,9 @@ jobs:
       - name: Build
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/wiliwili_psv_builder:latest \
-            "mv /usr/local/vitasdk/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys /src/psv/ && \
-             mkdir -p /src/psv/module/ && cp /usr/local/vitasdk/arm-vita-eabi/suprx/*.suprx /src/psv/module/ && \
+            "mkdir -p /src/psv/module/ && 
+             mv /usr/local/vitasdk/share/gcc-arm-vita-eabi/samples/hello_world/sce_sys /src/psv/sce_sys && \
+             cp /usr/local/vitasdk/arm-vita-eabi/suprx/*.suprx /src/psv/module/ && \
              cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
              cmake --build build"
       - name: Upload dist
