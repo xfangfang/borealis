@@ -64,10 +64,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        driver: [ glfw, sdl, deko3d ]
+        driver: [ glfw, sdl2, deko3d ]
         include:
-          - { driver: glfw, cmake: "-DUSE_GLFW=ON", ext: "glfw_gl" }
-          - { driver: sdl, cmake: "-DUSE_SDL2=ON", ext: "sdl_gl" }
+          - { driver: glfw, cmake: "-DUSE_GLFW=ON", ext: "gl3-glfw" }
+          - { driver: sdl2, cmake: "-DUSE_SDL2=ON", ext: "gl3-sdl2" }
           - { driver: deko3d, cmake: "-DUSE_DEKO3D=ON", ext: "deko3d" }
     steps:
       - name: Checkout
@@ -127,7 +127,7 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_DESKTOP=ON -DBUNDLE_MACOS_APP=ON ${{ matrix.window.cmake }}
           make -C build -j$(sysctl -n hw.ncpu)
-          mkdir borealis-macos-universal
+          mkdir borealis-macos-${{ matrix.window.name }}
           mv build/borealis_demo.app borealis-macos-${{ matrix.window.name }}/
           tar -czvf borealis-macos-${{ matrix.window.name }}.tar.gz borealis-macos-${{ matrix.window.name }}
       - name: Upload dist
