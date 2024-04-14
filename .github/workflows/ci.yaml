@@ -11,16 +11,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: irgaly/xcode-cache@v1
-        with:
-          key: xcode-cache-deriveddata-${{ github.workflow }}-${{ github.sha }}
-          restore-keys: xcode-cache-deriveddata-${{ github.workflow }}
-          verbose: true
       - name: Build
         run: |
           ./build_libromfs_generator.sh
-          cmake -B build-ios -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=SIMULATORARM64 -DDEPLOYMENT_TARGET=13.0
-          xcodebuild -project build-ios/borealis_demo.xcodeproj -target borealis_demo -configuration Release clean build
+          cmake -B build -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=13.0
+          cmake --build build
+          ditto -ck --rsrc --sequesterRsrc --keepParent build/Debug-iphoneos/borealis_demo.app borealis_demo.zip
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: borealis-ios
+          path: borealis_demo.ipa
 
   ps4:
     runs-on: ubuntu-latest
