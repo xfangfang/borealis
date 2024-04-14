@@ -11,17 +11,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - uses: actions/cache/restore@v4
+        id: ios-cache
+        with:
+          path: build
+          key: ios-cmake-build-dir
       - name: Build
         run: |
           ./build_libromfs_generator.sh
           cmake -B build -G Xcode -DPLATFORM_IOS=ON -DPLATFORM=OS64 -DDEPLOYMENT_TARGET=13.0
           cmake --build build
           ditto -ck --rsrc --sequesterRsrc --keepParent build/Debug-iphoneos/borealis_demo.app borealis_demo.zip
+      - uses: actions/cache/save@v4
+        with:
+          path: build
+          key: ios-cmake-build-dir
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
           name: borealis-ios
-          path: borealis_demo.ipa
+          path: borealis_demo.zip
 
   ps4:
     runs-on: ubuntu-latest
