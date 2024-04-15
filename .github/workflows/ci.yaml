@@ -11,11 +11,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: cache
+        id: cache-key
+        run: echo "IOS_CACHE_KEY=ios-cmake-build-dir-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '.github/workflows/ci.yaml') }}" >> $GITHUB_OUTPUT
       - uses: actions/cache/restore@v4
         id: ios-cache
         with:
           path: build
-          key: ios-cmake-build-dir-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '.github/workflows/ci.yaml') }}
+          key: ${{ steps.cache-key.outputs.IOS_CACHE_KEY }}
       - name: Build
         run: |
           ./build_libromfs_generator.sh
@@ -26,7 +29,7 @@ jobs:
         if: ${{ !steps.ios-cache.outputs.cache-hit }}
         with:
           path: build
-          key: ios-cmake-build-dir-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '.github/workflows/ci.yaml') }}
+          key: ${{ steps.cache-key.outputs.IOS_CACHE_KEY }}
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
