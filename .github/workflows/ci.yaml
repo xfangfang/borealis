@@ -23,6 +23,7 @@ jobs:
           cmake --build build
           ditto -ck --rsrc --sequesterRsrc --keepParent build/Debug-iphoneos/borealis_demo.app borealis_demo.zip
       - uses: actions/cache/save@v4
+        if: ${{ !steps.ios-cache.outputs.cache-hit }}
         with:
           path: build
           key: ios-cmake-build-dir
