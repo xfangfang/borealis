@@ -41,7 +41,6 @@ jobs:
         if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
 
       - name: Build libromfs generator
-        if: ${{ matrix.package == 'libromfs' }}
         run: ./build_libromfs_generator.sh
 
       - name: Install dependencies
