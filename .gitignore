@@ -9,7 +9,6 @@
 builddir
 *.dksh
 .DS_Store
-psv/module/
-psv/sce_sys/
+*.suprx
 libromfs-generator
 !.github/
