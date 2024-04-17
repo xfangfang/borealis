@@ -162,6 +162,20 @@ open build-ios/*.xcodeproj
 # 3. Set up Team and Bundle Identifiers in Xcode, then connect devices to run.
 ```
 
+<details>
+
+How to install the borealis demo on your iPhone (in a beginner-friendly way):
+
+1. Download the `borealis_demo.app` (borealis-ios) from [GitHub Actions](https://github.com/xfangfang/borealis/actions).
+2. Create a new iOS project in xcode (make sure you can install the app on your iPhone).
+3. Download [ios-app-signer](https://github.com/DanTheMan827/ios-app-signer).
+4. Open `ios-app-signer`, select `borealis_demo.app` for `Input File`, select the newly created xcode project for `Provisioning Profile`, and click start.
+5. Change the suffix of the generated ipa to zip and unzip it to get the Payload folder.
+6. Open xcode, select `Window -> Devices and Simulators` from the menu bar, connect the device, click the `+` in `installed apps`, and select the `borealis_demo.app` file in the Payload folder.
+
+</details>
+
+
 ### 2. Build for arm64 iphoneOS Simulator
 
 ```shell
