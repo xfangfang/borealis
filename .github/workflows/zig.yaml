@@ -1,4 +1,4 @@
-name: Build borealis demo
+name: Build borealis demo [cross-compilation]
 
 on:
   push:

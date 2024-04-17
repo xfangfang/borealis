@@ -1,7 +1,7 @@
 name: Build borealis demo
 
 on:
-  push:
+#  push:
   pull_request:
 jobs:
   ios:
