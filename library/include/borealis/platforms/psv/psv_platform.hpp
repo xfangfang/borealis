@@ -25,7 +25,7 @@ namespace brls
     {
       public:
         PsvPlatform();
-        ~PsvPlatform();
+        ~PsvPlatform() override;
         bool canShowBatteryLevel() override;
         bool canShowWirelessLevel() override;
         int getBatteryLevel() override;
@@ -36,6 +36,9 @@ namespace brls
         std::string getIpAddress() override;
         std::string getDnsServer() override;
         void openBrowser(std::string url) override;
+        void setBacklightBrightness(float brightness) override;
+        float getBacklightBrightness() override;
+        bool canSetBacklightBrightness() override;
     };
 
 } // namespace brls

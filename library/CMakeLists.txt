@@ -136,6 +136,8 @@ elseif (PLATFORM_PSV)
             libgpu_es4_ext_stub_weak
             libIMGEGL_stub_weak
             libGLESv2_stub_weak
+            SceAVConfig_stub
+            SceRegistryMgr_stub
             -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
             )
     list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -D__PSV__ -DUSE_GLES2)
