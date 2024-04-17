@@ -1,0 +1,6 @@
+#!/bin/sh
+
+shift $(($#-2))
+rc=$2
+res=$1
+@WINDRES_EXECUTABLE@ --target=pe-i386 --output-format=coff "${rc}" "${res}"

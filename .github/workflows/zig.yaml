@@ -1,0 +1,88 @@
+name: Build borealis demo
+
+on:
+  push:
+  pull_request:
+jobs:
+  build-desktop:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, windows, macos]
+        arch: [ x86_64 ]
+        driver: [ gl2, gl3, gles2, gles3, d3d11]
+        exclude:
+          - { os: linux, driver: d3d11 }
+          - { os: macos, driver: d3d11 }
+          - { os: macos, driver: gles2 }
+          - { os: macos, driver: gles3 }
+          - { os: macos, driver: gl2 }
+          - { os: windows, driver: gles2 }
+          - { os: windows, driver: gles3 }
+        include:
+          - { os: windows, libc: "gnu", cmake: "-DUSE_LIBROMFS=ON", ext: ".exe" }
+          - { os: linux, libc: "gnu", cmake: "-DUSE_LIBROMFS=ON -DX11_X11_LIB=ON" }
+          - { os: macos, libc: "none", cmake: "-DBUNDLE_MACOS_APP=ON", os_version: ".11.0", ext: ".app" }
+          - { driver: d3d11, cmake_driver: "-DUSE_D3D11=ON" }
+          - { driver: gles2, cmake_driver: "-DUSE_GLES2=ON" }
+          - { driver: gles3, cmake_driver: "-DUSE_GLES3=ON" }
+          - { driver: gl2, cmake_driver: "-DUSE_GL2=ON" }
+          - { driver: gl3, cmake_driver: "-DUSE_GL3=ON" }
+      # Don't fail the whole workflow if one architecture fails
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: SSH connection to Actions
+        uses: P3TERX/ssh2actions@v1.0.0
+        if: (github.event.inputs.ssh_ubuntu == 'true' && github.event.inputs.ssh_ubuntu  != 'false') || contains(github.event.action, 'ssh_ubuntu')
+
+      - name: Build libromfs generator
+        if: ${{ matrix.package == 'libromfs' }}
+        run: ./build_libromfs_generator.sh
+
+      - name: Install dependencies
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          sudo apt update -y
+          sudo apt remove -y libc6-dev
+          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxi-dev --no-install-recommends
+
+      - name: Install dependencies
+        if: ${{ matrix.os == 'windows' }}
+        run: |
+          sudo apt update -y
+          sudo apt install -y binutils-mingw-w64-x86-64 --no-install-recommends
+
+      - name: Build
+        id: build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} ${{ matrix.cmake_driver }} ${{ matrix.cmake_pkg }} ${{ matrix.cmake_window }} \
+            -DPLATFORM_DESKTOP=ON \
+            -DUSE_STD_THREAD=ON \
+            -DLIBROMFS_PREBUILT_GENERATOR=`pwd`/libromfs-generator \
+            -DZIG_TARGET=${{ matrix.arch }}-${{ matrix.os }}${{ matrix.os_version }}-${{ matrix.libc }}
+          make -C build -j$(nproc)
+          output_dir=borealis-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.driver }}
+          mkdir -p ${output_dir}
+          mv build/borealis_demo${{ matrix.ext }} ${output_dir}
+          echo "DEMO=${output_dir}" >> $GITHUB_OUTPUT
+
+      - name: strip
+        if: ${{ matrix.os == 'linux' }}
+        run: |
+          strip ${{ steps.build.outputs.DEMO }}/borealis_demo
+
+      - name: package
+        run: tar -czvf ${{ steps.build.outputs.DEMO }}.tar.gz ${{ steps.build.outputs.DEMO }}
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.DEMO }}
+          path: "${{ steps.build.outputs.DEMO }}.tar.gz"

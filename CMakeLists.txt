@@ -11,8 +11,13 @@ cmake_dependent_option(USE_SYSTEM_FMT "" OFF "NOT USE_SHARED_LIB" ON)
 cmake_dependent_option(USE_SYSTEM_TINYXML2 "" OFF "NOT USE_SHARED_LIB" ON)
 cmake_dependent_option(USE_SYSTEM_TWEENY "" OFF "NOT USE_SHARED_LIB" ON)
 
-if (APPLE AND PLATFORM_DESKTOP)
-    option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
+# Create *.app bundle for macOS
+option(BUNDLE_MACOS_APP "Bundle a app for macOS" OFF)
+
+# Set macos minimum support system version
+# When using zig, you need to specify the target platform explicitly through ZIG_TARGET
+# eg: `-DZIG_TARGET=x86_64-macos.11.0-none` or `-DZIG_TARGET=aarch64-macos.11.0-none`
+if (APPLE AND PLATFORM_DESKTOP AND NOT ZIG_TARGET)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
     set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
