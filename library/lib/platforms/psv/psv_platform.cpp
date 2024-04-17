@@ -15,12 +15,14 @@ limitations under the License.
 */
 
 #include <SDL2/SDL.h>
+#include <psp2/apputil.h>
+#include <psp2/avconfig.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/net/netctl.h>
 #include <psp2/power.h>
-#include <psp2/rtc.h>
-#include <psp2/apputil.h>
+#include <psp2/registrymgr.h>
 #include <psp2/system_param.h>
+#include <sys/unistd.h>
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
@@ -66,7 +68,7 @@ int CallbackThread(SceSize args, void* arg)
 
 PsvPlatform::PsvPlatform()
 {
-    //    The main thread does not handle callbacks, so we need to make one to handle them.
+    // The main thread does not handle callbacks, so we need to make one to handle them.
     int thid = sceKernelCreateThread("callbackThread", CallbackThread, 0x10000100, 0x10000, 0, 0, NULL);
     if (thid >= 0)
         sceKernelStartThread(thid, 0, NULL);
@@ -83,11 +85,11 @@ PsvPlatform::PsvPlatform()
     if (enterButton == SCE_SYSTEM_PARAM_ENTER_BUTTON_CIRCLE)
         brls::Application::setSwapInputKeys(true);
 
+    // trigger internal network init in newlib
+    gethostname(nullptr, 0);
 }
 
-PsvPlatform::~PsvPlatform()
-{
-}
+PsvPlatform::~PsvPlatform() = default;
 
 bool PsvPlatform::canShowBatteryLevel()
 {
@@ -161,6 +163,25 @@ std::string PsvPlatform::getDnsServer()
 
 void PsvPlatform::openBrowser(std::string url)
 {
+}
+
+void PsvPlatform::setBacklightBrightness(float brightness)
+{
+    int value = 21 + (int)(brightness * 65515);
+    sceAVConfigSetDisplayBrightness(value);
+    sceRegMgrSetKeyInt("/CONFIG/DISPLAY", "brightness", value);
+}
+
+float PsvPlatform::getBacklightBrightness()
+{
+    int brightness = 0;
+    sceRegMgrGetKeyInt("/CONFIG/DISPLAY", "brightness", &brightness);
+    return ((float)brightness - 21.0f) / 65515.0f;
+}
+
+bool PsvPlatform::canSetBacklightBrightness()
+{
+    return true;
 }
 
 } // namespace brls
