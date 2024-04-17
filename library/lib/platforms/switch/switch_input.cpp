@@ -185,6 +185,7 @@ short SwitchInputManager::getControllersConnectedCount()
     int controllers = extra;
     for (int i = 0; i < GAMEPADS_MAX - extra; i++)
     {
+        padUpdate(&this->padsState[i]);
         if (padsState[i].style_set == 0)
             break;
         controllers++;
