@@ -19,9 +19,13 @@ namespace brls
 
         <brls:Label
             id="brls/dialog/header"
-            fontSize="24"
-            marginTop="50"
-            marginBottom="30"
+            fontSize="24")xml"
+#ifdef __PSV__
+            R"xml(marginTop="30")xml"
+#else
+            R"xml(marginTop="50")xml"
+#endif
+      R"xml(marginBottom="30"
             textColor="#FFFFFF"/>
 
         <brls:Box
@@ -98,7 +102,13 @@ namespace brls
         this->registerAction(
             "hints/back"_i18n, BUTTON_B, [this](...)
             {
-                Application::popActivity(TransitionAnimation::FADE, [this](){
+                Application::popActivity(
+#ifdef __PSV__
+                    TransitionAnimation::NONE,
+#else
+                    TransitionAnimation::FADE,
+#endif
+                    [this](){
                         this->cancelEvent.fire();
                     });
                 return true; });
@@ -142,7 +152,11 @@ namespace brls
 
     bool EditTextDialog::isTranslucent()
     {
+#ifdef __PSV__
+        return false;
+#else
         return true;
+#endif
     }
 
     void EditTextDialog::onLayout()

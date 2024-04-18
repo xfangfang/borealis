@@ -525,6 +525,11 @@ void SDLInputManager::updateKeyboardState(SDL_KeyboardEvent event)
     state.key            = sdlToBrlsKeyboardScancode(event.keysym.scancode);
     state.mods           = event.keysym.mod;
     state.pressed        = event.type == SDL_KEYDOWN;
+#ifdef __PSV__
+    // This is to ensure that the delete operation of the ime will not be ignored
+    if (event.keysym.scancode == SDL_SCANCODE_DELETE && state.pressed)
+        Application::onControllerButtonPressed(brls::ControllerButton::BUTTON_BACKSPACE, false);
+#endif
 
     self->getKeyboardKeyStateChanged()->fire(state);
     Application::setActiveEvent(true);
