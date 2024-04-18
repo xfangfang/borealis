@@ -2,6 +2,14 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/application.hpp>
 
+#ifdef __PSV__
+#define EDIT_TEXT_DIALOG_POP_ANIMATION TransitionAnimation::NONE
+#define EDIT_TEXT_DIALOG_BACKGROUND_TRANSLUCENT false
+#else
+#define EDIT_TEXT_DIALOG_POP_ANIMATION TransitionAnimation::FADE
+#define EDIT_TEXT_DIALOG_BACKGROUND_TRANSLUCENT true
+#endif
+
 namespace brls
 {
 
@@ -76,14 +84,14 @@ namespace brls
         this->registerAction(
             "hints/ok"_i18n, BUTTON_A, [this](...)
             {
-                Application::popActivity(TransitionAnimation::FADE, [this](){
+                Application::popActivity(EDIT_TEXT_DIALOG_POP_ANIMATION, [this](){
                         this->summitEvent.fire();
                     });
                 return true; });
         this->registerAction(
             "hints/ok"_i18n, BUTTON_START, [this](...)
             {
-                Application::popActivity(TransitionAnimation::FADE, [this](){
+                Application::popActivity(EDIT_TEXT_DIALOG_POP_ANIMATION, [this](){
                         this->summitEvent.fire();
                     });
                 return true; }, true);
@@ -102,13 +110,7 @@ namespace brls
         this->registerAction(
             "hints/back"_i18n, BUTTON_B, [this](...)
             {
-                Application::popActivity(
-#ifdef __PSV__
-                    TransitionAnimation::NONE,
-#else
-                    TransitionAnimation::FADE,
-#endif
-                    [this](){
+                Application::popActivity(EDIT_TEXT_DIALOG_POP_ANIMATION, [this](){
                         this->cancelEvent.fire();
                     });
                 return true; });
@@ -152,11 +154,7 @@ namespace brls
 
     bool EditTextDialog::isTranslucent()
     {
-#ifdef __PSV__
-        return false;
-#else
-        return true;
-#endif
+        return EDIT_TEXT_DIALOG_BACKGROUND_TRANSLUCENT;
     }
 
     void EditTextDialog::onLayout()
