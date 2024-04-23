@@ -344,7 +344,7 @@ void ScrollingFrame::willAppear(bool resetState)
     // First scroll all the way to the top
     // then wait for the first frame to scroll
     // to the selected view if needed (only known then)
-    if (resetState)
+    if (resetState && behavior == ScrollingBehavior::CENTERED)
     {
         this->updateScrollingOnNextFrame = true; // focus may have changed since
     }
