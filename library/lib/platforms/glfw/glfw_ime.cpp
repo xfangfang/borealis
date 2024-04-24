@@ -134,7 +134,7 @@ void GLFWImeManager::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
     if (!showIME)
         return;
-    if (cursor < 0 || cursor > textBuffer.size())
+    if (cursor < 0 || cursor > (int)textBuffer.size())
         cursor = textBuffer.size();
     textBuffer.insert(textBuffer.begin() + cursor, (wchar_t)codepoint);
     cursor++;
@@ -204,7 +204,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
                     return ;
                 }
                 isEditing = true;
-                if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
+                if (cursor < 0 || cursor > (int)textBuffer.size()) cursor = textBuffer.size();
                 auto left = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(0, cursor));
                 auto right = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(cursor, textBuffer.size()));
                 dialog->setText(left + preeditTextBuffer + right);
@@ -215,8 +215,8 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
     dialog->getBackspaceEvent()->subscribe([dialog](...)
         {
             if(textBuffer.empty()) return true;
-            if (cursor < 0 || cursor > textBuffer.size()) cursor = textBuffer.size();
-            if (cursor > 0 && cursor <= textBuffer.size()) {
+            if (cursor < 0 || cursor > (int)textBuffer.size()) cursor = textBuffer.size();
+            if (cursor > 0 && cursor <= (int)textBuffer.size()) {
                 textBuffer.erase(cursor - 1, 1);
                 cursor--;
                 dialog->setCursor(cursor);
@@ -239,7 +239,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
         {
             if (isEditing) return true;
             if (cursor >= (int)CursorPosition::START) {
-                if (cursor < textBuffer.size()) {
+                if (cursor < (int)textBuffer.size()) {
                     cursor++;
                     dialog->setCursor(cursor);
                 }
