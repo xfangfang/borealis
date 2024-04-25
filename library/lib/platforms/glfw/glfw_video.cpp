@@ -292,7 +292,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     // Set window position
     if (!VideoContext::FULLSCREEN)
     {
-        if (mode->width >= windowWidth && mode->height >= windowHeight)
+        if (mode->width >= (int)windowWidth && mode->height >= (int)windowHeight)
         {
             if (!isnan(windowX) && !isnan(windowY))
             {
