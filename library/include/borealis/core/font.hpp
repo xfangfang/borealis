@@ -32,6 +32,7 @@ static const std::string FONT_CHINESE_SIMPLIFIED_EXT = "zh-Hans-ext"; // Simplif
 static const std::string FONT_CHINESE_TRADITIONAL    = "zh-Hant"; // Traditional Chinese
 static const std::string FONT_MATERIAL_ICONS         = "material"; // Material icons font
 static const std::string FONT_SWITCH_ICONS           = "switch"; // Switch icons font (see the HOS shared symbols font for an example)
+static const std::string FONT_EMOJI                  = "emoji";
 
 typedef std::unordered_map<std::string, int> FontStash;
 

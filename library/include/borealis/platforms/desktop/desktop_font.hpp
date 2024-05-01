@@ -29,6 +29,8 @@ class DesktopFontLoader : public FontLoader
     void loadFonts() override;
   private:
     bool loadFontsExist(NVGcontext* vg, std::vector<std::string> fontPaths, std::string fontName, std::string fallbackFont);
+
+    bool loadFont(const std::string& name, const std::string& path);
 };
 
 } // namespace brls
