@@ -345,29 +345,7 @@ static void arm_enable_runfast_mode(void)
 #if defined(__linux__) && !defined(CPU_X86)
 static unsigned char check_arm_cpu_feature(const char* feature)
 {
-   char line[1024];
-   unsigned char status = 0;
-   RFILE *fp = filestream_open("/proc/cpuinfo",
-         RETRO_VFS_FILE_ACCESS_READ,
-         RETRO_VFS_FILE_ACCESS_HINT_NONE);
-
-   if (!fp)
-      return 0;
-
-   while (filestream_gets(fp, line, sizeof(line)))
-   {
-      if (strncmp(line, "Features\t: ", 11))
-         continue;
-
-      if (strstr(line + 11, feature))
-         status = 1;
-
-      break;
-   }
-
-   filestream_close(fp);
-
-   return status;
+   return 0;
 }
 
 #if !defined(_SC_NPROCESSORS_ONLN)
@@ -856,34 +834,7 @@ end:
       sysctlbyname("machdep.cpu.brand_string", name, &len_size, NULL, 0);
    }
 #elif defined(__linux__)
-   if (!name)
-      return;
-   {
-      char *model_name, line[128];
-      RFILE *fp = filestream_open("/proc/cpuinfo",
-            RETRO_VFS_FILE_ACCESS_READ,
-            RETRO_VFS_FILE_ACCESS_HINT_NONE);
-
-      if (!fp)
-         return;
-
-      while (filestream_gets(fp, line, sizeof(line)))
-      {
-         if (strncmp(line, "model name", 10))
-            continue;
-
-         if ((model_name = strstr(line + 10, ": ")))
-         {
-            model_name += 2;
-            strncpy(name, model_name, len);
-            name[len - 1] = '\0';
-         }
-
-         break;
-      }
-
-      filestream_close(fp);
-   }
+    return;
 #else
    if (!name)
       return;
