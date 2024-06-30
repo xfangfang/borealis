@@ -75,7 +75,7 @@
 #include <psp2/rtc.h>
 #endif
 
-#if defined(ORBIS)
+#if defined(PS4) || defined(ORBIS)
 #include <orbis/libkernel.h>
 #endif
 
@@ -236,6 +236,8 @@ retro_time_t cpu_features_get_time_usec(void)
    return (svcGetSystemTick() * 10) / 192;
 #elif defined(_3DS)
    return osGetTime() * 1000;
+#elif defined(PS4) || defined(ORBIS)
+    return sceKernelGetProcessTime();
 #elif defined(_POSIX_MONOTONIC_CLOCK) || defined(__QNX__) || defined(ANDROID) || defined(__MACH__)
    struct timespec tv;
    if (ra_clock_gettime(CLOCK_MONOTONIC, &tv) < 0)
@@ -249,8 +251,6 @@ retro_time_t cpu_features_get_time_usec(void)
    return sceKernelGetSystemTimeWide();
 #elif defined(DJGPP)
    return uclock() * 1000000LL / UCLOCKS_PER_SEC;
-#elif defined(ORBIS)
-   return sceKernelGetProcessTime();
 #else
 #error "Your platform does not have a timer function implemented in cpu_features_get_time_usec(). Cannot continue."
 #endif
