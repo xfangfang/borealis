@@ -130,6 +130,10 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
 
                 float velocityX = distanceX / time;
                 float velocityY = distanceY / time;
+                if (panFactor > 0.0f) {
+                    velocityX *= panFactor;
+                    velocityY *= panFactor;
+                }
 
                 acceleration.time.x = -fabs(velocityX) / PAN_SCROLL_ACCELERATION;
                 acceleration.time.y = -fabs(velocityY) / PAN_SCROLL_ACCELERATION;

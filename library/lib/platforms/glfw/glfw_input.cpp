@@ -101,14 +101,36 @@ static void glfwJoystickCallback(int jid, int event)
     Application::setActiveEvent(true);
 }
 
+#define GLFW_STICKY 4
 static RawTouchState touchState = { 0, 0, { 0, 0 } };
+static int touchStateStatus = GLFW_RELEASE;
+static bool touchUpdate = false;
+
+static inline int getTouchState()
+{
+    if (touchStateStatus == GLFW_STICKY)
+    {
+        touchStateStatus = GLFW_RELEASE;
+        // Try to ignore the touch end event as this can lead to a smaller calculation of scrolling acceleration
+        int res = touchUpdate ? GLFW_PRESS : GLFW_RELEASE;
+        touchUpdate = false;
+        return res;
+    }
+    else
+    {
+        touchUpdate = false;
+        return touchStateStatus;
+    }
+}
 
 static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double xpos, double ypos)
 {
     touchState.fingerId   = 0;
-    touchState.pressed    = true;
+    touchState.pressed    = action != GLFW_RELEASE;
     touchState.position.x = xpos / Application::windowScale;
     touchState.position.y = ypos / Application::windowScale;
+    touchStateStatus      = touchState.pressed ? GLFW_PRESS : GLFW_STICKY;
+    touchUpdate          |= touchState.pressed;
     Application::setActiveEvent(true);
 }
 
@@ -320,10 +342,10 @@ bool sameSign(int a, int b)
 
 void GLFWInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
-    if (touchState.pressed)
+    if (getTouchState()) {
+        touchState.pressed = true;
         states->push_back(touchState);
-
-    touchState.pressed = false;
+    }
 }
 
 void GLFWInputManager::updateMouseStates(RawMouseState* state)

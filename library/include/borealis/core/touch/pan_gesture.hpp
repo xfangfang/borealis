@@ -77,6 +77,8 @@ class PanGestureRecognizer : public GestureRecognizer
     // Get pan gesture event
     PanGestureEvent getPanGestureEvent() const { return panEvent; }
 
+    static inline float panFactor{1.0f};
+  
   private:
     int lastFingerId = 0;
     PanGestureEvent panEvent;
