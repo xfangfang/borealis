@@ -119,13 +119,17 @@ bool D3D11Context::initDX(HWND hWnd, IUnknown* coreWindow, int width, int height
         ZeroMemory(&swapDesc, sizeof(swapDesc));
         swapDesc.SampleDesc.Count   = sampleDesc.Count;
         swapDesc.SampleDesc.Quality = sampleDesc.Quality;
-        swapDesc.Format             = DXGI_FORMAT_B8G8R8A8_UNORM;
+        swapDesc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
         swapDesc.Stereo             = FALSE;
         swapDesc.BufferUsage        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapDesc.BufferCount        = SwapChainBufferCount;
         swapDesc.Flags              = 0;
         swapDesc.Scaling            = DXGI_SCALING_STRETCH;
-        swapDesc.SwapEffect         = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+        if (IsWindows10OrGreater()) {
+            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        } else {
+            swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+        }
 #ifdef __WINRT__
         if (IsWindows8OrGreater())
         {
@@ -226,7 +230,7 @@ bool D3D11Context::onFramebufferSize(int width, int height, bool init)
 
     if (!init)
     {
-        hr = this->swapChain->ResizeBuffers(SwapChainBufferCount, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+        hr = this->swapChain->ResizeBuffers(SwapChainBufferCount, width, height, DXGI_FORMAT_UNKNOWN, 0);
         if (FAILED(hr))
         {
             return false;
@@ -239,12 +243,7 @@ bool D3D11Context::onFramebufferSize(int width, int height, bool init)
         return false;
     }
 
-    D3D11_RENDER_TARGET_VIEW_DESC renderDesc;
-    renderDesc.Format             = DXGI_FORMAT_B8G8R8A8_UNORM;
-    renderDesc.ViewDimension      = (sampleDesc.Count > 1) ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
-    renderDesc.Texture2D.MipSlice = 0;
-
-    hr = this->device->CreateRenderTargetView(backBuffer, &renderDesc, &this->renderTargetView);
+    hr = this->device->CreateRenderTargetView(backBuffer, nullptr, &this->renderTargetView);
     D3D_API_RELEASE(backBuffer);
     if (FAILED(hr))
     {
