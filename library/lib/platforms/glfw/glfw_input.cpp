@@ -285,6 +285,7 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
             state->buttons[brlsButton] |= glfwGetKey(this->window, key) != 0;
     }
 
+    state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
 
     state->buttons[BUTTON_BACKSPACE] = glfwGetKey(this->window, GLFW_KEY_BACKSPACE);
