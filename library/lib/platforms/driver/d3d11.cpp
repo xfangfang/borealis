@@ -23,6 +23,36 @@ namespace brls
 static const int SwapChainBufferCount    = 2;
 static const DXGI_SAMPLE_DESC sampleDesc = { 1, 0 };
 
+#ifndef __WINRT__
+
+typedef UINT (WINAPI * GetDpiForWindowPtr)(HWND);
+static HMODULE hModUser32 = nullptr;
+static GetDpiForWindowPtr dpiFunctionPtr = nullptr;
+static bool noDpiSymbol = false;
+#define DEFAULT_DPI 96
+
+static uint32_t GetDpiForWindow(HWND hWnd)
+{
+    if (hWnd == nullptr || noDpiSymbol) return DEFAULT_DPI;
+    if (!hModUser32) {
+        hModUser32 = ::GetModuleHandleW(L"user32.dll");
+        if (!hModUser32) {
+            noDpiSymbol = true;
+            return DEFAULT_DPI;
+        }
+    }
+    if (!dpiFunctionPtr) {
+        dpiFunctionPtr = (GetDpiForWindowPtr)::GetProcAddress(hModUser32, "GetDpiForWindow");
+        if (!dpiFunctionPtr) {
+            noDpiSymbol = true;
+            return DEFAULT_DPI;
+        }
+    }
+    return dpiFunctionPtr(hWnd);
+}
+
+#endif
+
 #ifdef __GLFW__
 D3D11Context::D3D11Context(GLFWwindow* window, int width, int height)
 {
@@ -208,7 +238,7 @@ double D3D11Context::getScaleFactor()
 
     return (unsigned int)displayInformation.LogicalDpi() / 96.0f;
 #else
-    return GetDpiForWindow(this->hWnd) / 96.0;
+    return brls::GetDpiForWindow(this->hWnd) / 96.0;
 #endif
 }
 
