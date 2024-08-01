@@ -70,8 +70,6 @@ bool D3D11Context::initDX(HWND hWnd, IUnknown* coreWindow, int width, int height
     };
 
     static const D3D_FEATURE_LEVEL levelAttempts[] = {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
         D3D_FEATURE_LEVEL_11_1, // Direct3D 11.1 SM 6
         D3D_FEATURE_LEVEL_11_0, // Direct3D 11.0 SM 5
         D3D_FEATURE_LEVEL_10_1, // Direct3D 10.1 SM 4
@@ -187,6 +185,8 @@ bool D3D11Context::initDX(HWND hWnd, IUnknown* coreWindow, int width, int height
         return false;
     }
 
+    this->GetDpiForWindow = (UINT(WINAPI*)(HWND))GetProcAddress(GetModuleHandleW(L"USER32.DLL"), "GetDpiForWindow");
+
     return true;
 }
 
@@ -212,7 +212,20 @@ double D3D11Context::getScaleFactor()
 
     return (unsigned int)displayInformation.LogicalDpi() / 96.0f;
 #else
-    return GetDpiForWindow(this->hWnd) / 96.0;
+    if (this->GetDpiForWindow)
+    {
+        return this->GetDpiForWindow(this->hWnd) / 96.0;
+    }
+
+    HDC hdc = GetDC(nullptr);
+    if (hdc)
+    {
+        int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+        ReleaseDC(nullptr, hdc);
+        return dpi / 96.0;
+    }
+
+    return 1.0;
 #endif
 }
 

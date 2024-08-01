@@ -57,6 +57,8 @@ class D3D11Context
     ID3D11RenderTargetView* renderTargetView = nullptr;
     ID3D11DepthStencilView* depthStencilView = nullptr;
 
+    UINT(WINAPI* GetDpiForWindow)(HWND);
+
     HWND hWnd = nullptr;
 
     bool initDX(HWND window, IUnknown* coreWindow, int width, int height);
