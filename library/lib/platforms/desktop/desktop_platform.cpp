@@ -35,7 +35,7 @@
 #include <shellapi.h>
 #include <winioctl.h>
 #include <ntddvdeo.h>
-#elif IOS
+#elif IOS || TVOS
 #elif __APPLE__
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/ps/IOPowerSources.h>
@@ -131,7 +131,7 @@ int win32_wlan_quality()
     }
     return quality;
 }
-#elif IOS
+#elif IOS || TVOS
 extern ThemeVariant ios_theme();
 extern uint8_t ios_battery_status();
 extern float ios_battery();
@@ -393,7 +393,7 @@ DesktopPlatform::DesktopPlatform()
     char* themeEnv = getenv("BOREALIS_THEME");
     if (themeEnv == nullptr)
     {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
         this->themeVariant = ios_theme();
 #elif __APPLE__
         CFPropertyListRef propertyList = CFPreferencesCopyValue(
@@ -461,7 +461,7 @@ DesktopPlatform::DesktopPlatform()
 
 bool DesktopPlatform::canShowBatteryLevel()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
     return ios_battery_status() != 0;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() >= 0;
@@ -477,7 +477,8 @@ bool DesktopPlatform::canShowBatteryLevel()
 
 bool DesktopPlatform::canShowWirelessLevel()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
+    return false;
 #elif defined(__APPLE__)
     return true;
 #elif defined(_WIN32)
@@ -489,7 +490,7 @@ bool DesktopPlatform::canShowWirelessLevel()
 
 int DesktopPlatform::getBatteryLevel()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
     return ios_battery() * 100;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x7F;
@@ -505,7 +506,7 @@ int DesktopPlatform::getBatteryLevel()
 
 bool DesktopPlatform::isBatteryCharging()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
     return ios_battery_status() == 2;
 #elif defined(__APPLE__)
     return darwin_get_powerstate() & 0x80;
@@ -521,7 +522,8 @@ bool DesktopPlatform::isBatteryCharging()
 
 bool DesktopPlatform::hasWirelessConnection()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
+    return false;
 #elif defined(__APPLE__)
     return darwin_wlan_quality() > 0;
 #elif defined(__WINRT__)
@@ -535,7 +537,8 @@ bool DesktopPlatform::hasWirelessConnection()
 
 int DesktopPlatform::getWirelessLevel()
 {
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
+    return 0;
 #elif defined(__APPLE__)
     return darwin_wlan_quality();
 #elif defined(__WINRT__)
@@ -552,7 +555,7 @@ int DesktopPlatform::getWirelessLevel()
 bool DesktopPlatform::hasEthernetConnection()
 {
     bool has_eth = false;
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__)
     SCDynamicStoreRef storeRef = SCDynamicStoreCreate(nullptr, CFSTR("FindCurrentInterface"), nullptr, nullptr);
     CFDictionaryRef globalRef  = (CFDictionaryRef)SCDynamicStoreCopyValue(storeRef, CFSTR("State:/Network/Global/IPv4"));
@@ -632,7 +635,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     if (disable)
     {
 #ifdef ANDROID
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__linux__)
         inhibitCookie = dbusInhibit(dbus_conn.get(), app, reason);
 #elif __APPLE__
@@ -649,7 +652,7 @@ void DesktopPlatform::disableScreenDimming(bool disable, const std::string& reas
     else
     {
 #ifdef ANDROID
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__linux__)
         if (inhibitCookie != 0)
             dbusUnInhibit(dbus_conn.get(), inhibitCookie);
@@ -738,7 +741,7 @@ std::string DesktopPlatform::getIpAddress()
 {
     std::string ipaddr = "-";
 #if defined(ANDROID)
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__) || defined(__linux__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)
@@ -799,7 +802,7 @@ std::string DesktopPlatform::getIpAddress()
 std::string DesktopPlatform::getDnsServer()
 {
     std::string dnssvr = "-";
-#if defined(IOS)
+#if defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__)
     SCPreferencesRef prefsDNS = SCPreferencesCreate(nullptr, CFSTR("DNSSETTING"), nullptr);
     CFArrayRef services       = SCNetworkServiceCopyAll(prefsDNS);
@@ -871,7 +874,7 @@ std::string DesktopPlatform::exec(const char* cmd)
 {
     std::stringstream ss;
 #if defined(ANDROID)
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__) || defined(__linux__)
     FILE* pipe = popen(cmd, "r");
     if (!pipe)

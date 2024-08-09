@@ -22,7 +22,7 @@
 #include <borealis/platforms/sdl/sdl_platform.hpp>
 #include <unordered_map>
 
-#ifdef IOS
+#if defined(IOS) || defined(TVOS)
 #include <sys/utsname.h>
 
 static bool isIPad()
@@ -43,7 +43,7 @@ SDLPlatform::SDLPlatform()
     VideoContext::FULLSCREEN = true;
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
     SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
     // Enable Fullscreen on iOS
     VideoContext::FULLSCREEN = true;
     if (!isIPad())
