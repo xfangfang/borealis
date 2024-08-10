@@ -98,14 +98,22 @@ GestureState PanGestureRecognizer::recognitionLoop(TouchState touch, MouseState 
                     switch (axis)
                     {
                         case PanAxis::HORIZONTAL:
-                            if (fabs(delta.x) > fabs(delta.y))
+                            if (fabs(delta.x) > fabs(delta.y)) {
+                                this->delta = Point();
+                                this->startPosition = position;
                                 this->state = GestureState::START;
+                            }
                             break;
                         case PanAxis::VERTICAL:
-                            if (fabs(delta.x) < fabs(delta.y))
+                            if (fabs(delta.x) < fabs(delta.y)) {
+                                this->delta = Point();
+                                this->startPosition = position;
                                 this->state = GestureState::START;
+                            }
                             break;
                         case PanAxis::ANY:
+                            this->delta = Point();
+                            this->startPosition = position;
                             this->state = GestureState::START;
                             break;
                     }
