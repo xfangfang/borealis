@@ -25,7 +25,7 @@
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__)
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #endif
@@ -81,7 +81,7 @@ class DesktopPlatform : public Platform
     uint32_t inhibitCookie = 0;
 #elif defined(_WIN32)
     HANDLE hLCD;
-#elif defined(IOS)
+#elif defined(IOS) || defined(TVOS)
 #elif defined(__APPLE__)
     IOPMAssertionID assertionID = 0;
 #endif

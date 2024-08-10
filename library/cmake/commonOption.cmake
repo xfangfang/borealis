@@ -8,6 +8,7 @@ include(CMakeDependentOption)
 # Platform
 option(PLATFORM_DESKTOP "build for desktop (Linux, macOS, Windows)" OFF)
 option(PLATFORM_IOS "build for iOS" OFF)
+option(PLATFORM_TVOS "build for tvOS" OFF)
 option(PLATFORM_ANDROID "build for Android" OFF)
 option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
