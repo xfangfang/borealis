@@ -191,27 +191,27 @@ void Hints::refillHints(View* focusView)
     }
 }
 
-bool Hints::actionsSortFunc(Action a, Action b)
-{
+int buttonToSortableVal(ControllerButton button) {
     // From left to right:
     //  - first +
-    //  - then all hints that are not B and A
+    //  - then all hints that are not B and A in original order
     //  - finally B and A
 
-    // + is before all others
-    if (a.button == BUTTON_START)
-        return true;
+    switch (button) {
+        case BUTTON_START:
+            return 0;
+        case BUTTON_B:
+            return 2;
+        case BUTTON_A:
+            return 3;
+        default:
+            return 1;
+    }
+}
 
-    // A is after all others
-    if (b.button == BUTTON_A)
-        return true;
-
-    // B is after all others but A
-    if (b.button == BUTTON_B && a.button != BUTTON_A)
-        return true;
-
-    // Keep original order for the rest
-    return false;
+bool Hints::actionsSortFunc(Action a, Action b)
+{
+    return buttonToSortableVal(a.button) < buttonToSortableVal(b.button);
 }
 
 View* Hints::create()
