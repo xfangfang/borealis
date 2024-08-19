@@ -7,6 +7,7 @@
 
 #include "fmt/std.h"
 
+#include <bitset>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -15,22 +16,26 @@
 #include "fmt/ranges.h"
 #include "gtest-extra.h"  // StartsWith
 
-using testing::StartsWith;
-
 #ifdef __cpp_lib_filesystem
 TEST(std_test, path) {
-  EXPECT_EQ(fmt::format("{:8}", std::filesystem::path("foo")), "\"foo\"   ");
-  EXPECT_EQ(fmt::format("{}", std::filesystem::path("foo\"bar.txt")),
-            "\"foo\\\"bar.txt\"");
-  EXPECT_EQ(fmt::format("{:?}", std::filesystem::path("foo\"bar.txt")),
-            "\"foo\\\"bar.txt\"");
+  using std::filesystem::path;
+  EXPECT_EQ(fmt::format("{}", path("/usr/bin")), "/usr/bin");
+  EXPECT_EQ(fmt::format("{:?}", path("/usr/bin")), "\"/usr/bin\"");
+  EXPECT_EQ(fmt::format("{:8}", path("foo")), "foo     ");
 
+  EXPECT_EQ(fmt::format("{}", path("foo\"bar")), "foo\"bar");
+  EXPECT_EQ(fmt::format("{:?}", path("foo\"bar")), "\"foo\\\"bar\"");
+
+  EXPECT_EQ(fmt::format("{:g}", path("/usr/bin")), "/usr/bin");
 #  ifdef _WIN32
-  EXPECT_EQ(fmt::format("{}", std::filesystem::path(
-                                  L"\x0428\x0447\x0443\x0447\x044B\x043D\x0448"
-                                  L"\x0447\x044B\x043D\x0430")),
-            "\"Шчучыншчына\"");
-  EXPECT_EQ(fmt::format("{}", std::filesystem::path(L"\xd800")), "\"\\ud800\"");
+  EXPECT_EQ(fmt::format("{}", path("C:\\foo")), "C:\\foo");
+  EXPECT_EQ(fmt::format("{:g}", path("C:\\foo")), "C:/foo");
+
+  EXPECT_EQ(fmt::format("{}", path(L"\x0428\x0447\x0443\x0447\x044B\x043D\x0448"
+                                   L"\x0447\x044B\x043D\x0430")),
+            "Шчучыншчына");
+  EXPECT_EQ(fmt::format("{}", path(L"\xd800")), "�");
+  EXPECT_EQ(fmt::format("{:?}", path(L"\xd800")), "\"\\ud800\"");
 #  endif
 }
 
@@ -39,7 +44,7 @@ TEST(ranges_std_test, format_vector_path) {
   auto p = std::filesystem::path("foo/bar.txt");
   auto c = std::vector<std::string>{"abc", "def"};
   EXPECT_EQ(fmt::format("path={}, range={}", p, c),
-            "path=\"foo/bar.txt\", range=[\"abc\", \"def\"]");
+            "path=foo/bar.txt, range=[\"abc\", \"def\"]");
 }
 
 // Test that path is not escaped twice in the debug mode.
@@ -59,6 +64,46 @@ TEST(ranges_std_test, format_quote_path) {
 TEST(std_test, thread_id) {
   EXPECT_FALSE(fmt::format("{}", std::this_thread::get_id()).empty());
 }
+
+TEST(std_test, complex) {
+  using limits = std::numeric_limits<double>;
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(1, limits::quiet_NaN())),
+            "(1+nan i)");
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(1, -limits::infinity())),
+            "(1-inf i)");
+
+  EXPECT_EQ(fmt::format("{}", std::complex<int>(1, 2)), "(1+2i)");
+
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(1, 2.2)), "(1+2.2i)");
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(1, -2.2)), "(1-2.2i)");
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(0, 2.2)), "2.2i");
+  EXPECT_EQ(fmt::format("{}", std::complex<double>(0, -2.2)), "-2.2i");
+
+  EXPECT_EQ(fmt::format("{:+}", std::complex<double>(0, 2.2)), "+2.2i");
+  EXPECT_EQ(fmt::format("{:+}", std::complex<double>(0, -2.2)), "-2.2i");
+  EXPECT_EQ(fmt::format("{:+}", std::complex<double>(1, -2.2)), "(+1-2.2i)");
+  EXPECT_EQ(fmt::format("{:+}", std::complex<double>(1, 2.2)), "(+1+2.2i)");
+  EXPECT_EQ(fmt::format("{: }", std::complex<double>(1, 2.2)), "( 1+2.2i)");
+  EXPECT_EQ(fmt::format("{: }", std::complex<double>(1, -2.2)), "( 1-2.2i)");
+
+  EXPECT_EQ(fmt::format("{:>20.2f}", std::complex<double>(1, 2.2)),
+            "        (1.00+2.20i)");
+  EXPECT_EQ(fmt::format("{:<20.2f}", std::complex<double>(1, 2.2)),
+            "(1.00+2.20i)        ");
+  EXPECT_EQ(fmt::format("{:<20.2f}", std::complex<double>(1, -2.2)),
+            "(1.00-2.20i)        ");
+  EXPECT_EQ(fmt::format("{:<{}.{}f}", std::complex<double>(1, -2.2), 20, 2),
+            "(1.00-2.20i)        ");
+}
+
+#ifdef __cpp_lib_source_location
+TEST(std_test, source_location) {
+  std::source_location loc = std::source_location::current();
+  EXPECT_EQ(fmt::format("{}", loc),
+            fmt::format("{}:{}:{}: {}", loc.file_name(), loc.line(),
+                        loc.column(), loc.function_name()));
+}
+#endif
 
 TEST(std_test, optional) {
 #ifdef __cpp_lib_optional
@@ -85,6 +130,64 @@ TEST(std_test, optional) {
   EXPECT_FALSE((fmt::is_formattable<unformattable>::value));
   EXPECT_FALSE((fmt::is_formattable<std::optional<unformattable>>::value));
   EXPECT_TRUE((fmt::is_formattable<std::optional<int>>::value));
+#endif
+}
+
+TEST(std_test, expected) {
+#ifdef __cpp_lib_expected
+  EXPECT_EQ(fmt::format("{}", std::expected<int, int>{1}), "expected(1)");
+  EXPECT_EQ(fmt::format("{}", std::expected<int, int>{std::unexpected(1)}),
+            "unexpected(1)");
+  EXPECT_EQ(fmt::format("{}", std::expected<std::string, int>{"test"}),
+            "expected(\"test\")");
+  EXPECT_EQ(fmt::format(
+                "{}", std::expected<int, std::string>{std::unexpected("test")}),
+            "unexpected(\"test\")");
+  EXPECT_EQ(fmt::format("{}", std::expected<char, int>{'a'}), "expected('a')");
+  EXPECT_EQ(fmt::format("{}", std::expected<int, char>{std::unexpected('a')}),
+            "unexpected('a')");
+
+  struct unformattable1 {};
+  struct unformattable2 {};
+  EXPECT_FALSE((fmt::is_formattable<unformattable1>::value));
+  EXPECT_FALSE((fmt::is_formattable<unformattable2>::value));
+  EXPECT_FALSE((fmt::is_formattable<
+                std::expected<unformattable1, unformattable2>>::value));
+  EXPECT_FALSE(
+      (fmt::is_formattable<std::expected<unformattable1, int>>::value));
+  EXPECT_FALSE(
+      (fmt::is_formattable<std::expected<int, unformattable2>>::value));
+  EXPECT_TRUE((fmt::is_formattable<std::expected<int, int>>::value));
+#endif
+}
+
+namespace my_nso {
+enum class my_number {
+  one,
+  two,
+};
+auto format_as(my_number number) -> fmt::string_view {
+  return number == my_number::one ? "first" : "second";
+}
+
+class my_class {
+ public:
+  int av;
+
+ private:
+  friend auto format_as(const my_class& elm) -> std::string {
+    return fmt::to_string(elm.av);
+  }
+};
+}  // namespace my_nso
+TEST(std_test, optional_format_as) {
+#ifdef __cpp_lib_optional
+  EXPECT_EQ(fmt::format("{}", std::optional<my_nso::my_number>{}), "none");
+  EXPECT_EQ(fmt::format("{}", std::optional{my_nso::my_number::one}),
+            "optional(\"first\")");
+  EXPECT_EQ(fmt::format("{}", std::optional<my_nso::my_class>{}), "none");
+  EXPECT_EQ(fmt::format("{}", std::optional{my_nso::my_class{7}}),
+            "optional(\"7\")");
 #endif
 }
 
@@ -190,6 +293,7 @@ const char* my_exception::what() const noexcept { return msg.c_str(); }
 }  // namespace my_ns1
 
 TEST(std_test, exception) {
+  using testing::StartsWith;
   exception_test<std::exception>();
   exception_test<std::runtime_error>();
 
@@ -218,4 +322,69 @@ TEST(std_test, exception) {
                 StartsWith("std::filesystem::filesystem_error: "));
   }
 #endif
+}
+
+#if FMT_USE_RTTI
+TEST(std_test, type_info) {
+  EXPECT_EQ(fmt::format("{}", typeid(std::runtime_error)),
+            "std::runtime_error");
+}
+#endif
+
+TEST(std_test, format_bit_reference) {
+  std::bitset<2> bs(1);
+  EXPECT_EQ(fmt::format("{} {}", bs[0], bs[1]), "true false");
+  std::vector<bool> v = {true, false};
+  EXPECT_EQ(fmt::format("{} {}", v[0], v[1]), "true false");
+}
+
+TEST(std_test, format_const_bit_reference) {
+  const std::bitset<2> bs(1);
+  EXPECT_EQ(fmt::format("{} {}", bs[0], bs[1]), "true false");
+  const std::vector<bool> v = {true, false};
+  EXPECT_EQ(fmt::format("{} {}", v[0], v[1]), "true false");
+}
+
+TEST(std_test, format_bitset) {
+  auto bs = std::bitset<6>(42);
+  EXPECT_EQ(fmt::format("{}", bs), "101010");
+  EXPECT_EQ(fmt::format("{:0>8}", bs), "00101010");
+  EXPECT_EQ(fmt::format("{:-^12}", bs), "---101010---");
+}
+
+TEST(std_test, format_atomic) {
+  std::atomic<bool> b(false);
+  EXPECT_EQ(fmt::format("{}", b), "false");
+
+  const std::atomic<bool> cb(true);
+  EXPECT_EQ(fmt::format("{}", cb), "true");
+}
+
+#ifdef __cpp_lib_atomic_flag_test
+TEST(std_test, format_atomic_flag) {
+  std::atomic_flag f = ATOMIC_FLAG_INIT;
+  (void)f.test_and_set();
+  EXPECT_EQ(fmt::format("{}", f), "true");
+
+  const std::atomic_flag cf = ATOMIC_FLAG_INIT;
+  EXPECT_EQ(fmt::format("{}", cf), "false");
+}
+#endif  // __cpp_lib_atomic_flag_test
+
+TEST(std_test, format_unique_ptr) {
+  std::unique_ptr<int> up(new int(1));
+  EXPECT_EQ(fmt::format("{}", fmt::ptr(up.get())),
+            fmt::format("{}", fmt::ptr(up)));
+  struct custom_deleter {
+    void operator()(int* p) const { delete p; }
+  };
+  std::unique_ptr<int, custom_deleter> upcd(new int(1));
+  EXPECT_EQ(fmt::format("{}", fmt::ptr(upcd.get())),
+            fmt::format("{}", fmt::ptr(upcd)));
+}
+
+TEST(std_test, format_shared_ptr) {
+  std::shared_ptr<int> sp(new int(1));
+  EXPECT_EQ(fmt::format("{}", fmt::ptr(sp.get())),
+            fmt::format("{}", fmt::ptr(sp)));
 }
