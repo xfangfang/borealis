@@ -70,7 +70,7 @@ Ps4Platform::Ps4Platform()
         brls::Logger::error("sceNetCtlInit() failed");
 
     // Dialogs
-    if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_MESSAGE_DIALOG) < 0 || sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_IME_DIALOG) < 0)
+    if (sceSysmoduleLoadModule(ORBIS_SYSMODULE_MESSAGE_DIALOG) < 0 || sceSysmoduleLoadModule(ORBIS_SYSMODULE_IME_DIALOG) < 0)
         Logger::error("Load ime dialog module failed");
     if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_COMMON_DIALOG) < 0 || sceCommonDialogInitialize() < 0)
         brls::Logger::error("sceCommonDialogInitialize() failed");

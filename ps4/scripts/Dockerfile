@@ -18,7 +18,8 @@ RUN ln -s /proc/mounts /etc/mtab && \
     pacbrew-pacman -Sy --noconfirm && \
     pacbrew-pacman -S --noconfirm ps4-openorbis ps4-openorbis-sdl2 ps4-openorbis-libsamplerate && \
     yes | pacbrew-pacman -Scc && \
-    cp /opt/pacbrew/ps4/openorbis/ps4vars.sh /root/.bash_aliases
+    cp /opt/pacbrew/ps4/openorbis/ps4vars.sh /root/.bash_aliases && \
+    sed -i '306i #include <cstdlib>' /opt/pacbrew/ps4/openorbis/include/c++/v1/cmath
 
 RUN mkdir /src/ &&\
     echo \#\!/bin/bash -i >> /entrypoint.sh &&\
