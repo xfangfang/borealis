@@ -38,4 +38,8 @@ void Logger::setLogOutput(std::FILE *newLogOut)
     Logger::logOut = newLogOut;
 }
 
+void Logger::setThreadSafeLogging(bool newThreadSafeLogging) {
+    Logger::threadSafeLogging = newThreadSafeLogging;
+}
+
 } // namespace brls
