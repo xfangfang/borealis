@@ -163,7 +163,7 @@ class Logger
 
   private:
     inline static std::mutex logMtx;
-    inline static bool threadSafeLogging = false;
+    inline static bool threadSafeLogging = true;
     inline static Event<TimePoint, LogLevel, std::string> logEvent;
     inline static std::FILE *logOut = stdout;
     inline static LogLevel logLevel = LogLevel::LOG_INFO;
