@@ -20,6 +20,18 @@ using namespace brls::literals;  // for _i18n
 
 bool radioSelected = false;
 
+static std::vector<std::string> NOTIFICATIONS = {
+    "You have cool hair",
+    "I like your shoes",
+    "borealis is powered by nanovg",
+    "The Triforce is an inside job",
+    "Pozznx will trigger in one day and twelve hours",
+    "Aurora Borealis? At this time of day, at this time of year, in this part of the gaming market, located entirely within your Switch?!",
+    "May I see it?",
+    "Hmm, Steamed Hams!",
+    "Hello\nWorld!"
+};
+
 SettingsTab::SettingsTab()
 {
     // Inflate the tab from the XML file
@@ -96,6 +108,12 @@ SettingsTab::SettingsTab()
         slider->setDetailText(fmt::format("{:.2f}", value));
     });
     slider->setDetailText(fmt::format("{:.2f}", brightness));
+
+    notify->registerClickAction([](...){
+        std::string notification = NOTIFICATIONS[std::rand() % NOTIFICATIONS.size()];
+        brls::Application::notify(notification);
+        return true;
+    });
 }
 
 brls::View* SettingsTab::create()

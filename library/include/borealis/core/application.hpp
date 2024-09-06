@@ -30,6 +30,7 @@
 #include <borealis/core/style.hpp>
 #include <borealis/core/theme.hpp>
 #include <borealis/core/view.hpp>
+#include <borealis/core/notification_manager.hpp>
 #include <borealis/views/label.hpp>
 #include <deque>
 #include <vector>
@@ -171,7 +172,7 @@ class Application
 
     static int getDefaultFont();
 
-    static void notify(std::string text);
+    static void notify(const std::string& text);
 
     static void onControllerButtonPressed(enum ControllerButton button, bool repeating);
 
@@ -318,6 +319,7 @@ class Application
     inline static View* currentFocus = nullptr;
     inline static std::vector<TouchState> currentTouchState;
     inline static MouseState currentMouseState;
+    inline static NotificationManager* notificationManager;
 
     // Return true if input type was changed
     static bool setInputType(InputType type);

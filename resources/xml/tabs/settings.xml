@@ -58,6 +58,10 @@
             <brls:SliderCell
                     id="slider"/>
 
+            <brls:DetailCell
+                    title="Post a notification"
+                    id="notify"/>
+
             <brls:RadioCell/>
             <brls:RadioCell/>
 

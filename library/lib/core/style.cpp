@@ -33,6 +33,13 @@ static StyleValues styleValues = {
 
     { "brls/animations/label_scrolling_timer", 1500.0f },
     { "brls/animations/label_scrolling_speed", 0.05f },
+    { "brls/animations/notification_timeout", 4000.0f },
+    { "brls/animations/notification_show", 300.0f },
+
+    // Notification
+    { "brls/notification/width", 280.0f },
+    { "brls/notification/padding", 16.0f },
+    { "brls/notification/slide", 40.0f },
 
     // Highlight
     { "brls/highlight/stroke_width", 5.0f },

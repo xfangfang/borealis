@@ -78,6 +78,7 @@ bool Application::init()
 
     // Init platform
     Application::platform = Platform::createPlatform();
+    Application::notificationManager = new NotificationManager();
 
     if (!Application::platform)
     {
@@ -689,6 +690,9 @@ void Application::frame()
         currentFocus->frameHighlight(&frameContext);
     }
 
+    // Notifications
+    Application::notificationManager->frame(&frameContext);
+
     if (isDrawCursor())
     {
         getPlatform()->getInputManager()->drawCursor(frameContext.vg);
@@ -727,6 +731,7 @@ void Application::exit()
 
     exitDoneEvent.fire();
 
+    delete Application::notificationManager;
     delete Application::platform;
 }
 
@@ -764,9 +769,9 @@ void Application::setLimitedFPS(size_t fps)
     Application::limitedFrameTime = fps == 0 ? 0 : 1000000.0f / fps;
 }
 
-void Application::notify(std::string text)
+void Application::notify(const std::string& text)
 {
-    // To be implemented
+    Application::notificationManager->notify(text);
 }
 
 void Application::giveFocus(View* view)
