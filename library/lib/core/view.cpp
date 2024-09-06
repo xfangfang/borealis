@@ -30,6 +30,12 @@
 #include <borealis/views/applet_frame.hpp>
 #include <fstream>
 
+// Avoid conflicts with macro definitions in windows.h
+#undef RGB
+#undef TRANSPARENT
+#undef RELATIVE
+#undef ABSOLUTE
+
 using namespace brls::literals;
 
 namespace brls
