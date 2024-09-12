@@ -953,7 +953,7 @@ void Application::addToFreeQueue(View* view)
 {
     if (std::binary_search(deletionPool.cbegin(), deletionPool.cend(), view))
         return;
-    
+
     brls::Logger::verbose("Application::addToFreeQueue {}", view->describe());
 
     Application::deletionPool.push_back(view);
@@ -1082,12 +1082,14 @@ void Application::onWindowResized(int width, int height)
     brls::cancelDelay(iter);
     iter = brls::delay(100, [width, height]()
         {
-            Logger::info("Window size changed to {}x{}, content size: {}x{} factor: {}",
-                width, height, contentWidth, contentHeight, Application::windowScale);
-            brls::Logger::info("scale factor: {}", Application::getPlatform()->getVideoContext()->getScaleFactor());
-
             Application::setWindowSize(width, height);
-            Application::getWindowSizeChangedEvent()->fire(); });
+            Application::getWindowSizeChangedEvent()->fire();
+
+            Logger::info("Window size changed to {}x{}, content size: {}x{} windowScale: {}",
+                width, height, contentWidth, contentHeight, Application::windowScale);
+            brls::Logger::info("scale factor: {}",
+                Application::getPlatform()->getVideoContext()->getScaleFactor());
+        });
 }
 
 void Application::setWindowPosition(int x, int y)

@@ -125,10 +125,11 @@ static inline int getTouchState()
 
 static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double xpos, double ypos)
 {
+    double scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor() / Application::windowScale;
     touchState.fingerId   = 0;
     touchState.pressed    = action != GLFW_RELEASE;
-    touchState.position.x = xpos / Application::windowScale;
-    touchState.position.y = ypos / Application::windowScale;
+    touchState.position.x = (float)(xpos * scaleFactor);
+    touchState.position.y = (float)(ypos * scaleFactor);
     touchStateStatus      = touchState.pressed ? GLFW_PRESS : GLFW_STICKY;
     touchUpdate          |= touchState.pressed;
     Application::setActiveEvent(true);

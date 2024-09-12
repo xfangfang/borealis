@@ -392,6 +392,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 #elif defined(BOREALIS_USE_METAL)
 #else
     scaleFactor = width * 1.0 / wWidth;
+    glViewport(0, 0, width, height);
 #endif
 
     if (!VideoContext::FULLSCREEN)
