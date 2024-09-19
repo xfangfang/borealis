@@ -183,7 +183,7 @@ int darwin_get_powerstate()
     return capacity;
 }
 #elif ANDROID
-#elif __linux__
+#elif defined(__linux__)
 // Thanks to: https://github.com/videolan/vlc/blob/master/modules/misc/inhibit/dbus.c
 enum INHIBIT_TYPE
 {
@@ -191,6 +191,7 @@ enum INHIBIT_TYPE
     FDO_PM, /**< KDE and GNOME <= 2.26 and Xfce */
     MATE, /**< >= 1.0 */
     GNOME, /**< GNOME 2.26..3.4 */
+    NONE,
 };
 
 static const char dbus_service[][40] = {
@@ -223,44 +224,21 @@ static const char dbus_method_uninhibit[][10] = {
 
 static const char dbus_method_inhibit[] = "Inhibit";
 
-static inline INHIBIT_TYPE detectLinuxDesktopEnvironment()
-{
-    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (currentDesktop)
-    {
-        std::string xdgCurrentDesktop { currentDesktop };
-        // to upper
-        for (auto& i : xdgCurrentDesktop)
-        {
-            if ('a' <= i && i <= 'z')
-            {
-                i -= 32;
-            }
-        }
-        Logger::info("XDG_CURRENT_DESKTOP: {}", xdgCurrentDesktop);
-        if (xdgCurrentDesktop == "GNOME")
-            return GNOME;
-        if (xdgCurrentDesktop == "UBUNTU:GNOME")
-            return GNOME;
-        if (xdgCurrentDesktop == "MATE")
-            return MATE;
-    }
-    if (getenv("GNOME_DESKTOP_SESSION_ID"))
-    {
-        Logger::info("CURRENT_DESKTOP: GNOME");
-        return GNOME;
-    }
-    const char* kdeVersion = getenv("KDE_SESSION_VERSION");
-    if (kdeVersion && atoi(kdeVersion) >= 4)
-    {
-        Logger::info("CURRENT_DESKTOP: KDE {}", kdeVersion);
-        return FDO_SS;
-    }
-    Logger::info("CURRENT_DESKTOP: DEFAULT");
-    return FDO_PM;
-}
+static INHIBIT_TYPE systemType = NONE;
 
-static INHIBIT_TYPE systemType = detectLinuxDesktopEnvironment();
+static inline void probeInhibitor(DBusConnection* conn)
+{
+    for (int i = FDO_SS; i < NONE; ++i)
+    {
+        if (dbus_bus_name_has_owner(conn, dbus_service[i], NULL))
+        {
+            Logger::info("Found inhibitor service: {}", dbus_service[i]);
+            systemType = static_cast<INHIBIT_TYPE>(i);
+            return;
+        }
+    }
+    Logger::error("Failed to find an inhibitor service");
+}
 
 static DBusConnection* connectSessionBus()
 {
@@ -289,6 +267,11 @@ void closeSessionBus(DBusConnection* bus)
 
 uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const std::string& reason)
 {
+    if (systemType == NONE) {
+        Logger::error("Idle inhibitor not available");
+        return 0;
+    }
+
     DBusMessage* msg = dbus_message_new_method_call(dbus_service[systemType],
         dbus_path[systemType],
         dbus_interface[systemType],
@@ -354,6 +337,11 @@ uint32_t dbusInhibit(DBusConnection* connection, const std::string& app, const s
 
 void dbusUnInhibit(DBusConnection* connection, uint32_t cookie)
 {
+    if (systemType == NONE) {
+        Logger::error("Idle inhibitor not available");
+        return;
+    }
+
     DBusMessage* msg = dbus_message_new_method_call(dbus_service[systemType],
         dbus_path[systemType],
         dbus_interface[systemType],
@@ -457,6 +445,10 @@ DesktopPlatform::DesktopPlatform()
     // Platform impls
     this->fontLoader = new DesktopFontLoader();
     this->imeManager = new DesktopImeManager();
+
+#if defined(__linux__) && !defined(ANDROID)
+    probeInhibitor(dbus_conn.get());
+#endif
 }
 
 bool DesktopPlatform::canShowBatteryLevel()
@@ -942,7 +934,7 @@ void DesktopPlatform::openBrowser(std::string url)
 #elif __APPLE__
     std::string cmd = "open \"" + url + "\"";
     system(cmd.c_str());
-#elif __linux__
+#elif defined(__linux__)
     if (isSteamDeck())
     {
         runSteamDeckCommand(fmt::format("steam://openurl/{}\n", url));
