@@ -125,7 +125,11 @@ static inline int getTouchState()
 
 static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double xpos, double ypos)
 {
+#if defined(BOREALIS_USE_D3D11)
+    float scaleFactor = 1.0f / Application::windowScale;
+#else
     double scaleFactor = Application::getPlatform()->getVideoContext()->getScaleFactor() / Application::windowScale;
+#endif
     touchState.fingerId   = 0;
     touchState.pressed    = action != GLFW_RELEASE;
     touchState.position.x = (float)(xpos * scaleFactor);
