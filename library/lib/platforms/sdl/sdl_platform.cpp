@@ -169,6 +169,19 @@ bool SDLPlatform::isScreenDimmingDisabled()
     return !SDL_IsScreenSaverEnabled();
 }
 
+void SDLPlatform::pasteToClipboard(const std::string& text)
+{
+    SDL_SetClipboardText(text.c_str());
+}
+
+std::string SDLPlatform::pasteFromClipboard()
+{
+    char *str = SDL_GetClipboardText();
+    if (!str)
+        return "";
+    return std::string{str};
+}
+
 std::string SDLPlatform::getName()
 {
     return "SDL";

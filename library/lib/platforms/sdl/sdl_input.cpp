@@ -1,6 +1,6 @@
 /*
     Copyright 2021 natinusala
-        Copyright 2021 XITRIX
+    Copyright 2021 XITRIX
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -142,24 +142,6 @@ static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
 };
 
-static const size_t SDL_GAMEPAD_TO_KEYBOARD_SWAP[SDL_GAMEPAD_BUTTON_MAX] = {
-    SDL_SCANCODE_RCTRL, // SDL_CONTROLLER_BUTTON_A
-    SDL_SCANCODE_RETURN, // SDL_CONTROLLER_BUTTON_B
-    SDL_SCANCODE_X, // SDL_CONTROLLER_BUTTON_X
-    SDL_SCANCODE_Y, // SDL_CONTROLLER_BUTTON_Y
-    SDL_SCANCODE_F1, // SDL_CONTROLLER_BUTTON_BACK
-    SDL_SCANCODE_UNKNOWN, // SDL_CONTROLLER_BUTTON_GUIDE
-    SDL_SCANCODE_F2, // SDL_CONTROLLER_BUTTON_START
-    SDL_SCANCODE_Q, // SDL_CONTROLLER_BUTTON_LEFTSTICK
-    SDL_SCANCODE_P, // SDL_CONTROLLER_BUTTON_RIGHTSTICK
-    SDL_SCANCODE_L, // SDL_CONTROLLER_BUTTON_LEFTSHOULDER
-    SDL_SCANCODE_R, // SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
-    SDL_SCANCODE_UP, // SDL_CONTROLLER_BUTTON_DPAD_UP
-    SDL_SCANCODE_DOWN, // SDL_CONTROLLER_BUTTON_DPAD_DOWN
-    SDL_SCANCODE_LEFT, // SDL_CONTROLLER_BUTTON_DPAD_LEFT
-    SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
-};
-
 static std::unordered_map<SDL_Scancode, int> keyboardKeys {};
 
 static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
@@ -255,6 +237,10 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             case SDL_SCANCODE_RIGHT:
             case SDL_SCANCODE_SPACE:
             case SDL_SCANCODE_F:
+            case SDL_SCANCODE_V:
+            case SDL_SCANCODE_LGUI:
+            case SDL_SCANCODE_LCTRL:
+            case SDL_SCANCODE_KP_ENTER:
                 keyboardKeys[event->key.keysym.scancode] = event->type == SDL_KEYDOWN ? SDL_PRESSED : SDL_STICKY;
                 break;
             default:
@@ -344,21 +330,37 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 0; i < SDL_GAMEPAD_BUTTON_MAX; i++)
+    for (size_t i = 2; i < SDL_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
-        size_t key        = Application::isSwapInputKeys() ? SDL_GAMEPAD_TO_KEYBOARD_SWAP[i]: SDL_GAMEPAD_TO_KEYBOARD[i];
+        size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
         if (key != SDL_SCANCODE_UNKNOWN)
             state->buttons[brlsButton] |= getKeyboardKeys((SDL_Scancode)key);
     }
+    if (Application::isSwapInputKeys()) {
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_RCTRL);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
+    } else {
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_RCTRL);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
+    }
+
     // Android tv remote control
     state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
-    state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
 
     // pc shortcuts
     state->buttons[BUTTON_SPACE] = getKeyboardKeys(SDL_SCANCODE_SPACE);
     state->buttons[BUTTON_BACKSPACE] = getKeyboardKeys(SDL_SCANCODE_BACKSPACE);
     state->buttons[BUTTON_F] = getKeyboardKeys(SDL_SCANCODE_F);
+    state->buttons[BUTTON_V] = getKeyboardKeys(SDL_SCANCODE_V);
+    state->buttons[BUTTON_CONTROL] = getKeyboardKeys(SDL_SCANCODE_LCTRL);
+    state->buttons[BUTTON_SUPER] = getKeyboardKeys(SDL_SCANCODE_LGUI);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];

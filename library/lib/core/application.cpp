@@ -79,6 +79,7 @@ bool Application::init()
     // Init platform
     Application::platform = Platform::createPlatform();
     Application::notificationManager = new NotificationManager();
+    Application::backgroundColor = Application::getTheme().getColor("brls/clear");
 
     if (!Application::platform)
     {
@@ -377,8 +378,6 @@ void Application::processInput()
     bool repeating                  = false;
     Time cpuTime = getCPUTimeUsec();
 
-    controllerState.buttons[BUTTON_B] |= inputManager->getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
-
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
         if (controllerState.buttons[i])
@@ -655,7 +654,6 @@ void Application::frame()
     frameContext.theme      = Application::getTheme();
 
     // Begin frame and clear
-    NVGcolor backgroundColor = frameContext.theme["brls/clear"];
     videoContext->beginFrame();
     videoContext->clear(backgroundColor);
     float scaleFactor = videoContext->getScaleFactor();

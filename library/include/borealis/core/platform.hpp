@@ -253,6 +253,17 @@ class Platform
      */
     virtual void openBrowser(std::string url) = 0;
 
+
+    /**
+     * Paste text to clipboard
+     */
+    virtual void pasteToClipboard(const std::string& text) {};
+
+    /**
+     * Copy text from clipboard
+     */
+    virtual std::string pasteFromClipboard() {return "";};
+
     /**
      * Selects and returns the best platform.
      */

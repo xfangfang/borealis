@@ -16,6 +16,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <libretro-common/encodings/utf.h>
+
 #include <borealis/core/box.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/core/thread.hpp>
@@ -24,7 +26,6 @@ limitations under the License.
 #include <borealis/views/dialog.hpp>
 #include <borealis/views/edit_text_dialog.hpp>
 #include <borealis/views/label.hpp>
-#include <libretro-common/encodings/utf.h>
 #include <codecvt>
 #include <cstring>
 #include <iostream>
@@ -173,13 +174,29 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
     dialog->setHintText(subText);
     dialog->setHeaderText(headerText);
     dialog->setCountText(std::to_string(utf8len(initialText.data())) + "/" + std::to_string(maxStringLength));
- #if defined(BOREALIS_USE_D3D11)
+#if defined(BOREALIS_USE_D3D11)
     float scale = Application::windowScale;
- #else
+#else
     float scale = Application::windowScale / Application::getPlatform()->getVideoContext()->getScaleFactor();
 #endif
     dialog->getLayoutEvent()->subscribe([this, scale](Point p)
         { glfwSetPreeditCursorRectangle(window, p.x * scale, p.y * scale, 1, 1); });
+
+    dialog->getClipboardEvent()->subscribe([dialog, maxStringLength](const std::string& str)
+        {
+            if(isEditing || str.empty()) return;
+            if (cursor < 0 || cursor > (int)textBuffer.size()) cursor = textBuffer.size();
+            auto left = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(0, cursor));
+            auto right = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer.substr(cursor, textBuffer.size()));
+            auto clipboard = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
+            textBuffer.insert(textBuffer.begin() + cursor, clipboard.begin(), clipboard.end());
+            cursor += clipboard.size();
+            if (textBuffer.size() > maxStringLength) {
+                textBuffer = textBuffer.substr(0, maxStringLength);
+            }
+            if (cursor < 0 || cursor > (int)textBuffer.size()) cursor = textBuffer.size();
+            dialog->setText(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(textBuffer));
+            dialog->setCursor(cursor); });
 
     // update
     auto eventID = Application::getRunLoopEvent()->subscribe([dialog, maxStringLength]()

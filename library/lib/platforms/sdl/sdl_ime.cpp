@@ -151,6 +151,13 @@ namespace brls
             SDL_SetTextInputRect(&rect);
 #endif
         });
+
+        dialog->getClipboardEvent()->subscribe([this, updateTextAndCursor](const std::string& str)
+            {
+                if(this->isEditing || str.empty()) return;
+                updateTextAndCursor(str);
+            });
+
         auto eventID1 = event->subscribe([this, updateTextAndCursor, updateText, updateTextCursor](SDL_Event *e) {
             switch (e->type) {
             case SDL_TEXTINPUT:

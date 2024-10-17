@@ -95,6 +95,22 @@ namespace brls
                         this->summitEvent.fire();
                     });
                 return true; }, true);
+        this->registerAction(
+            "", BUTTON_V, [this](...)
+            {
+                brls::ControllerState state{};
+                brls::InputManager* input = Application::getPlatform()->getInputManager();
+                input->updateUnifiedControllerState(&state);
+        #ifdef __APPLE__
+                if (state.buttons[brls::BUTTON_SUPER] || state.buttons[brls::BUTTON_CONTROL]) {
+        #else
+                if (state.buttons[brls::BUTTON_CONTROL]) {
+        #endif
+                    clipboardEvent.fire(Application::getPlatform()->pasteFromClipboard());
+                    return true;
+                } else {
+                    return false;
+                } }, true);
 
         // backspace
         this->registerAction("hints/delete"_i18n, BUTTON_BACKSPACE, [this](...)
@@ -183,6 +199,11 @@ namespace brls
     Event<>* EditTextDialog::getSubmitEvent()
     {
         return &this->summitEvent;
+    }
+
+    Event<std::string>* EditTextDialog::getClipboardEvent()
+    {
+        return &this->clipboardEvent;
     }
 
     void EditTextDialog::updateUI()

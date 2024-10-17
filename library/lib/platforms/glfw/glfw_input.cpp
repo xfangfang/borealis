@@ -282,7 +282,7 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
+    for (size_t i = 2; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = GLFW_BUTTONS_MAPPING[i];
         size_t key        = GLFW_GAMEPAD_TO_KEYBOARD[i];
@@ -290,12 +290,25 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
             state->buttons[brlsButton] |= glfwGetKey(this->window, key) != 0;
     }
 
-    state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
+    if (Application::isSwapInputKeys()) {
+        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
+        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
+        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
+        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_RIGHT_CONTROL) != 0;
+    } else {
+        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
+        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
+        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
+        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_RIGHT_CONTROL) != 0;
+    }
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
 
     state->buttons[BUTTON_BACKSPACE] = glfwGetKey(this->window, GLFW_KEY_BACKSPACE);
     state->buttons[BUTTON_SPACE]     = glfwGetKey(this->window, GLFW_KEY_SPACE);
     state->buttons[BUTTON_F]         = glfwGetKey(this->window, GLFW_KEY_F);
+    state->buttons[BUTTON_V]         = glfwGetKey(this->window, GLFW_KEY_V);
+    state->buttons[BUTTON_CONTROL]   = glfwGetKey(this->window, GLFW_KEY_LEFT_CONTROL);
+    state->buttons[BUTTON_SUPER]   = glfwGetKey(this->window, GLFW_KEY_LEFT_SUPER);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];

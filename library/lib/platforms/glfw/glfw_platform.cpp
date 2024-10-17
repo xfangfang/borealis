@@ -91,7 +91,8 @@ void GLFWPlatform::restoreWindow()
 
 void GLFWPlatform::setWindowSize(uint32_t windowWidth, uint32_t windowHeight)
 {
-    if (windowWidth > 0 && windowHeight > 0) {
+    if (windowWidth > 0 && windowHeight > 0)
+    {
         glfwSetWindowSize(this->videoContext->getGLFWWindow(), windowWidth, windowHeight);
     }
 }
@@ -117,6 +118,19 @@ void GLFWPlatform::setWindowState(uint32_t windowWidth, uint32_t windowHeight, i
         glfwRestoreWindow(win);
         glfwSetWindowMonitor(win, nullptr, windowXPos, windowYPos, windowWidth, windowHeight, 0);
     }
+}
+
+void GLFWPlatform::pasteToClipboard(const std::string& text)
+{
+    glfwSetClipboardString(this->videoContext->getGLFWWindow(), text.c_str());
+}
+
+std::string GLFWPlatform::pasteFromClipboard()
+{
+    const char* str = glfwGetClipboardString(this->videoContext->getGLFWWindow());
+    if (!str)
+        return "";
+    return std::string { str };
 }
 
 std::string GLFWPlatform::getName()

@@ -21,12 +21,14 @@ class EditTextDialog : public Box
     Event<>* getBackspaceEvent();
     Event<>* getCancelEvent();
     Event<>* getSubmitEvent();
+    Event<std::string>* getClipboardEvent();
     void updateUI();
   private:
     std::string content;
     std::string hint;
     Event<Point> layoutEvent;
     Event<> backspaceEvent, cancelEvent, summitEvent;
+    Event<std::string> clipboardEvent;
     bool init = false;
 
     BRLS_BIND(brls::Label, header, "brls/dialog/header");
