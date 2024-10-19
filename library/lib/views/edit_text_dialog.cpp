@@ -95,28 +95,32 @@ namespace brls
                         this->summitEvent.fire();
                     });
                 return true; }, true);
-        this->registerAction(
-            "", BUTTON_V, [this](...)
-            {
-                brls::ControllerState state{};
-                brls::InputManager* input = Application::getPlatform()->getInputManager();
-                input->updateUnifiedControllerState(&state);
-        #ifdef __APPLE__
-                if (state.buttons[brls::BUTTON_SUPER] || state.buttons[brls::BUTTON_CONTROL]) {
-        #else
-                if (state.buttons[brls::BUTTON_CONTROL]) {
-        #endif
-                    clipboardEvent.fire(Application::getPlatform()->pasteFromClipboard());
-                    return true;
-                } else {
-                    return false;
-                } }, true);
 
-        // backspace
-        this->registerAction("hints/delete"_i18n, BUTTON_BACKSPACE, [this](...)
-            {
-                this->backspaceEvent.fire();
-                return true; }, true, true);
+        keyEvent = Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this](const KeyState& state) {
+            if (!state.pressed) return;
+
+            switch (state.key) {
+                case BRLS_KBD_KEY_BACKSPACE:
+                case BRLS_KBD_KEY_DELETE: // This is to ensure that the delete operation of the PSV ime will not be ignored
+                    this->backspaceEvent.fire();
+                    break;
+                case BRLS_KBD_KEY_ENTER: // This is to ensure that the delete operation of the PSV ime will not be ignored
+                    this->summitEvent.fire();
+                    break;
+                case BRLS_KBD_KEY_V:
+#ifdef __APPLE__
+                    if (state.mods & (BRLS_KBD_MODIFIER_CTRL | BRLS_KBD_MODIFIER_META)) {
+#else
+                    if (state.mods & BRLS_KBD_MODIFIER_CTRL) {
+#endif
+                        this->clipboardEvent.fire(Application::getPlatform()->pasteFromClipboard());
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
         this->registerAction("hints/delete"_i18n, BUTTON_BACK, [this](...)
             {
                 this->backspaceEvent.fire();
@@ -132,6 +136,11 @@ namespace brls
                 return true; });
 
         this->init = true;
+    }
+
+    EditTextDialog::~EditTextDialog()
+    {
+        Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->unsubscribe(keyEvent);
     }
 
     void EditTextDialog::open()

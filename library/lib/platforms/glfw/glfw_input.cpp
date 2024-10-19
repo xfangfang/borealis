@@ -52,7 +52,7 @@ static const size_t GLFW_BUTTONS_MAPPING[GLFW_GAMEPAD_BUTTON_MAX] = {
 
 static const size_t GLFW_GAMEPAD_TO_KEYBOARD[GLFW_GAMEPAD_BUTTON_MAX] = {
     GLFW_KEY_ENTER, // GLFW_GAMEPAD_BUTTON_A
-    GLFW_KEY_RIGHT_CONTROL, // GLFW_GAMEPAD_BUTTON_B
+    GLFW_KEY_ESCAPE, // GLFW_GAMEPAD_BUTTON_B
     GLFW_KEY_X, // GLFW_GAMEPAD_BUTTON_X
     GLFW_KEY_Y, // GLFW_GAMEPAD_BUTTON_Y
     GLFW_KEY_L, // GLFW_GAMEPAD_BUTTON_LEFT_BUMPER
@@ -282,7 +282,7 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 2; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
+    for (size_t i = 0; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = GLFW_BUTTONS_MAPPING[i];
         size_t key        = GLFW_GAMEPAD_TO_KEYBOARD[i];
@@ -292,23 +292,12 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
 
     if (Application::isSwapInputKeys()) {
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
-        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
-        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
-        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_RIGHT_CONTROL) != 0;
+        state->buttons[BUTTON_A] |= glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     } else {
         state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
-        state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
-        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
-        state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_RIGHT_CONTROL) != 0;
+        state->buttons[BUTTON_B] |= glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     }
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
-
-    state->buttons[BUTTON_BACKSPACE] = glfwGetKey(this->window, GLFW_KEY_BACKSPACE);
-    state->buttons[BUTTON_SPACE]     = glfwGetKey(this->window, GLFW_KEY_SPACE);
-    state->buttons[BUTTON_F]         = glfwGetKey(this->window, GLFW_KEY_F);
-    state->buttons[BUTTON_V]         = glfwGetKey(this->window, GLFW_KEY_V);
-    state->buttons[BUTTON_CONTROL]   = glfwGetKey(this->window, GLFW_KEY_LEFT_CONTROL);
-    state->buttons[BUTTON_SUPER]   = glfwGetKey(this->window, GLFW_KEY_LEFT_SUPER);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
@@ -345,18 +334,7 @@ void GLFWInputManager::updateControllerState(ControllerState* state, int control
 
 bool GLFWInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    if (key == BRLS_KBD_KEY_ESCAPE)
-    {
-        return glfwGetKey(this->window, key) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-    }
     return glfwGetKey(this->window, key);
-}
-
-bool sameSign(int a, int b)
-{
-    if (a == 0 || b == 0)
-        return true;
-    return (a >= 0) ^ (b < 0);
 }
 
 void GLFWInputManager::updateTouchStates(std::vector<RawTouchState>* states)

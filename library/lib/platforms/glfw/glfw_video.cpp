@@ -237,13 +237,13 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
     glfwWindowHint(GLFW_AUTO_ICONIFY, 0);
+    glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
 #endif
 
 // create window
 #if defined(__linux__) || defined(_WIN32) || defined(__APPLE__)
     if (VideoContext::FULLSCREEN)
     {
-        glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
         this->window = glfwCreateWindow(mode->width, mode->height, windowTitle.c_str(), monitor, nullptr);
 #ifdef _WIN32
         // glfw will disable screen sleep when in full-screen mode

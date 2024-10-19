@@ -79,7 +79,6 @@ bool Application::init()
     // Init platform
     Application::platform = Platform::createPlatform();
     Application::notificationManager = new NotificationManager();
-    Application::backgroundColor = Application::getTheme().getColor("brls/clear");
 
     if (!Application::platform)
     {
@@ -157,6 +156,8 @@ void Application::createWindow(std::string windowTitle)
     Application::registerBuiltInXMLViews();
 
     Application::getWindowCreationDoneEvent()->fire();
+
+    Application::backgroundColor = Application::getTheme().getColor("brls/clear");
 }
 
 bool Application::mainLoop()

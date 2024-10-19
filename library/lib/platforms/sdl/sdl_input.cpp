@@ -27,81 +27,273 @@ namespace brls
 #define SDL_GAMEPAD_AXIS_MAX 6
 #define SDL_STICKY 2
 
-    /// HidKeyboardScancode
+/// HidKeyboardScancode
 /// Uses the same key codes as GLFW
 static const BrlsKeyboardScancode sdlToBrlsKeyboardScancode(SDL_Scancode scancode)
 {
-    if (scancode == SDL_SCANCODE_UNKNOWN) return BRLS_KBD_KEY_UNKNOWN;
+    if (scancode == SDL_SCANCODE_UNKNOWN)
+        return BRLS_KBD_KEY_UNKNOWN;
 
     // 1 - 9
-    if (scancode >= SDL_SCANCODE_1 && scancode <= SDL_SCANCODE_9) return (BrlsKeyboardScancode) (BRLS_KBD_KEY_1 + scancode - SDL_SCANCODE_1);
+    if (scancode >= SDL_SCANCODE_1 && scancode <= SDL_SCANCODE_9)
+        return (BrlsKeyboardScancode)(BRLS_KBD_KEY_1 + scancode - SDL_SCANCODE_1);
 
     // KP1 - KP9
-    if (scancode >= SDL_SCANCODE_KP_1 && scancode <= SDL_SCANCODE_KP_9) return (BrlsKeyboardScancode) (BRLS_KBD_KEY_KP_1 + scancode - SDL_SCANCODE_KP_1);
+    if (scancode >= SDL_SCANCODE_KP_1 && scancode <= SDL_SCANCODE_KP_9)
+        return (BrlsKeyboardScancode)(BRLS_KBD_KEY_KP_1 + scancode - SDL_SCANCODE_KP_1);
 
     // A - Z
-    if (scancode >= SDL_SCANCODE_A && scancode <= SDL_SCANCODE_Z) return (BrlsKeyboardScancode) (BRLS_KBD_KEY_A + scancode - SDL_SCANCODE_A);
+    if (scancode >= SDL_SCANCODE_A && scancode <= SDL_SCANCODE_Z)
+        return (BrlsKeyboardScancode)(BRLS_KBD_KEY_A + scancode - SDL_SCANCODE_A);
 
     // F1 - F12
-    if (scancode >= SDL_SCANCODE_F1 && scancode <= SDL_SCANCODE_F12) return (BrlsKeyboardScancode) (BRLS_KBD_KEY_F1 + scancode - SDL_SCANCODE_F1);
+    if (scancode >= SDL_SCANCODE_F1 && scancode <= SDL_SCANCODE_F12)
+        return (BrlsKeyboardScancode)(BRLS_KBD_KEY_F1 + scancode - SDL_SCANCODE_F1);
 
-    switch (scancode) {
-        case SDL_SCANCODE_UNKNOWN: return BRLS_KBD_KEY_UNKNOWN;
+    switch (scancode)
+    {
+        case SDL_SCANCODE_UNKNOWN:
+            return BRLS_KBD_KEY_UNKNOWN;
 
-    /* Printable keys */
-        case SDL_SCANCODE_SPACE: return BRLS_KBD_KEY_SPACE;
-        case SDL_SCANCODE_APOSTROPHE: return BRLS_KBD_KEY_APOSTROPHE;
-        case SDL_SCANCODE_COMMA: return BRLS_KBD_KEY_COMMA;
-        case SDL_SCANCODE_MINUS: return BRLS_KBD_KEY_MINUS;
-        case SDL_SCANCODE_PERIOD: return BRLS_KBD_KEY_PERIOD;
-        case SDL_SCANCODE_SLASH: return BRLS_KBD_KEY_SLASH;
-        case SDL_SCANCODE_0: return BRLS_KBD_KEY_0;
-        case SDL_SCANCODE_SEMICOLON: return BRLS_KBD_KEY_SEMICOLON;
-        case SDL_SCANCODE_EQUALS: return BRLS_KBD_KEY_EQUAL;
-        case SDL_SCANCODE_LEFTBRACKET: return BRLS_KBD_KEY_LEFT_BRACKET;
-        case SDL_SCANCODE_BACKSLASH: return BRLS_KBD_KEY_BACKSLASH;
-        case SDL_SCANCODE_RIGHTBRACKET: return BRLS_KBD_KEY_RIGHT_BRACKET;
-        case SDL_SCANCODE_GRAVE: return BRLS_KBD_KEY_GRAVE_ACCENT;
-        case SDL_SCANCODE_INTERNATIONAL1: return BRLS_KBD_KEY_WORLD_1;
+            /* Printable keys */
+        case SDL_SCANCODE_SPACE:
+            return BRLS_KBD_KEY_SPACE;
+        case SDL_SCANCODE_APOSTROPHE:
+            return BRLS_KBD_KEY_APOSTROPHE;
+        case SDL_SCANCODE_COMMA:
+            return BRLS_KBD_KEY_COMMA;
+        case SDL_SCANCODE_MINUS:
+            return BRLS_KBD_KEY_MINUS;
+        case SDL_SCANCODE_PERIOD:
+            return BRLS_KBD_KEY_PERIOD;
+        case SDL_SCANCODE_SLASH:
+            return BRLS_KBD_KEY_SLASH;
+        case SDL_SCANCODE_0:
+            return BRLS_KBD_KEY_0;
+        case SDL_SCANCODE_SEMICOLON:
+            return BRLS_KBD_KEY_SEMICOLON;
+        case SDL_SCANCODE_EQUALS:
+            return BRLS_KBD_KEY_EQUAL;
+        case SDL_SCANCODE_LEFTBRACKET:
+            return BRLS_KBD_KEY_LEFT_BRACKET;
+        case SDL_SCANCODE_BACKSLASH:
+            return BRLS_KBD_KEY_BACKSLASH;
+        case SDL_SCANCODE_RIGHTBRACKET:
+            return BRLS_KBD_KEY_RIGHT_BRACKET;
+        case SDL_SCANCODE_GRAVE:
+            return BRLS_KBD_KEY_GRAVE_ACCENT;
+        case SDL_SCANCODE_INTERNATIONAL1:
+            return BRLS_KBD_KEY_WORLD_1;
 
-    /* Function keys */
-        case SDL_SCANCODE_ESCAPE: return BRLS_KBD_KEY_ESCAPE;
-        case SDL_SCANCODE_RETURN: return BRLS_KBD_KEY_ENTER;
-        case SDL_SCANCODE_TAB: return BRLS_KBD_KEY_TAB;
-        case SDL_SCANCODE_BACKSPACE: return BRLS_KBD_KEY_BACKSPACE;
-        case SDL_SCANCODE_INSERT: return BRLS_KBD_KEY_INSERT;
-        case SDL_SCANCODE_DELETE: return BRLS_KBD_KEY_DELETE;
-        case SDL_SCANCODE_RIGHT: return BRLS_KBD_KEY_RIGHT;
-        case SDL_SCANCODE_LEFT: return BRLS_KBD_KEY_LEFT;
-        case SDL_SCANCODE_DOWN: return BRLS_KBD_KEY_DOWN;
-        case SDL_SCANCODE_UP: return BRLS_KBD_KEY_UP;
-        case SDL_SCANCODE_PAGEUP: return BRLS_KBD_KEY_PAGE_UP;
-        case SDL_SCANCODE_PAGEDOWN: return BRLS_KBD_KEY_PAGE_DOWN;
-        case SDL_SCANCODE_HOME: return BRLS_KBD_KEY_HOME;
-        case SDL_SCANCODE_END: return BRLS_KBD_KEY_END;
-        case SDL_SCANCODE_CAPSLOCK: return BRLS_KBD_KEY_CAPS_LOCK;
-        case SDL_SCANCODE_SCROLLLOCK: return BRLS_KBD_KEY_SCROLL_LOCK;
-        case SDL_SCANCODE_NUMLOCKCLEAR: return BRLS_KBD_KEY_NUM_LOCK;
-        case SDL_SCANCODE_PRINTSCREEN: return BRLS_KBD_KEY_PRINT_SCREEN;
-        case SDL_SCANCODE_PAUSE: return BRLS_KBD_KEY_PAUSE;
-        case SDL_SCANCODE_KP_0: return BRLS_KBD_KEY_KP_0;
-        case SDL_SCANCODE_KP_DECIMAL: return BRLS_KBD_KEY_KP_DECIMAL;
-        case SDL_SCANCODE_KP_DIVIDE: return BRLS_KBD_KEY_KP_DIVIDE;
-        case SDL_SCANCODE_KP_MULTIPLY: return BRLS_KBD_KEY_KP_MULTIPLY;
-        case SDL_SCANCODE_KP_MINUS: return BRLS_KBD_KEY_KP_SUBTRACT;
-        case SDL_SCANCODE_KP_PLUS: return BRLS_KBD_KEY_KP_ADD;
-        case SDL_SCANCODE_KP_ENTER: return BRLS_KBD_KEY_KP_ENTER;
-        case SDL_SCANCODE_KP_EQUALS: return BRLS_KBD_KEY_KP_EQUAL;
-        case SDL_SCANCODE_LSHIFT: return BRLS_KBD_KEY_LEFT_SHIFT;
-        case SDL_SCANCODE_LCTRL: return BRLS_KBD_KEY_LEFT_CONTROL;
-        case SDL_SCANCODE_LALT: return BRLS_KBD_KEY_LEFT_ALT;
-        case SDL_SCANCODE_LGUI: return BRLS_KBD_KEY_LEFT_SUPER;
-        case SDL_SCANCODE_RSHIFT: return BRLS_KBD_KEY_RIGHT_SHIFT;
-        case SDL_SCANCODE_RCTRL: return BRLS_KBD_KEY_RIGHT_CONTROL;
-        case SDL_SCANCODE_RALT: return BRLS_KBD_KEY_RIGHT_ALT;
-        case SDL_SCANCODE_RGUI: return BRLS_KBD_KEY_RIGHT_SUPER;
-        case SDL_SCANCODE_MENU: return BRLS_KBD_KEY_MENU;
-        default: return BRLS_KBD_KEY_UNKNOWN;
+            /* Function keys */
+        case SDL_SCANCODE_ESCAPE:
+            return BRLS_KBD_KEY_ESCAPE;
+        case SDL_SCANCODE_RETURN:
+            return BRLS_KBD_KEY_ENTER;
+        case SDL_SCANCODE_TAB:
+            return BRLS_KBD_KEY_TAB;
+        case SDL_SCANCODE_BACKSPACE:
+            return BRLS_KBD_KEY_BACKSPACE;
+        case SDL_SCANCODE_INSERT:
+            return BRLS_KBD_KEY_INSERT;
+        case SDL_SCANCODE_DELETE:
+            return BRLS_KBD_KEY_DELETE;
+        case SDL_SCANCODE_RIGHT:
+            return BRLS_KBD_KEY_RIGHT;
+        case SDL_SCANCODE_LEFT:
+            return BRLS_KBD_KEY_LEFT;
+        case SDL_SCANCODE_DOWN:
+            return BRLS_KBD_KEY_DOWN;
+        case SDL_SCANCODE_UP:
+            return BRLS_KBD_KEY_UP;
+        case SDL_SCANCODE_PAGEUP:
+            return BRLS_KBD_KEY_PAGE_UP;
+        case SDL_SCANCODE_PAGEDOWN:
+            return BRLS_KBD_KEY_PAGE_DOWN;
+        case SDL_SCANCODE_HOME:
+            return BRLS_KBD_KEY_HOME;
+        case SDL_SCANCODE_END:
+            return BRLS_KBD_KEY_END;
+        case SDL_SCANCODE_CAPSLOCK:
+            return BRLS_KBD_KEY_CAPS_LOCK;
+        case SDL_SCANCODE_SCROLLLOCK:
+            return BRLS_KBD_KEY_SCROLL_LOCK;
+        case SDL_SCANCODE_NUMLOCKCLEAR:
+            return BRLS_KBD_KEY_NUM_LOCK;
+        case SDL_SCANCODE_PRINTSCREEN:
+            return BRLS_KBD_KEY_PRINT_SCREEN;
+        case SDL_SCANCODE_PAUSE:
+            return BRLS_KBD_KEY_PAUSE;
+        case SDL_SCANCODE_KP_0:
+            return BRLS_KBD_KEY_KP_0;
+        case SDL_SCANCODE_KP_DECIMAL:
+            return BRLS_KBD_KEY_KP_DECIMAL;
+        case SDL_SCANCODE_KP_DIVIDE:
+            return BRLS_KBD_KEY_KP_DIVIDE;
+        case SDL_SCANCODE_KP_MULTIPLY:
+            return BRLS_KBD_KEY_KP_MULTIPLY;
+        case SDL_SCANCODE_KP_MINUS:
+            return BRLS_KBD_KEY_KP_SUBTRACT;
+        case SDL_SCANCODE_KP_PLUS:
+            return BRLS_KBD_KEY_KP_ADD;
+        case SDL_SCANCODE_KP_ENTER:
+            return BRLS_KBD_KEY_KP_ENTER;
+        case SDL_SCANCODE_KP_EQUALS:
+            return BRLS_KBD_KEY_KP_EQUAL;
+        case SDL_SCANCODE_LSHIFT:
+            return BRLS_KBD_KEY_LEFT_SHIFT;
+        case SDL_SCANCODE_LCTRL:
+            return BRLS_KBD_KEY_LEFT_CONTROL;
+        case SDL_SCANCODE_LALT:
+            return BRLS_KBD_KEY_LEFT_ALT;
+        case SDL_SCANCODE_LGUI:
+            return BRLS_KBD_KEY_LEFT_SUPER;
+        case SDL_SCANCODE_RSHIFT:
+            return BRLS_KBD_KEY_RIGHT_SHIFT;
+        case SDL_SCANCODE_RCTRL:
+            return BRLS_KBD_KEY_RIGHT_CONTROL;
+        case SDL_SCANCODE_RALT:
+            return BRLS_KBD_KEY_RIGHT_ALT;
+        case SDL_SCANCODE_RGUI:
+            return BRLS_KBD_KEY_RIGHT_SUPER;
+        case SDL_SCANCODE_MENU:
+            return BRLS_KBD_KEY_MENU;
+        default:
+            return BRLS_KBD_KEY_UNKNOWN;
+    }
+}
+
+static const SDL_Scancode brlsToSdlKeyboardScancode(BrlsKeyboardScancode scancode)
+{
+    if (scancode == BRLS_KBD_KEY_UNKNOWN)
+        return SDL_SCANCODE_UNKNOWN;
+
+    // 1 - 9
+    if (scancode >= BRLS_KBD_KEY_1 && scancode <= BRLS_KBD_KEY_9)
+        return (SDL_Scancode)(SDL_SCANCODE_1 + scancode - BRLS_KBD_KEY_1);
+
+    // KP1 - KP9
+    if (scancode >= BRLS_KBD_KEY_KP_1 && scancode <= BRLS_KBD_KEY_KP_9)
+        return (SDL_Scancode)(SDL_SCANCODE_KP_1 + scancode - BRLS_KBD_KEY_KP_1);
+
+    // A - Z
+    if (scancode >= BRLS_KBD_KEY_A && scancode <= BRLS_KBD_KEY_Z)
+        return (SDL_Scancode)(SDL_SCANCODE_A + scancode - BRLS_KBD_KEY_A);
+
+    // F1 - F12
+    if (scancode >= BRLS_KBD_KEY_F1 && scancode <= BRLS_KBD_KEY_F12)
+        return (SDL_Scancode)(SDL_SCANCODE_F1 + scancode - BRLS_KBD_KEY_F1);
+
+    switch (scancode)
+    {
+        case BRLS_KBD_KEY_UNKNOWN:
+            return SDL_SCANCODE_UNKNOWN;
+
+            /* Printable keys */
+        case BRLS_KBD_KEY_SPACE:
+            return SDL_SCANCODE_SPACE;
+        case BRLS_KBD_KEY_APOSTROPHE:
+            return SDL_SCANCODE_APOSTROPHE;
+        case BRLS_KBD_KEY_COMMA:
+            return SDL_SCANCODE_COMMA;
+        case BRLS_KBD_KEY_MINUS:
+            return SDL_SCANCODE_MINUS;
+        case BRLS_KBD_KEY_PERIOD:
+            return SDL_SCANCODE_PERIOD;
+        case BRLS_KBD_KEY_SLASH:
+            return SDL_SCANCODE_SLASH;
+        case BRLS_KBD_KEY_0:
+            return SDL_SCANCODE_0;
+        case BRLS_KBD_KEY_SEMICOLON:
+            return SDL_SCANCODE_SEMICOLON;
+        case BRLS_KBD_KEY_EQUAL:
+            return SDL_SCANCODE_EQUALS;
+        case BRLS_KBD_KEY_LEFT_BRACKET:
+            return SDL_SCANCODE_LEFTBRACKET;
+        case BRLS_KBD_KEY_BACKSLASH:
+            return SDL_SCANCODE_BACKSLASH;
+        case BRLS_KBD_KEY_RIGHT_BRACKET:
+            return SDL_SCANCODE_RIGHTBRACKET;
+        case BRLS_KBD_KEY_GRAVE_ACCENT:
+            return SDL_SCANCODE_GRAVE;
+        case BRLS_KBD_KEY_WORLD_1:
+            return SDL_SCANCODE_INTERNATIONAL1;
+
+            /* Function keys */
+        case BRLS_KBD_KEY_ESCAPE:
+            return SDL_SCANCODE_ESCAPE;
+        case BRLS_KBD_KEY_ENTER:
+            return SDL_SCANCODE_RETURN;
+        case BRLS_KBD_KEY_TAB:
+            return SDL_SCANCODE_TAB;
+        case BRLS_KBD_KEY_BACKSPACE:
+            return SDL_SCANCODE_BACKSPACE;
+        case BRLS_KBD_KEY_INSERT:
+            return SDL_SCANCODE_INSERT;
+        case BRLS_KBD_KEY_DELETE:
+            return SDL_SCANCODE_DELETE;
+        case BRLS_KBD_KEY_RIGHT:
+            return SDL_SCANCODE_RIGHT;
+        case BRLS_KBD_KEY_LEFT:
+            return SDL_SCANCODE_LEFT;
+        case BRLS_KBD_KEY_DOWN:
+            return SDL_SCANCODE_DOWN;
+        case BRLS_KBD_KEY_UP:
+            return SDL_SCANCODE_UP;
+        case BRLS_KBD_KEY_PAGE_UP:
+            return SDL_SCANCODE_PAGEUP;
+        case BRLS_KBD_KEY_PAGE_DOWN:
+            return SDL_SCANCODE_PAGEDOWN;
+        case BRLS_KBD_KEY_HOME:
+            return SDL_SCANCODE_HOME;
+        case BRLS_KBD_KEY_END:
+            return SDL_SCANCODE_END;
+        case BRLS_KBD_KEY_CAPS_LOCK:
+            return SDL_SCANCODE_CAPSLOCK;
+        case BRLS_KBD_KEY_SCROLL_LOCK:
+            return SDL_SCANCODE_SCROLLLOCK;
+        case BRLS_KBD_KEY_NUM_LOCK:
+            return SDL_SCANCODE_NUMLOCKCLEAR;
+        case BRLS_KBD_KEY_PRINT_SCREEN:
+            return SDL_SCANCODE_PRINTSCREEN;
+        case BRLS_KBD_KEY_PAUSE:
+            return SDL_SCANCODE_PAUSE;
+        case BRLS_KBD_KEY_KP_0:
+            return SDL_SCANCODE_KP_0;
+        case BRLS_KBD_KEY_KP_DECIMAL:
+            return SDL_SCANCODE_KP_DECIMAL;
+        case BRLS_KBD_KEY_KP_DIVIDE:
+            return SDL_SCANCODE_KP_DIVIDE;
+        case BRLS_KBD_KEY_KP_MULTIPLY:
+            return SDL_SCANCODE_KP_MULTIPLY;
+        case BRLS_KBD_KEY_KP_SUBTRACT:
+            return SDL_SCANCODE_KP_MINUS;
+        case BRLS_KBD_KEY_KP_ADD:
+            return SDL_SCANCODE_KP_PLUS;
+        case BRLS_KBD_KEY_KP_ENTER:
+            return SDL_SCANCODE_KP_ENTER;
+        case BRLS_KBD_KEY_KP_EQUAL:
+            return SDL_SCANCODE_KP_EQUALS;
+        case BRLS_KBD_KEY_LEFT_SHIFT:
+            return SDL_SCANCODE_LSHIFT;
+        case BRLS_KBD_KEY_LEFT_CONTROL:
+            return SDL_SCANCODE_LCTRL;
+        case BRLS_KBD_KEY_LEFT_ALT:
+            return SDL_SCANCODE_LALT;
+        case BRLS_KBD_KEY_LEFT_SUPER:
+            return SDL_SCANCODE_LGUI;
+        case BRLS_KBD_KEY_RIGHT_SHIFT:
+            return SDL_SCANCODE_RSHIFT;
+        case BRLS_KBD_KEY_RIGHT_CONTROL:
+            return SDL_SCANCODE_RCTRL;
+        case BRLS_KBD_KEY_RIGHT_ALT:
+            return SDL_SCANCODE_RALT;
+        case BRLS_KBD_KEY_RIGHT_SUPER:
+            return SDL_SCANCODE_RGUI;
+        case BRLS_KBD_KEY_MENU:
+            return SDL_SCANCODE_MENU;
+        default:
+            return SDL_SCANCODE_UNKNOWN;
     }
 }
 
@@ -126,7 +318,7 @@ static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
 
 static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
     SDL_SCANCODE_RETURN, // SDL_CONTROLLER_BUTTON_A
-    SDL_SCANCODE_RCTRL, // SDL_CONTROLLER_BUTTON_B
+    SDL_SCANCODE_ESCAPE, // SDL_CONTROLLER_BUTTON_B
     SDL_SCANCODE_X, // SDL_CONTROLLER_BUTTON_X
     SDL_SCANCODE_Y, // SDL_CONTROLLER_BUTTON_Y
     SDL_SCANCODE_F1, // SDL_CONTROLLER_BUTTON_BACK
@@ -174,6 +366,8 @@ static inline int getKeyboardKeys(SDL_Scancode code)
 {
     if (keyboardKeys.find(code) == keyboardKeys.end())
         return SDL_RELEASED;
+    // Using SDL_STICKY to ensure that no input is lost
+    // It's very helpful for devices with frame drops such as PSV
     if (keyboardKeys[code] == SDL_STICKY)
     {
         keyboardKeys[code] = SDL_RELEASED;
@@ -214,38 +408,7 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
     }
     else if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP)
     {
-        switch (event->key.keysym.scancode)
-        {
-            case SDL_SCANCODE_ESCAPE:
-            case SDL_SCANCODE_RCTRL:
-            case SDL_SCANCODE_RETURN:
-            case SDL_SCANCODE_MENU:
-            case SDL_SCANCODE_AC_BACK:
-            case SDL_SCANCODE_BACKSPACE:
-            case SDL_SCANCODE_X:
-            case SDL_SCANCODE_Y:
-            case SDL_SCANCODE_F1:
-            case SDL_SCANCODE_UNKNOWN:
-            case SDL_SCANCODE_F2:
-            case SDL_SCANCODE_Q:
-            case SDL_SCANCODE_P:
-            case SDL_SCANCODE_L:
-            case SDL_SCANCODE_R:
-            case SDL_SCANCODE_UP:
-            case SDL_SCANCODE_DOWN:
-            case SDL_SCANCODE_LEFT:
-            case SDL_SCANCODE_RIGHT:
-            case SDL_SCANCODE_SPACE:
-            case SDL_SCANCODE_F:
-            case SDL_SCANCODE_V:
-            case SDL_SCANCODE_LGUI:
-            case SDL_SCANCODE_LCTRL:
-            case SDL_SCANCODE_KP_ENTER:
-                keyboardKeys[event->key.keysym.scancode] = event->type == SDL_KEYDOWN ? SDL_PRESSED : SDL_STICKY;
-                break;
-            default:
-                break;
-        }
+        keyboardKeys[event->key.keysym.scancode] = event->type == SDL_KEYDOWN ? SDL_PRESSED : SDL_STICKY;
     }
     Application::setActiveEvent(true);
     return 0;
@@ -330,37 +493,26 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 2; i < SDL_GAMEPAD_BUTTON_MAX; i++)
+    for (size_t i = 0; i < SDL_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
         size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
         if (key != SDL_SCANCODE_UNKNOWN)
             state->buttons[brlsButton] |= getKeyboardKeys((SDL_Scancode)key);
     }
-    if (Application::isSwapInputKeys()) {
+    if (Application::isSwapInputKeys())
+    {
         state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
-        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
-        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_RCTRL);
-        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
-    } else {
+    }
+    else
+    {
         state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
-        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
-        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_RCTRL);
-        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
     }
 
     // Android tv remote control
     state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
-
-    // pc shortcuts
-    state->buttons[BUTTON_SPACE] = getKeyboardKeys(SDL_SCANCODE_SPACE);
-    state->buttons[BUTTON_BACKSPACE] = getKeyboardKeys(SDL_SCANCODE_BACKSPACE);
-    state->buttons[BUTTON_F] = getKeyboardKeys(SDL_SCANCODE_F);
-    state->buttons[BUTTON_V] = getKeyboardKeys(SDL_SCANCODE_V);
-    state->buttons[BUTTON_CONTROL] = getKeyboardKeys(SDL_SCANCODE_LCTRL);
-    state->buttons[BUTTON_SUPER] = getKeyboardKeys(SDL_SCANCODE_LGUI);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
@@ -397,32 +549,26 @@ void SDLInputManager::updateControllerState(ControllerState* state, int controll
 
 bool SDLInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    switch (key)
-    {
-        case BRLS_KBD_KEY_ESCAPE:
-            return getKeyboardKeys(SDL_SCANCODE_ESCAPE);
-        case BRLS_KBD_KEY_ENTER:
-            return getKeyboardKeys(SDL_SCANCODE_RETURN);
-        default:
-            return false;
-    }
-    return false;
+    return getKeyboardKeys(brlsToSdlKeyboardScancode(key));
 }
 
 void SDLInputManager::updateTouchStates(std::vector<RawTouchState>* states)
 {
     int devices = SDL_GetNumTouchDevices();
-    if (devices == 0) return;
+    if (devices == 0)
+        return;
 
-    for (int deviceID = 0; deviceID < devices; deviceID++) {
+    for (int deviceID = 0; deviceID < devices; deviceID++)
+    {
         SDL_TouchID device = SDL_GetTouchDevice(deviceID);
-        int touchesCount = SDL_GetNumTouchFingers(device);
-        for (int touchID = 0; touchID < touchesCount; touchID++) {
+        int touchesCount   = SDL_GetNumTouchFingers(device);
+        for (int touchID = 0; touchID < touchesCount; touchID++)
+        {
             SDL_Finger* finger = SDL_GetTouchFinger(device, touchID);
-            
+
             RawTouchState state;
             state.pressed    = true;
-            state.fingerId   = (int) finger->id;
+            state.fingerId   = (int)finger->id;
             state.position.x = Application::contentWidth * finger->x;
             state.position.y = Application::contentHeight * finger->y;
             states->push_back(state);
@@ -484,7 +630,7 @@ void SDLInputManager::updateMouseMotion(SDL_MouseMotionEvent event)
 
         int width, height;
         SDL_GetWindowSize(window, &width, &height);
-        SDL_WarpMouseInWindow(window, width/2, height/2);
+        SDL_WarpMouseInWindow(window, width / 2, height / 2);
     }
 }
 
@@ -506,14 +652,15 @@ void SDLInputManager::updateControllerSensorsUpdate(SDL_ControllerSensorEvent ev
     auto id = event.which;
     SensorEvent state;
 
-    switch (event.sensor) {
+    switch (event.sensor)
+    {
         case SDL_SENSOR_ACCEL:
-            state = SensorEvent { id, SensorEventType::ACCEL, {event.data[0], event.data[1], event.data[2]}, event.timestamp };
+            state = SensorEvent { id, SensorEventType::ACCEL, { event.data[0], event.data[1], event.data[2] }, event.timestamp };
             getControllerSensorStateChanged()->fire(state);
             Application::setActiveEvent(true);
             break;
         case SDL_SENSOR_GYRO:
-            state = SensorEvent { id, SensorEventType::GYRO, {event.data[0], event.data[1], event.data[2]}, event.timestamp };
+            state = SensorEvent { id, SensorEventType::GYRO, { event.data[0], event.data[1], event.data[2] }, event.timestamp };
             getControllerSensorStateChanged()->fire(state);
             Application::setActiveEvent(true);
             break;
@@ -524,14 +671,12 @@ void SDLInputManager::updateKeyboardState(SDL_KeyboardEvent event)
 {
     auto* self = (SDLInputManager*)Application::getPlatform()->getInputManager();
     KeyState state {};
-    state.key            = sdlToBrlsKeyboardScancode(event.keysym.scancode);
-    state.mods           = event.keysym.mod;
-    state.pressed        = event.type == SDL_KEYDOWN;
-#ifdef __PSV__
-    // This is to ensure that the delete operation of the ime will not be ignored
-    if (event.keysym.scancode == SDL_SCANCODE_DELETE && state.pressed)
-        Application::onControllerButtonPressed(brls::ControllerButton::BUTTON_BACKSPACE, false);
-#endif
+    state.key     = sdlToBrlsKeyboardScancode(event.keysym.scancode);
+    state.pressed = event.type == SDL_KEYDOWN;
+    state.mods |= event.keysym.mod & KMOD_SHIFT ? BRLS_KBD_MODIFIER_SHIFT : 0;
+    state.mods |= event.keysym.mod & KMOD_CTRL ? BRLS_KBD_MODIFIER_CTRL : 0;
+    state.mods |= event.keysym.mod & KMOD_ALT ? BRLS_KBD_MODIFIER_ALT : 0;
+    state.mods |= event.keysym.mod & KMOD_GUI ? BRLS_KBD_MODIFIER_META : 0;
 
     self->getKeyboardKeyStateChanged()->fire(state);
     Application::setActiveEvent(true);

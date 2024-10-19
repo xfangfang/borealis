@@ -205,14 +205,6 @@ enum ControllerButton
     BUTTON_NAV_DOWN,
     BUTTON_NAV_LEFT,
 
-    // Keyboard keys
-    BUTTON_SPACE,
-    BUTTON_F,
-    BUTTON_V,
-    BUTTON_CONTROL,
-    BUTTON_SUPER,
-    BUTTON_BACKSPACE,
-
     _BUTTON_MAX,
 };
 
