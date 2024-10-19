@@ -493,7 +493,7 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 0; i < SDL_GAMEPAD_BUTTON_MAX; i++)
+    for (size_t i = 2; i < SDL_GAMEPAD_BUTTON_MAX; i++)
     {
         size_t brlsButton = SDL_BUTTONS_MAPPING[i];
         size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
@@ -503,11 +503,15 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     if (Application::isSwapInputKeys())
     {
         state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
     }
     else
     {
         state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
+        state->buttons[BUTTON_A] |= getKeyboardKeys(SDL_SCANCODE_RETURN);
+        state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_ESCAPE);
         state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_AC_BACK);
     }
 
