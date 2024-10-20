@@ -53,12 +53,14 @@ enum class InputType
 };
 
 class DebugLayer;
+class EditTextDialog;
 
 typedef std::function<View*(void)> XMLViewCreator;
 
 class Application
 {
   public:
+    friend class EditTextDialog;
 
     static inline uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
     static inline uint32_t ORIGINAL_WINDOW_HEIGHT = 720;

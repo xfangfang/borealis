@@ -1,10 +1,13 @@
 #include <borealis/views/edit_text_dialog.hpp>
 #include <borealis/core/i18n.hpp>
+#include <borealis/core/touch/tap_gesture.hpp>
 #include <borealis/core/application.hpp>
 
 #ifdef __PSV__
 #define EDIT_TEXT_DIALOG_POP_ANIMATION TransitionAnimation::NONE
 #define EDIT_TEXT_DIALOG_BACKGROUND_TRANSLUCENT false
+#include <SDL2/SDL.h>
+#include "borealis/platforms/sdl/sdl_video.hpp"
 #else
 #define EDIT_TEXT_DIALOG_POP_ANIMATION TransitionAnimation::FADE
 #define EDIT_TEXT_DIALOG_BACKGROUND_TRANSLUCENT true
@@ -104,9 +107,6 @@ namespace brls
                 case BRLS_KBD_KEY_DELETE: // This is to ensure that the delete operation of the PSV ime will not be ignored
                     this->backspaceEvent.fire();
                     break;
-                case BRLS_KBD_KEY_ENTER: // This is to ensure that the delete operation of the PSV ime will not be ignored
-                    this->summitEvent.fire();
-                    break;
                 case BRLS_KBD_KEY_V:
 #ifdef __APPLE__
                     if (state.mods & (BRLS_KBD_MODIFIER_CTRL | BRLS_KBD_MODIFIER_META)) {
@@ -134,6 +134,23 @@ namespace brls
                         this->cancelEvent.fire();
                     });
                 return true; });
+
+#ifdef __PSV__
+        // After turning off the on-screen keyboard, tap on the input area to reopen
+        this->addGestureRecognizer(new brls::TapGestureRecognizer([](brls::TapGestureStatus status, brls::Sound*) {
+            if (status.state == brls::GestureState::END) {
+                auto* videoContext = (SDLVideoContext*)Application::getPlatform()->getVideoContext();
+                if (!SDL_IsScreenKeyboardShown(videoContext->getSDLWindow()))
+                {
+                    SDL_StopTextInput();
+                    SDL_StartTextInput();
+                    Application::setInputType(InputType::GAMEPAD);
+                }
+            }
+        }));
+        // Force to set to gamepad mode to avoid missing the `Enter` keyboard event
+        Application::setInputType(InputType::GAMEPAD);
+#endif
 
         this->init = true;
     }
