@@ -45,7 +45,12 @@ class Slider : public Box
 
     void setPointerSize(float size);
 
+    void showPointer();
+    void hidePointer();
+
     static View* create();
+    
+    Rectangle* getPointer() { return pointer; }
 
   private:
     InputManager* input;
