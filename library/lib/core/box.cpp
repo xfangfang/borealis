@@ -220,6 +220,14 @@ void Box::removeView(View* view, bool free)
         YGNodeRemoveChild(this->ygNode, view->getYGNode());
     this->children.erase(this->children.begin() + index);
 
+    // Update parent userdata
+    for (size_t i = index; i < this->children.size(); i++)
+    {
+        auto* index = (size_t*)this->children[i]->getParentUserData();
+        if (index)
+            (*index)--;
+    }
+
     view->willDisappear(true);
     if (free)
         view->freeView();
