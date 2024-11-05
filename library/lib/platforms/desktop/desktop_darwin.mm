@@ -46,4 +46,13 @@ bool darwin_runloop(const std::function<bool()>& runLoopImpl) {
     }
 }
 
+std::string darwin_locale() {
+    @autoreleasepool {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSArray *languages = [defaults objectForKey:@"AppleLanguages"];
+        NSString *current = [languages objectAtIndex:0];
+        return [current UTF8String];
+    }
+}
+
 }

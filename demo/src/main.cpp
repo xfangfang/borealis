@@ -48,6 +48,8 @@ int main(int argc, char* argv[])
         }
     }
 
+    brls::Platform::APP_LOCALE_DEFAULT = brls::LOCALE_AUTO;
+
     // Init the app and i18n
     if (!brls::Application::init())
     {

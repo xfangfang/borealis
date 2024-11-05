@@ -429,7 +429,6 @@ DesktopPlatform::DesktopPlatform()
     {
         char* langEnv = getenv("BOREALIS_LANG");
         this->locale  = langEnv ? std::string(langEnv) : LOCALE_DEFAULT;
-        brls::Logger::info("Auto set app locale: {}", this->locale);
     }
     else
     {
