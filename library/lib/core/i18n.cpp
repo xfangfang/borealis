@@ -20,9 +20,14 @@
 #ifdef USE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
-#else
+#elif __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
+#elif __has_include("experimental/filesystem")
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#error "Failed to include <filesystem> header!"
 #endif
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -75,11 +80,7 @@ static void loadLocale(std::string locale, nlohmann::json* target)
     // Iterate over all JSON files in the directory
     for (const fs::directory_entry& entry : fs::directory_iterator(localePath))
     {
-#if USE_BOOST_FILESYSTEM
         if (fs::is_directory(entry))
-#else
-        if (entry.is_directory())
-#endif
             continue;
 
         std::string name = entry.path().filename().string();
