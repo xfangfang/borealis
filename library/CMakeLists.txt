@@ -116,27 +116,58 @@ if (PLATFORM_DESKTOP)
     list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/desktop)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"${BRLS_RESOURCES_DIR}/resources/\"")
 elseif (PLATFORM_PSV)
-    if (USE_SYSTEM_SDL2)
-        find_package(SDL2 REQUIRED)
-    else ()
-        set(BUILD_SHARED_LIBS OFF)
-        set(VIDEO_VITA_PVR ON CACHE BOOL "")
-        add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL EXCLUDE_FROM_ALL)
-    endif ()
-    list(APPEND BOREALIS_SOURCE
-            ${BOREALIS_PATH}/lib/platforms/psv
-            ${BOREALIS_PATH}/lib/platforms/sdl
-            ${BOREALIS_PATH}/lib/platforms/desktop)
+    list(APPEND BOREALIS_SOURCE ${BOREALIS_PATH}/lib/platforms/desktop)
     list(APPEND BRLS_PLATFORM_LIBS
-            SDL2::SDL2-static
-            libgpu_es4_ext_stub_weak
-            libIMGEGL_stub_weak
-            libGLESv2_stub_weak
+            SceGxm_stub
+            SceDisplay_stub
+            SceCtrl_stub
+            SceCommonDialog_stub
+            SceTouch_stub
+            SceAppUtil_stub
+            SceCtrl_stub
+            SceIme_stub
+            ScePower_stub
             SceAVConfig_stub
             SceRegistryMgr_stub
-            -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-            )
-    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__ -D__PSV__ -DUSE_GLES2)
+            -Wl,--whole-archive -lpthread -Wl,--no-whole-archive)
+    if (BOREALIS_USE_GXM)
+        if (USE_VITA_SHARK)
+                include(FetchContent)
+                FetchContent_Populate(
+                        libshacccg
+                        URL "https://codeload.github.com/AnimMouse/SceShaccCg/zip/refs/heads/main"
+                        SOURCE_DIR "${CMAKE_BINARY_DIR}/vendor/SceShaccCg"
+                        SUBBUILD_DIR "${CMAKE_BINARY_DIR}/CMakeFiles/SceShaccCg"
+                        BINARY_DIR "${CMAKE_BINARY_DIR}/CMakeFiles/SceShaccCg"
+                )
+                list(APPEND BRLS_PLATFORM_LIBS
+                        vitashark
+                        SceShaccCgExt
+                        taihen_stub
+                        SceShaccCg_stub
+                )
+        endif ()
+        file(GLOB_RECURSE PSV_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/psv/*.cpp")
+        list(APPEND BOREALIS_SRC ${PSV_PLATFORM_SRC})
+    else()
+        if (USE_SYSTEM_SDL2)
+            find_package(SDL2 REQUIRED)
+        else ()
+            set(BUILD_SHARED_LIBS OFF)
+            set(VIDEO_VITA_PVR ${BOREALIS_USE_GXM} CACHE BOOL "")
+            add_subdirectory(${BOREALIS_PATH}/lib/extern/SDL EXCLUDE_FROM_ALL)
+        endif ()
+        list(APPEND BRLS_PLATFORM_LIBS
+                SDL2::SDL2-static
+                libgpu_es4_ext_stub_weak
+                libIMGEGL_stub_weak
+                libGLESv2_stub_weak)
+        # Using SDL implementation instead
+        file(GLOB_RECURSE SDL_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/sdl/*.cpp")
+        list(APPEND BOREALIS_SRC ${SDL_PLATFORM_SRC})
+        list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/psv/psv_platform.cpp)
+    endif ()
+    list(APPEND BRLS_PLATFORM_OPTION -D__PSV__ -DSTBI_NEON)
     set(BRLS_PLATFORM_RESOURCES_PATH "\"app0:resources/\"")
     set_target_properties(yogacore PROPERTIES POSITION_INDEPENDENT_CODE OFF)
 elseif(PLATFORM_PS4)
@@ -255,6 +286,11 @@ elseif (BOREALIS_USE_D3D11)
     set(BOREALIS_DRIVER BOREALIS_USE_D3D11)
 elseif (BOREALIS_USE_DEKO3D)
     set(BOREALIS_DRIVER BOREALIS_USE_DEKO3D)
+elseif (BOREALIS_USE_GXM)
+    set(BOREALIS_DRIVER BOREALIS_USE_GXM)
+    if (USE_VITA_SHARK)
+        list(APPEND BRLS_PLATFORM_OPTION -DUSE_VITA_SHARK)
+    endif ()
 endif ()
 list(APPEND BRLS_PLATFORM_OPTION -D${BOREALIS_DRIVER})
 message(STATUS "borealis driver ${BOREALIS_DRIVER}")

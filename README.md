@@ -24,7 +24,12 @@ Check the [daily builds](https://github.com/xfangfang/borealis/actions) for what
 To build for Switch, a standard development environment must first be set up. In order to do so, [refer to the Getting Started guide](https://devkitpro.org/wiki/Getting_Started).
 
 ```bash
+# 1. OpenGL
 cmake -B build_switch -DPLATFORM_SWITCH=ON
+make -C build_switch borealis_demo.nro -j$(nproc)
+
+# 2. deko3d
+cmake -B build_switch -DPLATFORM_SWITCH=ON -DUSE_DEKO3D=ON
 make -C build_switch borealis_demo.nro -j$(nproc)
 ```
 
@@ -70,15 +75,25 @@ xmake b -y demo
 ## Building the demo for PSV
 
 - install [VITASDK](https://github.com/vitasdk/vdpm)
-- install [PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2) headers and libs. refer to: [SDL/vita.yaml](https://github.com/libsdl-org/SDL/blob/5733f42c7c2cbfbbd03282919534ed30c3b07da6/.github/workflows/vita.yaml#L28-L44)
-- put `*.suprx` files ([PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2)) to `psv/module`
+- (GLES2.0 Only) install [PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2) headers and libs. refer to: [SDL/vita.yaml](https://github.com/libsdl-org/SDL/blob/5733f42c7c2cbfbbd03282919534ed30c3b07da6/.github/workflows/vita.yaml#L28-L44)
+- (GLES2.0 Only) put `*.suprx` files ([PVR_PSP2](https://github.com/GrapheneCt/PVR_PSP2)) to `psv/module`
 - Unlock unsafe mode in `System Settings/HENkaku`
 
-> We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`  
-> Overclock ES4(GPU) to 166MHz or higher for a smoother experience.
+> (GLES2.0 Only) We only need: `libGLESv2.suprx` `libgpu_es4_ext.suprx` `libIMGEGL.suprx` `libpvrPSP2_WSEGL.suprx`  
+> (GLES2.0 Only) Overclock ES4(GPU) to 166MHz or higher for a smoother experience.
 
 ```bash
+# 1. OpenGL ES 2.0
 cmake -B build_psv -DPLATFORM_PSV=ON
+make -C build_psv borealis_demo.vpk -j$(nproc)
+
+# 2. OpenGL ES 2.0; Using Docker image
+docker run --rm -v $(pwd):/src/ xfangfang/vitasdk_sdl2_gles2:latest \
+  "cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
+   cmake --build build"
+
+# 3. GXM
+cmake -B build_psv -DPLATFORM_PSV=ON -DUSE_GXM=ON
 make -C build_psv borealis_demo.vpk -j$(nproc)
 ```
 

@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <SDL2/SDL.h>
 #include <psp2/apputil.h>
 #include <psp2/avconfig.h>
 #include <psp2/kernel/processmgr.h>
@@ -37,8 +36,6 @@ extern "C"
 
 namespace brls
 {
-
-static bool DISABLE_SUSPEND = false;
 
 static int powerCallback(int notifyId, int notifyCount, int powerInfo, void* common)
 {
@@ -73,23 +70,108 @@ PsvPlatform::PsvPlatform()
     if (thid >= 0)
         sceKernelStartThread(thid, 0, NULL);
 
-    // Auto swap X and O buttons
-    int enterButton;
     SceAppUtilInitParam initParam;
     SceAppUtilBootParam bootParam;
     memset(&initParam, 0, sizeof(SceAppUtilInitParam));
     memset(&bootParam, 0, sizeof(SceAppUtilBootParam));
     sceAppUtilInit(&initParam, &bootParam);
+
+    // Auto swap X and O buttons
+    int enterButton;
     sceAppUtilSystemParamGetInt(SCE_SYSTEM_PARAM_ID_ENTER_BUTTON, &enterButton);
-    sceAppUtilShutdown();
     if (enterButton == SCE_SYSTEM_PARAM_ENTER_BUTTON_CIRCLE)
         brls::Application::setSwapInputKeys(true);
+
+    // Override locale
+    if (Platform::APP_LOCALE_DEFAULT == LOCALE_AUTO)
+    {
+        int systemLanguage;
+        sceAppUtilSystemParamGetInt(SCE_SYSTEM_PARAM_ID_LANG, &systemLanguage);
+
+        std::unordered_map<int, std::string> psv2brls = {
+            { SCE_SYSTEM_PARAM_LANG_CHINESE_S, LOCALE_ZH_HANS },
+            { SCE_SYSTEM_PARAM_LANG_CHINESE_T, LOCALE_ZH_HANT },
+            { SCE_SYSTEM_PARAM_LANG_JAPANESE, LOCALE_JA },
+            { SCE_SYSTEM_PARAM_LANG_KOREAN, LOCALE_Ko },
+            { SCE_SYSTEM_PARAM_LANG_ITALIAN, LOCALE_IT }
+        };
+
+        if (psv2brls.count(systemLanguage) > 0) {
+            this->locale = psv2brls[systemLanguage];
+        } else {
+            this->locale = LOCALE_EN_US;
+        }
+        brls::Logger::info("Set app locale: {}", this->locale);
+    }
 
     // trigger internal network init in newlib
     gethostname(nullptr, 0);
 }
 
-PsvPlatform::~PsvPlatform() = default;
+PsvPlatform::~PsvPlatform()
+{
+    delete this->audioPlayer;
+    delete this->inputManager;
+    delete this->imeManager;
+    delete this->videoContext;
+}
+
+void PsvPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
+{
+#ifdef BOREALIS_USE_GXM
+    this->videoContext = new PsvVideoContext();
+    this->inputManager = new PsvInputManager();
+    this->imeManager   = new PsvImeManager();
+#else
+    this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
+    this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
+    this->imeManager   = new SDLImeManager(&this->otherEvent);
+#endif
+    this->audioPlayer  = new NullAudioPlayer();
+}
+
+bool PsvPlatform::mainLoopIteration()
+{
+    if (this->suspendDisabled) {
+        sceKernelPowerTick(SCE_KERNEL_POWER_TICK_DEFAULT);
+    }
+#ifdef __SDL2__
+    return SDLPlatform::mainLoopIteration();
+#else
+    return true;
+#endif
+}
+
+InputManager* PsvPlatform::getInputManager()
+{
+    return this->inputManager;
+}
+
+ImeManager* PsvPlatform::getImeManager()
+{
+    return this->imeManager;
+}
+
+VideoContext* PsvPlatform::getVideoContext()
+{
+    return this->videoContext;
+}
+
+AudioPlayer* PsvPlatform::getAudioPlayer()
+{
+    return this->audioPlayer;
+}
+
+bool PsvPlatform::isScreenDimmingDisabled()
+{
+    return suspendDisabled;
+}
+void PsvPlatform::disableScreenDimming(bool disable, const std::string& reason, const std::string& app)
+{
+    (void) reason;
+    (void) app;
+    suspendDisabled = disable;
+}
 
 bool PsvPlatform::canShowBatteryLevel()
 {
@@ -163,6 +245,20 @@ std::string PsvPlatform::getDnsServer()
 
 void PsvPlatform::openBrowser(std::string url)
 {
+    if (url.empty())
+        return;
+    SceAppUtilWebBrowserParam browser_param;
+    browser_param.str = url.c_str();
+    browser_param.strlen = url.length();
+    browser_param.launchMode = 1;
+    if (sceAppUtilLaunchWebBrowser(&browser_param) == SCE_OK) {
+        return;
+    }
+    brls::Logger::error("Failed to open browser in MODAL mode, trying NORMAL mode");
+    browser_param.launchMode = 0;
+    if (sceAppUtilLaunchWebBrowser(&browser_param) != SCE_OK) {
+        brls::Logger::error("Failed to open browser in NORMAL mode");
+    }
 }
 
 void PsvPlatform::setBacklightBrightness(float brightness)

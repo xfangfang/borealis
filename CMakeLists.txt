@@ -107,22 +107,21 @@ if (PLATFORM_DESKTOP)
 elseif (PLATFORM_PSV)
     set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
-    if (USE_LIBROMFS)
-        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
+    set(PSV_ASSETS_FILES ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys)
+    if (NOT USE_LIBROMFS)
+        list(APPEND PSV_ASSETS_FILES ${CMAKE_SOURCE_DIR}/resources resources)
+    endif ()
+    if (NOT USE_GXM)
+        list(APPEND PSV_ASSETS_FILES ${CMAKE_SOURCE_DIR}/psv/module/ module)
+    endif ()
+    if (USE_VITA_SHARK)
+        list(APPEND PSV_ASSETS_FILES "${CMAKE_BINARY_DIR}/vendor/SceShaccCg" module)
+    endif ()
+    vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
             VERSION ${PSN_VERSION}
             NAME ${PROJECT_NAME}
-            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
-        )
-    else()
-        vita_create_vpk(${PROJECT_NAME}.vpk ${PSN_TITLE_ID} ${PROJECT_NAME}.self
-            VERSION ${PSN_VERSION}
-            NAME ${PROJECT_NAME}
-            FILE ${CMAKE_SOURCE_DIR}/resources resources
-            FILE ${CMAKE_SOURCE_DIR}/psv/sce_sys sce_sys
-            FILE ${CMAKE_SOURCE_DIR}/psv/module/ module
-        )
-    endif()
+            FILE ${PSV_ASSETS_FILES}
+    )
 elseif (PLATFORM_PS4)
     # There is no `add_self` and `add_pkg` functions without pacbrew toolchain.
     # We can install the OpenOrbits SDK so that the IDE can provide some basic code prompts,

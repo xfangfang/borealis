@@ -57,20 +57,37 @@ jobs:
 
   psv:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { driver: gxm }
+          - { driver: gles2 }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Build
+
+      - name: Build GLES2
+        if: ${{ matrix.driver == 'gles2' }}
         run: |
           docker run --rm -v $(pwd):/src/ xfangfang/vitasdk_sdl2_gles2:latest \
             "cmake -B build -G Ninja -DPLATFORM_PSV=ON -DUSE_SYSTEM_SDL2=ON -DCMAKE_BUILD_TYPE=Release && \
              cmake --build build"
+
+      - name: Build GXM
+        if: ${{ matrix.driver == 'gxm' }}
+        run: |
+          echo "cd /src" > build_gxm.sh
+          echo "cmake -B build -DPLATFORM_PSV=ON -DCMAKE_BUILD_TYPE=Release -DUSE_GXM=ON" >> build_gxm.sh
+          echo "cmake --build build -- -j$(nproc)" >> build_gxm.sh
+          docker run --rm -v $(pwd):/src/ vitasdk/vitasdk:latest sh -C /src/build_gxm.sh
+
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: borealis-psv
+          name: borealis-psv-${{ matrix.driver }}
           path: build/*.vpk
 
   switch:

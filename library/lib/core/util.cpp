@@ -17,6 +17,10 @@
 #include <borealis/core/util.hpp>
 #include <fstream>
 
+#ifdef __PSV__
+#include <psp2/kernel/processmgr.h>
+#endif
+
 namespace brls
 {
 
@@ -33,7 +37,11 @@ bool startsWith(const std::string& data, const std::string& prefix)
 [[noreturn]] void fatal(std::string message)
 {
     brls::Logger::error("Fatal error: {}", message);
+#ifdef __PSV__
+    sceKernelExitProcess(1);
+#else
     throw std::logic_error(message);
+#endif
 }
 
 std::string loadFileContents(const std::string &path) {

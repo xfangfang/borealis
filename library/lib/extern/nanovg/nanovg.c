@@ -38,7 +38,7 @@
 #endif
 
 #ifndef NVG_INIT_FONTIMAGE_SIZE
-#	ifdef __PSV__
+#	if defined(__PSV__) && defined(USE_GLES2)
 #		define NVG_INIT_FONTIMAGE_SIZE  240
 #	else
 #		define NVG_INIT_FONTIMAGE_SIZE 512
@@ -46,7 +46,7 @@
 #endif
 
 #ifndef NVG_MAX_FONTIMAGE_SIZE
-#	ifdef __PSV__
+#	if defined(__PSV__) && defined(USE_GLES2)
 #		define NVG_MAX_FONTIMAGE_SIZE 960
 #	else
 #		define NVG_MAX_FONTIMAGE_SIZE 4096
