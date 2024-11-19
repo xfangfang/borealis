@@ -52,10 +52,6 @@ PsvVideoContext::PsvVideoContext()
     }
 
     Application::setWindowSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-
-
-    // TODO: 删除
-    brls::Logger::info("PSVita Video Context initialized");
 }
 
 PsvVideoContext::~PsvVideoContext()

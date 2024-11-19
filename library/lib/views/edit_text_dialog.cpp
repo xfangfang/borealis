@@ -135,7 +135,7 @@ namespace brls
                     });
                 return true; });
 
-#ifdef __PSV__
+#if defined(__PSV__) and !defined(BOREALIS_USE_GXM)
         // After turning off the on-screen keyboard, tap on the input area to reopen
         this->addGestureRecognizer(new brls::TapGestureRecognizer([](brls::TapGestureStatus status, brls::Sound*) {
             if (status.state == brls::GestureState::END) {
