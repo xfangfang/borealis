@@ -190,26 +190,30 @@ function(linux_install res res_install svg_icon icon_res_dir icon_res_list appda
     # bin
     install(TARGETS ${PROJECT_NAME}
             DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    if (NOT DEFINED CMAKE_INSTALL_SHARE_DIR)
+        set(CMAKE_INSTALL_SHARE_DIR ${CMAKE_INSTALL_PREFIX}/share)
+    endif ()
     # resources
     install(DIRECTORY ${res}
             DESTINATION ${res_install}
             FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     # svg icon
     install(FILES ${svg_icon}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps
+            DESTINATION ${CMAKE_INSTALL_SHARE_DIR}/icons/hicolor/scalable/apps
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     # png icon
     foreach (icon_dir ${icon_res_list})
         install(FILES ${icon_res_dir}/${icon_dir}/${PACKAGE_NAME}.png
-                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/${icon_dir}/apps
+                DESTINATION ${CMAKE_INSTALL_SHARE_DIR}/icons/hicolor/${icon_dir}/apps
                 PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     endforeach ()
     # appdata
     install(FILES ${appdata}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo
+            DESTINATION ${CMAKE_INSTALL_SHARE_DIR}/metainfo
             PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     # desktop
-    install(FILES ${desktop} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
+    configure_file("${desktop}" "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.desktop")
+    install(FILES "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.desktop" DESTINATION ${CMAKE_INSTALL_SHARE_DIR}/applications)
 endfunction()
 
 function(add_libromfs app res)
