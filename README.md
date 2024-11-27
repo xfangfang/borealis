@@ -111,6 +111,11 @@ mv borealis_demo.self eboot.bin && \
 curl --ftp-method nocwd -T eboot.bin ftp://192.168.1.140:1337/ux0:/app/BRLS00000/ && \
 echo launch BRLS00000 | nc 192.168.1.140 1338
 ```
+6. If your app crash, you can run the following command under the build directory to parse the dump file:
+
+```shell
+docker run --rm -it -v $(pwd):/src xfangfang/vita_parse ftp://192.168.1.140:1337 borealis_demo
+```
 
 >  192.168.1.140 is the ip address of my psv  
 >  BRLS00000 is the demo app ID
