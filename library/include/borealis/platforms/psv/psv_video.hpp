@@ -35,11 +35,11 @@ class PsvVideoContext : public VideoContext
     double getScaleFactor() override;
     NVGcontext* getNVGContext() override;
 
-    NVGXMframebuffer *getFramebuffer();
+    NVGXMwindow *getWindow();
 
   private:
     NVGcontext* nvgContext;
-    NVGXMframebuffer* gxm;
+    NVGXMwindow* window;
 };
 
 } // namespace brls

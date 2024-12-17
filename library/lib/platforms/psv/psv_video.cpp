@@ -38,14 +38,15 @@ PsvVideoContext::PsvVideoContext()
         .msaa = SCE_GXM_MULTISAMPLE_4X,
         .swapInterval = 1,
         .dumpShader = 0,
+        .scenesPerFrame = 1,
     };
 
-    gxm = nvgxmCreateFramebuffer(&initOptions);
-    if (gxm == NULL) {
+    window = gxmCreateWindow(&initOptions);
+    if (window == NULL) {
         fatal("gxm: failed to initialize");
     }
 
-    this->nvgContext = nvgCreateGXM(gxm, 0);
+    this->nvgContext = nvgCreateGXM(window->context, window->shader_patcher, 0);
     if (!this->nvgContext)
     {
         brls::fatal("sdl: unable to init nanovg");
@@ -61,7 +62,7 @@ PsvVideoContext::~PsvVideoContext()
         if (this->nvgContext)
         {
             nvgDeleteGXM(this->nvgContext);
-            nvgxmDeleteFramebuffer(gxm);
+            gxmDeleteWindow(window);
         }
     }
     catch (...)
@@ -102,9 +103,9 @@ NVGcontext* PsvVideoContext::getNVGContext() {
     return this->nvgContext;
 }
 
-NVGXMframebuffer* PsvVideoContext::getFramebuffer()
+NVGXMwindow* PsvVideoContext::getWindow()
 {
-    return this->gxm;
+    return this->window;
 }
 
 }
