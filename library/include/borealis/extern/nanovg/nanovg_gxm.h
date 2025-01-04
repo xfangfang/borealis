@@ -47,6 +47,9 @@ extern "C"
     // These are additional flags on top of NVGimageFlags.
     enum NVGimageFlagsGXM {
         NVG_IMAGE_NODELETE = 1 << 16, // Do not delete GXM texture handle.
+        NVG_IMAGE_DXT1 = 1 << 15,
+        NVG_IMAGE_DXT5 = 1 << 14,
+        NVG_IMAGE_LPDDR = 1 << 13,
     };
 
     int __attribute__((weak)) nvg_gxm_vertex_buffer_size = 1024 * 1024;
@@ -70,19 +73,18 @@ extern "C"
 
 #include <vitashark.h>
 
-static void shark_log_cb(const char *msg, shark_log_level msg_level, int line) {
+static void __attribute__((__optimize__("no-optimize-sibling-calls"))) shark_log_cb(const char *msg, shark_log_level msg_level, int line) {
     switch (msg_level) {
         case SHARK_LOG_INFO:
-            fprintf(stdout, "\033[0;34m[GXP #%d]\033[0m %s\n", line, msg);
+            sceClibPrintf("\033[0;34m[GXP #%d]\033[0m %s\n", line, msg);
             break;
         case SHARK_LOG_WARNING:
-            fprintf(stdout, "\033[0;33m[GXP #%d]\033[0m %s\n", line, msg);
+            sceClibPrintf("\033[0;33m[GXP #%d]\033[0m %s\n", line, msg);
             break;
         case SHARK_LOG_ERROR:
-            fprintf(stdout, "\033[0;31m[GXP #%d]\033[0m %s\n", line, msg);
+            sceClibPrintf("\033[0;31m[GXP #%d]\033[0m %s\n", line, msg);
             break;
     }
-    fflush(stdout);
 }
 
 #endif
@@ -113,7 +115,6 @@ struct GXMNVGtexture {
     int type;
     int flags;
 
-    int stride;
     int unused;
 
     NVGXMtexture texture;
@@ -219,7 +220,7 @@ typedef struct GXMNVGcontext GXMNVGcontext;
 
 
 static void gxmDrawArrays(GXMNVGcontext *gxm, SceGxmPrimitiveType type, int fillOffset, int fillCount) {
-    if (fillCount > UINT16_MAX) {
+    if (fillCount > UINT16_MAX || fillCount < 3) {
         return;
     }
 
@@ -236,6 +237,17 @@ static void gxmDrawArrays(GXMNVGcontext *gxm, SceGxmPrimitiveType type, int fill
 }
 
 static int gxmnvg__maxi(int a, int b) { return a > b ? a : b; }
+
+static unsigned int gxmnvg__nearestPow2(unsigned int num) {
+    unsigned n = num > 0 ? num - 1 : 0;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+    return n;
+}
 
 static void
 gxmnvg__stencilFunc(GXMNVGcontext *gxm, SceGxmStencilFunc func, SceGxmStencilOp stencilFail, SceGxmStencilOp depthFail,
@@ -306,8 +318,12 @@ static int gxmnvg__garbageCollector(GXMNVGcontext *gxm) {
     for (i = 0; i < gxm->ntextures; i++) {
         if (gxm->textures[i].unused == 0)
             continue;
-        gpu_unmap_free(gxm->textures[i].texture.uid);
-        memset(&gxm->textures[i], 0, sizeof(gxm->textures[i]));
+        if (gxm->textures[i].unused > DISPLAY_BUFFER_COUNT) {
+            gpu_unmap_free(gxm->textures[i].texture.uid);
+            memset(&gxm->textures[i], 0, sizeof(gxm->textures[i]));
+            continue;
+        }
+        gxm->textures[i].unused++;
     }
     return 0;
 }
@@ -398,7 +414,6 @@ static int gxmnvg__renderCreate(void *uptr) {
                                 "    float strokeAlpha = 1.0f;\n"
                                 "#endif\n"
                                 "   if (type == 0.0f) {\n" // simple color
-                                "       float2 pt = (mul(paintMat, float3(fpos,1.0))).xy;\n"
                                 "       float4 color = innerCol;\n"
                                 "       color *= strokeAlpha * scissor;\n"
                                 "       result = color;\n"
@@ -785,16 +800,38 @@ static int gxmnvg__renderCreateTexture(void *uptr, int type, int w, int h, int i
         return 0;
 
     SceGxmTextureFormat format =
-        type == NVG_TEXTURE_RGBA ? SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR : SCE_GXM_TEXTURE_FORMAT_U8_R;
+        type == NVG_TEXTURE_RGBA ? SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR : SCE_GXM_TEXTURE_FORMAT_U8_000R;
     int aligned_w = ALIGN(w, 8);
-    int texture_w = w;
     int spp = type == NVG_TEXTURE_RGBA ? 4 : 1;
-    int tex_size = aligned_w * h * spp;
+    uint32_t tex_size, stride, mem_type1, mem_type2;
     int ret;
+    int swizzled = ((imageFlags & NVG_IMAGE_DXT1) || (imageFlags & NVG_IMAGE_DXT5)) && (type == NVG_TEXTURE_RGBA);
 
-    tex->stride = aligned_w * spp;
-    tex->texture.data = (uint8_t *) gpu_alloc_map(SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW, SCE_GXM_MEMORY_ATTRIB_RW,
+    if (swizzled) {
+        format = imageFlags & NVG_IMAGE_DXT1 ? SCE_GXM_TEXTURE_FORMAT_UBC1_ABGR : SCE_GXM_TEXTURE_FORMAT_UBC3_ABGR;
+        tex_size = gxmnvg__nearestPow2(w) * gxmnvg__nearestPow2(h);
+        if (imageFlags & NVG_IMAGE_DXT1)
+            tex_size = tex_size >> 1;
+    } else {
+        tex_size = aligned_w * h * spp;
+    }
+
+    if (imageFlags & NVG_IMAGE_LPDDR) {
+        mem_type1 = SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE;
+        mem_type2 = SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW;
+    } else {
+        mem_type1 = SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW;
+        mem_type2 = SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE;
+    }
+
+    tex->texture.data = (uint8_t *) gpu_alloc_map(mem_type1,
+        SCE_GXM_MEMORY_ATTRIB_RW,
         tex_size, &tex->texture.uid);
+    if (tex->texture.data == NULL) {
+        tex->texture.data = (uint8_t *) gpu_alloc_map(mem_type2,
+            SCE_GXM_MEMORY_ATTRIB_RW,
+            tex_size, &tex->texture.uid);
+    }
     if (tex->texture.data == NULL) {
         return 0;
     }
@@ -802,9 +839,12 @@ static int gxmnvg__renderCreateTexture(void *uptr, int type, int w, int h, int i
     /* Clear the texture */
     if (data == NULL) {
         memset(tex->texture.data, 0, tex_size);
+    } else if (swizzled || aligned_w == w) {
+        memcpy(tex->texture.data, data, tex_size);
     } else {
+        stride = aligned_w * spp;
         for (int i = 0; i < h; i++) {
-            memcpy(tex->texture.data + i * tex->stride, data + i * w * spp, w * spp);
+            memcpy(tex->texture.data + i * stride, data + i * w * spp, w * spp);
         }
     }
 
@@ -812,7 +852,12 @@ static int gxmnvg__renderCreateTexture(void *uptr, int type, int w, int h, int i
     imageFlags &= ~NVG_IMAGE_GENERATE_MIPMAPS;
 
     /* Create the gxm texture */
-    ret = sceGxmTextureInitLinear(&tex->texture.tex, tex->texture.data, format, texture_w, h, 0);
+    if (swizzled) {
+        ret = sceGxmTextureInitSwizzledArbitrary(&tex->texture.tex, tex->texture.data, format, w, h, 0);
+    } else {
+        ret = sceGxmTextureInitLinear(&tex->texture.tex, tex->texture.data, format, w, h, 0);
+    }
+
     if (ret < 0) {
         GXM_PRINT_ERROR(ret);
         gpu_unmap_free(tex->texture.uid);
@@ -870,10 +915,18 @@ static int gxmnvg__renderUpdateTexture(void *uptr, int image, int x, int y, int 
     if (tex == NULL)
         return 0;
 
-    int spp = tex->type == NVG_TEXTURE_RGBA ? 4 : 1;
+    if (tex->flags & NVG_IMAGE_DXT1 || tex->flags & NVG_IMAGE_DXT5) {
+        uint32_t tex_size = gxmnvg__nearestPow2(w) * gxmnvg__nearestPow2(h);
+        if (tex->flags & NVG_IMAGE_DXT1)
+            tex_size = tex_size >> 1;
+        memcpy(tex->texture.data, data, tex_size);
+        return 1;
+    }
 
+    int spp = tex->type == NVG_TEXTURE_RGBA ? 4 : 1;
+    uint32_t stride = ALIGN(tex->width, 8);
     for (int i = 0; i < h; i++) {
-        int start = (i + y) * tex->stride + x * spp;
+        uint32_t start = ((i + y) * stride + x) * spp;
         memcpy(tex->texture.data + start, data + start, w * spp);
     }
 
@@ -1015,9 +1068,6 @@ static void gxmnvg__fill(GXMNVGcontext *gxm, GXMNVGcall *call) {
     GXMNVGpath *paths = &gxm->paths[call->pathOffset];
     int i, npaths = call->pathCount;
 
-    // set bindpoint for solid loc
-    gxmnvg__setUniforms(gxm, call->uniformOffset, 0);
-
     // Draw shapes
     {
         // Disable color output
@@ -1047,7 +1097,7 @@ static void gxmnvg__fill(GXMNVGcontext *gxm, GXMNVGcall *call) {
     }
 
     // Draw anti-aliased pixels
-    gxmnvg__setUniforms(gxm, call->uniformOffset + gxm->fragSize, call->image);
+    gxmnvg__setUniforms(gxm, call->uniformOffset, call->image);
 
     if (gxm->flags & NVG_ANTIALIAS) {
         gxmnvg__stencilFunc(gxm, SCE_GXM_STENCIL_FUNC_EQUAL,
@@ -1338,10 +1388,9 @@ static void gxmnvg__renderFill(void *uptr, NVGpaint *paint,
     GXMNVGcontext *gxm = (GXMNVGcontext *) uptr;
     GXMNVGcall *call = gxmnvg__allocCall(gxm);
     NVGvertex *quad;
-    GXMNVGfragUniforms *frag;
-    int i, maxverts, offset;
+    int i, maxverts, offset, valid = 0;
 
-    if (call == NULL)
+    if (call == NULL || npaths == 0)
         return;
 
     call->type = GXMNVG_FILL;
@@ -1368,19 +1417,23 @@ static void gxmnvg__renderFill(void *uptr, NVGpaint *paint,
         GXMNVGpath *copy = &gxm->paths[call->pathOffset + i];
         const NVGpath *path = &paths[i];
         memset(copy, 0, sizeof(GXMNVGpath));
-        if (path->nfill > 0) {
+        if (path->nfill > 2) {
             copy->fillOffset = offset;
             copy->fillCount = path->nfill;
             memcpy(&gxm->verts[offset], path->fill, sizeof(NVGvertex) * path->nfill);
             offset += path->nfill;
+            valid = 1;
         }
-        if (path->nstroke > 0) {
+        if (path->nstroke > 2) {
             copy->strokeOffset = offset;
             copy->strokeCount = path->nstroke;
             memcpy(&gxm->verts[offset], path->stroke, sizeof(NVGvertex) * path->nstroke);
             offset += path->nstroke;
+            valid = 1;
         }
     }
+    if (valid == 0)
+        goto error;
 
     // Setup uniforms for draw calls
     if (call->type == GXMNVG_FILL) {
@@ -1395,13 +1448,8 @@ static void gxmnvg__renderFill(void *uptr, NVGpaint *paint,
         call->uniformOffset = gxmnvg__allocFragUniforms(gxm, 2);
         if (call->uniformOffset == -1)
             goto error;
-        // Simple shader for stencil
-        frag = nvg__fragUniformPtr(gxm, call->uniformOffset);
-        memset(frag, 0, sizeof(*frag));
-        frag->strokeThr = -1.0f;
-        frag->type = NSVG_SHADER_SIMPLE;
         // Fill shader
-        gxmnvg__convertPaint(gxm, nvg__fragUniformPtr(gxm, call->uniformOffset + gxm->fragSize), paint, scissor, fringe,
+        gxmnvg__convertPaint(gxm, nvg__fragUniformPtr(gxm, call->uniformOffset), paint, scissor, fringe,
             fringe, -1.0f);
     } else {
         call->uniformOffset = gxmnvg__allocFragUniforms(gxm, 1);
@@ -1425,9 +1473,9 @@ static void gxmnvg__renderStroke(void *uptr, NVGpaint *paint,
     float fringe, float strokeWidth, const NVGpath *paths, int npaths) {
     GXMNVGcontext *gxm = (GXMNVGcontext *) uptr;
     GXMNVGcall *call = gxmnvg__allocCall(gxm);
-    int i, maxverts, offset;
+    int i, maxverts, offset, valid = 0;
 
-    if (call == NULL)
+    if (call == NULL || npaths == 0)
         return;
 
     call->type = GXMNVG_STROKE;
@@ -1448,13 +1496,16 @@ static void gxmnvg__renderStroke(void *uptr, NVGpaint *paint,
         GXMNVGpath *copy = &gxm->paths[call->pathOffset + i];
         const NVGpath *path = &paths[i];
         memset(copy, 0, sizeof(GXMNVGpath));
-        if (path->nstroke) {
+        if (path->nstroke > 2) {
             copy->strokeOffset = offset;
             copy->strokeCount = path->nstroke;
             memcpy(&gxm->verts[offset], path->stroke, sizeof(NVGvertex) * path->nstroke);
             offset += path->nstroke;
+            valid = 1;
         }
     }
+    if (valid == 0)
+        goto error;
 
     if (gxm->flags & NVG_STENCIL_STROKES) {
         // Fill shader
@@ -1491,7 +1542,7 @@ static void gxmnvg__renderTriangles(void *uptr, NVGpaint *paint,
     GXMNVGcall *call = gxmnvg__allocCall(gxm);
     GXMNVGfragUniforms *frag;
 
-    if (call == NULL)
+    if (call == NULL || nverts == 0)
         return;
 
     call->type = GXMNVG_TRIANGLES;

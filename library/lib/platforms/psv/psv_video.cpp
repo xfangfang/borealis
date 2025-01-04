@@ -29,7 +29,7 @@ PsvVideoContext::PsvVideoContext()
 #ifdef USE_VITA_SHARK
     if (shark_init("app0:module/libshacccg.suprx") < 0) {
         sceClibPrintf("vitashark: failed to initialize");
-        return EXIT_FAILURE;
+        return;
     }
 #endif
 
@@ -75,11 +75,7 @@ PsvVideoContext::~PsvVideoContext()
 }
 
 void PsvVideoContext::clear(NVGcolor color) {
-    static NVGcolor clearColor{};
-    if (clearColor.r != color.r || clearColor.g != color.g || clearColor.b != color.b || clearColor.a != color.a) {
-        clearColor = color;
-        gxmClearColor(color.r, color.g, color.b, color.a);
-    }
+    gxmClearColor(color.r, color.g, color.b, color.a);
 }
 
 void PsvVideoContext::resetState() { }

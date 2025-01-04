@@ -169,7 +169,7 @@ extern "C"
 
     NVGXMwindow *gxmCreateWindow(const NVGXMinitOptions *opts);
 
-    NVGXMwindow *gxmGetWindow();
+    NVGXMwindow *gxmGetWindow(void);
 
     void gxmDeleteWindow(NVGXMwindow *window);
 
@@ -185,6 +185,7 @@ extern "C"
  * @brief Begin a scene.
      */
     void gxmBeginFrame(void);
+
     void gxmBeginFrameEx(NVGXMframebuffer *fb, unsigned int flags);
 
     /**
@@ -207,6 +208,11 @@ extern "C"
  * Must be called between gxmBeginFrame and gxmEndFrame.
      */
     void gxmClear(void);
+
+    /**
+ * @brief Set the scissor rectangle.
+     */
+    void gxmScissor(int x, int y, int w, int h);
 
     /**
  * @brief Get framebuffer data.
@@ -632,9 +638,9 @@ NVGXMwindow *gxmCreateWindow(const NVGXMinitOptions *opts) {
                                          "	return float4(position, 1.f, 1.f);\n"
                                          "}\n";
 
-    static const char *clearFragShader = "float4 main(uniform float4 color) : COLOR\n"
+    static const char *clearFragShader = "__nativecolor __regformat unsigned char4 main(uniform float4 color) : COLOR\n"
                                          "{\n"
-                                         "	return color;\n"
+                                         "	return unsigned char4(color * 255);\n"
                                          "}\n";
 #else
     static const unsigned char clearVertShader[252] = {
@@ -763,7 +769,7 @@ void gxmDeleteWindow(NVGXMwindow *window) {
     free(window);
 }
 
-NVGXMwindow *gxmGetWindow() {
+NVGXMwindow *gxmGetWindow(void) {
     return gxm_internal.window;
 }
 
@@ -881,8 +887,7 @@ void gxmDeleteFramebuffer(NVGXMframebuffer *fb) {
     free(fb);
 }
 
-static int tex_format_to_bytespp(SceGxmTextureFormat format)
-{
+static int tex_format_to_bytespp(SceGxmTextureFormat format) {
     switch (format & 0x9f000000U) {
         case SCE_GXM_TEXTURE_BASE_FORMAT_U8:
         case SCE_GXM_TEXTURE_BASE_FORMAT_S8:
@@ -936,7 +941,7 @@ NVGXMtexture *gxmCreateTexture(int width, int height, SceGxmTextureFormat format
         memset(texture->data, 0, tex_size);
     } else {
         for (int i = 0; i < height; i++) {
-            memcpy(texture->data + i * stride, data + i * width * spp, width * spp);
+            memcpy(texture->data + i * stride, (uint8_t *) data + i * width * spp, width * spp);
         }
     }
 
@@ -991,6 +996,10 @@ void gxmClear(void) {
         SCE_GXM_INDEX_FORMAT_U16,
         gxm_internal.linearIndices,
         3);
+}
+
+void gxmScissor(int x, int y, int w, int h) {
+    sceGxmSetRegionClip(gxm_internal.context, SCE_GXM_REGION_CLIP_OUTSIDE, x, y, x + w, y + h);
 }
 
 void gxmBeginFrame(void) {

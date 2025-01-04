@@ -118,7 +118,7 @@ docker run --rm -it -v $(pwd):/src xfangfang/vita_parse ftp://192.168.1.140:1337
 ```
 
 >  192.168.1.140 is the ip address of my psv  
->  BRLS00000 is the demo app ID
+>  BRLS00000 is the demo app ID  
 >  For me using [PSMLogUSB](https://github.com/TeamFAPS/PSVita-RE-tools/tree/master/PSMLogUSB) with [psmlogusb-client](https://github.com/isage/psmlogusb-client) is more stable than PrincessLog.
 
 ## Building the demo for PS4
