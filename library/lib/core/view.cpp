@@ -355,17 +355,18 @@ void View::drawWireframe(FrameContext* ctx, Rect frame)
     if (this->hasParent())
     {
         // Diagonals
-        nvgFillColor(ctx->vg, nvgRGB(0, 0, 255));
+        nvgStrokeColor(ctx->vg, nvgRGB(0, 0, 255));
+        nvgStrokeWidth(ctx->vg, 1);
 
         nvgBeginPath(ctx->vg);
         nvgMoveTo(ctx->vg, frame.getMinX(), frame.getMinY());
         nvgLineTo(ctx->vg, frame.getMaxX(), frame.getMaxY());
-        nvgFill(ctx->vg);
+        nvgStroke(ctx->vg);
 
         nvgBeginPath(ctx->vg);
         nvgMoveTo(ctx->vg, frame.getMaxX(), frame.getMinY());
         nvgLineTo(ctx->vg, frame.getMinX(), frame.getMaxY());
-        nvgFill(ctx->vg);
+        nvgStroke(ctx->vg);
     }
 
     // Padding
