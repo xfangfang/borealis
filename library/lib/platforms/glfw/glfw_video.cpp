@@ -20,9 +20,6 @@
 
 // nanovg implementation
 #ifdef BOREALIS_USE_OPENGL
-#ifdef __PSV__
-#define NANOVG_GLES2_IMPLEMENTATION
-#else
 #include <glad/glad.h>
 #ifdef USE_GL2
 #define NANOVG_GL2_IMPLEMENTATION
@@ -33,7 +30,6 @@
 #else
 #define NANOVG_GL3_IMPLEMENTATION
 #endif /* USE_GL2 */
-#endif /* __PSV__ */
 #include <nanovg_gl.h>
 #elif defined(BOREALIS_USE_METAL)
 static void* METAL_CONTEXT = nullptr;
@@ -333,10 +329,8 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
 
 #ifdef BOREALIS_USE_OPENGL
     glfwMakeContextCurrent(window);
-#ifndef __PSV__
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-#endif
     glfwSwapInterval(1);
 
     Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
