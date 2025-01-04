@@ -84,8 +84,8 @@ void PsvInputManager::updateControllerState(ControllerState* state, int controll
     state->buttons[BUTTON_START] = pad.buttons & SCE_CTRL_START;
     state->buttons[BUTTON_BACK]  = pad.buttons & SCE_CTRL_SELECT;
 
-    state->buttons[BUTTON_LB] = pad.buttons & SCE_CTRL_L1;
-    state->buttons[BUTTON_RB] = pad.buttons & SCE_CTRL_R1;
+    state->buttons[BUTTON_LB] = pad.buttons & SCE_CTRL_L2;
+    state->buttons[BUTTON_RB] = pad.buttons & SCE_CTRL_R2;
 
     if (Application::isSwapInputKeys())
     {
@@ -107,10 +107,10 @@ void PsvInputManager::updateControllerState(ControllerState* state, int controll
     state->axes[RIGHT_X] = pad.rx / 255.0f - 1.0f;
     state->axes[RIGHT_Y] = pad.ry / 255.0f - 1.0f;
 
-    state->buttons[BUTTON_NAV_UP]    = pad.ly < 0x40 || pad.ry < 0x40 || state->buttons[BUTTON_UP];
-    state->buttons[BUTTON_NAV_RIGHT] = pad.lx > 0xc0 || pad.rx > 0xc0 || state->buttons[BUTTON_RIGHT];
-    state->buttons[BUTTON_NAV_DOWN]  = pad.ly > 0xc0 || pad.ry > 0xc0 || state->buttons[BUTTON_DOWN];
-    state->buttons[BUTTON_NAV_LEFT]  = pad.lx < 0x40 || pad.rx < 0x40 || state->buttons[BUTTON_LEFT];
+    state->buttons[BUTTON_NAV_UP]    = pad.ly < 0x20 || pad.ry < 0x20 || state->buttons[BUTTON_UP];
+    state->buttons[BUTTON_NAV_RIGHT] = pad.lx > 0xe0 || pad.rx > 0xe0 || state->buttons[BUTTON_RIGHT];
+    state->buttons[BUTTON_NAV_DOWN]  = pad.ly > 0xe0 || pad.ry > 0xe0 || state->buttons[BUTTON_DOWN];
+    state->buttons[BUTTON_NAV_LEFT]  = pad.lx < 0x20 || pad.rx < 0x20 || state->buttons[BUTTON_LEFT];
 }
 
 bool PsvInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
