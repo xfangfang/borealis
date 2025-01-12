@@ -110,10 +110,12 @@ PsvPlatform::PsvPlatform()
 
 PsvPlatform::~PsvPlatform()
 {
+#ifdef BOREALIS_USE_GXM
     delete this->audioPlayer;
     delete this->inputManager;
     delete this->imeManager;
     delete this->videoContext;
+#endif
 }
 
 void PsvPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
