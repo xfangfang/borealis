@@ -118,6 +118,11 @@ PsvPlatform::~PsvPlatform()
 #endif
 }
 
+std::string PsvPlatform::getName()
+{
+    return "Psv";
+}
+
 void PsvPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
 #ifdef BOREALIS_USE_GXM

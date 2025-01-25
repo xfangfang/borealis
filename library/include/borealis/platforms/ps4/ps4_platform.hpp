@@ -26,6 +26,7 @@ class Ps4Platform : public SDLPlatform
   public:
     Ps4Platform();
     ~Ps4Platform() override;
+    std::string getName() override;
     void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos) override;
     bool canShowWirelessLevel() override;
     bool hasWirelessConnection() override;

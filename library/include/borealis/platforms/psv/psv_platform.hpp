@@ -37,9 +37,8 @@ class PsvPlatform : public SDLPlatform
   public:
     PsvPlatform();
     ~PsvPlatform() override;
-
+    std::string getName() override;
     void createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos) override;
-
     bool canShowBatteryLevel() override;
     bool canShowWirelessLevel() override;
     int getBatteryLevel() override;

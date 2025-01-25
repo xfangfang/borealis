@@ -79,7 +79,7 @@ endif ()
 
 if (NOT DEFINED APP_PLATFORM_LINK_OPTION)
     set(APP_PLATFORM_LINK_OPTION)
-    if (PLATFORM_SWITCH)
+    if (PLATFORM_SWITCH OR PLATFORM_PSV)
         list(APPEND APP_PLATFORM_LINK_OPTION "-Wl,-Map,borealis.map")
     endif ()
 endif ()

@@ -138,6 +138,11 @@ Ps4Platform::Ps4Platform()
 
 Ps4Platform::~Ps4Platform() = default;
 
+std::string Ps4Platform::getName()
+{
+    return "Ps4";
+}
+
 void Ps4Platform::createWindow(std::string windowTitle, uint32_t windowWidth, uint32_t windowHeight, float windowXPos, float windowYPos)
 {
     if (sceKernelIsNeoMode())
