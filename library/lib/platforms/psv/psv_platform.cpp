@@ -27,13 +27,6 @@ limitations under the License.
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/psv/psv_platform.hpp>
 
-extern "C"
-{
-    unsigned int _newlib_heap_size_user      = 220 * 1024 * 1024;
-    unsigned int sceLibcHeapSize             = 24 * 1024 * 1024;
-    unsigned int _pthread_stack_default_user = 2 * 1024 * 1024;
-}
-
 namespace brls
 {
 
