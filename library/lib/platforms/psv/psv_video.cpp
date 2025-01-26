@@ -49,7 +49,7 @@ PsvVideoContext::PsvVideoContext()
     this->nvgContext = nvgCreateGXM(window->context, window->shader_patcher, 0);
     if (!this->nvgContext)
     {
-        brls::fatal("sdl: unable to init nanovg");
+        brls::fatal("gxm: unable to init nanovg");
     }
 
     Application::setWindowSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);

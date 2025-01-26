@@ -75,7 +75,8 @@ int __attribute__((weak)) nvg_gxm_vertex_buffer_size = 1024 * 1024;
 
 #include <vitashark.h>
 
-static void __attribute__((__optimize__("no-optimize-sibling-calls"))) shark_log_cb(const char *msg, shark_log_level msg_level, int line) {
+static void __attribute__((__optimize__("no-optimize-sibling-calls")))
+shark_log_cb(const char *msg, shark_log_level msg_level, int line) {
     switch (msg_level) {
         case SHARK_LOG_INFO:
             sceClibPrintf("\033[0;34m[GXP #%d]\033[0m %s\n", line, msg);
@@ -137,6 +138,8 @@ enum GXMNVGcallType {
     GXMNVG_CONVEXFILL,
     GXMNVG_STROKE,
     GXMNVG_TRIANGLES,
+    GXMNVG_CONVEXFILL_STENCIL,
+    GXMNVG_CONVEXFILL_STENCIL_CLEAR,
 };
 
 struct GXMNVGcall {
@@ -193,6 +196,8 @@ struct GXMNVGcontext {
     struct NVGvertex *vertBuf;
 
     GXMNVGshader depth_shader;
+
+    GXMNVGshader depth_texture_shader;
 
     GXMNVGtexture *textures;
     float view[2];
@@ -350,98 +355,107 @@ static int gxmnvg__renderCreate(void *uptr) {
     int align = 4;
 
 #if USE_VITA_SHARK
-    char fillVertShader[500] = "struct VS_OUTPUT\n"
-                               "{\n"
-                               "    float4 position   : POSITION;\n"
-                               "    float2 ftcoord    : TEXCOORD0;\n"
-                               "    float2 fpos       : TEXCOORD1;\n"
-                               "};\n"
-                               "void main(\n"
-                               "   float2 vertex : POSITION,\n"
-                               "   float2 tcoord : TEXCOORD0,\n"
-                               "   uniform float2 viewSize,\n"
-                               "   out VS_OUTPUT output\n"
-                               ")\n"
-                               "{\n"
-                               "   output.ftcoord = tcoord;\n"
-                               "   output.fpos = vertex;\n"
-                               "   output.position = float4(2.0 * vertex.x / viewSize.x - 1.0, 1.0 - 2.0 * vertex.y / viewSize.y, 1.0f, 1.0f);\n"
-                               "}\n";
+    char fillVertShader[] = "struct VS_OUTPUT\n"
+                            "{\n"
+                            "    float4 position   : POSITION;\n"
+                            "    float2 ftcoord    : TEXCOORD0;\n"
+                            "    float2 fpos       : TEXCOORD1;\n"
+                            "};\n"
+                            "void main(\n"
+                            "   float2 vertex : POSITION,\n"
+                            "   float2 tcoord : TEXCOORD0,\n"
+                            "   uniform float2 viewSize,\n"
+                            "   out VS_OUTPUT output\n"
+                            ")\n"
+                            "{\n"
+                            "   output.ftcoord = tcoord;\n"
+                            "   output.fpos = vertex;\n"
+                            "   output.position = float4(2.0 * vertex.x / viewSize.x - 1.0, 1.0 - 2.0 * vertex.y / viewSize.y, 1.0f, 1.0f);\n"
+                            "}\n";
 
-    char fillFragShader[2500] = "#define EDGE_AA 0\n"
-                                "#define UNIFORMARRAY_SIZE 11\n"
-                                "uniform float4 frag[UNIFORMARRAY_SIZE];\n"
-                                "#define scissorMat float3x3(frag[0].xyz, frag[1].xyz, frag[2].xyz)\n"
-                                "#define paintMat float3x3(frag[3].xyz, frag[4].xyz, frag[5].xyz)\n"
-                                "#define innerCol frag[6]\n"
-                                "#define outerCol frag[7]\n"
-                                "#define scissorExt frag[8].xy\n"
-                                "#define scissorScale frag[8].zw\n"
-                                "#define extent frag[9].xy\n"
-                                "#define radius frag[9].z\n"
-                                "#define feather frag[9].w\n"
-                                "#define strokeMult frag[10].x\n"
-                                "#define strokeThr frag[10].y\n"
-                                "#define texType frag[10].z\n"
-                                "#define type frag[10].w\n"
-                                "float sdroundrect(float2 pt, float2 ext, float rad)\n"
-                                "{\n"
-                                "    float2 ext2 = ext - float2(rad,rad);\n"
-                                "    float2 d = abs(pt) - ext2;\n"
-                                "    return min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rad;\n"
-                                "}\n"
-                                "float scissorMask(float2 p) {\n"
-                                "   float2 sc = (abs((mul(scissorMat, float3(p,1.0))).xy) - scissorExt);\n"
-                                "   sc = float2(0.5,0.5) - sc * scissorScale;\n"
-                                "   return clamp(sc.x,0.0,1.0) * clamp(sc.y,0.0,1.0);\n"
-                                "}\n"
-                                "#if EDGE_AA\n" // Stroke - from [0..1] to clipped pyramid, where the slope is 1px.
-                                "float strokeMask(float2 ftcoord)\n"
-                                "{\n"
-                                "    return min(1.0, (1.0 - abs(ftcoord.x*2.0 - 1.0))*strokeMult) * min(1.0f, ftcoord.y);\n"
-                                "}\n"
-                                "#endif\n"
-                                "float4 main(\n"
-                                "   uniform sampler2D tex : TEXUNIT0,\n"
-                                "   float2 ftcoord: TEXCOORD0,\n"
-                                "   float2 fpos: TEXCOORD1\n"
-                                ") : COLOR\n"
-                                "{\n"
-                                "   float4 result;\n"
-                                "   float scissor = scissorMask(fpos);\n"
-                                "#if EDGE_AA\n"
-                                "    float strokeAlpha = strokeMask(ftcoord);\n"
-                                "    if (strokeAlpha < strokeThr) discard;\n"
-                                "#else\n"
-                                "    float strokeAlpha = 1.0f;\n"
-                                "#endif\n"
-                                "   if (type == 0.0f) {\n" // simple color
-                                "       float4 color = innerCol;\n"
-                                "       color *= strokeAlpha * scissor;\n"
-                                "       result = color;\n"
-                                "   } else if (type == 1.0f) {\n" // Gradient
-                                "       float2 pt = (mul(paintMat, float3(fpos,1.0))).xy;\n"
-                                "       float d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n"
-                                "       float4 color = lerp(innerCol, outerCol, d);\n"
-                                "       color *= strokeAlpha * scissor;\n"
-                                "       result = color;\n"
-                                "   } else if (type == 2.0f) {\n" // Image
-                                "       float2 pt = (mul(paintMat, float3(fpos,1.0))).xy / extent.xy;\n"
-                                "       float4 color = tex2D(tex, pt);\n"
-                                "       color = float4(color.xyz*color.w, color.w);\n"
-                                "       color *= innerCol;\n"
-                                "       color *= strokeAlpha * scissor;\n"
-                                "       result = color;\n"
-                                "   } else {\n" // Textured tris
-                                "       float4 color = tex2D(tex, ftcoord);\n"
-                                "       color = float4(color.x, color.x, color.x, color.x);\n"
-                                "       color *= scissor;\n"
-                                "       result = (color * innerCol);\n"
-                                "   }\n"
-                                "   return result;\n"
-                                "}\n";
+    char fillFragShader[] = "#define EDGE_AA 0\n"
+                            "#define UNIFORMARRAY_SIZE 11\n"
+                            "uniform float4 frag[UNIFORMARRAY_SIZE];\n"
+                            "#define scissorMat float3x3(frag[0].xyz, frag[1].xyz, frag[2].xyz)\n"
+                            "#define paintMat float3x3(frag[3].xyz, frag[4].xyz, frag[5].xyz)\n"
+                            "#define innerCol frag[6]\n"
+                            "#define outerCol frag[7]\n"
+                            "#define scissorExt frag[8].xy\n"
+                            "#define scissorScale frag[8].zw\n"
+                            "#define extent frag[9].xy\n"
+                            "#define radius frag[9].z\n"
+                            "#define feather frag[9].w\n"
+                            "#define strokeMult frag[10].x\n"
+                            "#define strokeThr frag[10].y\n"
+                            "#define texType frag[10].z\n"
+                            "#define type frag[10].w\n"
+                            "float sdroundrect(float2 pt, float2 ext, float rad)\n"
+                            "{\n"
+                            "    float2 ext2 = ext - float2(rad,rad);\n"
+                            "    float2 d = abs(pt) - ext2;\n"
+                            "    return min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rad;\n"
+                            "}\n"
+                            "float scissorMask(float2 p) {\n"
+                            "   float2 sc = (abs((mul(scissorMat, float3(p,1.0))).xy) - scissorExt);\n"
+                            "   sc = float2(0.5,0.5) - sc * scissorScale;\n"
+                            "   return clamp(sc.x,0.0,1.0) * clamp(sc.y,0.0,1.0);\n"
+                            "}\n"
+                            "#if EDGE_AA\n" // Stroke - from [0..1] to clipped pyramid, where the slope is 1px.
+                            "float strokeMask(float2 ftcoord)\n"
+                            "{\n"
+                            "    return min(1.0, (1.0 - abs(ftcoord.x*2.0 - 1.0))*strokeMult) * min(1.0f, ftcoord.y);\n"
+                            "}\n"
+                            "#endif\n"
+                            "float4 main(\n"
+                            "   uniform sampler2D tex : TEXUNIT0,\n"
+                            "   float2 ftcoord: TEXCOORD0,\n"
+                            "   float2 fpos: TEXCOORD1\n"
+                            ") : COLOR\n"
+                            "{\n"
+                            "   float4 result;\n"
+                            "   float scissor = scissorMask(fpos);\n"
+                            "#if EDGE_AA\n"
+                            "    float strokeAlpha = strokeMask(ftcoord);\n"
+                            "    if (strokeAlpha < strokeThr) discard;\n"
+                            "#else\n"
+                            "    float strokeAlpha = 1.0f;\n"
+                            "#endif\n"
+                            "   if (type == 0.0f) {\n" // simple color
+                            "       float4 color = innerCol;\n"
+                            "       color *= strokeAlpha * scissor;\n"
+                            "       result = color;\n"
+                            "   } else if (type == 1.0f) {\n" // Gradient
+                            "       float2 pt = (mul(paintMat, float3(fpos,1.0))).xy;\n"
+                            "       float d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n"
+                            "       float4 color = lerp(innerCol, outerCol, d);\n"
+                            "       color *= strokeAlpha * scissor;\n"
+                            "       result = color;\n"
+                            "   } else if (type == 2.0f) {\n" // Image
+                            "       float2 pt = (mul(paintMat, float3(fpos,1.0))).xy / extent.xy;\n"
+                            "       float4 color = tex2D(tex, pt);\n"
+                            "       color = float4(color.xyz*color.w, color.w);\n"
+                            "       color *= innerCol;\n"
+                            "       color *= strokeAlpha * scissor;\n"
+                            "       result = color;\n"
+                            "   } else {\n" // Textured tris
+                            "       float4 color = tex2D(tex, ftcoord);\n"
+                            "       color = float4(color.x, color.x, color.x, color.x);\n"
+                            "       color *= scissor;\n"
+                            "       result = (color * innerCol);\n"
+                            "   }\n"
+                            "   return result;\n"
+                            "}\n";
 
-    char depthFragShader[20] = "void main() {}";
+    char depthFragShader[] = "void main() {}";
+
+    char depthTextureFragShader[] = "void main(\n"
+                                    "   uniform sampler2D tex : TEXUNIT0,\n"
+                                    "   float2 ftcoord: TEXCOORD0\n"
+                                    ")\n"
+                                    "{\n"
+                                    "   float4 color = tex2D(tex, ftcoord);\n"
+                                    "   if (color.a == 1.0) discard;"
+                                    "}\n";
 
     if (gxm->flags & NVG_ANTIALIAS) {
         fillFragShader[16] = '1'; // #define EDGE_AA 1
@@ -711,6 +725,41 @@ static int gxmnvg__renderCreate(void *uptr) {
             0xfa
     };
 
+    static const unsigned char depthTextureFragShader[348] = {
+        0x47, 0x58, 0x50, 0x00, 0x01, 0x05, 0x00, 0x03, 0x5c, 0x01, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x08,
+        0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
+        0x70, 0x00, 0x00, 0x00, 0x04, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x02, 0x00, 0x08, 0x00, 0x00, 0x00, 0x88, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x00, 0x00, 0x00, 0x74,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0xb8, 0x00, 0x00, 0x00, 0x90, 0x3a,
+        0x03, 0x00, 0x03, 0x00, 0x00, 0x00, 0x94, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0xac, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x94, 0x00, 0x00,
+        0x00, 0x01, 0x00, 0x00, 0x00, 0x8c, 0x00, 0x00, 0x00, 0xa0, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x07, 0x04, 0x01, 0x00, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00,
+        0x00, 0xf9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00,
+        0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x44, 0xfa, 0x82,
+        0x80, 0x03, 0x90, 0x91, 0xc1, 0x89, 0x48, 0x00, 0x01, 0x00, 0xe0,
+        0x02, 0x10, 0x81, 0x91, 0x80, 0x00, 0x00, 0xe0, 0x0a, 0x00, 0x81,
+        0x55, 0x01, 0x00, 0x0a, 0xb0, 0x85, 0x01, 0x88, 0x48, 0x00, 0x00,
+        0x00, 0xf0, 0x06, 0x04, 0x30, 0xf9, 0x00, 0x00, 0x00, 0x00, 0x40,
+        0x01, 0x04, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x44, 0xfa,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
+        0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0,
+        0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x30,
+        0x00, 0x00, 0x00, 0x02, 0x04, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x74, 0x65, 0x78, 0x00
+    };
+
     if (gxm->flags & NVG_ANTIALIAS) {
         if (gxmnvg__createShader(&gxm->shader, "fillAA", (const char*)fillVertShader, (const char*)fillAAFragShader) == 0)
             return 0;
@@ -721,6 +770,10 @@ static int gxmnvg__renderCreate(void *uptr) {
 #endif
 
     if (gxmnvg__createShader(&gxm->depth_shader, "depth", NULL, (const char *) depthFragShader) == 0)
+        return 0;
+
+    if (gxmnvg__createShader(&gxm->depth_texture_shader, "depthTexture", NULL,
+                             (const char *) depthTextureFragShader) == 0)
         return 0;
 
     gxm->vertBuf = (struct NVGvertex *) gpu_alloc_map(
@@ -781,6 +834,11 @@ static int gxmnvg__renderCreate(void *uptr) {
                                        SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
                                        NULL, gxm->shader.prog.vert_gxp,
                                        &gxm->depth_shader.prog.frag));
+
+    GXM_CHECK(gxmCreateFragmentProgram(gxm->depth_texture_shader.prog.frag_id,
+                                       SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
+                                       NULL, gxm->shader.prog.vert_gxp,
+                                       &gxm->depth_texture_shader.prog.frag));
 
     gxm->fragSize = ALIGN(sizeof(GXMNVGfragUniforms), align);
 
@@ -931,8 +989,9 @@ static int gxmnvg__renderUpdateTexture(void *uptr, int image, int x, int y, int 
     int spp = tex->type == NVG_TEXTURE_RGBA ? 4 : 1;
     uint32_t stride = ALIGN(tex->width, 8);
     for (int i = 0; i < h; i++) {
-        uint32_t start = ((i + y) * stride + x) * spp;
-        memcpy(tex->texture.data + start, data + start, w * spp);
+        uint32_t tex_start = ((i + y) * stride + x) * spp;
+        uint32_t data_start = ((i + y) * tex->width + x) * spp;
+        memcpy(tex->texture.data + tex_start, data + data_start, w * spp);
     }
 
     return 1;
@@ -1139,6 +1198,63 @@ static void gxmnvg__convexFill(GXMNVGcontext *gxm, GXMNVGcall *call) {
     }
 }
 
+static void gxmnvg__convexFillStencil(GXMNVGcontext *gxm, GXMNVGcall *call) {
+    GXMNVGpath *paths = &gxm->paths[call->pathOffset];
+    int i, npaths = call->pathCount;
+    GXMNVGtexture *tex;
+    GXMNVGfragUniforms *frag = nvg__fragUniformPtr(gxm, call->uniformOffset);
+
+    sceGxmSetFrontStencilRef(gxm_internal.context, 1);
+    sceGxmSetBackStencilRef(gxm_internal.context, 1);
+    gxmnvg__stencilFunc(gxm, SCE_GXM_STENCIL_FUNC_ALWAYS,
+                        SCE_GXM_STENCIL_OP_REPLACE, SCE_GXM_STENCIL_OP_REPLACE, SCE_GXM_STENCIL_OP_REPLACE);
+    // Disable color output
+    sceGxmSetFragmentProgram(gxm->context, gxm->depth_texture_shader.prog.frag);
+
+    // Set texture
+    tex = gxmnvg__findTexture(gxm, call->image);
+    sceGxmSetFragmentTexture(gxm->context, 0, &tex->texture.tex);
+
+    for (i = 0; i < npaths; i++) {
+        for(int j = 0; j < paths[i].fillCount; j++) {
+            // tex_coord = (mul(paintMat, float3(fpos,1.0))).xy / extent.xy;
+            NVGvertex *vertex = &gxm->verts[paths[i].fillOffset + j];
+            vertex->u = (frag->paintMat[0] * vertex->x + frag->paintMat[1] * vertex->y + frag->paintMat[2]) / frag->extent[0];
+            vertex->v = (frag->paintMat[4] * vertex->x + frag->paintMat[5] * vertex->y + frag->paintMat[6]) / frag->extent[1];
+        }
+        gxmDrawArrays(gxm, SCE_GXM_PRIMITIVE_TRIANGLE_FAN, paths[i].fillOffset, paths[i].fillCount);
+    }
+
+    // Enable color output
+    sceGxmSetFragmentProgram(gxm->context, gxm->shader.prog.frag);
+    sceGxmSetFrontStencilRef(gxm_internal.context, 0);
+    sceGxmSetBackStencilRef(gxm_internal.context, 0);
+    gxmnvg__stencilFunc(gxm, SCE_GXM_STENCIL_FUNC_EQUAL,
+                        SCE_GXM_STENCIL_OP_KEEP, SCE_GXM_STENCIL_OP_KEEP, SCE_GXM_STENCIL_OP_KEEP);
+}
+
+static void gxmnvg__convexFillStencilClear(GXMNVGcontext *gxm, GXMNVGcall *call) {
+    GXMNVGpath *paths = &gxm->paths[call->pathOffset];
+    int i, npaths = call->pathCount;
+
+    sceGxmSetFrontStencilRef(gxm_internal.context, 0);
+    sceGxmSetBackStencilRef(gxm_internal.context, 0);
+    gxmnvg__stencilFunc(gxm, SCE_GXM_STENCIL_FUNC_ALWAYS, SCE_GXM_STENCIL_OP_ZERO, SCE_GXM_STENCIL_OP_ZERO,
+                        SCE_GXM_STENCIL_OP_ZERO);
+
+    // Disable color output
+    sceGxmSetFragmentProgram(gxm->context, gxm->depth_shader.prog.frag);
+
+    for (i = 0; i < npaths; i++) {
+        gxmDrawArrays(gxm, SCE_GXM_PRIMITIVE_TRIANGLE_FAN, paths[i].fillOffset, paths[i].fillCount);
+    }
+
+    // Enable color output
+    sceGxmSetFragmentProgram(gxm->context, gxm->shader.prog.frag);
+
+    gxmnvg__disableStencilTest(gxm);
+}
+
 static void gxmnvg__stroke(GXMNVGcontext *gxm, GXMNVGcall *call) {
     GXMNVGpath *paths = &gxm->paths[call->pathOffset];
     int npaths = call->pathCount, i;
@@ -1290,6 +1406,10 @@ static void gxmnvg__renderFlush(void *uptr) {
                 gxmnvg__stroke(gxm, call);
             else if (call->type == GXMNVG_TRIANGLES)
                 gxmnvg__triangles(gxm, call);
+            else if (call->type == GXMNVG_CONVEXFILL_STENCIL)
+                gxmnvg__convexFillStencil(gxm, call);
+            else if (call->type == GXMNVG_CONVEXFILL_STENCIL_CLEAR)
+                gxmnvg__convexFillStencilClear(gxm, call);
         }
     }
 
@@ -1408,7 +1528,12 @@ static void gxmnvg__renderFill(void *uptr, NVGpaint *paint,
     call->blendFunc = gxmnvg__blendCompositeOperation(compositeOperation);
 
     if (npaths == 1 && paths[0].convex) {
-        call->type = GXMNVG_CONVEXFILL;
+        if (scissor->stencilFlag == NVG_STENCIL_DEFAULT)
+            call->type = GXMNVG_CONVEXFILL;
+        else if (scissor->stencilFlag == NVG_STENCIL_ENABLE)
+            call->type = GXMNVG_CONVEXFILL_STENCIL;
+        else if (scissor->stencilFlag == NVG_STENCIL_CLEAR)
+            call->type = GXMNVG_CONVEXFILL_STENCIL_CLEAR;
         call->triangleCount = 0; // Bounding box fill quad not needed for convex fill
     }
 
@@ -1456,6 +1581,7 @@ static void gxmnvg__renderFill(void *uptr, NVGpaint *paint,
         // Fill shader
         gxmnvg__convertPaint(gxm, nvg__fragUniformPtr(gxm, call->uniformOffset), paint, scissor, fringe,
                              fringe, -1.0f);
+    } else if (call->type == GXMNVG_CONVEXFILL_STENCIL_CLEAR) {
     } else {
         call->uniformOffset = gxmnvg__allocFragUniforms(gxm, 1);
         if (call->uniformOffset == -1)
@@ -1598,6 +1724,7 @@ static void gxmnvg__renderDelete(void *uptr) {
 
     gxmnvg__deleteShader(&gxm->shader);
     gxmnvg__deleteShader(&gxm->depth_shader);
+    gxmnvg__deleteShader(&gxm->depth_texture_shader);
 
     free(gxm->textures);
     free(gxm->paths);
