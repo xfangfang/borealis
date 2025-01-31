@@ -159,6 +159,7 @@ class PsvImeView : public View
             return;
 
         uint8_t utf8_buffer[SCE_IME_DIALOG_MAX_TEXT_LENGTH];
+        std::string text;
         SceImeDialogResult result;
         memset(&result, 0, sizeof(SceImeDialogResult));
         sceImeDialogGetResult(&result);
@@ -166,13 +167,14 @@ class PsvImeView : public View
         {
 
             utf16_to_utf8(ime_buffer, utf8_buffer);
-            std::string text { (const char*)utf8_buffer };
-            if (callback)
-                callback(text);
+            text = std::string{ (const char*)utf8_buffer };
         }
 
         sceImeDialogTerm();
-        Application::popActivity(TransitionAnimation::NONE);
+        Application::popActivity(TransitionAnimation::NONE, [this, text](){
+            if (!text.empty() && callback)
+                callback(text);
+        });
         Application::unblockInputs();
         running = false;
     }
@@ -205,7 +207,7 @@ bool PsvImeManager::openForText(std::function<void(std::string)> f, std::string 
     ime->setInitialText(initialText);
     ime->setMaxStringLength(maxStringLength);
     ret = ime->openImeDialog();
-    Application::pushActivity(new Activity(ime));
+    Application::pushActivity(new Activity(ime), TransitionAnimation::NONE);
     return ret;
 }
 
@@ -239,7 +241,7 @@ bool PsvImeManager::openForNumber(std::function<void(long)> f, std::string heade
     ime->setInitialText(initialText);
     ime->setMaxStringLength(maxStringLength);
     ret = ime->openImeDialog();
-    Application::pushActivity(new Activity(ime));
+    Application::pushActivity(new Activity(ime), TransitionAnimation::NONE);
     return ret;
 }
 
