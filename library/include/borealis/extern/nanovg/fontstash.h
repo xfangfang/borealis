@@ -19,10 +19,6 @@
 #ifndef FONS_H
 #define FONS_H
 
-#ifdef __PSV__
-#include <psp2/io/fcntl.h>
-#endif
-
 #define FONS_INVALID -1
 
 enum FONSflags {
@@ -149,6 +145,10 @@ void fonsDrawDebug(FONScontext* s, float x, float y);
 #ifdef FONTSTASH_IMPLEMENTATION
 
 #define FONS_NOTUSED(v)  (void)sizeof(v)
+
+#ifdef __PSV__
+#include <psp2/io/fcntl.h>
+#endif
 
 #ifdef FONS_USE_FREETYPE
 
