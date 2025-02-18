@@ -765,6 +765,7 @@ size_t Application::getFPS()
 void Application::setLimitedFPS(size_t fps)
 {
     Application::limitedFrameTime = fps == 0 ? 0 : 1000000.0f / fps;
+}
 
 void Application::setSwapInterval(int interval)
 {
