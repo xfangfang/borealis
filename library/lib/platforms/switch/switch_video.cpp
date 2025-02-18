@@ -228,6 +228,12 @@ void SwitchVideoContext::endFrame()
     queue.presentImage(this->swapchain, this->imageSlot);
 }
 
+void SwitchVideoContext::setSwapInterval(int interval)
+{
+    VideoContext::swapInterval = interval;
+    swapchain.setSwapInterval(interval);
+}
+
 void SwitchVideoContext::destroyFramebufferResources()
 {
     // Return early if we have nothing to destroy

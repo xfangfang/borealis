@@ -765,6 +765,10 @@ size_t Application::getFPS()
 void Application::setLimitedFPS(size_t fps)
 {
     Application::limitedFrameTime = fps == 0 ? 0 : 1000000.0f / fps;
+
+void Application::setSwapInterval(int interval)
+{
+    Application::platform->getVideoContext()->setSwapInterval(interval);
 }
 
 void Application::notify(const std::string& text)

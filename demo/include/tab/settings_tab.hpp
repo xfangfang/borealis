@@ -34,6 +34,7 @@ class SettingsTab : public brls::Box
     BRLS_BIND(brls::BooleanCell, bottomBar, "bottomBar");
     BRLS_BIND(brls::BooleanCell, alwaysOnTop, "alwaysOnTop");
     BRLS_BIND(brls::BooleanCell, fps, "fps");
+    BRLS_BIND(brls::SelectorCell, swapInterval, "swapInterval");
     BRLS_BIND(brls::SliderCell, slider, "slider");
     BRLS_BIND(brls::DetailCell, notify, "notify");
 

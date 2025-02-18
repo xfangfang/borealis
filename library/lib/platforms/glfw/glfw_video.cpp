@@ -331,7 +331,7 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwMakeContextCurrent(window);
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    glfwSwapInterval(1);
+    glfwSwapInterval(VideoContext::swapInterval);
 
     Logger::info("glfw: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
     Logger::info("glfw: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
@@ -429,6 +429,17 @@ void GLFWVideoContext::endFrame()
     D3D11_CONTEXT->endFrame();
 #endif
 }
+
+void GLFWVideoContext::setSwapInterval(int interval)
+{
+    VideoContext::swapInterval = interval;
+#ifdef BOREALIS_USE_D3D11
+    D3D11_CONTEXT->setSwapInterval(interval);
+#else
+    glfwSwapInterval(interval);
+#endif
+}
+
 
 void GLFWVideoContext::clear(NVGcolor color)
 {
@@ -570,7 +581,7 @@ void GLFWVideoContext::fullScreen(bool fs)
         }
     }
 #ifdef BOREALIS_USE_OPENGL
-    glfwSwapInterval(1);
+    glfwSwapInterval(VideoContext::swapInterval);
 #endif
 }
 

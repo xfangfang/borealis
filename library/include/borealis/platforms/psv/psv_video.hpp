@@ -32,6 +32,7 @@ class PsvVideoContext : public VideoContext
     void resetState() override;
     void beginFrame() override;
     void endFrame() override;
+    void setSwapInterval(int interval) override;
     double getScaleFactor() override;
     NVGcontext* getNVGContext() override;
 

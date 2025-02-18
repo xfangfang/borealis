@@ -271,7 +271,7 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     // Load OpenGL routines using glad
     gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
 #endif
-    SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetSwapInterval(VideoContext::swapInterval);
 
     Logger::info("sdl: GL Vendor: {}", (const char*)glGetString(GL_VENDOR));
     Logger::info("sdl: GL Renderer: {}", (const char*)glGetString(GL_RENDERER));
@@ -344,6 +344,16 @@ void SDLVideoContext::endFrame()
     SDL_GL_SwapWindow(this->window);
 #elif defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->endFrame();
+#endif
+}
+
+void SDLVideoContext::setSwapInterval(int interval)
+{
+    VideoContext::swapInterval = interval;
+#ifdef BOREALIS_USE_OPENGL
+    SDL_GL_SetSwapInterval(interval);
+#elif defined(BOREALIS_USE_D3D11)
+    D3D11_CONTEXT->setSwapInterval(interval);
 #endif
 }
 

@@ -36,7 +36,7 @@ PsvVideoContext::PsvVideoContext()
     // Initialize nanovg
     NVGXMinitOptions initOptions = {
         .msaa = SCE_GXM_MULTISAMPLE_4X,
-        .swapInterval = 1,
+        .swapInterval = VideoContext::swapInterval,
         .dumpShader = 0,
         .scenesPerFrame = 1,
     };
@@ -89,6 +89,11 @@ void PsvVideoContext::endFrame() {
     gxmEndFrame();
     gxmDialogUpdate();
     gxmSwapBuffer();
+}
+
+void PsvVideoContext::setSwapInterval(int interval) {
+    VideoContext::swapInterval = interval;
+    gxmSwapInterval(interval);
 }
 
 double PsvVideoContext::getScaleFactor() {

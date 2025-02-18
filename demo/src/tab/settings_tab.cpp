@@ -70,6 +70,9 @@ SettingsTab::SettingsTab()
         brls::Application::setFPSStatus(value);
     });
 
+    swapInterval->init("Swap Interval", {"0", "1", "2", "3", "4"}, 1, [](int selected) {},
+                       [](int selected) { brls::Application::setSwapInterval(selected); });
+
     alwaysOnTop->init("Always On Top", false, [](bool value){
         brls::Application::getPlatform()->setWindowAlwaysOnTop(value);
     });

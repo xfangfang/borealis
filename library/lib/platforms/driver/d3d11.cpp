@@ -324,7 +324,14 @@ void D3D11Context::endFrame()
     // https://learn.microsoft.com/zh-cn/windows/win32/api/dxgi/nf-dxgi-idxgiswapchain-present
     DXGI_PRESENT_PARAMETERS presentParameters;
     ZeroMemory(&presentParameters, sizeof(DXGI_PRESENT_PARAMETERS));
-    this->swapChain->Present1(1, 0, &presentParameters);
+    this->swapChain->Present1(interval, 0, &presentParameters);
+}
+
+void D3D11Context::setSwapInterval(int value)
+{
+    if (value < 0 || value > 4)
+        return;
+    this->interval = value;
 }
 
 }

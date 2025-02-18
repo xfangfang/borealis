@@ -43,6 +43,7 @@ class D3D11Context
     void clear(NVGcolor color);
     void beginFrame();
     void endFrame();
+    void setSwapInterval(int value);
 
     bool onFramebufferSize(int width, int height, bool init = false);
 
@@ -56,6 +57,7 @@ class D3D11Context
     IDXGISwapChain1* swapChain               = nullptr;
     ID3D11RenderTargetView* renderTargetView = nullptr;
     ID3D11DepthStencilView* depthStencilView = nullptr;
+    int interval                             = 1;
 
     UINT(WINAPI* GetDpiForWindow)(HWND);
 

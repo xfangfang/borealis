@@ -208,7 +208,20 @@ class Application
     static void setFPSStatus(bool enabled);
     static bool getFPSStatus();
     static size_t getFPS();
+
+    /**
+     * Set the FPS limit
+     * @param fps 0 to disable limit
+     */
     static void setLimitedFPS(size_t fps);
+
+    /**
+     * Set the swap interval
+     * Must be called after createWindow. On some platforms, it is impossible to set it back
+     * to 0 after setting it to a non-zero values
+     * @param interval 0 to disable vsync
+     */
+    static void setSwapInterval(int interval);
 
     /**
      * If the value is set to true, the program will limit FPS to Application::DeactivatedFPS

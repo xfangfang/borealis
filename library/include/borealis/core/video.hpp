@@ -64,7 +64,9 @@ class VideoContext
 
     virtual NVGcontext* getNVGContext() = 0;
 
-    virtual int getCurrentMonitorIndex() { return 0; };
+    virtual void setSwapInterval(int interval) = 0;
+
+    virtual int getCurrentMonitorIndex() { return 0; }
 
     static inline bool FULLSCREEN = false;
 
@@ -73,4 +75,6 @@ class VideoContext
     static inline uint32_t sizeW = 0, sizeH = 0;
 
     static inline int monitorIndex = 0;
+
+    static inline int swapInterval = 1;
 };
