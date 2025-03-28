@@ -64,6 +64,7 @@ option(SIMPLE_HIGHLIGHT "Simple highlight" OFF)
 # https://cmake.org/cmake/help/latest/prop_tgt/UNITY_BUILD.html
 option(BRLS_UNITY_BUILD "Unity build" OFF)
 
+option(BRLS_FONTSTASH_STREAM "fontstash use stream" OFF)
 
 if (NOT DEFINED APP_PLATFORM_INCLUDE)
     set(APP_PLATFORM_INCLUDE)

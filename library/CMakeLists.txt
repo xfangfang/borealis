@@ -267,6 +267,14 @@ endif ()
 
 # nanovg
 list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/extern/nanovg/nanovg.c)
+if (BRLS_FONTSTASH_STREAM)
+    set_source_files_properties(
+        ${BOREALIS_PATH}/lib/extern/nanovg/nanovg.c
+        PROPERTIES
+        COMPILE_DEFINITIONS "FONTSTASH_STREAM_IMPLEMENTATION"
+    )
+    message(STATUS "borealis fontstash use stream")
+endif ()
 if (PLATFORM_SWITCH AND BOREALIS_USE_DEKO3D)
     file(GLOB_RECURSE NANOVG_PLATFORM_SRC ${BOREALIS_PATH}/lib/extern/nanovg/*.cpp)
     list(APPEND BOREALIS_SRC ${NANOVG_PLATFORM_SRC})

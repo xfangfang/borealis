@@ -89,6 +89,20 @@ typedef struct FONStextIter FONStextIter;
 
 typedef struct FONScontext FONScontext;
 
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+typedef struct FONSstream {
+	void* userPtr;
+	size_t (*read)(void* uptr, void *buffer, size_t size);
+    int (*seek)(void* uptr, long offset);
+    void (*close)(void* uptr);
+} FONSstream;
+
+FONSstream* fonsCreateFileStream(const char *filename);
+FONSstream* fonsCreateMemStream(void* data, int ndata, int freeData);
+void fonsDeleteStream(FONSstream* stream);
+int fonsAddFontStream(FONScontext* s, const char* name, FONSstream* stream, int fontIndex);
+#endif
+
 // Constructor and destructor.
 FONScontext* fonsCreateInternal(FONSparams* params);
 void fonsDeleteInternal(FONScontext* s);
@@ -144,6 +158,104 @@ void fonsDrawDebug(FONScontext* s, float x, float y);
 
 #ifdef FONTSTASH_IMPLEMENTATION
 
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+#include <stdio.h>
+
+static size_t _fonsFileStreamRead(void *uptr, void *buffer, size_t size) {
+    FILE* file = (FILE*)uptr;
+    return fread(buffer, size, 1, file);
+}
+
+static int _fonsFileStreamSeek(void *uptr, long offset) {
+    FILE* file = (FILE*)uptr;
+    return fseek(file, offset, SEEK_SET);
+}
+
+static void _fonsFileStreamClose(void *uptr) {
+    FILE* file = (FILE*)uptr;
+    fclose(file);
+}
+
+FONSstream* fonsCreateFileStream(const char *filename) {
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        return NULL;
+    }
+    FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
+    if (!stream) return NULL;
+    stream->userPtr = file;
+    stream->read = _fonsFileStreamRead;
+    stream->seek = _fonsFileStreamSeek;
+    stream->close = _fonsFileStreamClose;
+    return stream;
+}
+
+typedef struct _fonsMemStream {
+    void* data;
+    int size;
+    int freeData;
+    long pos;
+} _fonsMemStream;
+
+
+static size_t _fonsMemStreamRead(void *uptr, void *buffer, size_t size) {
+    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
+    int remaining = ptr->size - ptr->pos;
+    if (remaining < size) {
+        size = remaining;
+    }
+    if (size <= 0) {
+        return 0;
+    }
+    memcpy(buffer, (unsigned char*)ptr->data + ptr->pos, size);
+    ptr->pos += size;
+    return size;
+}
+
+static int _fonsMemStreamSeek(void *uptr, long offset) {
+    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
+    if (offset > ptr->size) {
+        offset = ptr->size;
+    }
+    ptr->pos = offset;
+    return 1;
+}
+
+static void _fonsMemStreamClose(void *uptr) {
+    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
+    if (ptr->freeData) {
+        free(ptr->data);
+    }
+    free(ptr);
+}
+
+FONSstream* fonsCreateMemStream(void* data, int ndata, int freeData) {
+    _fonsMemStream* ptr = (_fonsMemStream*)malloc(sizeof(_fonsMemStream));
+    if (!ptr) return NULL;
+    ptr->data = data;
+    ptr->size = ndata;
+    ptr->freeData = freeData;
+    ptr->pos = 0;
+
+    FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
+    if (!stream) {
+        free(ptr);
+        return NULL;
+    }
+    stream->userPtr = ptr;
+    stream->read = _fonsMemStreamRead;
+    stream->seek = _fonsMemStreamSeek;
+    stream->close = _fonsMemStreamClose;
+    return stream;
+}
+
+void fonsDeleteStream(FONSstream* stream) {
+    stream->close(stream->userPtr);
+    stream->userPtr = NULL;
+    free(stream);
+}
+#endif // FONTSTASH_STREAM_IMPLEMENTATION
+
 #define FONS_NOTUSED(v)  (void)sizeof(v)
 
 #ifdef __PSV__
@@ -170,7 +282,15 @@ static void* fons__tmpalloc(size_t size, void* up);
 static void fons__tmpfree(void* ptr, void* up);
 #define STBTT_malloc(x,u)    fons__tmpalloc(x,u)
 #define STBTT_free(x,u)      fons__tmpfree(x,u)
+
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+#define STBTT_STREAM_TYPE FONSstream*
+#define STBTT_STREAM_READ(s,x,y) s->read(s->userPtr, x, y);
+#define STBTT_STREAM_SEEK(s,x)  s->seek(s->userPtr,x);
+#include "stb_truetype_htcw.h"
+#else
 #include "stb_truetype.h"
+#endif
 
 struct FONSttFontImpl {
 	stbtt_fontinfo font;
@@ -240,9 +360,13 @@ struct FONSfont
 {
 	FONSttFontImpl font;
 	char name[64];
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+    FONSstream* data;
+#else
 	unsigned char* data;
 	int dataSize;
 	unsigned char freeData;
+#endif
 	float ascender;
 	float descender;
 	float lineh;
@@ -414,6 +538,22 @@ int fons__tt_done(FONScontext *context)
 	return 1;
 }
 
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+int fons__tt_loadFont(FONScontext *context, FONSttFontImpl *font, FONSstream *stream, int fontIndex)
+{
+	int offset, stbError;
+
+	font->font.userdata = context;
+	offset = stbtt_GetFontOffsetForIndex(stream, fontIndex);
+	if (offset == -1) {
+		stbError = 0;
+	} else {
+		stbError = stbtt_InitFont(&font->font, stream, offset);
+	}
+	return stbError;
+}
+
+#else
 int fons__tt_loadFont(FONScontext *context, FONSttFontImpl *font, unsigned char *data, int dataSize, int fontIndex)
 {
 	int offset, stbError;
@@ -428,6 +568,7 @@ int fons__tt_loadFont(FONScontext *context, FONSttFontImpl *font, unsigned char 
 	}
 	return stbError;
 }
+#endif
 
 void fons__tt_getFontVMetrics(FONSttFontImpl *font, int *ascent, int *descent, int *lineGap)
 {
@@ -893,8 +1034,16 @@ void fonsClearState(FONScontext* stash)
 static void fons__freeFont(FONSfont* font)
 {
 	if (font == NULL) return;
+// https://github.com/memononen/nanovg/issues/657
+#ifdef FONS_USE_FREETYPE
+    if (font->font.font) FT_Done_Face(font->font.font);
+#endif
 	if (font->glyphs) free(font->glyphs);
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+    if (font->data) fonsDeleteStream(font->data);
+#else
 	if (font->freeData && font->data) free(font->data);
+#endif
 	free(font);
 }
 
@@ -925,6 +1074,61 @@ error:
 	return FONS_INVALID;
 }
 
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+
+int fonsAddFontStream(FONScontext* stash, const char* name, FONSstream* stream, int fontIndex) {
+    int i, ascent, descent, fh, lineGap;
+	FONSfont* font;
+
+	int idx = fons__allocFont(stash);
+	if (idx == FONS_INVALID)
+		return FONS_INVALID;
+
+	font = stash->fonts[idx];
+
+	strncpy(font->name, name, sizeof(font->name));
+	font->name[sizeof(font->name)-1] = '\0';
+
+	// Init hash lookup.
+	for (i = 0; i < FONS_HASH_LUT_SIZE; ++i)
+		font->lut[i] = -1;
+
+	// Read in the font data.
+	font->data = stream;
+
+	// Init font
+	stash->nscratch = 0;
+	if (!fons__tt_loadFont(stash, &font->font, stream, fontIndex)) goto error;
+
+	// Store normalized line height. The real line height is got
+	// by multiplying the lineh by font size.
+	fons__tt_getFontVMetrics( &font->font, &ascent, &descent, &lineGap);
+	ascent += lineGap;
+	fh = ascent - descent;
+	font->ascender = (float)ascent / (float)fh;
+	font->descender = (float)descent / (float)fh;
+	font->lineh = font->ascender - font->descender;
+
+	return idx;
+
+error:
+	fons__freeFont(font);
+	stash->nfonts--;
+	return FONS_INVALID;
+}
+
+int fonsAddFont(FONScontext* stash, const char* name, const char* path, int fontIndex) {
+    FONSstream *stream = fonsCreateFileStream(path);
+	if (!stream) return FONS_INVALID;
+	return fonsAddFontStream(stash, name, stream, fontIndex);
+}
+
+int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, int dataSize, int freeData, int fontIndex) {
+    FONSstream *stream = fonsCreateMemStream(data, dataSize, freeData);
+	if (!stream) return FONS_INVALID;
+	return fonsAddFontStream(stash, name, stream, fontIndex);
+}
+#else
 int fonsAddFont(FONScontext* stash, const char* name, const char* path, int fontIndex)
 {
 #ifdef __PSV__
@@ -1022,6 +1226,7 @@ error:
 	stash->nfonts--;
 	return FONS_INVALID;
 }
+#endif
 
 int fonsGetFontByName(FONScontext* s, const char* name)
 {
