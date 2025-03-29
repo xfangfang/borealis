@@ -100,11 +100,12 @@ void DesktopFontLoader::loadFonts()
     std::vector<std::string> koreanFonts = {
         "/System/Library/Fonts/AppleSDGothicNeo",
     };
-    std::vector<std::string> simplifiedChineseFonts = {
-        "/System/Library/Fonts/STHeiti Light", // 黑体
-        "/System/Library/Fonts/Supplemental/Arial Unicode", // Arial Unicode
-        "/System/Library/Fonts/Supplemental/Songti", // 宋体
-    };
+    std::vector<std::string> simplifiedChineseFonts;
+    // {
+    //     "/System/Library/Fonts/STHeiti Light", // 黑体
+    //     "/System/Library/Fonts/Supplemental/Arial Unicode", // Arial Unicode
+    //     "/System/Library/Fonts/Supplemental/Songti", // 宋体
+    // };
 #elif defined(_WIN32)
     std::string prefix = "C:\\Windows\\Fonts\\";
     char* winDir = getenv("systemroot");
