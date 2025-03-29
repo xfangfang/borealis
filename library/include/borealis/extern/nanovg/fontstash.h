@@ -93,13 +93,17 @@ typedef struct FONScontext FONScontext;
 typedef struct FONSstream {
 	void* userPtr;
 	size_t (*read)(void* uptr, void *buffer, size_t size);
-    int (*seek)(void* uptr, long offset);
-    void (*close)(void* uptr);
+	int (*seek)(void* uptr, long offset);
+	void (*close)(void* uptr);
 } FONSstream;
 
+// create stream for load font from file.
 FONSstream* fonsCreateFileStream(const char *filename);
+// create stream for load font from memory.
 FONSstream* fonsCreateMemStream(void* data, int ndata, int freeData);
+// delete stream.
 void fonsDeleteStream(FONSstream* stream);
+// add font from stream.
 int fonsAddFontStream(FONScontext* s, const char* name, FONSstream* stream, int fontIndex);
 #endif
 
@@ -158,109 +162,140 @@ void fonsDrawDebug(FONScontext* s, float x, float y);
 
 #ifdef FONTSTASH_IMPLEMENTATION
 
-#ifdef FONTSTASH_STREAM_IMPLEMENTATION
-#include <stdio.h>
-
-static size_t _fonsFileStreamRead(void *uptr, void *buffer, size_t size) {
-    FILE* file = (FILE*)uptr;
-    return fread(buffer, size, 1, file);
-}
-
-static int _fonsFileStreamSeek(void *uptr, long offset) {
-    FILE* file = (FILE*)uptr;
-    return fseek(file, offset, SEEK_SET);
-}
-
-static void _fonsFileStreamClose(void *uptr) {
-    FILE* file = (FILE*)uptr;
-    fclose(file);
-}
-
-FONSstream* fonsCreateFileStream(const char *filename) {
-    FILE* file = fopen(filename, "rb");
-    if (!file) {
-        return NULL;
-    }
-    FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
-    if (!stream) return NULL;
-    stream->userPtr = file;
-    stream->read = _fonsFileStreamRead;
-    stream->seek = _fonsFileStreamSeek;
-    stream->close = _fonsFileStreamClose;
-    return stream;
-}
-
-typedef struct _fonsMemStream {
-    void* data;
-    int size;
-    int freeData;
-    long pos;
-} _fonsMemStream;
-
-
-static size_t _fonsMemStreamRead(void *uptr, void *buffer, size_t size) {
-    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
-    int remaining = ptr->size - ptr->pos;
-    if (remaining < size) {
-        size = remaining;
-    }
-    if (size <= 0) {
-        return 0;
-    }
-    memcpy(buffer, (unsigned char*)ptr->data + ptr->pos, size);
-    ptr->pos += size;
-    return size;
-}
-
-static int _fonsMemStreamSeek(void *uptr, long offset) {
-    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
-    if (offset > ptr->size) {
-        offset = ptr->size;
-    }
-    ptr->pos = offset;
-    return 1;
-}
-
-static void _fonsMemStreamClose(void *uptr) {
-    _fonsMemStream* ptr = (_fonsMemStream*)uptr;
-    if (ptr->freeData) {
-        free(ptr->data);
-    }
-    free(ptr);
-}
-
-FONSstream* fonsCreateMemStream(void* data, int ndata, int freeData) {
-    _fonsMemStream* ptr = (_fonsMemStream*)malloc(sizeof(_fonsMemStream));
-    if (!ptr) return NULL;
-    ptr->data = data;
-    ptr->size = ndata;
-    ptr->freeData = freeData;
-    ptr->pos = 0;
-
-    FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
-    if (!stream) {
-        free(ptr);
-        return NULL;
-    }
-    stream->userPtr = ptr;
-    stream->read = _fonsMemStreamRead;
-    stream->seek = _fonsMemStreamSeek;
-    stream->close = _fonsMemStreamClose;
-    return stream;
-}
-
-void fonsDeleteStream(FONSstream* stream) {
-    stream->close(stream->userPtr);
-    stream->userPtr = NULL;
-    free(stream);
-}
-#endif // FONTSTASH_STREAM_IMPLEMENTATION
-
 #define FONS_NOTUSED(v)  (void)sizeof(v)
 
 #ifdef __PSV__
 #include <psp2/io/fcntl.h>
 #endif
+
+#ifdef FONTSTASH_STREAM_IMPLEMENTATION
+#include <stdio.h>
+
+#ifdef __PSV__
+static size_t _fonsFileStreamRead(void *uptr, void *buffer, size_t size) {
+	SceUID* file = (SceUID*)uptr;
+	return sceIoRead(*file, buffer, (long)size);
+}
+
+static int _fonsFileStreamSeek(void *uptr, long offset) {
+	SceUID* file = (SceUID*)uptr;
+	return sceIoLseek32(*file, offset, SCE_SEEK_SET);
+}
+
+static void _fonsFileStreamClose(void *uptr) {
+	SceUID* file = (SceUID*)uptr;
+	sceIoClose(*file);
+	free(file);
+}
+#else
+static size_t _fonsFileStreamRead(void *uptr, void *buffer, size_t size) {
+	FILE* file = (FILE*)uptr;
+	return fread(buffer, size, 1, file);
+}
+
+static int _fonsFileStreamSeek(void *uptr, long offset) {
+	FILE* file = (FILE*)uptr;
+	return fseek(file, offset, SEEK_SET);
+}
+
+static void _fonsFileStreamClose(void *uptr) {
+	FILE* file = (FILE*)uptr;
+	fclose(file);
+}
+#endif
+
+FONSstream* fonsCreateFileStream(const char *filename) {
+#ifdef __PSV__
+	SceUID *fp = (SceUID*)malloc(sizeof(SceUID));
+	*fp = sceIoOpen(filename, SCE_O_RDONLY, 0777);
+	if (fp == 0) {
+		free(fp);
+		return NULL;
+	}
+	void* file = fp;
+#else
+	FILE* fp = fopen(filename, "rb");
+	if (!fp) {
+		return NULL;
+	}
+	void* file = fp;
+#endif
+	FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
+	if (!stream) return NULL;
+	stream->userPtr = file;
+	stream->read = _fonsFileStreamRead;
+	stream->seek = _fonsFileStreamSeek;
+	stream->close = _fonsFileStreamClose;
+	return stream;
+}
+
+typedef struct _fonsMemStream {
+	void* data;
+	int size;
+	int freeData;
+	long pos;
+} _fonsMemStream;
+
+static size_t _fonsMemStreamRead(void *uptr, void *buffer, size_t size) {
+	_fonsMemStream* ptr = (_fonsMemStream*)uptr;
+	if (ptr->pos >= ptr->size) return 0;
+	int remaining = ptr->size - ptr->pos;
+	if (size > remaining) {
+		size = remaining;
+	}
+	if (size <= 0) {
+		return 0;
+	}
+	memcpy(buffer, (unsigned char*)ptr->data + ptr->pos, size);
+	ptr->pos += size;
+	return size;
+}
+
+static int _fonsMemStreamSeek(void *uptr, long offset) {
+	_fonsMemStream* ptr = (_fonsMemStream*)uptr;
+	if (offset < 0) {
+		offset = 0;
+	} else if (offset > ptr->size) {
+		offset = ptr->size;
+	}
+	ptr->pos = offset;
+	return 1;
+}
+
+static void _fonsMemStreamClose(void *uptr) {
+	_fonsMemStream* ptr = (_fonsMemStream*)uptr;
+	if (ptr->freeData) {
+		free(ptr->data);
+	}
+	free(ptr);
+}
+
+FONSstream* fonsCreateMemStream(void* data, int ndata, int freeData) {
+	_fonsMemStream* ptr = (_fonsMemStream*)malloc(sizeof(_fonsMemStream));
+	if (!ptr) return NULL;
+	ptr->data = data;
+	ptr->size = ndata;
+	ptr->freeData = freeData;
+	ptr->pos = 0;
+
+	FONSstream* stream = (FONSstream*)malloc(sizeof(FONSstream));
+	if (!stream) {
+		free(ptr);
+		return NULL;
+	}
+	stream->userPtr = ptr;
+	stream->read = _fonsMemStreamRead;
+	stream->seek = _fonsMemStreamSeek;
+	stream->close = _fonsMemStreamClose;
+	return stream;
+}
+
+void fonsDeleteStream(FONSstream* stream) {
+	stream->close(stream->userPtr);
+	stream->userPtr = NULL;
+	free(stream);
+}
+#endif // FONTSTASH_STREAM_IMPLEMENTATION
 
 #ifdef FONS_USE_FREETYPE
 
@@ -280,8 +315,8 @@ typedef struct FONSttFontImpl FONSttFontImpl;
 
 static void* fons__tmpalloc(size_t size, void* up);
 static void fons__tmpfree(void* ptr, void* up);
-#define STBTT_malloc(x,u)    fons__tmpalloc(x,u)
-#define STBTT_free(x,u)      fons__tmpfree(x,u)
+#define STBTT_malloc(x,u)	fons__tmpalloc(x,u)
+#define STBTT_free(x,u)	  fons__tmpfree(x,u)
 
 #ifdef FONTSTASH_STREAM_IMPLEMENTATION
 #define STBTT_STREAM_TYPE FONSstream*
@@ -361,7 +396,7 @@ struct FONSfont
 	FONSttFontImpl font;
 	char name[64];
 #ifdef FONTSTASH_STREAM_IMPLEMENTATION
-    FONSstream* data;
+	FONSstream* data;
 #else
 	unsigned char* data;
 	int dataSize;
@@ -392,7 +427,7 @@ struct FONSstate
 typedef struct FONSstate FONSstate;
 
 struct FONSatlasNode {
-    short x, y, width;
+	short x, y, width;
 };
 typedef struct FONSatlasNode FONSatlasNode;
 
@@ -663,11 +698,11 @@ static unsigned int fons__decutf8(unsigned int* state, unsigned int* codep, unsi
 		12,12,12,12,12,12,12,24,12,12,12,12, 12,24,12,12,12,12,12,12,12,24,12,12,
 		12,12,12,12,12,12,12,36,12,36,12,12, 12,36,12,12,12,12,12,36,12,36,12,12,
 		12,36,12,12,12,12,12,12,12,12,12,12,
-    };
+	};
 
 	unsigned int type = utf8d[byte];
 
-    *codep = (*state != FONS_UTF8_ACCEPT) ?
+	*codep = (*state != FONS_UTF8_ACCEPT) ?
 		(byte & 0x3fu) | (*codep << 6) :
 		(0xff >> type) & (byte);
 
@@ -1036,11 +1071,11 @@ static void fons__freeFont(FONSfont* font)
 	if (font == NULL) return;
 // https://github.com/memononen/nanovg/issues/657
 #ifdef FONS_USE_FREETYPE
-    if (font->font.font) FT_Done_Face(font->font.font);
+	if (font->font.font) FT_Done_Face(font->font.font);
 #endif
 	if (font->glyphs) free(font->glyphs);
 #ifdef FONTSTASH_STREAM_IMPLEMENTATION
-    if (font->data) fonsDeleteStream(font->data);
+	if (font->data) fonsDeleteStream(font->data);
 #else
 	if (font->freeData && font->data) free(font->data);
 #endif
@@ -1077,7 +1112,7 @@ error:
 #ifdef FONTSTASH_STREAM_IMPLEMENTATION
 
 int fonsAddFontStream(FONScontext* stash, const char* name, FONSstream* stream, int fontIndex) {
-    int i, ascent, descent, fh, lineGap;
+	int i, ascent, descent, fh, lineGap;
 	FONSfont* font;
 
 	int idx = fons__allocFont(stash);
@@ -1118,13 +1153,13 @@ error:
 }
 
 int fonsAddFont(FONScontext* stash, const char* name, const char* path, int fontIndex) {
-    FONSstream *stream = fonsCreateFileStream(path);
+	FONSstream *stream = fonsCreateFileStream(path);
 	if (!stream) return FONS_INVALID;
 	return fonsAddFontStream(stash, name, stream, fontIndex);
 }
 
 int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, int dataSize, int freeData, int fontIndex) {
-    FONSstream *stream = fonsCreateMemStream(data, dataSize, freeData);
+	FONSstream *stream = fonsCreateMemStream(data, dataSize, freeData);
 	if (!stream) return FONS_INVALID;
 	return fonsAddFontStream(stash, name, stream, fontIndex);
 }
@@ -1132,29 +1167,29 @@ int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, in
 int fonsAddFont(FONScontext* stash, const char* name, const char* path, int fontIndex)
 {
 #ifdef __PSV__
-    SceUID fp = 0;
-    long dataSize = 0;
-    SceSSize readed;
-    unsigned char* data = NULL;
+	SceUID fp = 0;
+	long dataSize = 0;
+	SceSSize readed;
+	unsigned char* data = NULL;
 
-    // Read in the font data.
-    fp = sceIoOpen(path, SCE_O_RDONLY, 0777);
-    if (fp == 0) goto error;
-    dataSize = sceIoLseek32(fp, 0, SCE_SEEK_END);
-    sceIoLseek32(fp, 0, SCE_SEEK_SET);
-    data = (unsigned char*)malloc(dataSize);
-    if (data == NULL) goto error;
-    readed = sceIoRead(fp, data, dataSize);
-    sceIoClose(fp);
-    fp = 0;
-    if (readed != (size_t)dataSize) goto error;
+	// Read in the font data.
+	fp = sceIoOpen(path, SCE_O_RDONLY, 0777);
+	if (fp == 0) goto error;
+	dataSize = sceIoLseek32(fp, 0, SCE_SEEK_END);
+	sceIoLseek32(fp, 0, SCE_SEEK_SET);
+	data = (unsigned char*)malloc(dataSize);
+	if (data == NULL) goto error;
+	readed = sceIoRead(fp, data, dataSize);
+	sceIoClose(fp);
+	fp = 0;
+	if (readed != (size_t)dataSize) goto error;
 
-    return fonsAddFontMem(stash, name, data, dataSize, 1, fontIndex);
+	return fonsAddFontMem(stash, name, data, dataSize, 1, fontIndex);
 
-    error:
-    if (data) free(data);
-    if (fp) sceIoClose(fp);
-    return FONS_INVALID;
+	error:
+	if (data) free(data);
+	if (fp) sceIoClose(fp);
+	return FONS_INVALID;
 #else
 	FILE* fp = 0;
 	int dataSize = 0;
