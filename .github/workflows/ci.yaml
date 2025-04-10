@@ -123,11 +123,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: nttld/setup-ndk@v1
-        id: setup_ndk
-        with:
-          ndk-version: r22b
-          local-cache: true
       - name: Setup
         run: |
           sudo apt-get update

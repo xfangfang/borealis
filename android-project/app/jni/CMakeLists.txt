@@ -6,6 +6,7 @@ project(BOREALIS_DEMO)
 # include(AndroidNdkModules)
 # android_ndk_import_module_cpufeatures()
 
+set(BUILD_SHARED_LIBS ON CACHE BOOL "")
 
 # SDL sources are in a subfolder named "SDL"
 add_subdirectory(SDL)
@@ -14,9 +15,6 @@ add_subdirectory(SDL)
 #add_subdirectory(SDL_image)
 #add_subdirectory(SDL_mixer)
 #add_subdirectory(SDL_ttf)
-
-# Your game and its CMakeLists.txt are in a subfolder named "src"
-#add_subdirectory(src)
 
 
 SET(PLATFORM_ANDROID ON CACHE BOOL "")
