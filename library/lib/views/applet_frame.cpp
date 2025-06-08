@@ -144,6 +144,19 @@ void AppletFrame::setIcon(std::string path)
     }
 }
 
+void AppletFrame::setIconFromMem(const unsigned char *data, int size)
+{
+    if (!data || size <= 0)
+    {
+        this->icon->setVisibility(Visibility::GONE);
+    }
+    else
+    {
+        this->icon->setVisibility(Visibility::VISIBLE);
+        this->icon->setImageFromMem(data, size);
+    }
+}
+
 void AppletFrame::setHeaderVisibility(Visibility visibility)
 {
     header->setVisibility(visibility);
