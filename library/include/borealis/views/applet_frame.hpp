@@ -53,6 +53,7 @@ class AppletFrame : public Box
 
     void setTitle(std::string title);
     void setIcon(std::string path);
+    void setIconFromMem(const unsigned char *data, int size);
 
     void setHeaderVisibility(Visibility visibility);
     void setFooterVisibility(Visibility visibility);
