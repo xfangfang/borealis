@@ -76,6 +76,11 @@ class AppletFrame : public Box
         return footer;
     }
 
+    Image* getIcon()
+    {
+        return icon;
+    }
+
     static View* create();
 
     inline static bool HIDE_BOTTOM_BAR = false;
