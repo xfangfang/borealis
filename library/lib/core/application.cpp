@@ -20,7 +20,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#ifndef YG_ENABLE_EVENTS
 #define YG_ENABLE_EVENTS
+#endif
 #include <yoga/YGNode.h>
 #include <yoga/event/event.h>
 
