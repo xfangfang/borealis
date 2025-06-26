@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#define YG_ENABLE_EVENTS
 #include <yoga/YGNode.h>
 #include <yoga/event/event.h>
 
@@ -67,6 +68,8 @@
 
 namespace brls
 {
+
+std::string Application::forcedLocale = "";
 
 bool Application::init()
 {
@@ -950,7 +953,14 @@ ImeManager* Application::getImeManager()
 
 std::string Application::getLocale()
 {
+    if (!forcedLocale.empty())
+        return forcedLocale;
     return Application::getPlatform()->getLocale();
+}
+
+void Application::setLocale(const std::string& locale)
+{
+    forcedLocale = locale;
 }
 
 void Application::addToFreeQueue(View* view)

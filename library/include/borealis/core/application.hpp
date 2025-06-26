@@ -300,6 +300,12 @@ class Application
      */
     static std::string getLocale();
 
+    /**
+     * Fuerza el locale de la aplicación (i18n) a un valor específico.
+     * Llamar antes de Application::init().
+     */
+    static void setLocale(const std::string& locale);
+
     static void addToFreeQueue(View* view);
 
     /**
@@ -420,6 +426,8 @@ class Application
     static void registerBuiltInXMLViews();
 
     inline static DebugLayer* debugLayer = nullptr;
+
+    static std::string forcedLocale;
 };
 
 } // namespace brls
