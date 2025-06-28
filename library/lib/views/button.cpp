@@ -49,6 +49,18 @@ const std::string buttonXML = R"xml(
     </brls:Box>
 )xml";
 
+// Permite reemplazar el contenido interno del botón por cualquier vista personalizada
+void Button::setCustomContent(brls::View* view)
+{
+    // Elimina todas las vistas hijas actuales (incluyendo el label por defecto)
+    auto& children = this->getChildren();
+    while (!children.empty()) {
+        this->removeView(children.back());
+    }
+    // Añade la vista personalizada
+    this->addView(view);
+    // Opcional: guarda referencia si se requiere para gestión posterior
+}
 Button::Button()
 {
     this->inflateFromXMLString(buttonXML);
@@ -176,7 +188,8 @@ void Button::setTextColor(NVGcolor color)
 
 void Button::setText(std::string text)
 {
-    this->label->setText(text);
+    if (this->label)
+        this->label->setText(text);
 }
 
 void Button::setFontSize(float value)

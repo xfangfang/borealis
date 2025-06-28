@@ -145,6 +145,10 @@ enum class ButtonState
 class Button : public Box
 {
   public:
+    /**
+     * Reemplaza el contenido interno del botón por cualquier vista personalizada (por ejemplo, un Box vertical con imagen y texto).
+     */
+    void setCustomContent(brls::View* view);
     Button();
 
     void onFocusGained() override;
