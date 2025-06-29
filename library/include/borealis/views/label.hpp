@@ -152,6 +152,9 @@ class Label : public View
     static inline bool OPENCC_ON = true;
     void setCursor(int cursor);
 
+    // Permite medir el ancho real de un texto con una fuente y tamaño dados
+    static float measureTextWidth(int font, float fontSize, const std::string& text);
+
   protected:
     std::string truncatedText;
     std::string fullText;

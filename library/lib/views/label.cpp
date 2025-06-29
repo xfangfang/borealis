@@ -678,4 +678,14 @@ View* Label::create()
     return new Label();
 }
 
+float brls::Label::measureTextWidth(int font, float fontSize, const std::string& text) {
+    NVGcontext* vg = brls::Application::getNVGContext();
+    if (!vg) return 0.0f;
+    nvgFontFaceId(vg, font);
+    nvgFontSize(vg, fontSize);
+    float bounds[4];
+    nvgTextBounds(vg, 0, 0, text.c_str(), nullptr, bounds);
+    return bounds[2] - bounds[0];
+}
+
 } // namespace brls
