@@ -38,26 +38,22 @@ class DialogButton
 // A modal dialog with zero to three buttons
 // and anything as content
 // Create the dialog then use open() and close()
-class Dialog : public Box
-{
+class Dialog : public Box {
   private:
+    std::string text;
+    brls::Label* label = nullptr;
     BRLS_BIND(Box, container, "brls/dialog/container");
     BRLS_BIND(AppletFrame, appletFrame, "brls/dialog/applet");
-
     unsigned frameX, frameY, frameWidth, frameHeight;
-
     std::vector<DialogButton*> buttons;
-
     void rebuildButtons();
     void buttonClick(DialogButton* button);
-
     bool cancelable = true;
 
   protected:
     BRLS_BIND(Button, button1, "brls/dialog/button1");
     BRLS_BIND(Button, button2, "brls/dialog/button2");
     BRLS_BIND(Button, button3, "brls/dialog/button3");
-
     BRLS_BIND(Rectangle, button2separator, "brls/dialog/button2/separator");
     BRLS_BIND(Rectangle, button3separator, "brls/dialog/button3/separator");
 
@@ -65,6 +61,16 @@ class Dialog : public Box
     Dialog(std::string text);
     Dialog(Box* contentView);
     ~Dialog();
+
+    /**
+     * Cambia el texto del diálogo (solo si fue creado con string)
+     */
+    void setText(const std::string& newText) {
+        this->text = newText;
+        if (this->label)
+            this->label->setText(newText);
+    }
+    const std::string& getText() const { return this->text; }
 
     AppletFrame* getAppletFrame() override;
 
@@ -89,8 +95,7 @@ class Dialog : public Box
     virtual void open();
     void close(std::function<void(void)> cb = [] {});
 
-    bool isTranslucent() override
-    {
+    bool isTranslucent() override {
         return true;
     }
 };

@@ -154,14 +154,15 @@ Dialog::Dialog(std::string text)
 {
     Style style = Application::getStyle();
 
-    Label* label = new Label();
-    label->setText(text);
-    label->setFontSize(style["brls/dialog/fontSize"]);
-    label->setHorizontalAlign(HorizontalAlign::CENTER);
-    label->setSingleLine(false);
+
+    this->label = new Label();
+    this->label->setText(text);
+    this->label->setFontSize(style["brls/dialog/fontSize"]);
+    this->label->setHorizontalAlign(HorizontalAlign::CENTER);
+    this->label->setSingleLine(false);
 
     Box* box = new Box();
-    box->addView(label);
+    box->addView(this->label);
     box->setAlignItems(AlignItems::CENTER);
     box->setJustifyContent(JustifyContent::CENTER);
     box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"], style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
