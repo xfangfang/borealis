@@ -58,7 +58,7 @@ using winrt::Windows::UI::ViewManagement::UISettings;
 #include <ifaddrs.h>
 #endif
 
-#elif defined(__linux__) && !defined(ANDROID)
+#if defined(__linux__) && !defined(ANDROID)
 #include <dbus/dbus.h>
 #endif
 
