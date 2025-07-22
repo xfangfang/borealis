@@ -44,8 +44,8 @@ SwitchVideoContext::SwitchVideoContext()
 
     if (R_FAILED(rc))
     {
-        Logger::warning("switch: failed to get default display resolution change event ({:#x}), falling back to operation mode change event", rc);
-        Logger::warning("switch: resolution might not change properly when docking while the app is running using 3rd party docks!");
+        Logger::warning(fmt::runtime("switch: failed to get default display resolution change event ({:#x}), falling back to operation mode change event"), rc);
+        Logger::warning(fmt::runtime("switch: resolution might not change properly when docking while the app is running using 3rd party docks!"));
         this->displayResolutionChangeEventReady = false; // default is true
     }
 
@@ -54,7 +54,10 @@ SwitchVideoContext::SwitchVideoContext()
 
     // Init deko
     this->device = dk::DeviceMaker {}.create();
-    this->queue  = dk::QueueMaker { this->device }.setFlags(DkQueueFlags_Graphics).create();
+    this->queue  = dk::QueueMaker(this->device)
+        // Give this queue a high priority to help render the ui smoothly even if libmpv is hogging the gpu
+        .setFlags(DkQueueFlags_Graphics | DkQueueFlags_DisableZcull | DkQueueFlags_HighPrio)
+        .create();
 
     this->imagesPool.emplace(device, DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image, IMAGES_POOL_SIZE);
     this->codePool.emplace(device, DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached | DkMemBlockFlags_Code, CODE_POOL_SIZE);
@@ -168,7 +171,7 @@ void SwitchVideoContext::updateWindowSize()
     // If it failed, use hardcoded resolutions as fallback
     else
     {
-        Logger::warning("switch: failed to detect display resolution ({:#x}), falling back to hardcoded resolution");
+        Logger::warning(fmt::runtime("switch: failed to detect display resolution ({:#x}), falling back to hardcoded resolution"));
 
         switch (appletGetOperationMode())
         {

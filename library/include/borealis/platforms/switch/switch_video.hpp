@@ -31,7 +31,7 @@ typedef Event _LibNXEvent; // "Event" alone clashes with brls::Event
 namespace brls
 {
 
-static constexpr const unsigned FRAMEBUFFERS_COUNT = 2;
+static constexpr const unsigned FRAMEBUFFERS_COUNT = 3;
 
 // deko3d video context
 class SwitchVideoContext : public VideoContext

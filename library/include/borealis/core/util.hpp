@@ -31,4 +31,33 @@ bool startsWith(const std::string& data, const std::string& prefix);
 
 std::string loadFileContents(const std::string& path);
 
+namespace utils {
+
+#define _BR_CAT(x, y) x ## y
+#define  BR_CAT(x, y) _BR_CAT(x, y)
+#define BR_ANONYMOUS BR_CAT(var, __COUNTER__)
+#define DEFER(f) auto BR_ANONYMOUS = ::brls::utils::_Defer(f)
+
+template <typename F>
+struct _Defer {
+    [[nodiscard]] _Defer(F &&f): f(std::move(f)) { }
+
+    _Defer(const _Defer &) = delete;
+    _Defer &operator =(const _Defer &) = delete;
+
+    ~_Defer() {
+        if (this->want_run)
+            this->f();
+    }
+
+    void cancel() {
+        this->want_run = false;
+    }
+
+    private:
+        bool want_run = true;
+        F f;
+};
+
+} // namespace utils
 } // namespace brls

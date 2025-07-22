@@ -48,6 +48,8 @@ void userAppInit()
 #endif
 
     romfsInit();
+    hidsysInitialize();
+    inssInitialize();
     plInitialize(PlServiceType_User);
     setsysInitialize();
     setInitialize();
@@ -73,6 +75,8 @@ void userAppExit()
     // system font
     plExit();
 
+    inssExit();
+    hidsysExit();
     romfsExit();
 
     if (nxlink_sock != -1)

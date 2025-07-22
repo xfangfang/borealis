@@ -14,8 +14,16 @@
     limitations under the License.
 */
 
+#include <chrono>
+#include <borealis/core/thread.hpp>
 #include <borealis/core/application.hpp>
 #include <borealis/platforms/switch/switch_input.hpp>
+#include <borealis/core/application.hpp>
+
+// Avoid namespace collision
+#define NXEvent ::Event
+
+using namespace std::chrono_literals;
 
 namespace brls
 {
@@ -98,6 +106,8 @@ static const size_t SWITCH_AXIS_MAPPING[_AXES_MAX] = {
 
 SwitchInputManager::SwitchInputManager()
 {
+    this->screenshot_button_thread = std::jthread(&SwitchInputManager::screenshot_button_thread_fn, this);
+
     padConfigureInput(GAMEPADS_MAX, HidNpadStyleSet_NpadStandard);
     hidSetNpadJoyHoldType(HidNpadJoyHoldType_Horizontal);
     hidSetNpadHandheldActivationMode(HidNpadHandheldActivationMode_Single);
@@ -131,6 +141,7 @@ SwitchInputManager::SwitchInputManager()
 
 SwitchInputManager::~SwitchInputManager()
 {
+    this->screenshot_button_thread.request_stop();
     NVGcontext* vg = Application::getNVGContext();
 
     if (this->cursorTexture != 0)
@@ -225,6 +236,14 @@ void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadS
         uint64_t switchKey = full ? SWITCH_BUTTONS_FULL_MAPPING[i] : SWITCH_BUTTONS_HALF_MAPPING[i];
         state->buttons[i]  = keysDown & switchKey;
     }
+
+    state->buttons[BUTTON_GUIDE] = false;
+
+    if (m_screenshotButtonMode == ButtonOverrideMode::GUIDE_BUTTON)
+        state->buttons[BUTTON_GUIDE] |= m_isScreenshotPressed;
+
+    if (m_homeButtonMode == ButtonOverrideMode::GUIDE_BUTTON)
+        state->buttons[BUTTON_GUIDE] |= m_isHomePressed;
 
     HidAnalogStickState analog_stick_l = padGetStickPos(pad, 0);
     HidAnalogStickState analog_stick_r = padGetStickPos(pad, 1);
@@ -612,6 +631,81 @@ BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
         // case KBD_HASHTILDE: return GLFW_HASHTILDE;
         default:
             return BRLS_KBD_KEY_UNKNOWN;
+    }
+}
+
+void SwitchInputManager::screenshot_button_thread_fn(std::stop_token token) {
+    // This needs a high priority because we are racing am to clear the event
+    svcSetThreadPriority(CUR_THREAD_HANDLE, 0x20);
+
+    NXEvent screenshot_evt;
+    DEFER([&screenshot_evt] { eventClose(&screenshot_evt); });
+    if (auto rc = hidsysAcquireCaptureButtonEventHandle(&screenshot_evt, false); R_FAILED(rc)) {
+        Logger::error("Failed to acquire the screenshot button event: {}\n", rc);
+        return;
+    }
+
+    NXEvent home_evt;
+    DEFER([&home_evt] { eventClose(&home_evt); });
+    if (auto rc = hidsysAcquireHomeButtonEventHandle(&home_evt, false); R_FAILED(rc)) {
+        Logger::error("Failed to acquire the home button event: {}\n", rc);
+        return;
+    }
+
+    eventClear(&screenshot_evt);
+    eventClear(&home_evt);
+
+    u64 screenshot_down_start_tick = 0;
+    u64 home_down_start_tick = 0;
+
+    while (!token.stop_requested()) {
+        s32 idx;
+        auto rc = waitMulti(&idx, std::chrono::nanoseconds(50ms).count(),
+            waiterForEvent(&screenshot_evt), waiterForEvent(&home_evt));
+
+        if (rc == KERNELRESULT(TimedOut))
+            continue;
+
+        switch (idx) {
+            case 0: // Screenshot button
+                if (this->m_screenshotButtonMode == ButtonOverrideMode::NONE) {
+                    m_isScreenshotPressed = false;
+                    break;
+                }
+
+                eventClear(&screenshot_evt);
+
+                if (!screenshot_down_start_tick) {
+                    screenshot_down_start_tick = armGetSystemTick();
+                    m_isScreenshotPressed = true;
+                    Logger::info("Screenshot button clicked");
+                } else {
+                    screenshot_down_start_tick    = 0;
+                    m_isScreenshotPressed = false;
+                    Logger::info("Screenshot button released");
+                }
+                break;
+            case 1: // Home button
+                if (this->m_homeButtonMode == ButtonOverrideMode::NONE) {
+                    m_isHomePressed = false;
+                    break;
+                }
+            
+                eventClear(&home_evt);
+
+                if (!home_down_start_tick) {
+                    home_down_start_tick = armGetSystemTick();
+                    m_isHomePressed = true;
+                    Logger::info("Home button clicked");
+                } else {
+                    home_down_start_tick    = 0;
+                    m_isHomePressed = false;
+                    Logger::info("Home button released");
+                }
+                break;
+            default:
+                break;
+        }
     }
 }
 
