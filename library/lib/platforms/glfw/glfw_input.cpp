@@ -50,24 +50,6 @@ static const size_t GLFW_BUTTONS_MAPPING[GLFW_GAMEPAD_BUTTON_MAX] = {
     BUTTON_LEFT, // GLFW_GAMEPAD_BUTTON_DPAD_LEFT
 };
 
-static const size_t GLFW_GAMEPAD_TO_KEYBOARD[GLFW_GAMEPAD_BUTTON_MAX] = {
-    GLFW_KEY_ENTER, // GLFW_GAMEPAD_BUTTON_A
-    GLFW_KEY_ESCAPE, // GLFW_GAMEPAD_BUTTON_B
-    GLFW_KEY_X, // GLFW_GAMEPAD_BUTTON_X
-    GLFW_KEY_Y, // GLFW_GAMEPAD_BUTTON_Y
-    GLFW_KEY_L, // GLFW_GAMEPAD_BUTTON_LEFT_BUMPER
-    GLFW_KEY_R, // GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER
-    GLFW_KEY_F1, // GLFW_GAMEPAD_BUTTON_BACK
-    GLFW_KEY_F2, // GLFW_GAMEPAD_BUTTON_START
-    GLFW_GAMEPAD_BUTTON_NONE, // GLFW_GAMEPAD_BUTTON_GUIDE
-    GLFW_KEY_Q, // GLFW_GAMEPAD_BUTTON_LEFT_THUMB
-    GLFW_KEY_P, // GLFW_GAMEPAD_BUTTON_RIGHT_THUMB
-    GLFW_KEY_UP, // GLFW_GAMEPAD_BUTTON_DPAD_UP
-    GLFW_KEY_RIGHT, // GLFW_GAMEPAD_BUTTON_DPAD_RIGHT
-    GLFW_KEY_DOWN, // GLFW_GAMEPAD_BUTTON_DPAD_DOWN
-    GLFW_KEY_LEFT, // GLFW_GAMEPAD_BUTTON_DPAD_LEFT
-};
-
 static const size_t GLFW_AXIS_MAPPING[GLFW_GAMEPAD_AXIS_MAX] = {
     LEFT_X,
     LEFT_Y,
@@ -282,14 +264,6 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 2; i < GLFW_GAMEPAD_BUTTON_MAX; i++)
-    {
-        size_t brlsButton = GLFW_BUTTONS_MAPPING[i];
-        size_t key        = GLFW_GAMEPAD_TO_KEYBOARD[i];
-        if (key != GLFW_GAMEPAD_BUTTON_NONE)
-            state->buttons[brlsButton] |= glfwGetKey(this->window, key) != 0;
-    }
-
     if (Application::isSwapInputKeys()) {
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
@@ -302,6 +276,11 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
         state->buttons[BUTTON_B] |= glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     }
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+
+    state->buttons[BUTTON_UP] |= glfwGetKey(this->window, GLFW_KEY_UP) != 0;
+    state->buttons[BUTTON_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_RIGHT) != 0;
+    state->buttons[BUTTON_DOWN] |= glfwGetKey(this->window, GLFW_KEY_DOWN) != 0;
+    state->buttons[BUTTON_LEFT] |= glfwGetKey(this->window, GLFW_KEY_LEFT) != 0;
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];
