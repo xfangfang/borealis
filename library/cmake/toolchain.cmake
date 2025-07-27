@@ -134,6 +134,13 @@ else ()
     message(STATUS "SDL2 AND GLFW is both disabled, make sure this is what you want")
 endif ()
 
+if (USE_EGL)
+    message(STATUS "Using EGL")
+    add_definitions(-DUSE_EGL)
+else ()
+    message(STATUS "Using native GL")
+endif ()
+
 if (SIMPLE_HIGHLIGHT)
     message(STATUS "Enable SIMPLE_HIGHLIGHT")
     add_definitions(-DSIMPLE_HIGHLIGHT)
