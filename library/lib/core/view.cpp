@@ -1520,6 +1520,14 @@ View::~View()
         this->parentUserdata = nullptr;
     }
 
+    for (const auto& action : this->actions)
+    {
+        if (action->getType() == ACTION_KEYBOARD)
+        {
+            Application::removeWatchedKeys(BrlsKeyCombination{ action->getButton() });
+        }
+    }
+
     // Focus sanity check
     if (Application::getCurrentFocus() == this)
         Application::giveFocus(nullptr);
