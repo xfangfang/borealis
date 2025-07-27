@@ -30,7 +30,6 @@ class EditTextDialog : public Box
     Event<Point> layoutEvent;
     Event<> backspaceEvent, cancelEvent, summitEvent;
     Event<std::string> clipboardEvent;
-    Event<KeyState>::Subscription keyEvent;
     bool init = false;
 
     BRLS_BIND(brls::Label, header, "brls/dialog/header");

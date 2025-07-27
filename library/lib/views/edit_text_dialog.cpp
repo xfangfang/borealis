@@ -99,27 +99,29 @@ namespace brls
                     });
                 return true; }, true);
 
-        keyEvent = Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe([this](const KeyState& state) {
-            if (!state.pressed) return;
-
-            switch (state.key) {
-                case BRLS_KBD_KEY_BACKSPACE:
-                case BRLS_KBD_KEY_DELETE: // This is to ensure that the delete operation of the PSV ime will not be ignored
-                    this->backspaceEvent.fire();
-                    break;
-                case BRLS_KBD_KEY_V:
+        // register paste action
+        int pasteKey = BRLS_KBD_MODIFIER_CTRL;
 #ifdef __APPLE__
-                    if (state.mods & (BRLS_KBD_MODIFIER_CTRL | BRLS_KBD_MODIFIER_META)) {
-#else
-                    if (state.mods & BRLS_KBD_MODIFIER_CTRL) {
+        pasteKey = BRLS_KBD_MODIFIER_META;
 #endif
-                        this->clipboardEvent.fire(Application::getPlatform()->pasteFromClipboard());
-                    }
-                    break;
-                default:
-                    break;
-            }
+        this->registerAction({ BRLS_KBD_KEY_V, pasteKey }, [this](...)
+        {
+            this->clipboardEvent.fire(Application::getPlatform()->pasteFromClipboard());
+            return true;
         });
+
+        // register delete action
+        this->registerAction({ BRLS_KBD_KEY_DELETE }, [this](...)
+        {
+            // This is to ensure that the delete operation of the PSV ime will not be ignored
+            this->backspaceEvent.fire();
+            return true;
+        }, true);
+        this->registerAction({ BRLS_KBD_KEY_BACKSPACE }, [this](...)
+        {
+            this->backspaceEvent.fire();
+            return true;
+        }, true);
 
         this->registerAction("hints/delete"_i18n, BUTTON_BACK, [this](...)
             {
@@ -155,10 +157,7 @@ namespace brls
         this->init = true;
     }
 
-    EditTextDialog::~EditTextDialog()
-    {
-        Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->unsubscribe(keyEvent);
-    }
+    EditTextDialog::~EditTextDialog() = default;
 
     void EditTextDialog::open()
     {
