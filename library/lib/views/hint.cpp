@@ -213,7 +213,12 @@ void Hints::refillHints(View* focusView)
         focusView = focusView->getParent();
     }
 
-    if (addUnableAButtonAction && getAction(BUTTON_A) == actions.end())
+    const auto it = std::find_if(actions.begin(), actions.end(), [](const std::shared_ptr<Action>& action)
+    {
+        return *action == BUTTON_A;
+    });
+
+    if (addUnableAButtonAction && it == actions.end())
     {
         actions.push_back(std::make_shared<GamepadAction>(BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, nullptr));
     }
