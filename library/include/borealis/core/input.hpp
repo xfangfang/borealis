@@ -31,6 +31,7 @@ namespace brls
 
 typedef enum
 {
+    BRLS_KBD_MODIFIER_NONE  = 0x00,
     BRLS_KBD_MODIFIER_SHIFT = 0x01,
     BRLS_KBD_MODIFIER_CTRL  = 0x02,
     BRLS_KBD_MODIFIER_ALT   = 0x04,

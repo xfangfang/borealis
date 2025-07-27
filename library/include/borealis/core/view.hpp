@@ -275,7 +275,7 @@ class View
     bool wireframeEnabled = false;
     bool clipsToBounds    = false;
 
-    std::vector<Action> actions;
+    std::vector<std::shared_ptr<Action>> actions;
     std::vector<GestureRecognizer*> gestureRecognizers;
 
     /**
@@ -1174,6 +1174,13 @@ class View
 
     void* getParentUserData();
 
+    typedef std::vector<std::shared_ptr<Action>>::iterator ActionIterator;
+
+    template <class ButtonType>
+    ActionIterator getAction(ButtonType button);
+
+    ActionIterator getAction(ActionIdentifier identifier);
+
     /**
      * Registers an action with the given parameters. The listener will be fired when the user presses
      * the key when the view is focused.
@@ -1186,7 +1193,14 @@ class View
      * Returns the identifier for the action, so it can be unregistered later on. Returns ACTION_NONE if the
      * action was not registered.
      */
-    ActionIdentifier registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
+    template <class ButtonType, class ActionType>
+    ActionIdentifier registerAction(const std::string& hintText, ButtonType button, const ActionListener& actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
+
+    ActionIdentifier registerAction(const std::string& hintText, ControllerButton button, const ActionListener& actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
+
+    ActionIdentifier registerAction(BrlsKeyCombination key, const ActionListener& actionListener, bool allowRepeating = false);
+
+    void func(BrlsKeyCombination key);
 
     /**
      * Unregisters an action with the given identifier.
@@ -1196,11 +1210,11 @@ class View
     /**
      * Shortcut to register a generic "A OK" click action.
      */
-    void registerClickAction(ActionListener actionListener);
+    void registerClickAction(const ActionListener& actionListener);
 
-    void updateActionHint(enum ControllerButton button, std::string hintText);
+    void updateActionHint(enum ControllerButton button, const std::string& hintText);
     void setActionAvailable(enum ControllerButton button, bool available);
-    void setActionsAvailable(bool available);
+    void setActionsAvailable(bool available) const;
 
     void resetClickAnimation();
     void playClickAnimation(bool reverse = false, bool animateBack = true, bool force = false);
@@ -1211,7 +1225,7 @@ class View
 
     YGNode* getYGNode();
 
-    const std::vector<Action>& getActions();
+    const std::vector<std::shared_ptr<Action>>& getActions();
 
     /**
      * Get the vector of all gesture recognizers attached to that view.

@@ -27,10 +27,10 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
             Application::giveFocus(view);
         for (auto& action : view->getActions())
         {
-            if (action.button != static_cast<enum ControllerButton>(BUTTON_A))
+            if (action->getType() != ACTION_GAMEPAD || action->getButton() != BUTTON_A)
                 continue;
 
-            if (action.available)
+            if (action->isAvailable())
             {
                 if (config.highlightOnSelect)
                     view->playClickAnimation(status.state != GestureState::UNSURE);
@@ -45,8 +45,8 @@ TapGestureRecognizer::TapGestureRecognizer(View* view, TapGestureConfig config)
                         *soundToPlay = config.failedSound;
                         break;
                     case GestureState::END:
-                        if (action.actionListener(view))
-                            *soundToPlay = action.sound;
+                        if (action->getActionListener()(view))
+                            *soundToPlay = action->getSound();
                         break;
                     default:
                         break;

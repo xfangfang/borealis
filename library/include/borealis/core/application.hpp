@@ -175,6 +175,8 @@ class Application
 
     static void onControllerButtonPressed(enum ControllerButton button, bool repeating);
 
+    static void onKeyboardPressed(BrlsKeyCombination key, bool repeating);
+
     /**
      * "Crashes" the app (displays a fullscreen CrashFrame)
      */
@@ -339,6 +341,10 @@ class Application
 
     static void tryDeinitFirstResponder(View* view);
 
+    static void addToWatchedKeys(const BrlsKeyCombination key);
+
+    static void removeWatchedKeys(const BrlsKeyCombination key);
+
   private:
     inline static bool inited               = false;
     inline static bool quitRequested        = false;
@@ -365,6 +371,9 @@ class Application
     static bool setInputType(InputType type);
 
     inline static InputType inputType = InputType::GAMEPAD;
+    inline static std::vector<BrlsKeyState> watchedKeys;
+    inline static std::vector<BrlsKeyState> oldWatchedKeys;
+    inline static std::unordered_map<int, int> watchedKeysMap;
 
     inline static void processInput();
     inline static bool internalMainLoop();
@@ -415,7 +424,7 @@ class Application
      * the given button
      * Returns true if at least one action has been fired
      */
-    static bool handleAction(char button, bool repeating);
+    static bool handleAction(ActionType type, int button, bool repeating);
 
     static void registerBuiltInXMLViews();
 

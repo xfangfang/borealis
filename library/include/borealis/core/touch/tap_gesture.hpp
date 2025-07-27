@@ -78,9 +78,9 @@ class TapGestureRecognizer : public GestureRecognizer
 
   private:
     TapGestureEvent tapEvent;
-    Point position;
-    GestureState lastState;
-    bool forceRecognision = false;
+    Point position{};
+    GestureState lastState{};
+    bool forceRecognision{};
 };
 
 } // namespace brls
