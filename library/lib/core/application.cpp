@@ -450,7 +450,7 @@ void Application::processInput()
 
 void Application::addToWatchedKeys(const BrlsKeyCombination key)
 {
-    if (watchedKeysMap.count(key) == 0)
+    if (watchedKeysMap.count(key) == 0 || watchedKeysMap[key] <= 0)
     {
         watchedKeysMap[key] = 0;
         watchedKeys.emplace_back(key);
