@@ -177,6 +177,22 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
                 state->axes[j] = 1;
         }
     }
+
+    state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
+    state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
+    state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT] |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
+
+    if (Application::isSwapInputKeys())
+    {
+        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
+        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
+    }
+    else
+    {
+        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
+        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
+    }
 }
 
 short SwitchInputManager::getControllersConnectedCount()
@@ -247,22 +263,6 @@ void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadS
 
     state->axes[LEFT_Z]  = 0; // SWITCH NOT SUPPORT ZL AXIS
     state->axes[RIGHT_Z] = 0; // SWITCH NOT SUPPORT ZR AXIS
-
-    state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
-    state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
-    state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
-    state->buttons[BUTTON_NAV_LEFT] |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
-
-    if (Application::isSwapInputKeys())
-    {
-        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
-        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
-    }
-    else
-    {
-        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
-        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
-    }
 }
 
 bool SwitchInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
