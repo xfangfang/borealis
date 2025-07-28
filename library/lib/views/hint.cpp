@@ -206,6 +206,11 @@ void Hints::refillHints(View* focusView)
             if (addedButtons.find(static_cast<ControllerButton>(action->getButton())) != addedButtons.end())
                 continue;
 
+            if (Application::isHintsLiteMode() && action->getButton() != BUTTON_A && action->getButton() != BUTTON_B)
+            {
+                continue;
+            }
+
             addedButtons.insert(static_cast<ControllerButton>(action->getButton()));
             actions.push_back(action);
         }

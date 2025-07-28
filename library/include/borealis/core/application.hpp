@@ -339,6 +339,17 @@ class Application
         return drawCoursor;
     }
 
+    inline static bool isHintsLiteMode()
+    {
+        return hintsLiteMode;
+    }
+
+    // Set hints lite mode, which will only show hints for A button and B button
+    inline void static setHintsLiteMode(const bool value)
+    {
+        hintsLiteMode = value;
+    }
+
     static void tryDeinitFirstResponder(View* view);
 
     static void addToWatchedKeys(const BrlsKeyCombination key);
@@ -391,6 +402,7 @@ class Application
     inline static size_t globalFPS                      = 60;
     inline static Time limitedFrameTime                 = 0;
     inline static Time frameStartTime                   = 0;
+    inline static bool hintsLiteMode                    = false;
 
     inline static bool deactivatedBehavior = false;
     inline static bool activeEvent         = false;
