@@ -405,7 +405,7 @@ void Application::processInput()
     const bool altPressed   = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_ALT) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_ALT);
     const bool shiftPressed = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_SHIFT) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_SHIFT);
     const bool metaPressed  = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_SUPER) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_SUPER);
-    for (int i = 0; i < watchedKeys.size(); i++)
+    for (size_t i = 0; i < watchedKeys.size(); i++)
     {
         auto& watchedKey    = watchedKeys[i];
         auto& oldWatchedKey = oldWatchedKeys[i];
