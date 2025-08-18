@@ -223,15 +223,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
-            libxcursor-dev libxi-dev --no-install-recommends
+          sudo apt install -y --no-install-recommends libdbus-1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols xorg-dev
       - name: Build
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
               -DPLATFORM_DESKTOP=ON \
-              -DUSE_LIBROMFS=ON \
-              -DX11_X11_LIB=ON
+              -DUSE_LIBROMFS=ON
           make -C build -j$(nproc)
           output_dir=borealis-linux-x86_64-${{ matrix.driver }}${{ matrix.ext }}
           strip build/borealis_demo
