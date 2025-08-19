@@ -20,7 +20,7 @@
 #include <borealis/core/platform.hpp>
 #include <borealis/platforms/desktop/desktop_font.hpp>
 #include <borealis/platforms/desktop/desktop_ime.hpp>
-#if defined(__linux__) and not defined(ANDROID)
+#if defined(__linux__) and !defined(__SDL2__)
 #include <dbus/dbus.h>
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
