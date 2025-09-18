@@ -245,7 +245,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
             }
             return true; });
 
-    dialog->registerAction(
+    dialog->getApplet()->registerAction(
         "hints/left"_i18n, BUTTON_LEFT, [dialog](...)
         {
             if (isEditing) return true;
@@ -256,7 +256,7 @@ void GLFWImeManager::openInputDialog(std::function<void(std::string)> cb, std::s
             }
             dialog->setCursor(cursor);
             return true; }, true, true);
-    dialog->registerAction(
+    dialog->getApplet()->registerAction(
         "hints/right"_i18n, BUTTON_RIGHT, [dialog](...)
         {
             if (isEditing) return true;

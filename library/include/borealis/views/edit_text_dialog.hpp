@@ -18,6 +18,7 @@ class EditTextDialog : public Box
     void setCursor(int cursor);
     bool isTranslucent() override;
     void onLayout() override;
+    brls::Box *getApplet();
     Event<Point>* getLayoutEvent();
     Event<>* getBackspaceEvent();
     Event<>* getCancelEvent();
@@ -25,6 +26,13 @@ class EditTextDialog : public Box
     Event<std::string>* getClipboardEvent();
     void updateUI();
   private:
+    enum class KeyboardMode
+    {
+      LOWERCASE,
+      UPPERCASE,
+      SYMBOLS
+    };
+  
     std::string content;
     std::string hint;
     Event<Point> layoutEvent;
@@ -32,9 +40,14 @@ class EditTextDialog : public Box
     Event<std::string> clipboardEvent;
     bool init = false;
 
+    KeyboardMode keyboardMode = KeyboardMode::LOWERCASE;
+    void buildKeyboard();
+
     BRLS_BIND(brls::Label, header, "brls/dialog/header");
     BRLS_BIND(brls::Label, label, "brls/dialog/label");
     BRLS_BIND(brls::Label, count, "brls/dialog/count");
+    BRLS_BIND(brls::Box, applet, "brls/dialog/applet");
     BRLS_BIND(brls::Box, container, "brls/container");
+    BRLS_BIND(brls::Box, keyboard, "brls/dialog/keyboard");
 };
 }

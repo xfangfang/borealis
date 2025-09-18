@@ -177,7 +177,7 @@ namespace brls
             }
         });
         
-        dialog->registerAction(
+        dialog->getApplet()->registerAction(
             "hints/left"_i18n, BUTTON_LEFT, [this, updateTextCursor](...){
                 if (this->isEditing) return true;
                 if (this->cursor == (int)CursorPosition::END) {
@@ -191,7 +191,7 @@ namespace brls
                 return true;
             }, true, true
         );
-        dialog->registerAction(
+        dialog->getApplet()->registerAction(
             "hints/right"_i18n, BUTTON_RIGHT, [this, updateTextCursor](...){
                 if (this->isEditing) return true;
                 if (this->cursor >= (int)CursorPosition::START) {
