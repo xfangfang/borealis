@@ -19,7 +19,9 @@
 
 #include <borealis/core/audio.hpp>
 #include <borealis/core/font.hpp>
+#ifndef __OBJC__
 #include <borealis/core/i18n.hpp>
+#endif
 #include <borealis/core/ime.hpp>
 #include <borealis/core/input.hpp>
 #include <borealis/core/theme.hpp>
@@ -272,7 +274,9 @@ class Platform
     /**
      * App locale, empty for default
      */
+#ifndef __OBJC__
     static inline std::string APP_LOCALE_DEFAULT = LOCALE_AUTO;
+#endif
 };
 
 } // namespace brls

@@ -15,7 +15,6 @@
     limitations under the License.
 */
 
-#import <borealis/core/logger.hpp>
 #import <borealis/platforms/desktop/desktop_platform.hpp>
 #import <CoreWLAN/CoreWLAN.h>
 
