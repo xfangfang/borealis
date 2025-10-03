@@ -15,6 +15,7 @@
 */
 
 #include <strings.h>
+#include <unistd.h> /* chdir */
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
