@@ -40,6 +40,8 @@ extern "C"
 #define NANOVG_GLES2_IMPLEMENTATION
 #elif USE_GLES3
 #define NANOVG_GLES3_IMPLEMENTATION
+#elif USE_GL2
+#define NANOVG_GL2_IMPLEMENTATION
 #else
 #define NANOVG_GL3_IMPLEMENTATION
 #endif
@@ -212,6 +214,13 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#elif defined(USE_GL2)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
 #else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -289,6 +298,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     this->nvgContext = nvgCreateGLES2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #elif USE_GLES3
     this->nvgContext = nvgCreateGLES3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
+#elif USE_GL2
+    this->nvgContext = nvgCreateGL2(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #else
     this->nvgContext = nvgCreateGL3(NVG_STENCIL_STROKES | NVG_ANTIALIAS);
 #endif
@@ -407,6 +418,8 @@ SDLVideoContext::~SDLVideoContext()
             nvgDeleteGLES2(this->nvgContext);
 #elif USE_GLES3
             nvgDeleteGLES3(this->nvgContext);
+#elif USE_GL2
+            nvgDeleteGL2(this->nvgContext);
 #else
             nvgDeleteGL3(this->nvgContext);
 #endif
