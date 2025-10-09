@@ -99,7 +99,8 @@ class Logger
         if (sceRtcGetCurrentClockLocalTime)
             sceRtcGetCurrentClockLocalTime(&lt);
 #else
-        std::tm time_tm = fmt::localtime(std::chrono::system_clock::to_time_t(now));
+        std::time_t time_t = std::chrono::system_clock::to_time_t(now);
+        std::tm time_tm = *std::localtime(&time_t);
 #endif
         std::string log = fmt::format(format, std::forward<Args>(args)...);
 
