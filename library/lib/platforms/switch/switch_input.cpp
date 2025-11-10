@@ -116,17 +116,18 @@ SwitchInputManager::SwitchInputManager()
 
     hidInitializeMouse();
     hidInitializeKeyboard();
+    hidInitializeKeyboardMap();
 
     m_hid_keyboard_state.assign(256, false);
 
     // It's necessary to initialize these separately as they all have different handle values
-	hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[0], 1, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
-	hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[1], 1, HidNpadIdType_No1, HidNpadStyleTag_NpadFullKey);
-	hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[2], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
-	hidStartSixAxisSensor(this->m_six_axis_sensor_handle[0]);
-	hidStartSixAxisSensor(this->m_six_axis_sensor_handle[1]);
-	hidStartSixAxisSensor(this->m_six_axis_sensor_handle[2]);
-	hidStartSixAxisSensor(this->m_six_axis_sensor_handle[3]);
+    hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[0], 1, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
+    hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[1], 1, HidNpadIdType_No1, HidNpadStyleTag_NpadFullKey);
+    hidGetSixAxisSensorHandles(&this->m_six_axis_sensor_handle[2], 2, HidNpadIdType_No1, HidNpadStyleTag_NpadJoyDual);
+    hidStartSixAxisSensor(this->m_six_axis_sensor_handle[0]);
+    hidStartSixAxisSensor(this->m_six_axis_sensor_handle[1]);
+    hidStartSixAxisSensor(this->m_six_axis_sensor_handle[2]);
+    hidStartSixAxisSensor(this->m_six_axis_sensor_handle[3]);
 }
 
 SwitchInputManager::~SwitchInputManager()
@@ -137,9 +138,9 @@ SwitchInputManager::~SwitchInputManager()
         nvgDeleteImage(vg, this->cursorTexture);
 
     hidStopSixAxisSensor(this->m_six_axis_sensor_handle[0]);
-	hidStopSixAxisSensor(this->m_six_axis_sensor_handle[1]);
-	hidStopSixAxisSensor(this->m_six_axis_sensor_handle[2]);
-	hidStopSixAxisSensor(this->m_six_axis_sensor_handle[3]);
+    hidStopSixAxisSensor(this->m_six_axis_sensor_handle[1]);
+    hidStopSixAxisSensor(this->m_six_axis_sensor_handle[2]);
+    hidStopSixAxisSensor(this->m_six_axis_sensor_handle[3]);
 
 }
 
@@ -152,10 +153,10 @@ void SwitchInputManager::clearVibration(int controller)
 
 void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
 {
-    for (size_t i = 0; i < _BUTTON_MAX; i++)
+    for (size_t i         = 0; i < _BUTTON_MAX; i++)
         state->buttons[i] = false;
 
-    for (size_t i = 0; i < _AXES_MAX; i++)
+    for (size_t i      = 0; i < _AXES_MAX; i++)
         state->axes[i] = 0;
 
     auto connected = getControllersConnectedCount();
@@ -175,6 +176,22 @@ void SwitchInputManager::updateUnifiedControllerState(ControllerState* state)
             else if (state->axes[j] > 1)
                 state->axes[j] = 1;
         }
+    }
+
+    state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
+    state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
+    state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
+    state->buttons[BUTTON_NAV_LEFT] |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
+
+    if (Application::isSwapInputKeys())
+    {
+        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
+        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
+    }
+    else
+    {
+        state->buttons[BUTTON_A] |= getKeyboardKeyState(BRLS_KBD_KEY_ENTER);
+        state->buttons[BUTTON_B] |= getKeyboardKeyState(BRLS_KBD_KEY_ESCAPE);
     }
 }
 
@@ -244,23 +261,13 @@ void SwitchInputManager::updateControllerStateInner(ControllerState* state, PadS
         state->axes[RIGHT_Y] = 0;
     }
 
-    state->axes[LEFT_Z] = 0;  // SWITCH NOT SUPPORT ZL AXIS
+    state->axes[LEFT_Z]  = 0; // SWITCH NOT SUPPORT ZL AXIS
     state->axes[RIGHT_Z] = 0; // SWITCH NOT SUPPORT ZR AXIS
-
-    state->buttons[BUTTON_NAV_UP] |= getKeyboardKeyState(BRLS_KBD_KEY_UP);
-    state->buttons[BUTTON_NAV_RIGHT] |= getKeyboardKeyState(BRLS_KBD_KEY_RIGHT);
-    state->buttons[BUTTON_NAV_DOWN] |= getKeyboardKeyState(BRLS_KBD_KEY_DOWN);
-    state->buttons[BUTTON_NAV_LEFT] |= getKeyboardKeyState(BRLS_KBD_KEY_LEFT);
 }
 
 bool SwitchInputManager::getKeyboardKeyState(BrlsKeyboardScancode key)
 {
-    for (int i = 0; i < 256; ++i)
-    {
-        if (key == switchKeyToGlfwKey(i))
-            return m_hid_keyboard_state[i];
-    }
-    return false;
+    return m_hid_keyboard_state[m_brls_hid_map[key]];
 }
 
 void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
@@ -389,11 +396,11 @@ void SwitchInputManager::handleKeyboard()
             auto is_pressed = (state.keys[i / 64] & (1ul << (i % 64))) != 0;
             if (m_hid_keyboard_state[i] != is_pressed)
             {
-                m_hid_keyboard_state[i]      = is_pressed;
-                BrlsKeyboardScancode glfwKey = switchKeyToGlfwKey(i);
+                m_hid_keyboard_state[i]            = is_pressed;
+                const BrlsKeyboardScancode brlsKey = m_hid_brls_map[i];
 
-                KeyState keyState;
-                keyState.key     = glfwKey;
+                KeyState keyState{};
+                keyState.key     = brlsKey;
                 keyState.pressed = is_pressed;
 
                 if (state.modifiers & HidKeyboardModifier_LeftAlt)
@@ -420,25 +427,40 @@ void SwitchInputManager::handleKeyboard()
 
 void SwitchInputManager::handleControllerSensors()
 {
-	HidSixAxisSensorState sixaxis = {0};
+    HidSixAxisSensorState sixaxis = { 0 };
 
-	uint64_t style_set = padGetStyleSet(&padsState[0]);
+    uint64_t style_set = padGetStyleSet(&padsState[0]);
     if (padStateHandheld.active_handheld)
-		hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[0], &sixaxis, 1);
-	else if(style_set & HidNpadStyleTag_NpadFullKey)
-		hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[1], &sixaxis, 1);
-	else if(style_set & HidNpadStyleTag_NpadJoyDual)
-	{
-		// For JoyDual, read from either the Left or Right Joy-Con depending on which is/are connected
-		u64 attrib = padGetAttributes(&padsState[0]);
-		if(attrib & HidNpadAttribute_IsLeftConnected)
-			hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[2], &sixaxis, 1);
-		else if(attrib & HidNpadAttribute_IsRightConnected)
-			hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[3], &sixaxis, 1);
-	}
+        hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[0], &sixaxis, 1);
+    else if (style_set & HidNpadStyleTag_NpadFullKey)
+        hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[1], &sixaxis, 1);
+    else if (style_set & HidNpadStyleTag_NpadJoyDual)
+    {
+        // For JoyDual, read from either the Left or Right Joy-Con depending on which is/are connected
+        u64 attrib = padGetAttributes(&padsState[0]);
+        if (attrib & HidNpadAttribute_IsLeftConnected)
+            hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[2], &sixaxis, 1);
+        else if (attrib & HidNpadAttribute_IsRightConnected)
+            hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[3], &sixaxis, 1);
+    }
 
-    SensorEvent accelState = SensorEvent { 0, SensorEventType::ACCEL, {-sixaxis.acceleration.x, -sixaxis.acceleration.z, sixaxis.acceleration.y}, 0 };
-    SensorEvent gyroState = SensorEvent { 0, SensorEventType::GYRO, {sixaxis.angular_velocity.x * 2.0f * M_PI, sixaxis.angular_velocity.z * 2.0f * M_PI, -sixaxis.angular_velocity.y * 2.0f * M_PI}, 0 };
+    auto accelState = SensorEvent{
+        0,
+        SensorEventType::ACCEL,
+        { -sixaxis.acceleration.x,
+          -sixaxis.acceleration.z,
+          sixaxis.acceleration.y
+        },
+        0
+    };
+    auto gyroState = SensorEvent{
+        0,
+        SensorEventType::GYRO,
+        { static_cast<float>(sixaxis.angular_velocity.x * 2.0f * M_PI),
+          static_cast<float>(sixaxis.angular_velocity.z * 2.0f * M_PI),
+          static_cast<float>(-sixaxis.angular_velocity.y * 2.0f * M_PI)
+        },
+        0 };
     getControllerSensorStateChanged()->fire(accelState);
     getControllerSensorStateChanged()->fire(gyroState);
     Application::setActiveEvent(true);
@@ -488,21 +510,21 @@ void SwitchInputManager::initCursor(NVGcontext* vg)
     }
 }
 
-BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
+static BrlsKeyboardScancode hidKey2BrlsKey(int key)
 {
     if (KBD_A <= key && key <= KBD_Z)
     {
         return (BrlsKeyboardScancode)(key - KBD_A + BRLS_KBD_KEY_A);
     }
-    else if (KBD_1 <= key && key <= KBD_9)
+    if (KBD_1 <= key && key <= KBD_9)
     {
         return (BrlsKeyboardScancode)(key - KBD_1 + BRLS_KBD_KEY_1);
     }
-    else if (KBD_F1 <= key && key <= KBD_F12)
+    if (KBD_F1 <= key && key <= KBD_F12)
     {
         return (BrlsKeyboardScancode)(key - KBD_F1 + BRLS_KBD_KEY_F1);
     }
-    else if (KBD_KP1 <= key && key <= KBD_KP9)
+    if (KBD_KP1 <= key && key <= KBD_KP9)
     {
         return (BrlsKeyboardScancode)(key - KBD_KP1 + BRLS_KBD_KEY_KP_1);
     }
@@ -612,6 +634,21 @@ BrlsKeyboardScancode SwitchInputManager::switchKeyToGlfwKey(int key)
         // case KBD_HASHTILDE: return GLFW_HASHTILDE;
         default:
             return BRLS_KBD_KEY_UNKNOWN;
+    }
+}
+
+void SwitchInputManager::hidInitializeKeyboardMap()
+{
+    m_hid_brls_map[KBD_NONE]             = BRLS_KBD_KEY_UNKNOWN;
+    m_brls_hid_map[BRLS_KBD_KEY_UNKNOWN] = KBD_NONE;
+
+    for (int i = 0; i < 256; ++i)
+    {
+        const auto brlsKey = hidKey2BrlsKey(i);
+        if (brlsKey == BRLS_KBD_KEY_UNKNOWN)
+            continue;
+        m_hid_brls_map[i]       = brlsKey;
+        m_brls_hid_map[brlsKey] = i;
     }
 }
 

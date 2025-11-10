@@ -134,7 +134,9 @@ class Activity
      * Returns the identifier for the action, so it can be unregistered later on. Returns ACTION_NONE if the
      * action was not registered.
      */
-    ActionIdentifier registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
+    ActionIdentifier registerAction(const std::string& hintText, enum ControllerButton button, const ActionListener& actionListener, bool hidden = false, bool allowRepeating = false, enum Sound sound = SOUND_NONE);
+
+    ActionIdentifier registerAction(BrlsKeyCombination key, const ActionListener& actionListener, bool allowRepeating = false);
 
     /**
      * Unregisters an action with the given identifier on the content view.

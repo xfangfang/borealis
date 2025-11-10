@@ -36,7 +36,6 @@ ScrollingFrame::ScrollingFrame()
 
     setupScrollingIndicator();
 
-    input = Application::getPlatform()->getInputManager();
     this->setFocusable(true);
     this->setMaximumAllowedXMLElements(1);
 
@@ -183,8 +182,7 @@ void ScrollingFrame::naturalScrollingBehaviour()
 
     if (focused || childFocused)
     {
-        ControllerState state{};
-        input->updateUnifiedControllerState(&state);
+        auto& state       = Application::getControllerState();
         float bottomLimit = this->getContentHeight() - this->getScrollingAreaHeight();
 
         // Sets true on border hit to play sound only once

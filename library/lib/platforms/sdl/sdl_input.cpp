@@ -316,24 +316,6 @@ static const size_t SDL_BUTTONS_MAPPING[SDL_GAMEPAD_BUTTON_MAX] = {
     BUTTON_RIGHT, //    SDL_CONTROLLER_BUTTON_DPAD_RIGHT
 };
 
-static const size_t SDL_GAMEPAD_TO_KEYBOARD[SDL_GAMEPAD_BUTTON_MAX] = {
-    SDL_SCANCODE_RETURN, // SDL_CONTROLLER_BUTTON_A
-    SDL_SCANCODE_ESCAPE, // SDL_CONTROLLER_BUTTON_B
-    SDL_SCANCODE_X, // SDL_CONTROLLER_BUTTON_X
-    SDL_SCANCODE_Y, // SDL_CONTROLLER_BUTTON_Y
-    SDL_SCANCODE_F1, // SDL_CONTROLLER_BUTTON_BACK
-    SDL_SCANCODE_UNKNOWN, // SDL_CONTROLLER_BUTTON_GUIDE
-    SDL_SCANCODE_F2, // SDL_CONTROLLER_BUTTON_START
-    SDL_SCANCODE_Q, // SDL_CONTROLLER_BUTTON_LEFTSTICK
-    SDL_SCANCODE_P, // SDL_CONTROLLER_BUTTON_RIGHTSTICK
-    SDL_SCANCODE_L, // SDL_CONTROLLER_BUTTON_LEFTSHOULDER
-    SDL_SCANCODE_R, // SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
-    SDL_SCANCODE_UP, // SDL_CONTROLLER_BUTTON_DPAD_UP
-    SDL_SCANCODE_DOWN, // SDL_CONTROLLER_BUTTON_DPAD_DOWN
-    SDL_SCANCODE_LEFT, // SDL_CONTROLLER_BUTTON_DPAD_LEFT
-    SDL_SCANCODE_RIGHT, // SDL_CONTROLLER_BUTTON_DPAD_RIGHT
-};
-
 static std::unordered_map<SDL_Scancode, int> keyboardKeys {};
 
 static const size_t SDL_AXIS_MAPPING[SDL_GAMEPAD_AXIS_MAX] = {
@@ -496,13 +478,6 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     }
 
     // Add keyboard keys on top of gamepad buttons
-    for (size_t i = 2; i < SDL_GAMEPAD_BUTTON_MAX; i++)
-    {
-        size_t brlsButton = SDL_BUTTONS_MAPPING[i];
-        size_t key        = SDL_GAMEPAD_TO_KEYBOARD[i];
-        if (key != SDL_SCANCODE_UNKNOWN)
-            state->buttons[brlsButton] |= getKeyboardKeys((SDL_Scancode)key);
-    }
     if (Application::isSwapInputKeys())
     {
         state->buttons[BUTTON_B] |= getKeyboardKeys(SDL_SCANCODE_KP_ENTER);
@@ -520,6 +495,11 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
 
     // Android tv remote control
     state->buttons[BUTTON_X] |= getKeyboardKeys(SDL_SCANCODE_MENU);
+
+    state->buttons[BUTTON_UP] |= getKeyboardKeys(SDL_SCANCODE_UP);
+    state->buttons[BUTTON_RIGHT] |= getKeyboardKeys(SDL_SCANCODE_RIGHT);
+    state->buttons[BUTTON_DOWN] |= getKeyboardKeys(SDL_SCANCODE_DOWN);
+    state->buttons[BUTTON_LEFT] |= getKeyboardKeys(SDL_SCANCODE_LEFT);
 
     state->buttons[BUTTON_NAV_UP] |= state->buttons[BUTTON_UP];
     state->buttons[BUTTON_NAV_RIGHT] |= state->buttons[BUTTON_RIGHT];

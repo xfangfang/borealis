@@ -15,6 +15,7 @@
 */
 
 #include <strings.h>
+#include <unistd.h> /* chdir */
 
 #include <borealis/core/application.hpp>
 #include <borealis/core/i18n.hpp>
@@ -217,7 +218,7 @@ bool SDLPlatform::processEvent(SDL_Event* event)
         if (manager)
             manager->updateControllerSensorsUpdate(event->csensor);
     }
-#ifdef IOS
+#if defined(IOS) || defined(ANDROID)
     else if (event->type == SDL_APP_WILLENTERBACKGROUND)
     {
         brls::Application::getWindowFocusChangedEvent()->fire(false);

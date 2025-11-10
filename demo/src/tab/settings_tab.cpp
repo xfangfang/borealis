@@ -54,6 +54,10 @@ SettingsTab::SettingsTab()
         });
     });
 
+    screenSaver->init("Disable ScreenSaver", brls::Application::getPlatform()->isScreenDimmingDisabled(), [](bool value){
+        brls::Application::getPlatform()->disableScreenDimming(value);
+    });
+
     bottomBar->init("Bottom Bar", !brls::AppletFrame::HIDE_BOTTOM_BAR, [](bool value){
         brls::AppletFrame::HIDE_BOTTOM_BAR = !value;
         auto stack = brls::Application::getActivitiesStack();

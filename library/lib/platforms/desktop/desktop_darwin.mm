@@ -15,15 +15,28 @@
     limitations under the License.
 */
 
-#import <borealis/core/logger.hpp>
-#import <borealis/platforms/desktop/desktop_platform.hpp>
-#import <CoreWLAN/CoreWLAN.h>
+#include <string>
+#include <functional>
+
+#include <AvailabilityMacros.h>
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+    #define HAS_CORE_WLAN 1
+#else
+    #define HAS_CORE_WLAN 0
+#endif
+
+#if HAS_CORE_WLAN
+    #import <CoreWLAN/CoreWLAN.h>
+#endif
 
 namespace brls
 {
 
 // Interface method, fetching the current connection info.
 int darwin_wlan_quality() {
+#if HAS_CORE_WLAN
+#ifdef __clang__
     @autoreleasepool {
         CWWiFiClient* Client = CWWiFiClient.sharedWiFiClient;
         CWInterface* currentInterface = Client.interface;
@@ -38,21 +51,57 @@ int darwin_wlan_quality() {
         if (rssi > -80) return 2;
         return 1;
     }
+#else
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    CWInterface* currentInterface = [CWInterface interface];
+    if (![currentInterface ssid]) {
+        [pool drain];
+        return 0;
+    }
+    NSNumber* rssiNumber = [currentInterface rssi];
+    int result = 1;
+    if (rssiNumber) {
+        int rssi = [rssiNumber intValue];
+        if (rssi > -50) result = 3;
+        else if (rssi > -80) result = 2;
+    }
+    [pool drain];
+    return result;
+#endif
+#else // HAS_CORE_WLAN
+    return -1;
+#endif
 }
 
 bool darwin_runloop(const std::function<bool()>& runLoopImpl) {
+#ifdef __clang__
     @autoreleasepool {
         return runLoopImpl();
     }
+#else
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    bool result = runLoopImpl();
+    [pool drain];
+    return result;
+#endif
 }
 
 std::string darwin_locale() {
+#ifdef __clang__
     @autoreleasepool {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         NSArray *languages = [defaults objectForKey:@"AppleLanguages"];
         NSString *current = [languages objectAtIndex:0];
         return [current UTF8String];
     }
+#else
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSArray *languages = [defaults objectForKey:@"AppleLanguages"];
+    NSString *current = [languages objectAtIndex:0];
+    [pool drain];
+    return [current UTF8String];
+#endif
 }
 
 }

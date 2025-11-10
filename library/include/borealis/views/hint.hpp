@@ -28,11 +28,11 @@ namespace brls
 class Hint : public Box
 {
   public:
-    Hint(Action action, bool allowAButtonTouch = false);
+    Hint(std::shared_ptr<Action> action, bool allowAButtonTouch = false);
     static std::string getKeyIcon(ControllerButton button, bool ignoreKeysSwap = false);
 
   private:
-    Action action;
+    std::shared_ptr<Action> action;
 
     BRLS_BIND(Label, icon, "icon");
     BRLS_BIND(Label, hint, "hint");
@@ -73,7 +73,6 @@ class Hints : public Box
     bool forceShown             = false;
 
     VoidEvent::Subscription hintSubscription;
-    static bool actionsSortFunc(Action a, Action b);
 };
 
 } // namespace brls

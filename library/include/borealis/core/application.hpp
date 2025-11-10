@@ -175,6 +175,8 @@ class Application
 
     static void onControllerButtonPressed(enum ControllerButton button, bool repeating);
 
+    static void onKeyboardPressed(BrlsKeyCombination key, bool repeating);
+
     /**
      * "Crashes" the app (displays a fullscreen CrashFrame)
      */
@@ -194,6 +196,8 @@ class Application
     static void unblockInputs();
 
     static bool isInputBlocks();
+
+    static const ControllerState& getControllerState();
 
     static void setCommonFooter(std::string footer);
     static std::string* getCommonFooter();
@@ -343,7 +347,22 @@ class Application
         return drawCoursor;
     }
 
+    inline static bool isHintsLiteMode()
+    {
+        return hintsLiteMode;
+    }
+
+    // Set hints lite mode, which will only show hints for A button and B button
+    inline void static setHintsLiteMode(const bool value)
+    {
+        hintsLiteMode = value;
+    }
+
     static void tryDeinitFirstResponder(View* view);
+
+    static void addToWatchedKeys(const BrlsKeyCombination key);
+
+    static void removeWatchedKeys(const BrlsKeyCombination key);
 
   private:
     inline static bool inited               = false;
@@ -371,6 +390,10 @@ class Application
     static bool setInputType(InputType type);
 
     inline static InputType inputType = InputType::GAMEPAD;
+    inline static std::vector<BrlsKeyState> watchedKeys;
+    inline static std::vector<BrlsKeyState> oldWatchedKeys;
+    inline static std::unordered_map<int, int> watchedKeysMap;
+    inline static ControllerState controllerState = {};
 
     inline static void processInput();
     inline static bool internalMainLoop();
@@ -388,6 +411,7 @@ class Application
     inline static size_t globalFPS                      = 60;
     inline static Time limitedFrameTime                 = 0;
     inline static Time frameStartTime                   = 0;
+    inline static bool hintsLiteMode                    = false;
 
     inline static bool deactivatedBehavior = false;
     inline static bool activeEvent         = false;
@@ -421,7 +445,7 @@ class Application
      * the given button
      * Returns true if at least one action has been fired
      */
-    static bool handleAction(char button, bool repeating);
+    static bool handleAction(ActionType type, int button, bool repeating);
 
     static void registerBuiltInXMLViews();
 

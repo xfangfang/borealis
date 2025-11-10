@@ -24,8 +24,6 @@ namespace brls
 
 Slider::Slider()
 {
-    input = Application::getPlatform()->getInputManager();
-
     line      = new Rectangle();
     lineEmpty = new Rectangle();
     pointer   = new Rectangle();
@@ -133,8 +131,7 @@ void Slider::buttonsProcessing()
 {
     if (pointer->isFocused())
     {
-        ControllerState state;
-        input->updateUnifiedControllerState(&state);
+        auto& state        = Application::getControllerState();
         static bool repeat = false;
 
         if (state.buttons[BUTTON_NAV_RIGHT] && state.buttons[BUTTON_NAV_LEFT])

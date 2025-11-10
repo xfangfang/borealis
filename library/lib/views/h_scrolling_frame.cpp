@@ -36,7 +36,6 @@ HScrollingFrame::HScrollingFrame()
 
     setupScrollingIndicator();
 
-    input = Application::getPlatform()->getInputManager();
     this->setFocusable(true);
     this->setMaximumAllowedXMLElements(1);
 
@@ -183,8 +182,7 @@ void HScrollingFrame::naturalScrollingBehaviour()
 
     if (focused || childFocused)
     {
-        ControllerState state;
-        input->updateUnifiedControllerState(&state);
+        auto& state      = Application::getControllerState();
         float rightLimit = this->getContentWidth() - this->getScrollingAreaWidth();
 
         // Sets true on border hit to play sound only once

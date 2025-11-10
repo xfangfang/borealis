@@ -295,7 +295,7 @@ YGNode* View::getYGNode()
     return this->ygNode;
 }
 
-const std::vector<Action>& View::getActions()
+const std::vector<std::shared_ptr<Action> >& View::getActions()
 {
     return this->actions;
 }
@@ -744,50 +744,88 @@ void View::drawBackground(NVGcontext* vg, FrameContext* ctx, Style style, Rect f
     }
 }
 
-ActionIdentifier View::registerAction(std::string hintText, enum ControllerButton button, ActionListener actionListener, bool hidden, bool allowRepeating, enum Sound sound)
+template <class ButtonType>
+View::ActionIterator View::getAction(ButtonType button)
 {
-    ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back().identifier + 1;
+    return std::find_if(this->actions.begin(), this->actions.end(), [button](const std::shared_ptr<Action>& action)
+    {
+        return *action == button;
+    });
+}
 
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        *it = { button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener };
+View::ActionIterator View::getAction(ActionIdentifier identifier)
+{
+    return std::find_if(this->actions.begin(), this->actions.end(), [identifier](const std::shared_ptr<Action>& action)
+    {
+        return action->getIdentifier() == identifier;
+    });
+}
+
+template <class ButtonType, class ActionType>
+ActionIdentifier View::registerAction(const std::string& hintText, ButtonType button, const ActionListener& actionListener, bool hidden, bool allowRepeating, enum Sound sound)
+{
+    ActionIdentifier nextIdentifier = (this->actions.size() == 0) ? 1 : this->actions.back()->getIdentifier() + 1;
+    auto newAction                  = std::make_shared<ActionType>(button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener);
+
+    auto it = getAction(button);
+    if (it != this->actions.end())
+    {
+        *it = newAction;
+    }
     else
-        this->actions.push_back({ button, nextIdentifier, hintText, true, hidden, allowRepeating, sound, actionListener });
+    {
+        this->actions.push_back(newAction);
+    }
 
     return nextIdentifier;
 }
 
-void View::unregisterAction(ActionIdentifier identifier)
+ActionIdentifier View::registerAction(const std::string& hintText, const ControllerButton button, const ActionListener& actionListener, const bool hidden, const bool allowRepeating, const enum Sound sound)
 {
-    auto is_matched_action = [identifier](Action action) {
-        return action.identifier == identifier;
-    };
-    if (auto it = std::find_if(this->actions.begin(), this->actions.end(), is_matched_action); it != this->actions.end())
-        this->actions.erase(it);
+    return registerAction<ControllerButton, GamepadAction>(hintText, button, actionListener, hidden, allowRepeating, sound);
 }
 
-void View::registerClickAction(ActionListener actionListener)
+ActionIdentifier View::registerAction(const BrlsKeyCombination key, const ActionListener& actionListener, const bool allowRepeating)
+{
+    Application::addToWatchedKeys(key);
+    return registerAction<BrlsKeyCode, KeyboardAction>("", key, actionListener, true, allowRepeating, SOUND_NONE);
+}
+
+void View::unregisterAction(ActionIdentifier identifier)
+{
+    if (const auto it = getAction(identifier); it != this->actions.end())
+    {
+        if ((*it)->getType() == ACTION_KEYBOARD)
+        {
+            Application::removeWatchedKeys(BrlsKeyCombination{ (*it)->getButton() });
+        }
+        this->actions.erase(it);
+    }
+}
+
+void View::registerClickAction(const ActionListener& actionListener)
 {
     this->registerAction("hints/ok"_i18n, BUTTON_A, actionListener, false, false, SOUND_CLICK);
 }
 
-void View::updateActionHint(enum ControllerButton button, std::string hintText)
+void View::updateActionHint(const enum ControllerButton button, const std::string& hintText)
 {
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        it->hintText = hintText;
+    if (const auto it = getAction(button); it != this->actions.end())
+        (*it)->setHintText(hintText);
 }
 
-void View::setActionAvailable(enum ControllerButton button, bool available)
+void View::setActionAvailable(const enum ControllerButton button, const bool available)
 {
-    if (auto it = std::find(this->actions.begin(), this->actions.end(), button); it != this->actions.end())
-        it->available = available;
+    if (const auto it = getAction(button); it != this->actions.end())
+        (*it)->setAvailable(available);
 
     Application::getGlobalHintsUpdateEvent()->fire();
 }
 
-void View::setActionsAvailable(bool available)
+void View::setActionsAvailable(const bool available) const
 {
-    for (size_t i = 0; i < this->actions.size(); i++)
-        this->actions[i].available = available;
+    for (const auto& action : this->actions)
+        action->setAvailable(available);
 
     Application::getGlobalHintsUpdateEvent()->fire();
 }
@@ -1480,6 +1518,14 @@ View::~View()
     {
         free(this->parentUserdata);
         this->parentUserdata = nullptr;
+    }
+
+    for (const auto& action : this->actions)
+    {
+        if (action->getType() == ACTION_KEYBOARD)
+        {
+            Application::removeWatchedKeys(BrlsKeyCombination{ action->getButton() });
+        }
     }
 
     // Focus sanity check

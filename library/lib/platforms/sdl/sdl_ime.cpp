@@ -67,7 +67,7 @@ namespace brls
         if (size == 0) {
             return 0;
         }
-        for (int i = offset; i < s.size(); i++) {
+        for (size_t i = offset; i < s.size(); i++) {
             char p = s.at(i);
             if ((p & 0xc0) != 0x80) {
                 size--;

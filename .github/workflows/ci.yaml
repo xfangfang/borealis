@@ -165,29 +165,30 @@ jobs:
           path: borealis-macos-${{ matrix.window.name }}.tar.gz
 
   windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         driver: [gl, d3d11]
         include:
           - { driver: d3d11, cmake: "-DUSE_D3D11=ON" }
-    env:
-      MSYSTEM: MINGW64
-      MSYS2_PATH_TYPE: inherit
     defaults:
       run:
-        shell: C:\shells\msys2bash.cmd {0}
+        shell: msys2 {0}
     steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          cache: false
+          release: false
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-cc
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install dependency
-        run: |
-          pacman -S --needed --noconfirm --noprogressbar \
-            ${MINGW_PACKAGE_PREFIX}-gcc \
-            ${MINGW_PACKAGE_PREFIX}-ninja
       - name: Build
         run: |
           cmake -B build -G Ninja ${{ matrix.cmake }} \
@@ -222,15 +223,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libdbus-1-dev libxkbcommon-dev \
-            libwayland-dev wayland-protocols libx11-dev libxrandr-dev libxinerama-dev \
-            libxcursor-dev libxi-dev --no-install-recommends
+          sudo apt install -y --no-install-recommends libdbus-1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols xorg-dev
       - name: Build
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake }} \
               -DPLATFORM_DESKTOP=ON \
-              -DUSE_LIBROMFS=ON \
-              -DX11_X11_LIB=ON
+              -DUSE_LIBROMFS=ON
           make -C build -j$(nproc)
           output_dir=borealis-linux-x86_64-${{ matrix.driver }}${{ matrix.ext }}
           strip build/borealis_demo

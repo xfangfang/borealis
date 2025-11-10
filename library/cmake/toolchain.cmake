@@ -134,6 +134,13 @@ else ()
     message(STATUS "SDL2 AND GLFW is both disabled, make sure this is what you want")
 endif ()
 
+if (USE_EGL)
+    message(STATUS "Using EGL")
+    add_definitions(-DUSE_EGL)
+elseif (NOT USE_D3D11)
+    message(STATUS "Using native GL")
+endif ()
+
 if (SIMPLE_HIGHLIGHT)
     message(STATUS "Enable SIMPLE_HIGHLIGHT")
     add_definitions(-DSIMPLE_HIGHLIGHT)
@@ -239,14 +246,16 @@ endfunction()
 function(git_info tag short)
     # Add git info
     find_package(Git)
-    if(GIT_EXECUTABLE)
-        execute_process(COMMAND git describe --tags
+    if(GIT_FOUND)
+        execute_process(COMMAND ${GIT_EXECUTABLE} describe --always --tags
                 TIMEOUT 5
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_TAG_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE
                 )
-        execute_process(COMMAND git rev-parse --short HEAD
+        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
                 TIMEOUT 5
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_TAG_SHORT
                 OUTPUT_STRIP_TRAILING_WHITESPACE
                 )

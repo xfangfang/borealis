@@ -53,23 +53,25 @@ const std::string hintXML = R"xml(
     </brls:Box>
 )xml";
 
-Hint::Hint(Action action, bool allowAButtonTouch)
+Hint::Hint(std::shared_ptr<Action> action, bool allowAButtonTouch)
     : Box(Axis::ROW)
-    , action(action)
+      , action(action)
 {
     this->inflateFromXMLString(hintXML);
     this->setFocusable(false);
 
-    icon->setText(getKeyIcon(action.button));
-    hint->setText(action.hintText);
+    icon->setText(getKeyIcon(static_cast<ControllerButton>(action->getButton())));
+    hint->setText(action->getHintText());
 
-    if ((action.button != BUTTON_A || allowAButtonTouch) && action.available && !Application::isInputBlocks())
+    if ((action->getButton() != BUTTON_A || allowAButtonTouch) && action->isAvailable() && !Application::isInputBlocks())
     {
         this->addGestureRecognizer(new TapGestureRecognizer(this, [this, action]()
-            { action.actionListener(this); }));
+        {
+            action->getActionListener()(this);
+        }));
     }
 
-    if (!action.available || Application::isInputBlocks())
+    if (!action->isAvailable() || Application::isInputBlocks())
     {
         Theme theme = Application::getTheme();
         icon->setTextColor(theme["brls/text_disabled"]);
@@ -127,20 +129,27 @@ Hints::Hints()
     setDirection(Direction::LEFT_TO_RIGHT);
 
     hintSubscription = Application::getGlobalHintsUpdateEvent()->subscribe([this]()
+    {
+        if (!AppletFrame::HIDE_BOTTOM_BAR || forceShown)
         {
-            if (!AppletFrame::HIDE_BOTTOM_BAR || forceShown)
-            {
-                refillHints(Application::getCurrentFocus());
-            } });
+            refillHints(Application::getCurrentFocus());
+        }
+    });
 
     this->registerBoolXMLAttribute("addBaseAction", [this](bool value)
-        { this->setAddUnableAButtonAction(value); });
+    {
+        this->setAddUnableAButtonAction(value);
+    });
 
     this->registerBoolXMLAttribute("allowAButtonTouch", [this](bool value)
-        { this->setAllowAButtonTouch(value); });
+    {
+        this->setAllowAButtonTouch(value);
+    });
 
     this->registerBoolXMLAttribute("forceShown", [this](bool value)
-        { this->forceShown = value; });
+    {
+        this->forceShown = value;
+    });
 }
 
 Hints::~Hints()
@@ -148,56 +157,15 @@ Hints::~Hints()
     Application::getGlobalHintsUpdateEvent()->unsubscribe(hintSubscription);
 }
 
-void Hints::refillHints(View* focusView)
+static int buttonToSortableVal(ControllerButton button)
 {
-    if (!focusView)
-        return;
-
-    // todo: 做一个缓存，可以节约 Hint 组件生成
-    clearViews();
-
-    std::set<ControllerButton> addedButtons; // we only ever want one action per key
-    std::vector<Action> actions;
-
-    while (focusView != nullptr)
-    {
-        for (auto& action : focusView->getActions())
-        {
-            if (action.hidden)
-                continue;
-
-            if (addedButtons.find(action.button) != addedButtons.end())
-                continue;
-
-            addedButtons.insert(action.button);
-            actions.push_back(action);
-        }
-
-        focusView = focusView->getParent();
-    }
-
-    if (addUnableAButtonAction && std::find(actions.begin(), actions.end(), BUTTON_A) == actions.end())
-    {
-        actions.push_back(Action { BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, NULL });
-    }
-
-    // Sort the actions
-    std::stable_sort(actions.begin(), actions.end(), Hints::actionsSortFunc);
-
-    for (Action action : actions)
-    {
-        Hint* hint = new Hint(action, allowAButtonTouch);
-        addView(hint);
-    }
-}
-
-int buttonToSortableVal(ControllerButton button) {
     // From left to right:
     //  - first +
     //  - then all hints that are not B and A in original order
     //  - finally B and A
 
-    switch (button) {
+    switch (button)
+    {
         case BUTTON_START:
             return 0;
         case BUTTON_B:
@@ -209,9 +177,65 @@ int buttonToSortableVal(ControllerButton button) {
     }
 }
 
-bool Hints::actionsSortFunc(Action a, Action b)
+static bool actionsSortFunc(const std::shared_ptr<Action>& a, const std::shared_ptr<Action>& b)
 {
-    return buttonToSortableVal(a.button) < buttonToSortableVal(b.button);
+    return buttonToSortableVal(static_cast<ControllerButton>(a->getButton())) < buttonToSortableVal(static_cast<ControllerButton>(b->getButton()));
+}
+
+void Hints::refillHints(View* focusView)
+{
+    if (!focusView)
+        return;
+
+    // todo: 做一个缓存，可以节约 Hint 组件生成
+    clearViews();
+
+    std::set<ControllerButton> addedButtons; // we only ever want one action per key
+    std::vector<std::shared_ptr<Action> > actions;
+
+    while (focusView != nullptr)
+    {
+        for (auto& action : focusView->getActions())
+        {
+            if (action->getType() != ACTION_GAMEPAD)
+                continue; // only show gamepad actions in hints
+
+            if (action->isHidden())
+                continue;
+
+            if (addedButtons.find(static_cast<ControllerButton>(action->getButton())) != addedButtons.end())
+                continue;
+
+            if (Application::isHintsLiteMode() && action->getButton() != BUTTON_A && action->getButton() != BUTTON_B)
+            {
+                continue;
+            }
+
+            addedButtons.insert(static_cast<ControllerButton>(action->getButton()));
+            actions.push_back(action);
+        }
+
+        focusView = focusView->getParent();
+    }
+
+    const auto it = std::find_if(actions.begin(), actions.end(), [](const std::shared_ptr<Action>& action)
+    {
+        return *action == BUTTON_A;
+    });
+
+    if (addUnableAButtonAction && it == actions.end())
+    {
+        actions.push_back(std::make_shared<GamepadAction>(BUTTON_A, 0, "hints/ok"_i18n, false, false, false, Sound::SOUND_NONE, nullptr));
+    }
+
+    // Sort the actions
+    std::stable_sort(actions.begin(), actions.end(), actionsSortFunc);
+
+    for (auto action : actions)
+    {
+        Hint* hint = new Hint(action, allowAButtonTouch);
+        addView(hint);
+    }
 }
 
 View* Hints::create()

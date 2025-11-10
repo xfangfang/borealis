@@ -18,6 +18,7 @@
 #pragma once
 
 #include <switch.h>
+#include <unordered_map>
 
 #include <borealis/core/input.hpp>
 
@@ -39,7 +40,7 @@ class SwitchInputManager : public InputManager
 
     void updateControllerState(ControllerState* state, int controller) override;
 
-    bool getKeyboardKeyState(BrlsKeyboardScancode state) override;
+    bool getKeyboardKeyState(BrlsKeyboardScancode key) override;
 
     void updateTouchStates(std::vector<RawTouchState>* states) override;
 
@@ -75,14 +76,15 @@ class SwitchInputManager : public InputManager
     HidSixAxisSensorHandle m_six_axis_sensor_handle[4]; // All for player 1, player 2 not supported
 
     std::vector<bool> m_hid_keyboard_state;
+    std::unordered_map<int, BrlsKeyboardScancode> m_hid_brls_map;
+    std::unordered_map<BrlsKeyboardScancode, int> m_brls_hid_map;
 
     void initCursor(NVGcontext* vg);
     void handleMouse();
     void handleKeyboard();
     void handleControllerSensors();
     void upToDateMouseState();
-    BrlsKeyboardScancode switchKeyToGlfwKey(int key);
-    int glfwKeyToVKKey(BrlsKeyboardScancode key);
+    void hidInitializeKeyboardMap();
     void updateControllerStateInner(ControllerState* state, PadState* pad);
     void sendRumbleInternal(HidVibrationDeviceHandle vibration_device[2], HidVibrationValue vibration_values[2],
         unsigned short lowFreqMotor, unsigned short highFreqMotor);

@@ -255,12 +255,16 @@ void Application::updateFPS()
     }
 }
 
+const ControllerState& Application::getControllerState()
+{
+    return controllerState;
+}
+
 void Application::processInput()
 {
     static ControllerState oldControllerState = {};
 
     // Input
-    static ControllerState controllerState = {};
     std::vector<RawTouchState> rawTouch;
     RawMouseState rawMouse;
 
@@ -404,6 +408,97 @@ void Application::processInput()
     }
 
     oldControllerState = controllerState;
+
+    // Trigger keyboard events
+    const bool ctrlPressed  = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_CONTROL) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_CONTROL);
+    const bool altPressed   = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_ALT) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_ALT);
+    const bool shiftPressed = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_SHIFT) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_SHIFT);
+    const bool metaPressed  = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_SUPER) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_SUPER);
+    for (size_t i = 0; i < watchedKeys.size(); i++)
+    {
+        auto& watchedKey    = watchedKeys[i];
+        auto& oldWatchedKey = oldWatchedKeys[i];
+
+        const BrlsKeyboardScancode scancode = watchedKey.getScancode();
+        if (scancode == BRLS_KBD_KEY_UNKNOWN)
+        {
+            continue;
+        }
+
+        watchedKey.pressed = inputManager->getKeyboardKeyState(scancode);
+        if (static_cast<bool>(watchedKey.getModifiers() & BRLS_KBD_MODIFIER_SHIFT) != shiftPressed ||
+            static_cast<bool>(watchedKey.getModifiers() & BRLS_KBD_MODIFIER_CTRL) != ctrlPressed ||
+            static_cast<bool>(watchedKey.getModifiers() & BRLS_KBD_MODIFIER_ALT) != altPressed ||
+            static_cast<bool>(watchedKey.getModifiers() & BRLS_KBD_MODIFIER_META) != metaPressed)
+        {
+            // If the key is pressed but the modifiers are not, unpressed it
+            watchedKey.pressed = false;
+        }
+
+        if (watchedKey.pressed)
+        {
+            repeating = watchedKey.repeatingStop > 0 && cpuTime > watchedKey.repeatingStop;
+
+            if (repeating)
+                watchedKey.repeatingStop = cpuTime + BUTTON_REPEAT_DELAY;
+
+            if (!oldWatchedKey.pressed)
+                watchedKey.repeatingStop = cpuTime + BUTTOM_REPEAT_TRIGGER;
+
+            if (!oldWatchedKey.pressed || repeating)
+                onKeyboardPressed(watchedKey.key, repeating);
+        }
+        else
+        {
+            watchedKey.repeatingStop = 0;
+        }
+
+        oldWatchedKeys[i] = watchedKeys[i];
+    }
+}
+
+void Application::addToWatchedKeys(const BrlsKeyCombination key)
+{
+    if (watchedKeysMap.count(key) == 0 || watchedKeysMap[key] <= 0)
+    {
+        watchedKeysMap[key] = 0;
+        watchedKeys.emplace_back(key);
+        oldWatchedKeys.emplace_back(key);
+    }
+    watchedKeysMap[key] = watchedKeysMap[key] + 1;
+}
+
+void Application::removeWatchedKeys(const BrlsKeyCombination key)
+{
+    if (watchedKeysMap.count(key) == 0 || watchedKeysMap[key] <= 0)
+    {
+        // Key is not watched, nothing to do
+        return;
+    }
+    watchedKeysMap[key] = watchedKeysMap[key] - 1;
+    if (watchedKeysMap[key] > 0)
+    {
+        // Key is still watched, nothing to do
+        return;
+    }
+
+    // Key is not watched anymore, remove it from the lists
+    for (auto it = watchedKeys.begin(); it != watchedKeys.end(); ++it)
+    {
+        if (it->key == key)
+        {
+            watchedKeys.erase(it);
+            break;
+        }
+    }
+    for (auto it = oldWatchedKeys.begin(); it != oldWatchedKeys.end(); ++it)
+    {
+        if (it->key == key)
+        {
+            oldWatchedKeys.erase(it);
+            break;
+        }
+    }
 }
 
 Platform* Application::getPlatform()
@@ -492,7 +587,7 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
 {
 
     // Actions
-    if (Application::handleAction(button, repeating))
+    if (Application::handleAction(ACTION_GAMEPAD, button, repeating))
         return;
 
     // Navigation
@@ -518,6 +613,11 @@ void Application::onControllerButtonPressed(enum ControllerButton button, bool r
 
     // Only play the error sound if no action applied
     Application::getAudioPlayer()->play(SOUND_CLICK_ERROR);
+}
+
+void Application::onKeyboardPressed(BrlsKeyCombination key, bool repeating)
+{
+    Application::handleAction(ACTION_KEYBOARD, key, repeating);
 }
 
 bool Application::setInputType(InputType type)
@@ -595,23 +695,17 @@ double Application::getDeactivatedFrameTime()
     return 1.0 / Application::deactivatedFPS;
 }
 
-bool Application::handleAction(char button, bool repeating)
+bool Application::handleAction(const ActionType type, const int button, const bool repeating)
 {
     // Dismiss if input type was changed
-    if (button == BUTTON_A && setInputType(InputType::GAMEPAD))
+    if (type == ACTION_GAMEPAD && button == BUTTON_A && setInputType(InputType::GAMEPAD))
         return false;
-
-    //    if (button == BUTTON_B && setInputType(InputType::GAMEPAD))
-    //    {
-    //        activitiesStack.back()->getContentView()->dismiss();
-    //        return true;
-    //    }
 
     if (Application::activitiesStack.empty())
         return false;
 
     View* hintParent = Application::currentFocus;
-    std::set<enum ControllerButton> consumedButtons;
+    std::set<int> consumedButtons;
 
     if (!hintParent)
         hintParent = Application::activitiesStack[Application::activitiesStack.size() - 1]->getContentView();
@@ -620,23 +714,26 @@ bool Application::handleAction(char button, bool repeating)
     {
         for (auto& action : hintParent->getActions())
         {
-            if (action.button != static_cast<enum ControllerButton>(button))
+            if (action->getType() != type)
                 continue;
 
-            if (consumedButtons.find(action.button) != consumedButtons.end())
+            if (action->getButton() != button)
                 continue;
 
-            if (action.available && (!repeating || action.allowRepeating))
+            if (consumedButtons.find(action->getButton()) != consumedButtons.end())
+                continue;
+
+            if (action->isAvailable() && (!repeating || action->isAllowRepeating()))
             {
-                if (action.actionListener(hintParent))
+                if (action->getActionListener()(hintParent))
                 {
                     setInputType(InputType::GAMEPAD);
-                    if (button == BUTTON_A)
+                    if (type == ACTION_GAMEPAD && button == BUTTON_A)
                         hintParent->playClickAnimation();
 
-                    Application::getAudioPlayer()->play(action.sound);
+                    getAudioPlayer()->play(action->getSound());
 
-                    consumedButtons.insert(action.button);
+                    consumedButtons.insert(action->getButton());
                 }
             }
         }

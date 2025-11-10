@@ -121,12 +121,14 @@ namespace brls
         ifr = (struct ifreq*)data;
         while ((char*)ifr < data + conf.ifc_len)
         {
-            if (ifr->ifr_addr.sa_family == AF_INET)
+            if (ifr->ifr_addr.sa_family == AF_INET && memcmp(ifr->ifr_name, "lo", 2) != 0)
             {
                 sock_addr          = (struct sockaddr_in*)&ifr->ifr_addr;
                 const char* result = inet_ntoa(sock_addr->sin_addr);
-                if (result)
-                    ipaddr = std::string { result };
+                if (result) {
+                    ipaddr = std::string{ result };
+                    break;
+                }
             }
             ifr = (struct ifreq*)((char*)ifr + sizeof(*ifr));
         }

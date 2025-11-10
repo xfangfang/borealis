@@ -48,7 +48,6 @@ class Slider : public Box
     static View* create();
 
   private:
-    InputManager* input;
     Rectangle* line;
     Rectangle* lineEmpty;
     Rectangle* pointer;

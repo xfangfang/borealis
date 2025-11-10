@@ -120,7 +120,6 @@ class ScrollingFrame : public Box
     float getContentHeight();
 
     ScrollingBehavior behavior = ScrollingBehavior::NATURAL;
-    InputManager* input;
     bool naturalScrollingCanScroll = false;
     void naturalScrollingBehaviour();
     void naturalScrollingButtonProcessing(FocusDirection focusDirection, bool* repeat);

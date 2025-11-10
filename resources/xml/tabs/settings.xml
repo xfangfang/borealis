@@ -47,6 +47,9 @@
                 id="debug"/>
 
             <brls:BooleanCell
+                id="screenSaver"/>
+
+            <brls:BooleanCell
                 id="bottomBar"/>
 
             <brls:BooleanCell
