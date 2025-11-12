@@ -252,6 +252,17 @@ class View
     FocusDirection highlightShakeDirection;
     float highlightShakeAmplitude;
 
+    // Smooth focus highlight transition state (shared across views)
+    static bool sHighlightTransitionEnabled;
+    static bool sHighlightInitialized;
+    static Animatable sHighlightProgress; // 0..1 progress from prevRect -> targetRect
+    static float sPrevHX, sPrevHY, sPrevHW, sPrevHH; // previous highlight rect
+    static float sTargetHX, sTargetHY, sTargetHW, sTargetHH; // target highlight rect
+    static View* sLastFocusView;
+    // Smooth corner radius transition for highlight
+    static float sPrevHCR;   // previous highlight corner radius
+    static float sTargetHCR; // target highlight corner radius
+
     bool fadeIn          = false; // is the fade in animation running?
     bool inFadeAnimation = false; // is any fade animation running?
 
@@ -1554,6 +1565,11 @@ class View
 
     Activity* getParentActivity();
     void setParentActivity(Activity* activity);
+
+    /**
+     * Enable or disable smooth focus highlight transition.
+     */
+    static inline void enableHighlightTransition(bool enabled) { sHighlightTransitionEnabled = enabled; }
 };
 
 } // namespace brls
