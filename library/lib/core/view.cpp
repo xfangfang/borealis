@@ -652,10 +652,18 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
     }
     else
     {
+        float finalAlpha = alpha;
+        if (sHighlightTransitionEnabled && sHighlightProgress.getValue() < 1.0f)
+        {
+            finalAlpha = 1.0f;
+        }
+
 #ifdef SIMPLE_HIGHLIGHT
         // Border
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, a(theme["brls/highlight/color1"]));
+        NVGcolor highlightColor = theme["brls/highlight/color1"];
+        highlightColor.a *= finalAlpha * this->getAlpha();
+        nvgStrokeColor(vg, highlightColor);
         nvgStrokeWidth(vg, style["brls/highlight/stroke_width"]);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
@@ -667,7 +675,7 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
             x, y + style["brls/highlight/shadow_width"],
             width, height,
             cornerRadius * 2, style["brls/highlight/shadow_feather"],
-            RGBA(0, 0, 0, style["brls/highlight/shadow_opacity"] * alpha), TRANSPARENT);
+            RGBA(0, 0, 0, style["brls/highlight/shadow_opacity"] * finalAlpha), TRANSPARENT);
 
         nvgBeginPath(vg);
         nvgRect(vg, x - shadowOffset, y - shadowOffset,
@@ -686,10 +694,10 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
         NVGcolor pulsationColor = RGBAf((color * highlightColor1.r) + (1 - color) * highlightColor1.r,
             (color * highlightColor1.g) + (1 - color) * highlightColor1.g,
             (color * highlightColor1.b) + (1 - color) * highlightColor1.b,
-            alpha);
+            finalAlpha);
 
         NVGcolor borderColor = theme["brls/highlight/color2"];
-        borderColor.a        = 0.5f * alpha * this->getAlpha();
+        borderColor.a        = 0.5f * finalAlpha * this->getAlpha();
 
         float strokeWidthInner = style["brls/highlight/stroke_width"];
 
