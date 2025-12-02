@@ -78,6 +78,17 @@ community contributors. If the version is out of date, please [create an
 issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg
 repository. -->
 
+### Conan
+
+You can download and install {fmt} using the [Conan](https://conan.io/) package manager:
+
+    conan install -r conancenter --requires="fmt/[*]" --build=missing
+
+<!-- The {fmt} package in Conan Center is maintained by
+[ConanCenterIndex](https://github.com/conan-io/conan-center-index) community.
+If the version is out of date or the package does not work,
+please create an issue or pull request on the Conan Center Index repository. -->
+
 ## Building from Source
 
 CMake works by generating native makefiles or project files that can be
@@ -202,7 +213,7 @@ For a static build, use the following subproject definition:
 
 For the header-only version, use:
 
-    fmt = subproject('fmt')
+    fmt = subproject('fmt', default_options: ['header-only=true'])
     fmt_dep = fmt.get_variable('fmt_header_only_dep')
 
 ### Android NDK

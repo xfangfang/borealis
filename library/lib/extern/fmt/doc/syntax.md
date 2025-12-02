@@ -251,7 +251,7 @@ The available integer presentation types are:
   <td><code>'b'</code></td>
   <td>
     Binary format. Outputs the number in base 2. Using the <code>'#'</code>
-    option with this type adds the prefix <code>"0b"</code> to the output value.    
+    option with this type adds the prefix <code>"0b"</code> to the output value.
   </td>
 </tr>
 <tr>
@@ -589,8 +589,7 @@ The available presentation types (*chrono_type*) are:
     represented with seconds, then the format is a decimal floating-point number
     with a fixed format and a precision matching that of the precision of the
     input (or to a microseconds precision if the conversion to floating-point
-    decimal seconds cannot be made within 18 fractional digits). The character
-    for the decimal point is localized according to the locale. The modified
+    decimal seconds cannot be made within 18 fractional digits). The modified
     command <code>%OS</code> produces the locale's alternative representation.
   </td>
 </tr>
@@ -707,19 +706,19 @@ The available padding modifiers (*padding_modifier*) are:
 
 | Type  | Meaning                                 |
 |-------|-----------------------------------------|
-| `'-'` | Pad a numeric result with spaces.       |
-| `'_'` | Do not pad a numeric result string.     |
+| `'_'` | Pad a numeric result with spaces.       |
+| `'-'` | Do not pad a numeric result string.     |
 | `'0'` | Pad a numeric result string with zeros. |
 
 These modifiers are only supported for the `'H'`, `'I'`, `'M'`, `'S'`, `'U'`,
-`'V'` and `'W'` presentation types.
+`'V'`, `'W'`, `'Y'`, `'d'`, `'j'` and `'m'` presentation types.
 
 ## Range Format Specifications
 
 Format specifications for range types have the following syntax:
 
 <pre><code class="language-json"
->range_format_spec ::= ["n"][range_type][range_underlying_spec]</code>
+>range_format_spec ::= ["n"][range_type][":" range_underlying_spec]</code>
 </pre>
 
 The `'n'` option formats the range without the opening and closing brackets.
@@ -762,14 +761,16 @@ fmt::print("{::}", std::vector{'h', 'e', 'l', 'l', 'o'});
 // Output: [h, e, l, l, o]
 fmt::print("{::d}", std::vector{'h', 'e', 'l', 'l', 'o'});
 // Output: [104, 101, 108, 108, 111]
+fmt::print("{:n:f}", std::array{std::numbers::pi, std::numbers::e});
+// Output: 3.141593, 2.718282
 ```
 
 ## Format Examples
 
 This section contains examples of the format syntax and comparison with
-the printf formatting.
+the `printf` formatting.
 
-In most of the cases the syntax is similar to the printf formatting,
+In most of the cases the syntax is similar to the `printf` formatting,
 with the addition of the `{}` and with `:` used instead of `%`. For
 example, `"%03.2f"` can be translated to `"{:03.2f}"`.
 
