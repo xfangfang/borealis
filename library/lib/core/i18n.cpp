@@ -161,7 +161,7 @@ namespace internal
 
 inline namespace literals
 {
-    std::string operator"" _i18n(const char* str, size_t len)
+    std::string operator""_i18n(const char* str, size_t len)
     {
         return internal::getRawStr(std::string(str, len));
     }
