@@ -60,12 +60,6 @@ if (PLATFORM_DESKTOP)
         list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/demo/borealis.icns)
     endif ()
 elseif (PLATFORM_SWITCH)
-    set(APP_PLATFORM_LIB
-        # needed by borealis
-        glfw3 EGL glapi drm_nouveau
-        # base lib
-        nx m
-    )
     list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/lib/platforms/switch/switch_wrapper.c)
 elseif (PLATFORM_PS4)
     # Show backtrace when app crash

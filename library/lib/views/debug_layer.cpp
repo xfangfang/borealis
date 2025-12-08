@@ -54,7 +54,8 @@ DebugLayer::DebugLayer()
                 sceRtcGetCurrentClockLocalTime(&lt);
             std::string timeBase = fmt::format("{:02d}:{:02d}:{:02d}.{:03d}", lt.hour, lt.minute, lt.second, (int)ms);
 #else
-            std::tm time_tm = fmt::localtime(std::chrono::system_clock::to_time_t(now));
+            std::time_t tt = std::chrono::system_clock::to_time_t(now);
+            std::tm time_tm = *std::localtime(&tt);
             std::string timeBase = fmt::format("{:%H:%M:%S}.{:03d}", time_tm, (int)ms);
 #endif
 

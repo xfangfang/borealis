@@ -64,7 +64,7 @@ TEST(args_test, custom_format) {
 }
 
 struct to_stringable {
-  friend fmt::string_view to_string_view(to_stringable) { return {}; }
+  friend auto to_string_view(to_stringable) -> fmt::string_view { return {}; }
 };
 
 FMT_BEGIN_NAMESPACE
@@ -185,4 +185,18 @@ TEST(args_test, move_constructor) {
   auto moved_store = std::move(*store);
   store.reset();
   EXPECT_EQ(fmt::vformat("{} {} {a1}", moved_store), "42 foo foo");
+}
+
+TEST(args_test, size) {
+  fmt::dynamic_format_arg_store<fmt::format_context> store;
+  EXPECT_EQ(store.size(), 0);
+
+  store.push_back(42);
+  EXPECT_EQ(store.size(), 1);
+
+  store.push_back("Molybdenum");
+  EXPECT_EQ(store.size(), 2);
+
+  store.clear();
+  EXPECT_EQ(store.size(), 0);
 }

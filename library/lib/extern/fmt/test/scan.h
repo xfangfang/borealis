@@ -211,7 +211,7 @@ class scan_parse_context {
  public:
   using iterator = string_view::iterator;
 
-  explicit FMT_CONSTEXPR scan_parse_context(string_view format)
+  FMT_CONSTEXPR explicit scan_parse_context(string_view format)
       : format_(format) {}
 
   FMT_CONSTEXPR auto begin() const -> iterator { return format_.begin(); }
@@ -229,6 +229,8 @@ enum class scan_type {
   uint_type,
   long_long_type,
   ulong_long_type,
+  double_type,
+  float_type,
   string_type,
   string_view_type,
   custom_type
@@ -251,6 +253,8 @@ template <typename Context> class basic_scan_arg {
     unsigned* uint_value_;
     long long* long_long_value_;
     unsigned long long* ulong_long_value_;
+    double* double_value_;
+    float* float_value_;
     std::string* string_;
     string_view* string_view_;
     detail::custom_scan_arg<Context> custom_;
@@ -276,6 +280,10 @@ template <typename Context> class basic_scan_arg {
       : type_(scan_type::long_long_type), long_long_value_(&value) {}
   FMT_CONSTEXPR basic_scan_arg(unsigned long long& value)
       : type_(scan_type::ulong_long_type), ulong_long_value_(&value) {}
+  FMT_CONSTEXPR basic_scan_arg(double& value)
+      : type_(scan_type::double_type), double_value_(&value) {}
+  FMT_CONSTEXPR basic_scan_arg(float& value)
+      : type_(scan_type::float_type), float_value_(&value) {}
   FMT_CONSTEXPR basic_scan_arg(std::string& value)
       : type_(scan_type::string_type), string_(&value) {}
   FMT_CONSTEXPR basic_scan_arg(string_view& value)
@@ -305,6 +313,10 @@ template <typename Context> class basic_scan_arg {
       return vis(*long_long_value_);
     case scan_type::ulong_long_type:
       return vis(*ulong_long_value_);
+    case scan_type::double_type:
+      return vis(*double_value_);
+    case scan_type::float_type:
+      return vis(*float_value_);
     case scan_type::string_type:
       return vis(*string_);
     case scan_type::string_view_type:
@@ -347,7 +359,7 @@ class scan_context {
   using iterator = detail::scan_iterator;
   using sentinel = detail::scan_sentinel;
 
-  explicit FMT_CONSTEXPR scan_context(detail::scan_buffer& buf, scan_args args)
+  FMT_CONSTEXPR explicit scan_context(detail::scan_buffer& buf, scan_args args)
       : buf_(buf), args_(args) {}
 
   FMT_CONSTEXPR auto arg(int id) const -> scan_arg {
@@ -368,7 +380,7 @@ const char* parse_scan_specs(const char* begin, const char* end,
     switch (to_ascii(*begin)) {
     // TODO: parse more scan format specifiers
     case 'x':
-      specs.type = presentation_type::hex;
+      specs.set_type(presentation_type::hex);
       ++begin;
       break;
     case '}':
@@ -437,7 +449,7 @@ auto read_hex(scan_iterator it, T& value) -> scan_iterator {
 template <typename T, FMT_ENABLE_IF(std::is_unsigned<T>::value)>
 auto read(scan_iterator it, T& value, const format_specs& specs)
     -> scan_iterator {
-  if (specs.type == presentation_type::hex) return read_hex(it, value);
+  if (specs.type() == presentation_type::hex) return read_hex(it, value);
   return read(it, value);
 }
 
@@ -454,6 +466,47 @@ auto read(scan_iterator it, T& value, const format_specs& specs = {})
   it = read(it, abs_value, specs);
   auto n = static_cast<T>(abs_value);
   value = negative ? -n : n;
+  return it;
+}
+
+auto read(scan_iterator it, double& value, const format_specs& = {})
+    -> scan_iterator {
+  if (it == scan_sentinel()) return it;
+  
+  // Simple floating-point parsing
+  bool negative = *it == '-';
+  if (negative) {
+    ++it;
+    if (it == scan_sentinel()) report_error("invalid input");
+  }
+  
+  double result = 0.0;
+  // Parse integer part
+  while (it != scan_sentinel() && *it >= '0' && *it <= '9') {
+    result = result * 10.0 + (*it - '0');
+    ++it;
+  }
+  
+  // Parse decimal part if present
+  if (it != scan_sentinel() && *it == '.') {
+    ++it;
+    double fraction = 0.1;
+    while (it != scan_sentinel() && *it >= '0' && *it <= '9') {
+      result += (*it - '0') * fraction;
+      fraction *= 0.1;
+      ++it;
+    }
+  }
+  
+  value = negative ? -result : result;
+  return it;
+}
+
+auto read(scan_iterator it, float& value, const format_specs& specs = {})
+    -> scan_iterator {
+  double temp;
+  it = read(it, temp, specs);
+  value = static_cast<float>(temp);
   return it;
 }
 
@@ -558,7 +611,7 @@ struct scan_handler {
 
 void vscan(detail::scan_buffer& buf, string_view fmt, scan_args args) {
   auto h = detail::scan_handler(fmt, buf, args);
-  detail::parse_format_string<false>(fmt, h);
+  detail::parse_format_string(fmt, h);
 }
 
 template <size_t I, typename... T, FMT_ENABLE_IF(I == sizeof...(T))>

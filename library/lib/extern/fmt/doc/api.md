@@ -79,6 +79,8 @@ time formatting and [`fmt/std.h`](#std-api) for other standard library types.
 
 There are two ways to make a user-defined type formattable: providing a
 `format_as` function or specializing the `formatter` struct template.
+Formatting of non-void pointer types is intentionally disallowed and they
+cannot be made formattable via either extension API.
 
 Use `format_as` if you want to make your type formattable as some other
 type with the same format specifiers. The `format_as` function should
@@ -220,7 +222,7 @@ You can also write a formatter for a hierarchy of classes:
 ```c++
 // demo.h:
 #include <type_traits>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 struct A {
   virtual ~A() {}
@@ -269,17 +271,15 @@ that support C++20 `consteval`. On older compilers you can use the
 
 Unused arguments are allowed as in Python's `str.format` and ordinary functions.
 
-::: basic_format_string
+See [Type Erasure](#type-erasure) for an example of how to enable compile-time
+checks in your own functions with `fmt::format_string` while avoiding template
+bloat.
+
+::: fstring
 
 ::: format_string
 
 ::: runtime(string_view)
-
-### Named Arguments
-
-::: arg(const Char*, const T&)
-
-Named arguments are not supported in compile-time checks at the moment.
 
 ### Type Erasure
 
@@ -316,6 +316,12 @@ parameterized version.
 ::: format_args
 
 ::: basic_format_arg
+
+### Named Arguments
+
+::: arg(const Char*, const T&)
+
+Named arguments are not supported in compile-time checks at the moment.
 
 ### Compatibility
 
@@ -375,18 +381,17 @@ allocator:
     using custom_string =
       std::basic_string<char, std::char_traits<char>, custom_allocator>;
 
-    custom_string vformat(custom_allocator alloc, fmt::string_view format_str,
-                          fmt::format_args args) {
+    auto vformat(custom_allocator alloc, fmt::string_view fmt,
+                 fmt::format_args args) -> custom_string {
       auto buf = custom_memory_buffer(alloc);
-      fmt::vformat_to(std::back_inserter(buf), format_str, args);
+      fmt::vformat_to(std::back_inserter(buf), fmt, args);
       return custom_string(buf.data(), buf.size(), alloc);
     }
 
     template <typename ...Args>
-    inline custom_string format(custom_allocator alloc,
-                                fmt::string_view format_str,
-                                const Args& ... args) {
-      return vformat(alloc, format_str, fmt::make_format_args(args...));
+    auto format(custom_allocator alloc, fmt::string_view fmt,
+                const Args& ... args) -> custom_string {
+      return vformat(alloc, fmt, fmt::make_format_args(args...));
     }
 
 The allocator will be used for the output container only. Formatting
@@ -400,7 +405,7 @@ All formatting is locale-independent by default. Use the `'L'` format
 specifier to insert the appropriate number separator characters from the
 locale:
 
-    #include <fmt/core.h>
+    #include <fmt/format.h>
     #include <locale>
 
     std::locale::global(std::locale("en_US.UTF-8"));
@@ -410,11 +415,11 @@ locale:
 that take `std::locale` as a parameter. The locale type is a template
 parameter to avoid the expensive `<locale>` include.
 
-::: format(const Locale&, format_string<T...>, T&&...)
+::: format(locale_ref, format_string<T...>, T&&...)
 
-::: format_to(OutputIt, const Locale&, format_string<T...>, T&&...)
+::: format_to(OutputIt, locale_ref, format_string<T...>, T&&...)
 
-::: formatted_size(const Locale&, format_string<T...>, T&&...)
+::: formatted_size(locale_ref, format_string<T...>, T&&...)
 
 <a id="legacy-checks"></a>
 ### Legacy Compile-Time Checks
@@ -470,9 +475,9 @@ chrono-format-specifications).
     #include <fmt/chrono.h>
 
     int main() {
-      std::time_t t = std::time(nullptr);
+      auto now = std::chrono::system_clock::now();
 
-      fmt::print("The date is {:%Y-%m-%d}.", fmt::localtime(t));
+      fmt::print("The date is {:%Y-%m-%d}.\n", now);
       // Output: The date is 2020-11-07.
       // (with 2020-11-07 replaced by the current date)
 
@@ -485,8 +490,6 @@ chrono-format-specifications).
       // Output: strftime-like format: 03:15:30
     }
 
-::: localtime(std::time_t)
-
 ::: gmtime(std::time_t)
 
 <a id="std-api"></a>
@@ -498,10 +501,13 @@ chrono-format-specifications).
 - [`std::atomic_flag`](https://en.cppreference.com/w/cpp/atomic/atomic_flag)
 - [`std::bitset`](https://en.cppreference.com/w/cpp/utility/bitset)
 - [`std::error_code`](https://en.cppreference.com/w/cpp/error/error_code)
+- [`std::exception`](https://en.cppreference.com/w/cpp/error/exception)
 - [`std::filesystem::path`](https://en.cppreference.com/w/cpp/filesystem/path)
-- [`std::monostate`](https://en.cppreference.com/w/cpp/utility/variant/monostate)
+- [`std::monostate`](
+  https://en.cppreference.com/w/cpp/utility/variant/monostate)
 - [`std::optional`](https://en.cppreference.com/w/cpp/utility/optional)
-- [`std::source_location`](https://en.cppreference.com/w/cpp/utility/source_location)
+- [`std::source_location`](
+  https://en.cppreference.com/w/cpp/utility/source_location)
 - [`std::thread::id`](https://en.cppreference.com/w/cpp/thread/thread/id)
 - [`std::variant`](https://en.cppreference.com/w/cpp/utility/variant/variant)
 
@@ -509,7 +515,7 @@ chrono-format-specifications).
 
 ::: ptr(const std::shared_ptr<T>&)
 
-### Formatting Variants
+### Variants
 
 A `std::variant` is only formattable if every variant alternative is
 formattable, and requires the `__cpp_lib_variant` [library
@@ -525,39 +531,87 @@ feature](https://en.cppreference.com/w/cpp/feature_test).
     fmt::print("{}", std::variant<std::monostate, char>());
     // Output: variant(monostate)
 
-<a id="compile-api"></a>
-## Format String Compilation
+## Bit-Fields and Packed Structs
 
-`fmt/compile.h` provides format string compilation enabled via the
-`FMT_COMPILE` macro or the `_cf` user-defined literal defined in
-namespace `fmt::literals`. Format strings marked with `FMT_COMPILE`
-or `_cf` are parsed, checked and converted into efficient formatting
-code at compile-time. This supports arguments of built-in and string
-types as well as user-defined types with `format` functions taking
+To format a bit-field or a field of a struct with `__attribute__((packed))`
+applied to it, you need to convert it to the underlying or compatible type via
+a cast or a unary `+` ([godbolt](https://www.godbolt.org/z/3qKKs6T5Y)):
+
+```c++
+struct smol {
+  int bit : 1;
+};
+
+auto s = smol();
+fmt::print("{}", +s.bit);
+```
+
+This is a known limitation of "perfect" forwarding in C++.
+
+<a id="compile-api"></a>
+## Compile-Time Support
+
+`fmt/compile.h` provides format string compilation and compile-time
+(`constexpr`) formatting enabled via the `FMT_COMPILE` macro or the `_cf`
+user-defined literal defined in namespace `fmt::literals`. Format strings
+marked with `FMT_COMPILE` or `_cf` are parsed, checked and converted into
+efficient formatting code at compile-time. This supports arguments of built-in
+and string types as well as user-defined types with `format` methods taking
 the format context type as a template parameter in their `formatter`
-specializations. For example:
+specializations. For example ([run](https://www.godbolt.org/z/3c13erEoq)):
+
+    struct point {
+      double x;
+      double y;
+    };
 
     template <> struct fmt::formatter<point> {
-      constexpr auto parse(format_parse_context& ctx);
+      constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
 
       template <typename FormatContext>
-      auto format(const point& p, FormatContext& ctx) const;
+      auto format(const point& p, FormatContext& ctx) const {
+        return format_to(ctx.out(), "({}, {})"_cf, p.x, p.y);
+      }
     };
+
+    using namespace fmt::literals;
+    std::string s = fmt::format("{}"_cf, point(4, 2));
 
 Format string compilation can generate more binary code compared to the
 default API and is only recommended in places where formatting is a
 performance bottleneck.
 
-::: FMT_COMPILE
+The same APIs support formatting at compile time e.g. in `constexpr`
+and `consteval` functions. Additionally there is an experimental
+`FMT_STATIC_FORMAT` that allows formatting into a string of the exact
+required size at compile time. Compile-time formatting works with built-in
+and user-defined formatters that have `constexpr` `format` methods.
+Example:
+
+    template <> struct fmt::formatter<point> {
+      constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+
+      template <typename FormatContext>
+      constexpr auto format(const point& p, FormatContext& ctx) const {
+        return format_to(ctx.out(), "({}, {})"_cf, p.x, p.y);
+      }
+    };
+
+    constexpr auto s = FMT_STATIC_FORMAT("{}", point(4, 2));
+    const char* cstr = s.c_str(); // Points the static string "(4, 2)".
 
 ::: operator""_cf
+
+::: FMT_COMPILE
+
+::: FMT_STATIC_FORMAT
 
 <a id="color-api"></a>
 ## Terminal Colors and Text Styles
 
 `fmt/color.h` provides support for terminal color and text style output.
 
-::: print(const text_style&, format_string<T...>, T&&...)
+::: print(text_style, format_string<T...>, T&&...)
 
 ::: fg(detail::color_type)
 
@@ -620,17 +674,15 @@ if an argument type doesn't match its format specification.
 
 ::: printf(string_view, const T&...)
 
-::: fprintf(std::FILE*, const S&, const T&...)
+::: fprintf(std::FILE*, string_view, const T&...)
 
-::: sprintf(const S&, const T&...)
+::: sprintf(string_view, const T&...)
 
 <a id="xchar-api"></a>
 ## Wide Strings
 
 The optional header `fmt/xchar.h` provides support for `wchar_t` and
 exotic character types.
-
-::: is_char
 
 ::: wstring_view
 
@@ -646,5 +698,63 @@ following differences:
 
 - Names are defined in the `fmt` namespace instead of `std` to avoid
   collisions with standard library implementations.
+
 - Width calculation doesn't use grapheme clusterization. The latter has
   been implemented in a separate branch but hasn't been integrated yet.
+
+- The default floating-point representation in {fmt} uses the smallest
+  precision that provides round-trip guarantees similarly to other languages
+  like Java and Python. `std::format` is currently specified in terms of
+  `std::to_chars` which tries to generate the smallest number of characters
+  (ignoring redundant digits and sign in exponent) and may procude more
+  decimal digits than necessary.
+
+## Configuration Options
+
+{fmt} provides configuration via CMake options and preprocessor macros to
+enable or disable features and to optimize for binary size. For example, you
+can disable OS-specific APIs defined in `fmt/os.h` with `-DFMT_OS=OFF` when
+configuring CMake.
+
+### CMake Options
+
+- **`FMT_OS`**: When set to `OFF`, disables OS-specific APIs (`fmt/os.h`).
+- **`FMT_UNICODE`**: When set of `OFF`, disables Unicode support on
+  Windows/MSVC. Unicode support is always enabled on other platforms.
+
+### Macros
+
+- **`FMT_HEADER_ONLY`**: Enables the header-only mode when defined. It is an
+  alternative to using the `fmt::fmt-header-only` CMake target.
+  Default: not defined.
+
+- **`FMT_USE_EXCEPTIONS`**: Disables the use of exceptions when set to `0`.
+  Default: `1` (`0` if compiled with `-fno-exceptions`).
+
+- **`FMT_USE_LOCALE`**: When set to `0`, disables locale support.
+  Default: `1` (`0` when `FMT_OPTIMIZE_SIZE > 1`).
+
+- **`FMT_CUSTOM_ASSERT_FAIL`**: When set to `1`, allows users to provide a
+  custom `fmt::assert_fail` function which is called on assertion failures and,
+  if exceptions are disabled, on runtime errors. Default: `0`.
+
+- **`FMT_BUILTIN_TYPES`**: When set to `0`, disables built-in handling of
+  arithmetic and string types other than `int`. This reduces library size at
+  the cost of per-call overhead. Default: `1`.
+
+- **`FMT_OPTIMIZE_SIZE`**: Controls binary size optimizations:
+    - `0` - off (default)
+    - `1` - disables locale support and applies some optimizations
+    - `2` - disables some Unicode features, named arguments and applies more
+      aggresive optimizations
+
+### Binary Size Optimization
+
+To minimize the binary footprint of {fmt} as much as possible at the cost of
+some features, you can use the following configuration:
+
+- CMake options:
+    - `FMT_OS=OFF`
+- Macros:
+    - `FMT_BUILTIN_TYPES=0`
+    - `FMT_OPTIMIZE_SIZE=2`

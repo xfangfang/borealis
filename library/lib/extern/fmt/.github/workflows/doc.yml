@@ -7,11 +7,10 @@ permissions:
 
 jobs:
   build:
-    # Use Ubuntu 20.04 because doxygen 1.8.13 from Ubuntu 18.04 is broken.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
     - name: Add Ubuntu mirrors
       run: |
@@ -25,7 +24,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install doxygen
-        pip install mkdocs-material==9.5.25 mkdocstrings==0.25.1 mike==2.1.1
+        pip install mkdocs-material==9.5.25 mkdocstrings==0.26.1 mike==2.1.1
         cmake -E make_directory ${{runner.workspace}}/build
         # Workaround https://github.com/actions/checkout/issues/13:
         git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
