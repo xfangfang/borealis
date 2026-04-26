@@ -173,6 +173,13 @@ void GLFWInputManager::cursorCallback(GLFWwindow* window, double x, double y)
         self->getMouseCusorOffsetChanged()->fire(localPointerOffset);
         glfwSetCursorPos(self->window, hWidth, hHeight);
     }
+    else
+    {
+        self->pointerOffsetBuffer.x += (x - self->lastMousePoint.x);
+        self->pointerOffsetBuffer.y += (y - self->lastMousePoint.y); 
+        self->lastMousePoint.x = x;
+        self->lastMousePoint.y = y;
+    }
 }
 
 GLFWInputManager::GLFWInputManager(GLFWwindow* window)

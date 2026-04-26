@@ -618,6 +618,8 @@ void SDLInputManager::updateMouseMotion(SDL_MouseMotionEvent event)
         SDL_GetWindowSize(window, &width, &height);
         SDL_WarpMouseInWindow(window, width / 2, height / 2);
     }
+    pointerOffsetBuffer.x += static_cast<float>(event.xrel);
+    pointerOffsetBuffer.y += static_cast<float>(event.yrel);
 }
 
 void SDLInputManager::updateMouseWheel(SDL_MouseWheelEvent event)
