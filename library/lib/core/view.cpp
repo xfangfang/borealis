@@ -46,6 +46,16 @@ using namespace brls::literals;
 namespace brls
 {
 
+// Static members initialization
+bool View::sHighlightTransitionEnabled = true;
+bool View::sHighlightInitialized = false;
+Animatable View::sHighlightProgress = 1.0f;
+float View::sPrevHX = 0.0f, View::sPrevHY = 0.0f, View::sPrevHW = 0.0f, View::sPrevHH = 0.0f;
+float View::sTargetHX = 0.0f, View::sTargetHY = 0.0f, View::sTargetHW = 0.0f, View::sTargetHH = 0.0f;
+View* View::sLastFocusView = nullptr;
+float View::sPrevHCR = 0.0f;
+float View::sTargetHCR = 0.0f;
+
 void AppletFrameItem::setHintView(View* hintView)
 {
     this->hintView = hintView;
@@ -535,20 +545,67 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
     if (Application::getInputType() == InputType::TOUCH)
         return;
 
-    nvgSave(vg);
-    nvgResetScissor(vg);
+    // For background, keep current scissor; for border overlay, we'll reset scissor below
+    if (!background)
+    {
+        nvgSave(vg);
+        nvgResetScissor(vg);
+    }
+    else
+    {
+        nvgSave(vg);
+        // keep existing scissor to avoid bleeding over siblings/parents
+    }
 
     float padding      = this->highlightPadding;
     float cornerRadius = this->highlightCornerRadius;
     float strokeWidth  = style["brls/highlight/stroke_width"];
 
-    float x      = this->getX() - padding - strokeWidth / 2;
-    float y      = this->getY() - padding - strokeWidth / 2;
-    float width  = this->getWidth() + padding * 2 + strokeWidth;
-    float height = this->getHeight() + padding * 2 + strokeWidth;
+    // Compute current target rect from this view (will follow scrolling/layout changes)
+    float targetX = this->getX() - padding - strokeWidth / 2;
+    float targetY = this->getY() - padding - strokeWidth / 2;
+    float targetW = this->getWidth() + padding * 2 + strokeWidth;
+    float targetH = this->getHeight() + padding * 2 + strokeWidth;
 
-    // Shake animation
-    if (this->highlightShaking)
+    // Animated rect defaults to target; may be interpolated below
+    float animX = targetX, animY = targetY, animW = targetW, animH = targetH;
+    float animCR = cornerRadius;
+
+    if (sHighlightTransitionEnabled)
+    {
+        // Keep target updated every frame to follow scrolling of the focused view
+        if (View::sLastFocusView == this)
+        {
+            View::sTargetHX = targetX;
+            View::sTargetHY = targetY;
+            View::sTargetHW = targetW;
+            View::sTargetHH = targetH;
+            View::sTargetHCR = cornerRadius;
+        }
+
+        // If not initialized, snap
+        if (!sHighlightInitialized)
+        {
+            sPrevHX = targetX; sPrevHY = targetY; sPrevHW = targetW; sPrevHH = targetH;
+            sTargetHX = targetX; sTargetHY = targetY; sTargetHW = targetW; sTargetHH = targetH;
+            sPrevHCR = cornerRadius; sTargetHCR = cornerRadius;
+            sHighlightProgress = 1.0f;
+            sHighlightInitialized = true;
+        }
+
+        float t = std::clamp(sHighlightProgress.getValue(), 0.0f, 1.0f);
+        animX = sPrevHX + (sTargetHX - sPrevHX) * t;
+        animY = sPrevHY + (sTargetHY - sPrevHY) * t;
+        animW = sPrevHW + (sTargetHW - sPrevHW) * t;
+        animH = sPrevHH + (sTargetHH - sPrevHH) * t;
+        animCR = sPrevHCR + (sTargetHCR - sPrevHCR) * t;
+    }
+
+    float x = animX, y = animY, width = animW, height = animH;
+    cornerRadius = animCR;
+
+    // Shake animation remains the same (apply only to border to avoid background shaking)
+    if (!background && this->highlightShaking)
     {
         Time curTime = getCPUTimeUsec() / 1000;
         Time t       = (curTime - highlightShakeStart) / 10;
@@ -580,7 +637,13 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
     // Draw
     if (background)
     {
-        // Background
+        // Background: intersect with view frame so it only renders inside the focused view content
+        float viewX = this->getX();
+        float viewY = this->getY();
+        float viewW = this->getWidth();
+        float viewH = this->getHeight();
+        nvgIntersectScissor(vg, viewX, viewY, viewW, viewH);
+
         NVGcolor highlightBackgroundColor = theme["brls/highlight/background"];
         nvgFillColor(vg, RGBAf(highlightBackgroundColor.r, highlightBackgroundColor.g, highlightBackgroundColor.b, this->highlightAlpha));
         nvgBeginPath(vg);
@@ -589,10 +652,18 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
     }
     else
     {
+        float finalAlpha = alpha;
+        if (sHighlightTransitionEnabled && sHighlightProgress.getValue() < 1.0f)
+        {
+            finalAlpha = 1.0f;
+        }
+
 #ifdef SIMPLE_HIGHLIGHT
         // Border
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, a(theme["brls/highlight/color1"]));
+        NVGcolor highlightColor = theme["brls/highlight/color1"];
+        highlightColor.a *= finalAlpha * this->getAlpha();
+        nvgStrokeColor(vg, highlightColor);
         nvgStrokeWidth(vg, style["brls/highlight/stroke_width"]);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
@@ -604,7 +675,7 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
             x, y + style["brls/highlight/shadow_width"],
             width, height,
             cornerRadius * 2, style["brls/highlight/shadow_feather"],
-            RGBA(0, 0, 0, style["brls/highlight/shadow_opacity"] * alpha), TRANSPARENT);
+            RGBA(0, 0, 0, style["brls/highlight/shadow_opacity"] * finalAlpha), TRANSPARENT);
 
         nvgBeginPath(vg);
         nvgRect(vg, x - shadowOffset, y - shadowOffset,
@@ -623,38 +694,38 @@ void View::drawHighlight(NVGcontext* vg, Theme theme, float alpha, Style style, 
         NVGcolor pulsationColor = RGBAf((color * highlightColor1.r) + (1 - color) * highlightColor1.r,
             (color * highlightColor1.g) + (1 - color) * highlightColor1.g,
             (color * highlightColor1.b) + (1 - color) * highlightColor1.b,
-            alpha);
+            finalAlpha);
 
         NVGcolor borderColor = theme["brls/highlight/color2"];
-        borderColor.a        = 0.5f * alpha * this->getAlpha();
+        borderColor.a        = 0.5f * finalAlpha * this->getAlpha();
 
-        float strokeWidth = style["brls/highlight/stroke_width"];
+        float strokeWidthInner = style["brls/highlight/stroke_width"];
 
         NVGpaint border1Paint = nvgRadialGradient(vg,
             x + gradientX * width, y + gradientY * height,
-            strokeWidth * 10, strokeWidth * 40,
+            strokeWidthInner * 10, strokeWidthInner * 40,
             borderColor, TRANSPARENT);
 
         NVGpaint border2Paint = nvgRadialGradient(vg,
             x + (1 - gradientX) * width, y + (1 - gradientY) * height,
-            strokeWidth * 10, strokeWidth * 40,
+            strokeWidthInner * 10, strokeWidthInner * 40,
             borderColor, TRANSPARENT);
 
         nvgBeginPath(vg);
         nvgStrokeColor(vg, pulsationColor);
-        nvgStrokeWidth(vg, strokeWidth);
+        nvgStrokeWidth(vg, strokeWidthInner);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
 
         nvgBeginPath(vg);
         nvgStrokePaint(vg, border1Paint);
-        nvgStrokeWidth(vg, strokeWidth);
+        nvgStrokeWidth(vg, strokeWidthInner);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
 
         nvgBeginPath(vg);
         nvgStrokePaint(vg, border2Paint);
-        nvgStrokeWidth(vg, strokeWidth);
+        nvgStrokeWidth(vg, strokeWidthInner);
         nvgRoundedRect(vg, x, y, width, height, cornerRadius);
         nvgStroke(vg);
 #endif
@@ -1299,6 +1370,63 @@ void View::onFocusGained()
     this->highlightAlpha.reset();
     this->highlightAlpha.addStep(1.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
     this->highlightAlpha.start();
+
+    // Update global transition state
+    if (sHighlightTransitionEnabled)
+    {
+        float padding     = this->highlightPadding;
+        float strokeWidth = style["brls/highlight/stroke_width"];
+        float tx = this->getX() - padding - strokeWidth / 2;
+        float ty = this->getY() - padding - strokeWidth / 2;
+        float tw = this->getWidth() + padding * 2 + strokeWidth;
+        float th = this->getHeight() + padding * 2 + strokeWidth;
+        float tcr = this->highlightCornerRadius;
+
+        // Determine if we should animate the highlight transition.
+        // Requirement: both origin and target must draw the focus border ("focus box").
+        bool targetDrawsBorder = !(this->hideHighlightBorder || this->hideHighlight);
+        bool originDrawsBorder = false;
+        if (View::sLastFocusView)
+            originDrawsBorder = !(View::sLastFocusView->hideHighlightBorder || View::sLastFocusView->hideHighlight);
+
+        bool shouldAnimate = targetDrawsBorder && originDrawsBorder;
+
+        if (!sHighlightInitialized)
+        {
+            // First initialization: snap regardless
+            sPrevHX = tx; sPrevHY = ty; sPrevHW = tw; sPrevHH = th;
+            sTargetHX = tx; sTargetHY = ty; sTargetHW = tw; sTargetHH = th;
+            sPrevHCR = tcr; sTargetHCR = tcr;
+            sHighlightProgress = 1.0f;
+            sHighlightInitialized = true;
+        }
+        else if (shouldAnimate)
+        {
+            // Start from current visual position (interpolated), go to new target
+            float curT = std::clamp(sHighlightProgress.getValue(), 0.0f, 1.0f);
+            float curX = sPrevHX + (sTargetHX - sPrevHX) * curT;
+            float curY = sPrevHY + (sTargetHY - sPrevHY) * curT;
+            float curW = sPrevHW + (sTargetHW - sPrevHW) * curT;
+            float curH = sPrevHH + (sTargetHH - sPrevHH) * curT;
+            float curCR = sPrevHCR + (sTargetHCR - sPrevHCR) * curT;
+            sPrevHX = curX; sPrevHY = curY; sPrevHW = curW; sPrevHH = curH; sPrevHCR = curCR;
+            sTargetHX = tx;  sTargetHY = ty;  sTargetHW = tw;  sTargetHH = th; sTargetHCR = tcr;
+
+            // Restart progress animation
+            sHighlightProgress.reset(0.0f);
+            sHighlightProgress.addStep(1.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
+            sHighlightProgress.start();
+        }
+        else
+        {
+            // No transition animation: snap to target immediately
+            sPrevHX = tx; sPrevHY = ty; sPrevHW = tw; sPrevHH = th; sPrevHCR = tcr;
+            sTargetHX = tx; sTargetHY = ty; sTargetHW = tw; sTargetHH = th; sTargetHCR = tcr;
+            sHighlightProgress = 1.0f;
+        }
+
+        sLastFocusView = this;
+    }
 
     this->focusEvent.fire(this);
 
