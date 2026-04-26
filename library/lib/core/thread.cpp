@@ -18,6 +18,7 @@
 
 #include <borealis/core/logger.hpp>
 #include <borealis/core/thread.hpp>
+#include <borealis/core/thread_pool.hpp>
 #include <exception>
 
 #ifdef BOREALIS_USE_STD_THREAD
@@ -49,9 +50,12 @@ void sync(const std::function<void()>& func)
     Threading::sync(func);
 }
 
-void async(const std::function<void()>& task)
+void async(const std::function<void()>& task, bool concurrent)
 {
-    Threading::async(task);
+    if (concurrent)
+        ThreadPool::global()->async(task);
+    else
+        Threading::async(task);
 }
 
 size_t delay(long milliseconds, const std::function<void()>& func)

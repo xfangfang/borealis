@@ -59,7 +59,7 @@ extern void sync(const std::function<void()>& func);
  *
  * It's a shortcut for brls::Application::async(&func);
  */
-extern void async(const std::function<void()>& func);
+extern void async(const std::function<void()>& func, bool concurrent = true);
 
 extern size_t delay(long milliseconds, const std::function<void()>& func);
 
