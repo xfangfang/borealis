@@ -269,7 +269,7 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/encodings
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
         )
-if (PLATFORM_PSV OR PLATFORM_PS4 OR BOREALIS_USE_D3D11)
+if (PLATFORM_PSV OR PLATFORM_PS4 OR BOREALIS_USE_D3D11 OR BOREALIS_USE_DEKO3D)
         list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
 endif ()
 
