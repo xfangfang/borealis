@@ -438,10 +438,10 @@ void SwitchInputManager::handleControllerSensors()
     {
         // For JoyDual, read from either the Left or Right Joy-Con depending on which is/are connected
         u64 attrib = padGetAttributes(&padsState[0]);
-        if (attrib & HidNpadAttribute_IsLeftConnected)
-            hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[2], &sixaxis, 1);
-        else if (attrib & HidNpadAttribute_IsRightConnected)
+        if (attrib & HidNpadAttribute_IsRightConnected)
             hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[3], &sixaxis, 1);
+        else if (attrib & HidNpadAttribute_IsLeftConnected)
+            hidGetSixAxisSensorStates(this->m_six_axis_sensor_handle[2], &sixaxis, 1);
     }
 
     auto accelState = SensorEvent{
