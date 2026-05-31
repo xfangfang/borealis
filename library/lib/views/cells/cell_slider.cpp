@@ -48,6 +48,9 @@ Event<float>* SliderCell::getEvent() {
 
 View* SliderCell::getDefaultFocus()
 {
+    if (this->getVisibility() != Visibility::VISIBLE)
+        return nullptr;
+
     return slider->getDefaultFocus();
 }
 

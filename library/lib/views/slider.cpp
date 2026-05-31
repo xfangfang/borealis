@@ -118,6 +118,9 @@ void Slider::onLayout()
 
 View* Slider::getDefaultFocus()
 {
+    if (this->getVisibility() != Visibility::VISIBLE)
+        return nullptr;
+
     return pointer;
 }
 
