@@ -12,6 +12,7 @@ option(PLATFORM_TVOS "build for tvOS" OFF)
 option(PLATFORM_ANDROID "build for Android" OFF)
 option(PLATFORM_PSV "build for psv" OFF)
 option(PLATFORM_PS4 "build for ps4" OFF)
+option(PLATFORM_PS5 "build for ps5" OFF)
 option(PLATFORM_SWITCH "build for switch" OFF)
 
 # OpenGL options

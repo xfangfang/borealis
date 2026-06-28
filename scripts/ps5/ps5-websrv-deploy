@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+PS5_HOST=
+PAYLOAD_PATH="/data/homebrew/borealis/eboot"
+LOCAL_ELF=
+PS5_FTP_PORT="2121"
+
+while getopts "h:p:e:P:" opt; do
+    case ${opt} in
+        h) PS5_HOST=$OPTARG ;;
+        p) PAYLOAD_PATH=$OPTARG ;;
+        e) LOCAL_ELF=$OPTARG ;;
+        P) PS5_FTP_PORT=$OPTARG ;;
+    esac
+done
+shift $((OPTIND -1))
+
+if [[ -z "$PS5_HOST" ]]; then
+    PS5_HOST="PS5"
+fi
+
+if [[ -z "$LOCAL_ELF" ]]; then
+    echo "Usage: $(basename "$0") -h HOST -e LOCAL_ELF [-p REMOTE_PAYLOAD] [-P FTP_PORT] [ARGS...]" >&2
+    exit 1
+fi
+
+if [[ ! -f "$LOCAL_ELF" ]]; then
+    echo "Local ELF not found: $LOCAL_ELF" >&2
+    exit 1
+fi
+
+echo "Uploading ELF via FTP: ${LOCAL_ELF} -> ${PAYLOAD_PATH}" >&2
+
+REMOTE_DIR=$(dirname "$PAYLOAD_PATH")
+REMOTE_NAME=$(basename "$PAYLOAD_PATH")
+
+curl --show-error \
+     --fail \
+     --ftp-create-dirs \
+     --upload-file "$LOCAL_ELF" \
+     "ftp://${PS5_HOST}:${PS5_FTP_PORT}${REMOTE_DIR}/${REMOTE_NAME}"
+
+echo "Launching via websrv hbldr: host=${PS5_HOST} path=${PAYLOAD_PATH} working_dir=${REMOTE_DIR}" >&2
+
+curl --get \
+     --show-error \
+     --fail \
+     --data-urlencode "path=$PAYLOAD_PATH" \
+     --data-urlencode "cwd=$REMOTE_DIR" \
+     --data-urlencode "env=LD_LIBRARY_PATH=$REMOTE_DIR" \
+     --data-urlencode "args=$*" \
+     --data-urlencode "daemon=0" \
+     --data-urlencode "pipe=1" \
+     "http://${PS5_HOST}:8080/hbldr"

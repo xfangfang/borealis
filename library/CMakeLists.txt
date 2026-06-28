@@ -43,7 +43,7 @@ if (USE_BOOST_FILESYSTEM)
         list(APPEND BRLS_PLATFORM_OPTION -DUSE_BOOST_FILESYSTEM)
     endif()
 elseif ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1) OR
-    (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT WIN32) AND NOT PLATFORM_ANDROID AND NOT PLATFORM_PS4)
+    (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT WIN32) AND NOT PLATFORM_ANDROID AND NOT PLATFORM_PS4 AND NOT PLATFORM_PS5)
     list(APPEND BRLS_PLATFORM_LIBS stdc++fs)
 endif ()
 
@@ -196,6 +196,26 @@ elseif(PLATFORM_PS4)
     else ()
         set(BRLS_PLATFORM_RESOURCES_PATH "\"/app0/resources/\"")
     endif ()
+elseif(PLATFORM_PS5)
+    find_package(SDL2 REQUIRED)
+    list(APPEND BOREALIS_SOURCE
+            ${BOREALIS_PATH}/lib/platforms/sdl
+            ${BOREALIS_PATH}/lib/platforms/desktop
+            ${BOREALIS_PATH}/lib/platforms/ps5)
+    list(APPEND BRLS_PLATFORM_LIBS
+            ${SDL2_LIBRARIES}
+            SceUserService
+            SceSystemService
+            SceKeyboard
+            SceImeDialog
+            SceAudioOut
+            SceVideoOut
+            ScePad
+            iconv
+            GL)
+    list(APPEND BOREALIS_INCLUDE ${SDL2_INCLUDE_DIRS})
+    list(APPEND BRLS_PLATFORM_OPTION -D__SDL2__)
+    set(BRLS_PLATFORM_RESOURCES_PATH "\"/data/homebrew/borealis/resources/\"")
 elseif(PLATFORM_ANDROID)
     find_library(SDL2 NAMES SDL2 SDL2main)
     list(APPEND BOREALIS_SOURCE
