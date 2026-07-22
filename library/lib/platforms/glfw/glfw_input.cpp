@@ -78,7 +78,7 @@ static void glfwJoystickCallback(int jid, int event)
     {
         Logger::info("glfw: joystick {} disconnected", jid);
 
-        controllersCount--;
+        if (controllersCount > 0) controllersCount--;
     }
     Application::setActiveEvent(true);
 }
@@ -209,6 +209,7 @@ GLFWInputManager::GLFWInputManager(GLFWwindow* window)
         {
             Logger::info("glfw: joystick {} connected", i);
             Logger::info("glfw: joystick {} is gamepad: \"{}\"", i, glfwGetGamepadName(i));
+            controllersCount++;
         }
     }
 
