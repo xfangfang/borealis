@@ -238,6 +238,23 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     glfwWindowHint(GLFW_AUTO_ICONIFY, 0);
     glfwWindowHint(GLFW_SOFT_FULLSCREEN, 1);
 #endif
+#if defined(__linux__) || defined(_WIN32) || defined(__APPLE__)
+    // Set the application ID so desktop environments can match this window to its
+    // .desktop entry (Wayland app_id / X11 WM_CLASS) — required for taskbar icons.
+    const std::string& appId = Application::getAppId();
+    if (!appId.empty())
+    {
+#ifdef GLFW_WAYLAND_APP_ID
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, appId.c_str());
+#endif
+#ifdef GLFW_X11_CLASS_NAME
+        glfwWindowHintString(GLFW_X11_CLASS_NAME, appId.c_str());
+#endif
+#ifdef GLFW_X11_INSTANCE_NAME
+        glfwWindowHintString(GLFW_X11_INSTANCE_NAME, appId.c_str());
+#endif
+    }
+#endif
 
 // create window
 #if defined(__linux__) || defined(_WIN32) || defined(__APPLE__)
