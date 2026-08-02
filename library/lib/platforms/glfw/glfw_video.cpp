@@ -244,10 +244,17 @@ GLFWVideoContext::GLFWVideoContext(const std::string& windowTitle, uint32_t wind
     const std::string& appId = Application::getAppId();
     if (!appId.empty())
     {
-        glfwWindowHint(GLFW_WAYLAND_APP_ID, appId.c_str());
-        glfwWindowHint(GLFW_X11_CLASS_NAME, appId.c_str());
-        glfwWindowHint(GLFW_X11_INSTANCE_NAME, appId.c_str());
+#ifdef GLFW_WAYLAND_APP_ID
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, appId.c_str());
+#endif
+#ifdef GLFW_X11_CLASS_NAME
+        glfwWindowHintString(GLFW_X11_CLASS_NAME, appId.c_str());
+#endif
+#ifdef GLFW_X11_INSTANCE_NAME
+        glfwWindowHintString(GLFW_X11_INSTANCE_NAME, appId.c_str());
+#endif
     }
+#endif
 
 // create window
 #if defined(__linux__) || defined(_WIN32) || defined(__APPLE__)
