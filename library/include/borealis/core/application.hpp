@@ -30,6 +30,8 @@
 #include <borealis/core/notification_manager.hpp>
 #include <borealis/views/label.hpp>
 #include <deque>
+#include <string>
+#include <utility>
 #include <vector>
 
 #ifdef __WINRT__
@@ -61,12 +63,23 @@ class Application
 
     static inline uint32_t ORIGINAL_WINDOW_WIDTH  = 1280;
     static inline uint32_t ORIGINAL_WINDOW_HEIGHT = 720;
+    inline static std::string appId = "";
 
     /**
      * Inits the borealis application.
      * Returns true if it succeeded, false otherwise.
      */
     static bool init();
+
+    /**
+     * Sets the application ID reported to the windowing system
+     * (Wayland app_id / X11 WM_CLASS). Desktop environments use it to
+     * associate the window with its .desktop entry, which is required
+     * for showing the correct icon in the taskbar.
+     * Must be called before createWindow().
+     */
+    static void setAppId(std::string appId) { Application::appId = std::move(appId); }
+    static const std::string& getAppId() { return Application::appId; }
 
     /**
      * Creates the application window with the given title.
