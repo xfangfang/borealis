@@ -42,7 +42,7 @@ void ProgressSpinner::restartAnimation()
             this->restartAnimation();
     });
     float animationLength = size == NORMAL ? 8.0f : 12.0f;
-    this->animationValue.addStep(animationLength, style["brls/spinner/animation_duration"], EasingFunction::linear);
+    this->animationValue.addStep(animationLength, style["brls/spinner/animation_duration"], tweeny::easing::linear);
     this->animationValue.start();
 }
 

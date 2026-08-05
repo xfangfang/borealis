@@ -249,10 +249,10 @@ void View::playClickAnimation(bool reverse, bool animateBack, bool force)
 
     this->clickAlpha.reset(reverse ? 1.0f : 0.0f);
 
-    this->clickAlpha.addStep(
-        reverse ? 0.0f : 1.0f,
-        style["brls/animations/highlight"],
-        reverse ? EasingFunction::quadraticOut : EasingFunction::quadraticIn);
+    if (reverse)
+        this->clickAlpha.addStep(0.0f, style["brls/animations/highlight"], tweeny::easing::quadraticOut);
+    else
+        this->clickAlpha.addStep(1.0f, style["brls/animations/highlight"], tweeny::easing::quadraticIn);
 
     this->clickAlpha.setEndCallback([this, reverse, animateBack](bool finished) {
         if (reverse || !animateBack || Application::getInputType() == InputType::TOUCH)
@@ -482,7 +482,7 @@ void View::collapse(bool animated)
 
         this->collapseState.reset();
 
-        this->collapseState.addStep(0.0f, style["brls/animations/collapse"], EasingFunction::quadraticOut);
+        this->collapseState.addStep(0.0f, style["brls/animations/collapse"], tweeny::easing::quadraticOut);
 
         this->collapseState.setTickCallback([this] {
             if (this->hasParent())
@@ -510,7 +510,7 @@ void View::expand(bool animated)
 
         this->collapseState.reset();
 
-        this->collapseState.addStep(1.0f, style["brls/animations/collapse"], EasingFunction::quadraticOut);
+        this->collapseState.addStep(1.0f, style["brls/animations/collapse"], tweeny::easing::quadraticOut);
 
         this->collapseState.setTickCallback([this] {
             if (this->hasParent())
@@ -1297,7 +1297,7 @@ void View::onFocusGained()
     Style style = Application::getStyle();
 
     this->highlightAlpha.reset();
-    this->highlightAlpha.addStep(1.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
+    this->highlightAlpha.addStep(1.0f, style["brls/animations/highlight"], tweeny::easing::quadraticOut);
     this->highlightAlpha.start();
 
     this->focusEvent.fire(this);
@@ -1323,7 +1323,7 @@ void View::onFocusLost()
     Style style = Application::getStyle();
 
     this->highlightAlpha.reset();
-    this->highlightAlpha.addStep(0.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
+    this->highlightAlpha.addStep(0.0f, style["brls/animations/highlight"], tweeny::easing::quadraticOut);
     this->highlightAlpha.start();
 
     this->focusLostEvent.fire(this);
@@ -1371,7 +1371,7 @@ void View::show(std::function<void(void)> cb, bool animate, float animationDurat
     {
         this->alpha.reset(0.0f);
 
-        this->alpha.addStep(1.0f, animationDuration, EasingFunction::quadraticOut);
+        this->alpha.addStep(1.0f, animationDuration, tweeny::easing::quadraticOut);
 
         this->alpha.setEndCallback([this, cb](bool finished) {
             this->fadeIn = false;
@@ -1412,7 +1412,7 @@ void View::hide(std::function<void(void)> cb, bool animated, float animationDura
     {
         this->alpha.reset(1.0f);
 
-        this->alpha.addStep(0.0f, animationDuration, EasingFunction::quadraticOut);
+        this->alpha.addStep(0.0f, animationDuration, tweeny::easing::quadraticOut);
 
         this->alpha.setEndCallback([cb](bool finished) {
             if (finished) cb();

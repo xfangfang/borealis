@@ -529,7 +529,7 @@ void Label::onScrollTimerFinished()
 
     this->scrollingAnimation.reset();
 
-    this->scrollingAnimation.addStep(target, duration, EasingFunction::linear);
+    this->scrollingAnimation.addStep(target, duration, tweeny::easing::linear);
 
     this->scrollingAnimation.setEndCallback([this](bool finished)
         {

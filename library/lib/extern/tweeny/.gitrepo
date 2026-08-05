@@ -5,8 +5,8 @@
 ;
 [subrepo]
 	remote = https://github.com/mobius3/tweeny
-	branch = master
-	commit = 126589a51ca10f225f5b614c4a6671f2d9bbddbf
-	parent = f77aa1bae746c77f8ed026db9d7eb907b1ac4897
+	branch = v4.1.0
+	commit = 68a7f44ae7a0d8404e37b976a3b90b87253d8d69
+	parent = 335c786d6bcb02fc3d473d4ec651202b14584350
 	method = merge
-	cmdver = 0.4.6
+	cmdver = 0.4.9

@@ -164,7 +164,7 @@ void Dropdown::show(std::function<void(void)> cb, bool animate, float animationD
 
         showOffset.stop();
         showOffset.reset(30.0f);
-        showOffset.addStep(0, animationDuration, EasingFunction::quadraticOut);
+        showOffset.addStep(0, animationDuration, tweeny::easing::quadraticOut);
         showOffset.setTickCallback([this]
             { this->offsetTick(); });
         showOffset.start();
@@ -179,7 +179,7 @@ void Dropdown::show(std::function<void(void)> cb, bool animate, float animationD
 
         applet->alpha.stop();
         applet->alpha.reset(0);
-        applet->alpha.addStep(1, animationDuration, EasingFunction::quadraticOut);
+        applet->alpha.addStep(1, animationDuration, tweeny::easing::quadraticOut);
         applet->alpha.start();
     }
 }
@@ -194,7 +194,7 @@ void Dropdown::hide(std::function<void(void)> cb, bool animated, float animation
 
         applet->alpha.stop();
         applet->alpha.reset(1);
-        applet->alpha.addStep(0, animationDuration, EasingFunction::quadraticOut);
+        applet->alpha.addStep(0, animationDuration, tweeny::easing::quadraticOut);
         applet->alpha.start();
     }
 

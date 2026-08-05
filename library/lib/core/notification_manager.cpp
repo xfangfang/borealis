@@ -46,9 +46,9 @@ void NotificationManager::notify(const std::string& text)
     float show    = style.getMetric("brls/animations/notification_show");
     float slide   = style.getMetric("brls/notification/slide");
     notification->timeoutTimer.reset(slide);
-    notification->timeoutTimer.addStep(0.0f, (int)show, EasingFunction::quadraticOut);
-    notification->timeoutTimer.addStep(0.0f, (int)timeout, EasingFunction::linear);
-    notification->timeoutTimer.addStep(slide, (int)show, EasingFunction::quadraticOut);
+    notification->timeoutTimer.addStep(0.0f, static_cast<uint32_t>(show), tweeny::easing::quadraticOut);
+    notification->timeoutTimer.addStep(0.0f, static_cast<uint32_t>(timeout), tweeny::easing::linear);
+    notification->timeoutTimer.addStep(slide, static_cast<uint32_t>(show), tweeny::easing::quadraticOut);
 
     notification->timeoutTimer.setTickCallback([notification, slide]()
         {

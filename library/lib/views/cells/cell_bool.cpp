@@ -49,8 +49,8 @@ void BooleanCell::setOn(bool on, bool animated)
     {
         scale.stop();
         scale.reset(1);
-        scale.addStep(0.8f, 100, EasingFunction::quadraticOut);
-        scale.addStep(1, 100, EasingFunction::quadraticIn);
+        scale.addStep(0.8f, 100, tweeny::easing::quadraticOut);
+        scale.addStep(1, 100, tweeny::easing::quadraticIn);
         scale.setTickCallback([this]
             { this->scaleTick(); });
         scale.setEndCallback([this](bool finished)

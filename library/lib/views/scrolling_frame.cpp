@@ -385,7 +385,7 @@ void ScrollingFrame::animateScrolling(float newScroll, float time)
 
     this->contentOffsetY.reset();
 
-    this->contentOffsetY.addStep(newScroll, time, EasingFunction::quadraticOut);
+    this->contentOffsetY.addStep(newScroll, time, tweeny::easing::quadraticOut);
 
     this->contentOffsetY.setTickCallback([this] {
         this->scrollAnimationTick();

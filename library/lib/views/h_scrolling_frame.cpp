@@ -385,7 +385,7 @@ void HScrollingFrame::animateScrolling(float newScroll, float time)
 
     this->contentOffsetX.reset();
 
-    this->contentOffsetX.addStep(newScroll, time, EasingFunction::quadraticOut);
+    this->contentOffsetX.addStep(newScroll, time, tweeny::easing::quadraticOut);
 
     this->contentOffsetX.setTickCallback([this] {
         this->scrollAnimationTick();

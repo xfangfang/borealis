@@ -34,22 +34,22 @@ TransformTab::TransformTab()
             skew2.stop();
 
             aniX.reset(0);
-            aniX.addStep(1.0, ANIMATION, brls::EasingFunction::exponentialOut);
-            aniX.addStep(0, ANIMATION, brls::EasingFunction::cubicIn);
-            aniX.addStep(0.5, ANIMATION, brls::EasingFunction::exponentialOut);
-            aniX.addStep(0, ANIMATION, brls::EasingFunction::cubicIn);
+            aniX.addStep(1.0, ANIMATION, tweeny::easing::exponentialOut);
+            aniX.addStep(0, ANIMATION, tweeny::easing::cubicIn);
+            aniX.addStep(0.5, ANIMATION, tweeny::easing::exponentialOut);
+            aniX.addStep(0, ANIMATION, tweeny::easing::cubicIn);
             aniX.setTickCallback([this](){transX->slider->setProgress(aniX);});
 
             aniY.reset(0);
-            aniY.addStep(1.0, ANIMATION, brls::EasingFunction::bounceOut);
-            aniY.addStep(0.0, ANIMATION, brls::EasingFunction::cubicIn);
-            aniY.addStep(1.0, ANIMATION, brls::EasingFunction::bounceOut);
-            aniY.addStep(0.0, ANIMATION, brls::EasingFunction::cubicIn);
+            aniY.addStep(1.0, ANIMATION, tweeny::easing::bounceOut);
+            aniY.addStep(0.0, ANIMATION, tweeny::easing::cubicIn);
+            aniY.addStep(1.0, ANIMATION, tweeny::easing::bounceOut);
+            aniY.addStep(0.0, ANIMATION, tweeny::easing::cubicIn);
             aniY.setTickCallback([this](){transY->slider->setProgress(aniY);});
 
             skew.reset(0);
-            skew.addStep(1, ANIMATION, brls::EasingFunction::bounceOut);
-            skew.addStep(0, ANIMATION, brls::EasingFunction::cubicIn);
+            skew.addStep(1, ANIMATION, tweeny::easing::bounceOut);
+            skew.addStep(0, ANIMATION, tweeny::easing::cubicIn);
             skew.setTickCallback([this](){
                     skewY->slider->setProgress(skew);
                     scaleX->slider->setProgress(1 - skew);
@@ -57,8 +57,8 @@ TransformTab::TransformTab()
 
             skew2.reset(0);
             skew2.addStep(0, ANIMATION * 2);
-            skew2.addStep(1, ANIMATION, brls::EasingFunction::bounceOut);
-            skew2.addStep(0, ANIMATION, brls::EasingFunction::cubicIn);
+            skew2.addStep(1, ANIMATION, tweeny::easing::bounceOut);
+            skew2.addStep(0, ANIMATION, tweeny::easing::cubicIn);
             skew2.setTickCallback([this](){
                     skewX->slider->setProgress(skew2);
                     scaleY->slider->setProgress(1 - skew2);

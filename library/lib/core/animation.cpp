@@ -28,7 +28,8 @@ Animatable::Animatable(float value)
 
 void Animatable::onReset()
 {
-    this->tween = tweeny::tween<float>::from(this->currentValue);
+    this->builder.reset();
+    this->tween.reset();
 }
 
 void Animatable::reset(float initialValue)
@@ -44,27 +45,35 @@ void Animatable::reset()
 
 void Animatable::onRewind()
 {
-    this->currentValue = this->tween.seek(0);
+    if (this->tween)
+        this->currentValue = this->tween->seek(0U);
 }
 
-void Animatable::addStep(float targetValue, int32_t duration, EasingFunction easing)
+void Animatable::addStep(float targetValue, uint32_t duration, EasingFunction easing)
 {
-    this->tween.to(targetValue).during(duration).via(easing);
+    if (this->builder)
+        this->builder = this->builder->to(targetValue);
+    else
+        this->builder = tweeny::from(this->currentValue).to(targetValue);
+        
+    this->builder->via(easing).during(duration);
+    this->tween = this->builder->build();
 }
 
 float Animatable::getProgress()
 {
-    return this->tween.progress();
+    if (!this->tween) return 0.0f;
+    return this->tween->progress();
 }
 
 bool Animatable::onUpdate(retro_time_t delta)
 {
-    if (this->tween.progress() >= 1.0f || this->tween.duration() <= 0)
+    if (!this->tween || this->tween->progress() >= 1.0f)
         return false;
     
     // int32_t for stepping works as long as the app goes faster than 0.00001396983 FPS
     // (in which case the delta for a frame wraps in an int32_t)
-    this->currentValue = this->tween.step((int32_t)delta);
+    this->currentValue = this->tween->step((int32_t)delta);
     return true;
 }
 

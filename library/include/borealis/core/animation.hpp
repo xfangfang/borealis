@@ -17,14 +17,16 @@
 #pragma once
 
 #include <stdint.h>
-#include <tweeny.h>
+#include <optional>
+#include <tweeny/tweeny.h>
 
 #include <borealis/core/time.hpp>
 
 namespace brls
 {
 
-using EasingFunction = tweeny::easing::enumerated;
+// Easing functions available for animations, matching the tweeny 4.x easing objects.
+using EasingFunction = std::function<float(float, float, float)>;
 
 // An animatable is a float which value can be animated from an initial value to a target value,
 // during a given amount of time. An easing function can also be specified.
@@ -71,12 +73,12 @@ class Animatable : public FiniteTicking
      * Adds an animation step to the target value, lasting the specified duration in milliseconds.
      *
      * An animation can have multiple steps. Target value can be greater and lower than the previous step (it can go forwards or backwards).
-     * Easing function is optional, default is EasingFunction::linear.
+     * Easing function is optional, default is tweeny::easing::linear.
      *
      * Duration is int32_t due to internal limitations, so a step cannot last for longer than 2 147 483 647ms.
      * The sum of the duration of all steps cannot exceed 71582min.
      */
-    void addStep(float targetValue, int32_t duration, EasingFunction easing = EasingFunction::linear);
+    void addStep(float targetValue, uint32_t duration, EasingFunction easing = tweeny::easing::linear);
 
     /**
      * Returns the progress of the animation between 0.0f and 1.0f.
@@ -96,7 +98,8 @@ class Animatable : public FiniteTicking
 
   private:
     float currentValue = 0.0f;
-    tweeny::tween<float> tween;
+    std::optional<tweeny::tweeny_builder<true, float>> builder;
+    std::optional<tweeny::tween<float>> tween;
 };
 
 void updateHighlightAnimation();
