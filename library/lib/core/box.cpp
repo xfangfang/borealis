@@ -234,6 +234,11 @@ void Box::removeView(View* view, bool free)
     if (free)
         view->freeView();
 
+    // A removed child must not linger as the remembered focus target:
+    // getDefaultFocus() would later dereference a freed view.
+    if (this->lastFocusedView == view)
+        this->lastFocusedView = nullptr;
+
     this->invalidate();
 }
 

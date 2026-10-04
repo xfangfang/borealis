@@ -72,10 +72,14 @@ void Event<Ts...>::clear()
 template <typename... Ts>
 bool Event<Ts...>::fire(Ts... args)
 {
-    for (Callback cb : this->callbacks)
+    // Iterate over a snapshot: a callback may subscribe/unsubscribe during the
+    // fire (e.g. cleanup handlers removing themselves), which invalidates the
+    // live vector's iterators and yields calls to destroyed std::functions.
+    CallbacksList callbacksCopy = this->callbacks;
+    for (Callback& cb : callbacksCopy)
         cb(args...);
 
-    return !this->callbacks.empty();
+    return !callbacksCopy.empty();
 }
 
 }; // namespace brls

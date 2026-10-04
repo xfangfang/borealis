@@ -30,6 +30,7 @@
 #include <borealis/core/notification_manager.hpp>
 #include <borealis/views/label.hpp>
 #include <deque>
+#include <algorithm>
 #include <vector>
 
 #ifdef __WINRT__
@@ -140,6 +141,17 @@ class Application
      * or clears the focus if given nullptr.
      */
     static void giveFocus(View* view);
+
+    /**
+     * Drops every reference to the given view from the focus stack. Must be
+     * called when a view is destroyed: popActivity() restores focus through
+     * raw stack pointers, and handing focus back to a deleted view crashed the
+     * app (home row rebuilt while a detail activity was open).
+     */
+    static void purgeFocusStack(View* view)
+    {
+        focusStack.erase(std::remove(focusStack.begin(), focusStack.end(), view), focusStack.end());
+    }
 
     inline static Style getStyle()
     {

@@ -207,6 +207,29 @@ void Image::setImageAlign(ImageAlignment align)
     this->invalidateImageBounds();
 }
 
+// Offset of the image along the axis that has spare (FIT) or overflowing
+// (FILL) space, honoring the view's alignment. CENTER crops/letterboxes
+// symmetrically, the axis matching edge pins the visible edge.
+static float imageAxisOffset(float total, float inner, ImageAlignment align, bool horizontal)
+{
+    float spare = total - inner;
+    if (horizontal)
+    {
+        if (align == ImageAlignment::LEFT)
+            return 0.0F;
+        if (align == ImageAlignment::RIGHT)
+            return spare;
+    }
+    else
+    {
+        if (align == ImageAlignment::TOP)
+            return 0.0F;
+        if (align == ImageAlignment::BOTTOM)
+            return spare;
+    }
+    return spare / 2.0F;
+}
+
 void Image::invalidateImageBounds()
 {
     if (this->texture == 0)
@@ -226,14 +249,14 @@ void Image::invalidateImageBounds()
             {
                 this->imageHeight = this->getHeight();
                 this->imageWidth  = this->imageHeight / imageAspectRatio;
-                this->imageX      = (width - this->imageWidth) / 2.0F;
+                this->imageX      = imageAxisOffset(width, this->imageWidth, this->align, true);
                 this->imageY      = 0;
             }
             else
             {
                 this->imageWidth  = this->getWidth();
                 this->imageHeight = this->imageWidth * imageAspectRatio;
-                this->imageY      = (height - this->imageHeight) / 2.0F;
+                this->imageY      = imageAxisOffset(height, this->imageHeight, this->align, false);
                 this->imageX      = 0;
             }
             break;
@@ -244,14 +267,14 @@ void Image::invalidateImageBounds()
             {
                 this->imageHeight = this->getHeight();
                 this->imageWidth  = this->imageHeight / imageAspectRatio;
-                this->imageX      = (width - this->imageWidth) / 2.0F;
+                this->imageX      = imageAxisOffset(width, this->imageWidth, this->align, true);
                 this->imageY      = 0;
             }
             else
             {
                 this->imageWidth  = this->getWidth();
                 this->imageHeight = this->imageWidth * imageAspectRatio;
-                this->imageY      = (height - this->imageHeight) / 2.0F;
+                this->imageY      = imageAxisOffset(height, this->imageHeight, this->align, false);
                 this->imageX      = 0;
             }
             break;
