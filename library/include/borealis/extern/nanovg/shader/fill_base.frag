@@ -310,6 +310,11 @@ void main(void) {
     }
 
     if (isHdrDirect) {
+        // The swapchain is a real 10bit PQ target (VK_FORMAT_A2B10G10R10 with
+        // VideoOut scanning it out as BGR10A2 BT.2100 PQ), so the shader writes
+        // PQ floats and lets the blending stay in the target. Packing the bits
+        // into an 8bit buffer by hand cannot work: the painter blends with
+        // premultiplied alpha, and blended packed bits are not a PQ value.
         vec3 finalPq;
         if (isVideo) {
             finalPq = videoPq * innerCol.rgb * strokeAlpha * scissor;
@@ -317,18 +322,7 @@ void main(void) {
             finalPq = srgb_to_pq_bt2408(clamp(result.rgb, 0.0, 1.0));
         }
 
-        uint b10 = uint(clamp(finalPq.b, 0.0, 1.0) * 1023.0 + 0.5);
-        uint g10 = uint(clamp(finalPq.g, 0.0, 1.0) * 1023.0 + 0.5);
-        uint r10 = uint(clamp(finalPq.r, 0.0, 1.0) * 1023.0 + 0.5);
-        uint a2  = uint(clamp(result.a, 0.0, 1.0) * 3.0 + 0.5);
-        uint u32 = b10 | (g10 << 10) | (r10 << 20) | (a2 << 30);
-
-        outColor = vec4(
-            float(u32 & 0xffu) / 255.0,
-            float((u32 >> 8) & 0xffu) / 255.0,
-            float((u32 >> 16) & 0xffu) / 255.0,
-            float((u32 >> 24) & 0xffu) / 255.0
-        );
+        outColor = vec4(clamp(finalPq, 0.0, 1.0), clamp(result.a, 0.0, 1.0));
     } else {
         outColor = result;
     }

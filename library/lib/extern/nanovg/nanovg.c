@@ -309,6 +309,10 @@ static NVGstate* nvg__getState(NVGcontext* ctx)
 	return &ctx->states[ctx->nstates-1];
 }
 
+// The display output mode, shared by every translation unit that includes the
+// Vulkan backend header (see its declaration in nanovg.h).
+int brls_nanovg_hdr_output = 0;
+
 NVGcontext* nvgCreateInternal(NVGparams* params)
 {
 	FONSparams fontParams;

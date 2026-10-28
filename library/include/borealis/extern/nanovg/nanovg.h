@@ -712,6 +712,12 @@ NVGparams* nvgInternalParams(NVGcontext* ctx);
 void nvgDebugDumpPathCache(NVGcontext* ctx);
 
 // PS5 / Vulkan HDR10 display output mode
+//
+// The flag lives here rather than in the Vulkan backend header because that
+// header is included by more than one translation unit: a static there gave
+// every one of them its own copy, so a caller and the code that fills the
+// uniform could disagree about the mode.
+extern int brls_nanovg_hdr_output;
 void nvgSetHdrOutput(NVGcontext* ctx, int enable);
 int nvgGetHdrOutput(NVGcontext* ctx);
 

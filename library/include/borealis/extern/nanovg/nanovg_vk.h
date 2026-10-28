@@ -127,9 +127,8 @@ typedef struct VKNVGfragUniforms {
   int hdrOutput;
 } VKNVGfragUniforms;
 
-static int s_vknvg_hdr_output = 0;
-static inline int vknvg_get_hdr_output(void) { return s_vknvg_hdr_output; }
-static inline void vknvg_set_hdr_output(int enable) { s_vknvg_hdr_output = enable; }
+static inline int vknvg_get_hdr_output(void) { return brls_nanovg_hdr_output; }
+static inline void vknvg_set_hdr_output(int enable) { brls_nanovg_hdr_output = enable; }
 
 void nvgSetHdrOutput(NVGcontext* ctx, int enable) {
   vknvg_set_hdr_output(enable);

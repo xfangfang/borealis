@@ -109,6 +109,22 @@ private:
     std::vector<VkImageView> swapchainImageViews;
     std::vector<VkFramebuffer> swapchainFramebuffers;
 
+public:
+    /// Ask for ten bits a channel with PQ, so the display scans out HDR10.
+    ///
+    /// Set before the platform is created. The swapchain falls back to eight
+    /// bit SDR when the surface does not offer the format or the console
+    /// refuses to register the buffers for it; isHdrSwapchain() says which
+    /// one the frames are drawn into.
+    inline static bool HDR_SWAPCHAIN = false;
+    /// The ten bit format the scanout takes: VideoOut's Bgr10A2 has blue in the
+    /// low bits, so this is A2R10G10B10 (A2B10G10R10 would swap red and blue).
+    inline static const VkFormat HDR_SWAPCHAIN_FORMAT = VK_FORMAT_A2R10G10B10_UNORM_PACK32;
+    bool isHdrSwapchain() const { return this->swapchainImageFormat == HDR_SWAPCHAIN_FORMAT; }
+
+private:
+    bool createSwapchainWithFormat(int width, int height, VkFormat format);
+
     VkImage depthImage                      = VK_NULL_HANDLE;
     VkDeviceMemory depthImageMemory         = VK_NULL_HANDLE;
     VkImageView depthImageView              = VK_NULL_HANDLE;

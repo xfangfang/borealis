@@ -367,6 +367,24 @@ bool VulkanContext::createLogicalDevice()
 
 bool VulkanContext::createSwapchain(int width, int height)
 {
+    if (HDR_SWAPCHAIN)
+    {
+        // The console switches the display to HDR10 when the framebuffers are
+        // registered as BGR10A2 BT.2100 PQ; the swapchain is what asks for
+        // them. A console or a surface that will not take them falls back to
+        // eight bit SDR rather than leaving the title without a picture.
+        if (createSwapchainWithFormat(width, height, HDR_SWAPCHAIN_FORMAT))
+        {
+            Logger::info("vulkan: swapchain is 10bit PQ, the display scans out HDR10");
+            return true;
+        }
+        Logger::error("vulkan: the 10bit PQ swapchain was refused, falling back to 8bit SDR");
+    }
+    return createSwapchainWithFormat(width, height, VK_FORMAT_B8G8R8A8_UNORM);
+}
+
+bool VulkanContext::createSwapchainWithFormat(int width, int height, VkFormat wantedFormat)
+{
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->physicalDevice, this->surface, &capabilities);
 
@@ -376,14 +394,21 @@ bool VulkanContext::createSwapchain(int width, int height)
     vkGetPhysicalDeviceSurfaceFormatsKHR(this->physicalDevice, this->surface, &formatCount, formats.data());
 
     VkSurfaceFormatKHR surfaceFormat = formats[0];
+    bool offered = false;
     for (const auto& availableFormat : formats)
     {
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
+        if (availableFormat.format == wantedFormat &&
             availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
             surfaceFormat = availableFormat;
+            offered = true;
             break;
         }
+    }
+    if (!offered)
+    {
+        Logger::error("vulkan: the surface does not offer format {}", (int) wantedFormat);
+        return false;
     }
     this->swapchainImageFormat = surfaceFormat.format;
 
@@ -443,6 +468,11 @@ bool VulkanContext::createSwapchain(int width, int height)
     vkGetSwapchainImagesKHR(this->device, this->swapchain, &imageCount, nullptr);
     this->swapchainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(this->device, this->swapchain, &imageCount, this->swapchainImages.data());
+
+    // The painter encodes PQ only when the display scans ten bit PQ out. The
+    // mode is shared state (nvgSetHdrOutput writes it), so the frames that
+    // follow - the whole user interface included - are encoded the same way.
+    nvgSetHdrOutput(nullptr, this->isHdrSwapchain() ? 1 : 0);
 
     return true;
 }
