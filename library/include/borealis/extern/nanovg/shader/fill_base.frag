@@ -149,31 +149,39 @@ vec3 hlg_to_sdr(vec3 hlg) {
 // Dolby Vision Profile 5 Reshaping & Decoding
 // ===========================================================================
 vec3 dolby_vision_profile5_to_nits(vec3 c) {
-    // 1. 从伪 RGB 提取 swscale 输出的 YUV 信号:
+    vec3 pseudo_rgb = c.rgb;
+
+    // 1. 从伪 RGB 提取 swscale 的 YUV 信号:
     // Y (明度 I), Cb (色度差 Ct), Cr (色度差 Cp)
-    // MPVCore::setDolbyVisionFormat() 已经用 format 滤镜把输入声明成
-    // full range + bt.709，所以这里两个方向用的是同一组系数，取值可以精确还原。
     const mat3 M_rgb_to_yuv_709 = mat3(
          0.21260000, -0.11457211,  0.50000000,
          0.71520000, -0.38542789, -0.45415291,
          0.07220000,  0.50000000, -0.04584709
     );
-    vec3 yuv = M_rgb_to_yuv_709 * c.rgb;
+    vec3 yuv = M_rgb_to_yuv_709 * pseudo_rgb;
+    
+    // 2. 补偿 mpv swscale 默认按 Limited Range (16-235) 造成的色度过载:
+    // Profile 5 属于 Full Range，swscale 将其当作 Limited Range 处理时色度被拉伸了约 14%
+    float Y = clamp(yuv.x, 0.0, 1.0);
+    float Ct = yuv.y * (224.0 / 255.0);
+    float Cp = yuv.z * (224.0 / 255.0);
 
-    float Y  = clamp(yuv.x, 0.0, 1.0);
-    float Ct = yuv.y;
-    float Cp = yuv.z;
+    // 3. 抑制暗部由于非线性色度差导致的绿色过敏泄漏:
+    // 在低明度暗调区域 (Y < 0.25)，色度噪声在 PQ 极陡曲线下会被放大数倍，进行软平滑衰减
+    float chroma_damp = smoothstep(0.02, 0.25, Y);
+    Ct *= mix(0.7, 1.0, chroma_damp);
+    Cp *= mix(0.7, 1.0, chroma_damp);
 
-    // 2. 重建标准 ITU-R BT.2100 非线性 LMS' (L', M', S')
+    // 4. 重建标准 ITU-R BT.2100 非线性 LMS' (L', M', S')
     float L_prime = clamp(Y + 0.00860904 * Ct + 0.11102963 * Cp, 0.0, 1.0);
     float M_prime = clamp(Y - 0.00860904 * Ct - 0.11102963 * Cp, 0.0, 1.0);
     float S_prime = clamp(Y + 0.56003134 * Ct - 0.32062717 * Cp, 0.0, 1.0);
     vec3 lms_prime = vec3(L_prime, M_prime, S_prime);
 
-    // 3. PQ EOTF -> 线性 LMS 光照
+    // 5. PQ EOTF -> 线性 LMS 光照
     vec3 lin_lms = pq_to_nits_vec3(lms_prime);
 
-    // 4. 线性 LMS -> BT.2020 矩阵 (libplacebo dovi_lms2rgb)
+    // 6. 线性 LMS -> BT.2020 矩阵 (libplacebo dovi_lms2rgb)
     const mat3 M_lms_to_2020 = mat3(
          3.06441879, -0.65612108,  0.01736321,
         -2.16597676,  1.78554118, -0.04725154,
@@ -181,7 +189,11 @@ vec3 dolby_vision_profile5_to_nits(vec3 c) {
     );
     vec3 lin2020 = M_lms_to_2020 * lin_lms;
 
-    // 5. 色域外的负值直接截断，不做整体抬升（抬升会把纯黑变成灰）
+    // 7. 色域边界保护: 防止极端暗部产生非物理负值导致的荧光绿偏色
+    float min_c = min(lin2020.r, min(lin2020.g, lin2020.b));
+    if (min_c < 0.0) {
+        lin2020 -= vec3(min_c);
+    }
     return max(lin2020, vec3(0.0));
 }
 
