@@ -1294,11 +1294,14 @@ void View::onFocusGained()
 {
     this->focused = true;
 
-    Style style = Application::getStyle();
-
-    this->highlightAlpha.reset();
-    this->highlightAlpha.addStep(1.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
-    this->highlightAlpha.start();
+    // The highlight is the focus indicator: it has to be lit on the very frame
+    // the focus lands on the view. This used to fade in from transparent over
+    // brls/animations/highlight (200ms here), so the first frame drew it at
+    // about 0.16 alpha and the block only looked lit several frames later -
+    // on the PS5 that reads as the highlight trailing one step behind the
+    // cursor. The view losing focus still fades out, so moving around keeps
+    // looking continuous.
+    this->highlightAlpha.reset(1.0f);
 
     this->focusEvent.fire(this);
 
@@ -1320,11 +1323,13 @@ void View::onFocusLost()
 {
     this->focused = false;
 
-    Style style = Application::getStyle();
-
-    this->highlightAlpha.reset();
-    this->highlightAlpha.addStep(0.0f, style["brls/animations/highlight"], EasingFunction::quadraticOut);
-    this->highlightAlpha.start();
+    // Same reasoning as onFocusGained: the highlight has to go away on the
+    // frame the focus leaves. Fading it out over brls/animations/highlight
+    // kept the previous row lit for 200ms while the new row was already lit,
+    // and that leftover block is what looks like the highlight arriving one
+    // step late. Note the border is only drawn for the current focus, so
+    // before this change the block outlived its own border.
+    this->highlightAlpha.reset(0.0f);
 
     this->focusLostEvent.fire(this);
 
