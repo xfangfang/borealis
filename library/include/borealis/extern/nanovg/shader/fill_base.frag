@@ -149,39 +149,38 @@ vec3 hlg_to_sdr(vec3 hlg) {
 // Dolby Vision Profile 5 Reshaping & Decoding
 // ===========================================================================
 vec3 dolby_vision_profile5_to_nits(vec3 c) {
-    vec3 pseudo_rgb = c.rgb;
+    // mpv 将 DV Profile 5 的 IPT 码流当作 bt2020nc limited-range YUV 处理：
+    // swscale 先做 limited→full 扩展（Y×255/219−16/219，Cb/Cr×255/224），
+    // 再用 BT.2020-nc 矩阵转 RGB。这里分两步完全还原这个过程。
 
-    // 1. 从伪 RGB 提取 swscale 的 YUV 信号:
-    // Y (明度 I), Cb (色度差 Ct), Cr (色度差 Cp)
-    const mat3 M_rgb_to_yuv_709 = mat3(
-         0.21260000, -0.11457211,  0.50000000,
-         0.71520000, -0.38542789, -0.45415291,
-         0.07220000,  0.50000000, -0.04584709
+    // 1. BT.2020-nc 逆矩阵：从 RGBA 纹理中取回"扩展后的 YCbCr"
+    //    Y = I 通道，Cb = Ct 通道，Cr = Cp 通道
+    //    (列主序 GLSL mat3，每列是 R/G/B 的系数)
+    const mat3 M_rgb_to_yuv_2020nc = mat3(
+         0.26270000, -0.13963000,  0.50000000,
+         0.67800000, -0.36037000, -0.45979000,
+         0.05930000,  0.50000000, -0.04021000
     );
-    vec3 yuv = M_rgb_to_yuv_709 * pseudo_rgb;
-    
-    // 2. 补偿 mpv swscale 默认按 Limited Range (16-235) 造成的色度过载:
-    // Profile 5 属于 Full Range，swscale 将其当作 Limited Range 处理时色度被拉伸了约 14%
-    float Y = clamp(yuv.x, 0.0, 1.0);
+    vec3 yuv = M_rgb_to_yuv_2020nc * c.rgb;
+
+    // 2. 撤销 swscale 的 limited→full 扩展，恢复真实的 full-range ICtCp 值：
+    //    I_true  = Y_expanded  × (219/255) + 16/255
+    //    Ct_true = Cb_expanded × (224/255)   （色度中心约为 0，偏移可忽略）
+    //    Cp_true = Cr_expanded × (224/255)
+    float Y  = clamp(yuv.x * (219.0 / 255.0) + (16.0 / 255.0), 0.0, 1.0);
     float Ct = yuv.y * (224.0 / 255.0);
     float Cp = yuv.z * (224.0 / 255.0);
 
-    // 3. 抑制暗部由于非线性色度差导致的绿色过敏泄漏:
-    // 在低明度暗调区域 (Y < 0.25)，色度噪声在 PQ 极陡曲线下会被放大数倍，进行软平滑衰减
-    float chroma_damp = smoothstep(0.02, 0.25, Y);
-    Ct *= mix(0.7, 1.0, chroma_damp);
-    Cp *= mix(0.7, 1.0, chroma_damp);
-
-    // 4. 重建标准 ITU-R BT.2100 非线性 LMS' (L', M', S')
+    // 3. 重建标准 ITU-R BT.2100 非线性 LMS' (L', M', S')
     float L_prime = clamp(Y + 0.00860904 * Ct + 0.11102963 * Cp, 0.0, 1.0);
     float M_prime = clamp(Y - 0.00860904 * Ct - 0.11102963 * Cp, 0.0, 1.0);
     float S_prime = clamp(Y + 0.56003134 * Ct - 0.32062717 * Cp, 0.0, 1.0);
     vec3 lms_prime = vec3(L_prime, M_prime, S_prime);
 
-    // 5. PQ EOTF -> 线性 LMS 光照
+    // 4. PQ EOTF -> 线性 LMS 光照
     vec3 lin_lms = pq_to_nits_vec3(lms_prime);
 
-    // 6. 线性 LMS -> BT.2020 矩阵 (libplacebo dovi_lms2rgb)
+    // 5. 线性 LMS -> BT.2020 矩阵 (libplacebo dovi_lms2rgb)
     const mat3 M_lms_to_2020 = mat3(
          3.06441879, -0.65612108,  0.01736321,
         -2.16597676,  1.78554118, -0.04725154,
@@ -189,11 +188,7 @@ vec3 dolby_vision_profile5_to_nits(vec3 c) {
     );
     vec3 lin2020 = M_lms_to_2020 * lin_lms;
 
-    // 7. 色域边界保护: 防止极端暗部产生非物理负值导致的荧光绿偏色
-    float min_c = min(lin2020.r, min(lin2020.g, lin2020.b));
-    if (min_c < 0.0) {
-        lin2020 -= vec3(min_c);
-    }
+    // 6. 色域外负值截断（抬升会把纯黑变成灰）
     return max(lin2020, vec3(0.0));
 }
 
