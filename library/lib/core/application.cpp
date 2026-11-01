@@ -315,7 +315,7 @@ bool Application::internalMainLoop()
         if (pumpMs > ps5MaxPump) ps5MaxPump = pumpMs;
         if (inputMs > ps5MaxInput) ps5MaxInput = inputMs;
         if (renderMs > ps5MaxRender) ps5MaxRender = renderMs;
-        if (now - ps5ReportAt > 1000000.0)
+        if (now - ps5ReportAt > 10000000.0)
         {
             Logger::info("[perf] frames={} last={:.1f}ms max={:.1f}ms | pump={:.1f} input={:.1f} render={:.1f} "
                          "| touch={:.1f} mouse={:.1f} ctrl={:.1f} dispatch={:.1f} "

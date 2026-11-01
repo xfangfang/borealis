@@ -390,7 +390,7 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
     }
     else if (event->type == SDL_CONTROLLERAXISMOTION)
     {
-        Logger::debug("{}: controller {} axis {} -> {}", event->caxis.axis,
+        Logger::verbose("{}: controller {} axis {} -> {}", event->caxis.axis,
             event->caxis.which, event->caxis.axis, event->caxis.value);
     }
     else if (event->type == SDL_MOUSEBUTTONDOWN)
