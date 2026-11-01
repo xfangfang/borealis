@@ -125,6 +125,8 @@ typedef struct VKNVGfragUniforms {
   int texType;
   int type;
   int hdrOutput;
+  int _pad[3];
+  NVGdoviMetadata dovi;
 } VKNVGfragUniforms;
 
 static inline int vknvg_get_hdr_output(void) { return brls_nanovg_hdr_output; }
@@ -465,7 +467,7 @@ static int vknvg_convertPaint(VKNVGcontext *vk, VKNVGfragUniforms *frag, NVGpain
     }
     frag->type = NSVG_SHADER_FILLIMG;
 
-    if (tex->type == NVG_TEXTURE_RGBA) {
+    if (tex->type == NVG_TEXTURE_RGBA || tex->type == NVG_TEXTURE_R16) {
       if (paint->radius > 2.5f) {
         frag->texType = 6; // GPU HLG (BT.2100 ARIB STD-B67) -> PQ / SDR tone mapping
       } else if (paint->radius > 1.5f || (tex->flags & NVG_IMAGE_DOVI_PROFILE5)) {
@@ -488,6 +490,9 @@ static int vknvg_convertPaint(VKNVGcontext *vk, VKNVGfragUniforms *frag, NVGpain
 
   vknvg_xformToMat3x4(frag->paintMat, invxform);
   frag->hdrOutput = vknvg_get_hdr_output();
+  if (frag->texType == 5) {
+    memcpy(&frag->dovi, &brls_nanovg_dovi_metadata, sizeof(frag->dovi));
+  }
 
   return 1;
 }
@@ -896,7 +901,9 @@ static int vknvg_UpdateTexture(VkDevice device, VKNVGtexture *tex, int dx, int d
   if (res != VK_SUCCESS || !bindptr) {
     return 0;
   }
-  int comp_size = (tex->type == NVG_TEXTURE_RGBA) ? 4 : 1;
+  int comp_size = 1;
+  if (tex->type == NVG_TEXTURE_RGBA) comp_size = 4;
+  else if (tex->type == NVG_TEXTURE_R16) comp_size = 2;
   size_t row_bytes = (size_t)w * comp_size;
   if (dx == 0 && dy == 0 && w == tex->width && (size_t)layout.rowPitch == row_bytes) {
     memcpy(bindptr, data, row_bytes * h);
@@ -1518,6 +1525,8 @@ static int vknvg_renderCreateTexture(void *uptr, int type, int w, int h, int ima
   image_createInfo.imageType = VK_IMAGE_TYPE_2D;
   if (type == NVG_TEXTURE_RGBA) {
     image_createInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  } else if (type == NVG_TEXTURE_R16) {
+    image_createInfo.format = VK_FORMAT_R16_UNORM;
   } else {
     image_createInfo.format = VK_FORMAT_R8_UNORM;
   }
@@ -1643,7 +1652,8 @@ static int vknvg_renderCreateTexture(void *uptr, int type, int w, int h, int ima
   }
   else{
     int tx_format=1;
-    if(type == NVG_TEXTURE_RGBA)tx_format=4;
+    if(type == NVG_TEXTURE_RGBA) tx_format=4;
+    else if(type == NVG_TEXTURE_R16) tx_format=2;
     size_t texture_size = w * h * tx_format * sizeof(uint8_t);
     uint8_t *generated_texture = (uint8_t*)calloc(1, texture_size);
     if (generated_texture) {

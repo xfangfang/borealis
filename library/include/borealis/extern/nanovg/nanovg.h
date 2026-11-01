@@ -389,6 +389,7 @@ int nvgCreateImageMem(NVGcontext* ctx, int imageFlags, unsigned char* data, int 
 // Creates image from specified image data.
 // Returns handle to the image.
 int nvgCreateImageRGBA(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data);
+int nvgCreateImageR16(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data);
 
 // Updates image data specified by image handle.
 void nvgUpdateImage(NVGcontext* ctx, int image, const unsigned char* data);
@@ -656,6 +657,7 @@ void nvgStencilClear(NVGcontext* ctx);
 enum NVGtexture {
 	NVG_TEXTURE_ALPHA = 0x01,
 	NVG_TEXTURE_RGBA = 0x02,
+	NVG_TEXTURE_R16 = 0x03,
 };
 
 struct NVGscissor {
@@ -720,6 +722,20 @@ void nvgDebugDumpPathCache(NVGcontext* ctx);
 extern int brls_nanovg_hdr_output;
 void nvgSetHdrOutput(NVGcontext* ctx, int enable);
 int nvgGetHdrOutput(NVGcontext* ctx);
+
+typedef struct NVGdoviMetadata {
+    float ycc[3][4];
+    float off[4];
+    float lms[3][4];
+    float lohi[3][4];
+    float piv[6][4];
+    float coef[24][4];
+    float mmr[144][4];
+    float meta[4];
+} NVGdoviMetadata;
+
+extern NVGdoviMetadata brls_nanovg_dovi_metadata;
+void nvgSetDoviMetadata(NVGcontext* ctx, const void* dovi);
 
 #ifdef _MSC_VER
 #pragma warning(pop)

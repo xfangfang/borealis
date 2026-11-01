@@ -312,6 +312,15 @@ static NVGstate* nvg__getState(NVGcontext* ctx)
 // The display output mode, shared by every translation unit that includes the
 // Vulkan backend header (see its declaration in nanovg.h).
 int brls_nanovg_hdr_output = 0;
+NVGdoviMetadata brls_nanovg_dovi_metadata = {0};
+
+void nvgSetDoviMetadata(NVGcontext* ctx, const void* dovi) {
+    if (dovi) {
+        memcpy(&brls_nanovg_dovi_metadata, dovi, sizeof(NVGdoviMetadata));
+    } else {
+        memset(&brls_nanovg_dovi_metadata, 0, sizeof(NVGdoviMetadata));
+    }
+}
 
 NVGcontext* nvgCreateInternal(NVGparams* params)
 {
@@ -860,6 +869,11 @@ int nvgCreateImageMem(NVGcontext* ctx, int imageFlags, unsigned char* data, int 
 int nvgCreateImageRGBA(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data)
 {
 	return ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_RGBA, w, h, imageFlags, data);
+}
+
+int nvgCreateImageR16(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data)
+{
+	return ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_R16, w, h, imageFlags, data);
 }
 
 void nvgUpdateImage(NVGcontext* ctx, int image, const unsigned char* data)

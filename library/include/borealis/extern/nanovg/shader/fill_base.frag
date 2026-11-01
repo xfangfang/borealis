@@ -15,6 +15,19 @@ layout(std140, binding = 1) uniform frag {
     int texType;
     int type;
     int hdrOutput; // 0: SDR 模式; 1: 物理真 HDR 模式 (Bgr10A2Bt2100Pq)
+    int _pad0;
+    int _pad1;
+    int _pad2;
+
+    // Dolby Vision Profile 5 Metadata (std140)
+    vec4 dovi_ycc[3];
+    vec4 dovi_off;
+    vec4 dovi_lms[3];
+    vec4 dovi_lohi[3];
+    vec4 dovi_piv[6];
+    vec4 dovi_coef[24];
+    vec4 dovi_mmr[144];
+    vec4 dovi_meta; // meta.x: 1 when frame carries an RPU
 };
 
 layout(binding = 2) uniform sampler2D tex;
@@ -132,8 +145,10 @@ vec3 hlg_to_nits(vec3 hlg) {
         (exp((h - vec3(c)) / a) + vec3(b)) / 12.0,
         greaterThan(h, vec3(0.5))
     );
-    // HLG 标称峰值白点为 1000 Nits
-    return lin * 1000.0;
+    // ITU-R BT.2100 Table 5: HLG Reference EOTF with OOTF (system gamma = 1.2 for 1000 nits)
+    float Y_S = dot(lin, vec3(0.2627, 0.6780, 0.0593));
+    float ootf = (Y_S > 1e-6) ? pow(Y_S, 0.2) : 0.0;
+    return lin * (1000.0 * ootf);
 }
 
 vec3 hlg_to_pq(vec3 hlg) {
@@ -146,60 +161,147 @@ vec3 hlg_to_sdr(vec3 hlg) {
 }
 
 // ===========================================================================
-// Dolby Vision Profile 5 Reshaping & Decoding
+// Dolby Vision Profile 5 Reshaping & Decoding (libplacebo / RPU std140)
 // ===========================================================================
-vec3 dolby_vision_profile5_to_nits(vec3 c) {
-    // mpv 将 DV Profile 5 的 IPT 码流当作 bt2020nc limited-range YUV 处理：
-    // swscale 先做 limited→full 扩展（Y×255/219−16/219，Cb/Cr×255/224），
-    // 再用 BT.2020-nc 矩阵转 RGB。这里分两步完全还原这个过程。
+vec3 sample_p010_ipt(vec2 coord) {
+    ivec2 tex_sz = textureSize(tex, 0);
+    int w = tex_sz.x;
+    int h = (tex_sz.y * 2) / 3;
 
-    // 1. BT.2020-nc 逆矩阵：从 RGBA 纹理中取回"扩展后的 YCbCr"
-    //    Y = I 通道，Cb = Ct 通道，Cr = Cp 通道
-    //    (列主序 GLSL mat3，每列是 R/G/B 的系数)
-    const mat3 M_rgb_to_yuv_2020nc = mat3(
-         0.26270000, -0.13963000,  0.50000000,
-         0.67800000, -0.36037000, -0.45979000,
-         0.05930000,  0.50000000, -0.04021000
+    // Luma (Y = I): sample with linear filtering
+    vec2 uv_y = vec2(coord.x, coord.y * ((float(h) - 0.5) / float(tex_sz.y)));
+    float Y_raw = texture(tex, uv_y).r;
+
+    // Chroma (U = Ct, V = Cp): texelFetch from interleaved UV rows
+    int chroma_row = h + int(clamp(coord.y * float(h / 2), 0.0, float(h / 2 - 1)));
+    int chroma_k = int(clamp(coord.x * float(w / 2), 0.0, float(w / 2 - 1)));
+    float U_raw = texelFetch(tex, ivec2(chroma_k * 2, chroma_row), 0).r;
+    float V_raw = texelFetch(tex, ivec2(chroma_k * 2 + 1, chroma_row), 0).r;
+
+    // P010 MSB normalization
+    return clamp(vec3(Y_raw, U_raw, V_raw) * (65535.0 / 65472.0), 0.0, 1.0);
+}
+
+float dv_reshape_component(int c, vec3 sig, float s) {
+    if (dovi_lohi[c].z == 0.0) {
+        return s;
+    }
+
+    vec4 piv0 = dovi_piv[c * 2 + 0];
+    vec4 piv1 = dovi_piv[c * 2 + 1];
+
+    int coef_base = c * 8;
+    vec4 c0 = dovi_coef[coef_base + 0];
+    vec4 c1 = dovi_coef[coef_base + 1];
+    vec4 c2 = dovi_coef[coef_base + 2];
+    vec4 c3 = dovi_coef[coef_base + 3];
+    vec4 c4 = dovi_coef[coef_base + 4];
+    vec4 c5 = dovi_coef[coef_base + 5];
+    vec4 c6 = dovi_coef[coef_base + 6];
+    vec4 c7 = dovi_coef[coef_base + 7];
+
+    float b0 = float(s >= piv0.x);
+    float b1 = float(s >= piv0.y);
+    float b2 = float(s >= piv0.z);
+    float b3 = float(s >= piv0.w);
+    float b4 = float(s >= piv1.x);
+    float b5 = float(s >= piv1.y);
+    float b6 = float(s >= piv1.z);
+
+    vec4 coeffs = mix(
+        mix(mix(c0, c1, b0),
+            mix(c2, c3, b2),
+            b1),
+        mix(mix(c4, c5, b4),
+            mix(c6, c7, b6),
+            b5),
+        b3
     );
-    vec3 yuv = M_rgb_to_yuv_2020nc * c.rgb;
 
-    // 2. 撤销 swscale 的 limited→full 扩展，恢复真实的 full-range ICtCp 值：
-    //    I_true  = Y_expanded  × (219/255) + 16/255
-    //    Ct_true = Cb_expanded × (224/255)   （色度中心约为 0，偏移可忽略）
-    //    Cp_true = Cr_expanded × (224/255)
-    float Y  = clamp(yuv.x * (219.0 / 255.0) + (16.0 / 255.0), 0.0, 1.0);
-    float Ct = yuv.y * (224.0 / 255.0);
-    float Cp = yuv.z * (224.0 / 255.0);
+    int order = int(coeffs.w);
+    if (order == 0) {
+        // Polynomial: s = c2 * s^2 + c1 * s + c0
+        s = (coeffs.z * s + coeffs.y) * s + coeffs.x;
+    } else {
+        // MMR (Multivariate Multiple Regression)
+        int mmr_idx = c * 48 + int(coeffs.y);
+        vec4 sigX;
+        s = coeffs.x;
+        sigX.xyz = sig.xxy * sig.yzz;
+        sigX.w = sigX.x * sig.z;
+        s += dot(dovi_mmr[mmr_idx + 0].xyz, sig);
+        s += dot(dovi_mmr[mmr_idx + 1], sigX);
 
-    // 3. 重建标准 ITU-R BT.2100 非线性 LMS' (L', M', S')
-    float L_prime = clamp(Y + 0.00860904 * Ct + 0.11102963 * Cp, 0.0, 1.0);
-    float M_prime = clamp(Y - 0.00860904 * Ct - 0.11102963 * Cp, 0.0, 1.0);
-    float S_prime = clamp(Y + 0.56003134 * Ct - 0.32062717 * Cp, 0.0, 1.0);
-    vec3 lms_prime = vec3(L_prime, M_prime, S_prime);
+        if (order >= 2) {
+            vec3 sig2 = sig * sig;
+            vec4 sigX2 = sigX * sigX;
+            s += dot(dovi_mmr[mmr_idx + 2].xyz, sig2);
+            s += dot(dovi_mmr[mmr_idx + 3], sigX2);
 
-    // 4. PQ EOTF -> 线性 LMS 光照
-    vec3 lin_lms = pq_to_nits_vec3(lms_prime);
+            if (order >= 3) {
+                s += dot(dovi_mmr[mmr_idx + 4].xyz, sig2 * sig);
+                s += dot(dovi_mmr[mmr_idx + 5], sigX2 * sigX);
+            }
+        }
+    }
 
-    // 5. 线性 LMS -> BT.2020 矩阵 (libplacebo dovi_lms2rgb)
+    return clamp(s, 0.0, 1.0);
+}
+
+vec3 dolby_vision_decode_rpu(vec3 raw) {
+    vec3 sig = vec3(
+        clamp(raw.x, dovi_lohi[0].x, dovi_lohi[0].y),
+        clamp(raw.y, dovi_lohi[1].x, dovi_lohi[1].y),
+        clamp(raw.z, dovi_lohi[2].x, dovi_lohi[2].y)
+    );
+
+    vec3 reshaped = vec3(
+        dv_reshape_component(0, sig, sig.x),
+        dv_reshape_component(1, sig, sig.y),
+        dv_reshape_component(2, sig, sig.z)
+    );
+
+    vec3 t = reshaped - dovi_off.xyz;
+    vec3 step1 = vec3(
+        dot(dovi_ycc[0].xyz, t),
+        dot(dovi_ycc[1].xyz, t),
+        dot(dovi_ycc[2].xyz, t)
+    );
+
+    vec3 lin2020;
+    if (dovi_meta.y == 1.0) {
+        // HLG (Profile 8.4): step1 is BT.2020 RGB in HLG gamma
+        lin2020 = hlg_to_nits(clamp(step1, 0.0, 1.0));
+    } else {
+        // PQ (Profile 5 and Profile 8.1): step1 is LMS' in PQ
+        vec3 lms = pq_to_nits_vec3(clamp(step1, 0.0, 1.0));
+        lin2020 = vec3(
+            dot(dovi_lms[0].xyz, lms),
+            dot(dovi_lms[1].xyz, lms),
+            dot(dovi_lms[2].xyz, lms)
+        );
+    }
+
+    return max(lin2020, vec3(0.0));
+}
+
+vec3 dolby_vision_profile5_fallback(vec3 raw_ipt) {
+    float Y  = raw_ipt.x;
+    float Ct = raw_ipt.y - 0.5;
+    float Cp = raw_ipt.z - 0.5;
+
+    float L_prime = clamp(Y + 0.09997559 * Ct + 0.21166992 * Cp, 0.0, 1.0);
+    float M_prime = clamp(Y - 0.10827637 * Ct - 0.07995605 * Cp, 0.0, 1.0);
+    float S_prime = clamp(Y + 0.55993652 * Ct - 0.32055664 * Cp, 0.0, 1.0);
+    vec3 lin_lms = pq_to_nits_vec3(vec3(L_prime, M_prime, S_prime));
+
     const mat3 M_lms_to_2020 = mat3(
          3.06441879, -0.65612108,  0.01736321,
         -2.16597676,  1.78554118, -0.04725154,
          0.10155818, -0.12943749,  1.03004253
     );
     vec3 lin2020 = M_lms_to_2020 * lin_lms;
-
-    // 6. 色域外负值截断（抬升会把纯黑变成灰）
     return max(lin2020, vec3(0.0));
-}
-
-vec3 dolby_vision_profile5_to_sdr(vec3 c) {
-    vec3 lin2020 = dolby_vision_profile5_to_nits(c);
-    return apply_libplacebo_bt2390_tone_mapping(lin2020);
-}
-
-vec3 dolby_vision_profile5_to_pq(vec3 c) {
-    vec3 lin2020 = dolby_vision_profile5_to_nits(c);
-    return nits_to_pq_vec3(lin2020);
 }
 
 // ===========================================================================
@@ -254,10 +356,13 @@ void main(void) {
             }
         } else if (texType == 5) {
             isVideo = true;
+            vec3 raw_ipt = sample_p010_ipt(pt);
+            vec3 lin2020 = (dovi_meta.x == 1.0) ? dolby_vision_decode_rpu(raw_ipt)
+                                                 : dolby_vision_profile5_fallback(raw_ipt);
             if (isHdrDirect) {
-                videoPq = dolby_vision_profile5_to_pq(color.rgb);
+                videoPq = nits_to_pq_vec3(lin2020);
             } else {
-                color = vec4(dolby_vision_profile5_to_sdr(color.rgb), color.a);
+                color = vec4(apply_libplacebo_bt2390_tone_mapping(lin2020), 1.0);
             }
         } else if (texType == 6) {
             isVideo = true;
@@ -286,10 +391,13 @@ void main(void) {
             }
         } else if (texType == 5) {
             isVideo = true;
+            vec3 raw_ipt = sample_p010_ipt(ftcoord);
+            vec3 lin2020 = (dovi_meta.x == 1.0) ? dolby_vision_decode_rpu(raw_ipt)
+                                                 : dolby_vision_profile5_fallback(raw_ipt);
             if (isHdrDirect) {
-                videoPq = dolby_vision_profile5_to_pq(color.rgb);
+                videoPq = nits_to_pq_vec3(lin2020);
             } else {
-                color = vec4(dolby_vision_profile5_to_sdr(color.rgb), color.a);
+                color = vec4(apply_libplacebo_bt2390_tone_mapping(lin2020), 1.0);
             }
         } else if (texType == 6) {
             isVideo = true;
