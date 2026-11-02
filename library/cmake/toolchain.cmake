@@ -4,6 +4,11 @@ function(check_libromfs_generator)
     if (NOT DEFINED LIBROMFS_PREBUILT_GENERATOR OR NOT EXISTS "${LIBROMFS_PREBUILT_GENERATOR}")
         if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libromfs-generator")
             set(LIBROMFS_PREBUILT_GENERATOR "${CMAKE_CURRENT_SOURCE_DIR}/libromfs-generator" PARENT_SCOPE)
+        elseif (DEFINED BOREALIS_LIBRARY AND EXISTS "${BOREALIS_LIBRARY}/../libromfs-generator")
+            # A project that only includes this file keeps it at its root, so
+            # the helper sits beside the checkout rather than beside the source
+            # directory of the caller.
+            set(LIBROMFS_PREBUILT_GENERATOR "${BOREALIS_LIBRARY}/../libromfs-generator" PARENT_SCOPE)
         else ()
             message(FATAL_ERROR "libromfs-generator has not been built, please refer to borealis/build_libromfs_generator.sh for more information")
         endif ()
@@ -86,6 +91,12 @@ elseif(PLATFORM_PS5)
     endif ()
     set(CMAKE_TOOLCHAIN_FILE "$ENV{PS5_PAYLOAD_SDK}/toolchain/prospero.cmake" CACHE PATH "toolchain file")
     add_definitions(-DPS5 -D__PS5__)
+    if (USE_LIBROMFS)
+        # The resources are turned into C++ by a helper that runs on the
+        # machine doing the build, and this one cross compiles: the helper has
+        # to exist for the host, see build_libromfs_generator.sh.
+        check_libromfs_generator()
+    endif ()
 elseif (PLATFORM_SWITCH)
     message(STATUS "building for SWITCH")
     if (NOT DEFINED ENV{DEVKITPRO})

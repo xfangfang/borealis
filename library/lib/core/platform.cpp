@@ -32,6 +32,10 @@
 #include <borealis/platforms/ps4/ps4_platform.hpp>
 #endif
 
+#ifdef PS5
+#include <borealis/platforms/ps5/ps5_platform.hpp>
+#endif
+
 #if defined(BOREALIS_USE_DEKO3D)
 #elif defined(__GLFW__)
 #include <borealis/platforms/glfw/glfw_platform.hpp>
@@ -44,7 +48,9 @@ namespace brls
 
 Platform* Platform::createPlatform()
 {
-#if defined(__SWITCH__)
+#if defined(PS5)
+    return new Ps5Platform();
+#elif defined(__SWITCH__)
     return new SwitchPlatform();
 #elif defined(ANDROID)
     return new AndroidPlatform();

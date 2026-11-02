@@ -18,20 +18,25 @@ set -e
 
 echo "Build libromfs-generator"
 
-PROJECT_PATH=$(dirname "$0")
+# absolute, so the paths below do not depend on where the script is called from
+PROJECT_PATH=$(cd -- "$(dirname -- "$0")" && pwd)
 LIBROMFS_PATH="${PROJECT_PATH}/library/lib/extern/libromfs/generator"
-BUILD_DIR="build_libromfs_generator"
+BUILD_DIR="${PROJECT_PATH}/build_libromfs_generator"
+# Ninja when it is around, the default generator otherwise
+GENERATOR=()
+command -v ninja > /dev/null 2>&1 && GENERATOR=(-G Ninja)
 
 cd "${PROJECT_PATH}"
 
-# build libromfs-generator
-cmake -B ${BUILD_DIR} "${LIBROMFS_PATH}" -G Ninja
-cmake --build ${BUILD_DIR}
+# build libromfs-generator: the source directory is spelled out, as a plain
+# path after -B is ignored by current cmake versions
+cmake -S "${LIBROMFS_PATH}" -B "${BUILD_DIR}" ${GENERATOR[@]+"${GENERATOR[@]}"}
+cmake --build "${BUILD_DIR}"
 
 # put libromfs-generator under the jni folder
-cp ${BUILD_DIR}/libromfs-generator "${PROJECT_PATH}"
+cp "${BUILD_DIR}/libromfs-generator" "${PROJECT_PATH}"
 echo "Build libromfs-generator: ${PROJECT_PATH}/libromfs-generator"
 
 # remove build folder
-rm -rf ${BUILD_DIR}
+rm -rf "${BUILD_DIR}"
 echo "Remove temp build dir: ${BUILD_DIR}"

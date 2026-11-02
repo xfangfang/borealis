@@ -34,9 +34,18 @@ bool startsWith(const std::string& data, const std::string& prefix)
     return data.rfind(prefix, 0) == 0;
 }
 
+#ifdef PS5
+extern "C" void wiliwili_ps5_notify(const char *message);
+#endif
+
 [[noreturn]] void fatal(std::string message)
 {
     brls::Logger::error("Fatal error: {}", message);
+#ifdef PS5
+    char toast[256];
+    std::snprintf(toast, sizeof(toast), "wiliwili fatal:\n%s", message.c_str());
+    wiliwili_ps5_notify(toast);
+#endif
 #ifdef __PSV__
     sceKernelExitProcess(1);
 #else

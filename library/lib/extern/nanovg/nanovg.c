@@ -309,6 +309,19 @@ static NVGstate* nvg__getState(NVGcontext* ctx)
 	return &ctx->states[ctx->nstates-1];
 }
 
+// The display output mode, shared by every translation unit that includes the
+// Vulkan backend header (see its declaration in nanovg.h).
+int brls_nanovg_hdr_output = 0;
+NVGdoviMetadata brls_nanovg_dovi_metadata = {0};
+
+void nvgSetDoviMetadata(NVGcontext* ctx, const void* dovi) {
+    if (dovi) {
+        memcpy(&brls_nanovg_dovi_metadata, dovi, sizeof(NVGdoviMetadata));
+    } else {
+        memset(&brls_nanovg_dovi_metadata, 0, sizeof(NVGdoviMetadata));
+    }
+}
+
 NVGcontext* nvgCreateInternal(NVGparams* params)
 {
 	FONSparams fontParams;
@@ -856,6 +869,11 @@ int nvgCreateImageMem(NVGcontext* ctx, int imageFlags, unsigned char* data, int 
 int nvgCreateImageRGBA(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data)
 {
 	return ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_RGBA, w, h, imageFlags, data);
+}
+
+int nvgCreateImageR16(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data)
+{
+	return ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_R16, w, h, imageFlags, data);
 }
 
 void nvgUpdateImage(NVGcontext* ctx, int image, const unsigned char* data)
@@ -2469,7 +2487,12 @@ static int nvg__allocTextAtlas(NVGcontext* ctx)
 		ctx->fontImages[ctx->fontImageIdx+1] = ctx->params.renderCreateTexture(ctx->params.userPtr, NVG_TEXTURE_ALPHA, iw, ih, 0, NULL);
 	}
 	++ctx->fontImageIdx;
-	fonsResetAtlas(ctx->fs, iw, ih);
+	// The atlas could not be made: without it the glyphs have nowhere to go,
+	// and the text would be rasterized into nothing.
+	if (fonsResetAtlas(ctx->fs, iw, ih) == 0) {
+		--ctx->fontImageIdx;
+		return 0;
+	}
 	return 1;
 }
 

@@ -53,9 +53,11 @@ using winrt::Windows::UI::ViewManagement::UIColorType;
 using winrt::Windows::UI::ViewManagement::UISettings;
 #endif
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__) || defined(PS5) || defined(__PS5__)
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #endif
 
 
@@ -734,16 +736,26 @@ std::string DesktopPlatform::getIpAddress()
     std::string ipaddr = "-";
 #if defined(ANDROID)
 #elif defined(IOS) || defined(TVOS)
-#elif defined(__APPLE__) || defined(__linux__)
+#elif defined(__APPLE__) || defined(__linux__) || defined(PS5) || defined(__PS5__)
     struct ifaddrs* interfaces = nullptr;
     if (getifaddrs(&interfaces) == 0)
     {
         for (auto addr = interfaces; addr != nullptr; addr = addr->ifa_next)
         {
             if (!addr->ifa_addr) continue;
+            if (addr->ifa_flags & IFF_LOOPBACK) continue;
+            if (!(addr->ifa_flags & IFF_UP)) continue;
             if (addr->ifa_addr->sa_family == AF_INET)
             {
-                ipaddr = inet_ntoa(reinterpret_cast<struct sockaddr_in*>(addr->ifa_addr)->sin_addr);
+                auto* sin = reinterpret_cast<struct sockaddr_in*>(addr->ifa_addr);
+                if (sin->sin_addr.s_addr == INADDR_ANY || sin->sin_addr.s_addr == htonl(INADDR_LOOPBACK))
+                    continue;
+                char buf[INET_ADDRSTRLEN] = {0};
+                if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf)))
+                {
+                    ipaddr = buf;
+                    break;
+                }
             }
         }
     }

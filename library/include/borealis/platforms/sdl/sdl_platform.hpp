@@ -57,7 +57,9 @@ protected:
     NullAudioPlayer* audioPlayer  = nullptr;
     SDLVideoContext* videoContext = nullptr;
     SDLInputManager* inputManager = nullptr;
-    SDLImeManager* imeManager     = nullptr;
+    // The console platforms here replace this with their own keyboard, so the
+    // member is the interface rather than SDL's implementation.
+    ImeManager* imeManager        = nullptr;
     Event<SDL_Event*> otherEvent;
 };
 

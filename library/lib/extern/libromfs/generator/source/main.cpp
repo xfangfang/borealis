@@ -1,29 +1,34 @@
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
-#include <string>
-#include <vector>
 #include <iomanip>
+#include <string>
+#include <system_error>
+#include <vector>
+
 #ifdef USE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #else
-#include <filesystem>
 namespace fs = std::filesystem;
 #endif
 
 namespace {
 
     std::string replace(std::string string, const std::string &from, const std::string &to) {
-        if(!from.empty())
-            for(size_t pos = 0; (pos = string.find(from, pos)) != std::string::npos; pos += to.size())
+        if (!from.empty())
+            for (size_t pos = 0; (pos = string.find(from, pos)) != std::string::npos; pos += to.size())
                 string.replace(pos, from.size(), to);
         return string;
     }
 
     std::string toPathString(std::string string) {
         // Replace all backslashes with forward slashes on Windows
-        #if defined (_WIN32)
-            string = replace(string, "\\", "/");
-        #endif
+#if defined(_WIN32)
+        string = replace(string, "\\", "/");
+#endif
 
         // Replace all " with \"
         string = replace(string, "\"", "\\\"");
@@ -31,73 +36,105 @@ namespace {
         return string;
     }
 
+    // The resources are read into memory before they are written: a file that
+    // cannot be read stops the generator with the path that failed instead of
+    // writing an image with a hole in it.
+    bool readFile(const fs::path &path, std::vector<char> &bytes) {
+        std::ifstream input(path, std::ios::binary);
+        if (!input) {
+            std::printf("[libromfs] cannot open %s\n", path.string().c_str());
+            return false;
+        }
+        input.seekg(0, std::ios::end);
+        const std::streamoff size = input.tellg();
+        if (size < 0) {
+            std::printf("[libromfs] cannot size %s\n", path.string().c_str());
+            return false;
+        }
+        input.seekg(0, std::ios::beg);
+        bytes.resize(static_cast<std::size_t>(size));
+        if (size > 0 && !input.read(bytes.data(), size)) {
+            std::printf("[libromfs] cannot read %s\n", path.string().c_str());
+            return false;
+        }
+        return true;
+    }
+
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     if (argc != 3) {
         std::printf("./libromfs-generator <LIBROMFS_PROJECT_NAME> <LIBROMFS_RESOURCE_LOCATION>");
         return 0;
     }
-    std::ofstream outputFile("libromfs_resources.cpp");
 
-    std::printf("[libromfs] Resource Folder: %s\n", argv[2]);
+    const std::string project = argv[1];
+    const fs::path root(argv[2]);
+
+    // The order the directory iterator returns is not fixed; sorting keeps the
+    // generated file identical between runs and between file systems.
+    std::vector<fs::path> resources;
+    std::error_code error;
+    for (const auto &entry : fs::recursive_directory_iterator(root, error)) {
+        if (error) break;
+        if (!fs::is_regular_file(entry.path(), error)) continue;
+        if (entry.path().filename().string() == ".DS_Store") {
+            std::printf("[libromfs] SKIP: %s\n", entry.path().string().c_str());
+            continue;
+        }
+        resources.push_back(entry.path());
+    }
+    if (error) {
+        std::printf("[libromfs] cannot walk %s: %s\n", root.string().c_str(), error.message().c_str());
+        return 1;
+    }
+    std::sort(resources.begin(), resources.end());
+
+    std::ofstream outputFile("libromfs_resources.cpp");
+    if (!outputFile) {
+        std::printf("[libromfs] cannot write libromfs_resources.cpp\n");
+        return 1;
+    }
+
+    std::printf("[libromfs] Resource Folder: %s\n", root.string().c_str());
 
     outputFile << "#include <romfs/romfs.hpp>\n\n";
     outputFile << "#include <array>\n";
     outputFile << "#include <map>\n";
-
     outputFile << "\n\n";
     outputFile << "/* Resource definitions */\n";
 
-    std::vector<fs::path> paths;
-    std::uint64_t identifierCount = 0;
-    for (const auto &entry : fs::recursive_directory_iterator(argv[2])) {
-        auto& p = entry.path();
-        if (!fs::is_regular_file(p)) continue;
+    std::vector<std::string> paths;
+    for (std::size_t identifier = 0; identifier < resources.size(); identifier++) {
+        std::vector<char> bytes;
+        if (!readFile(resources[identifier], bytes)) return 1;
 
-        auto path = fs::canonical(fs::absolute(entry.path()));
-        auto relativePath = fs::relative(entry.path(), fs::absolute(argv[2]));
+        paths.push_back(fs::relative(resources[identifier], root).generic_string());
 
-        if (path.filename().string() == ".DS_Store") {
-            std::printf("[libromfs] SKIP: %s\n", relativePath.string().c_str());
-            continue ;
-        }
-
-        outputFile << "static std::array<std::uint8_t, " << fs::file_size(p) + 1 << "> " << "resource_" + std::string(argv[1]) + "_" << identifierCount << " = {\n";
+        outputFile << "static std::array<std::uint8_t, " << bytes.size() + 1 << "> "
+                   << "resource_" << project << "_" << identifier << " = {\n";
         outputFile << "    ";
-
-        std::vector<std::byte> bytes;
-        bytes.resize(fs::file_size(p));
-
-        auto file = std::fopen(entry.path().string().c_str(), "rb");
-        bytes.resize(std::fread(bytes.data(), 1, fs::file_size(p), file));
-        std::fclose(file);
-
         outputFile << std::hex << std::uppercase << std::setfill('0') << std::setw(2);
-        for (std::byte byte : bytes) {
-            outputFile << "0x" << static_cast<std::uint32_t>(byte) << ", ";
+        for (char byte : bytes) {
+            outputFile << "0x" << static_cast<std::uint32_t>(static_cast<unsigned char>(byte)) << ", ";
         }
         outputFile << std::dec << std::nouppercase << std::setfill(' ') << std::setw(0);
-
         outputFile << "\n 0x00 };\n\n";
-
-        paths.push_back(relativePath);
-
-        identifierCount++;
     }
 
     outputFile << "\n";
 
     {
         outputFile << "/* Resource map */\n";
-        outputFile << "const std::map<fs::path, romfs::Resource>& RomFs_" + std::string(argv[1]) + "_get_resources() {\n";
+        outputFile << "const std::map<fs::path, romfs::Resource>& RomFs_" << project << "_get_resources() {\n";
         outputFile << "    static std::map<fs::path, romfs::Resource> resources = {\n";
 
-        for (std::uint64_t i = 0; i < identifierCount; i++) {
+        for (std::size_t identifier = 0; identifier < resources.size(); identifier++) {
+            std::printf("[libromfs] Bundling resource: %s\n", paths[identifier].c_str());
 
-            std::printf("[libromfs] Bundling resource: %s\n", paths[i].string().c_str());
-
-            outputFile << "        " << "{ \"" << toPathString(paths[i].string()) << "\", romfs::Resource({ reinterpret_cast<std::byte*>(resource_" + std::string(argv[1]) + "_" << i << ".data()), " << "resource_" + std::string(argv[1]) + "_" << i << ".size() - 1 }) " << "},\n";
+            outputFile << "        " << "{ \"" << toPathString(paths[identifier]) << "\", romfs::Resource({ "
+                       << "reinterpret_cast<std::byte*>(resource_" << project << "_" << identifier << ".data()), "
+                       << "resource_" << project << "_" << identifier << ".size() - 1 }) },\n";
         }
         outputFile << "    };";
 
@@ -109,11 +146,11 @@ int main(int argc, char* argv[]) {
 
     {
         outputFile << "/* Resource paths */\n";
-        outputFile << "const std::vector<fs::path>& RomFs_" + std::string(argv[1]) + "_get_paths() {\n";
+        outputFile << "const std::vector<fs::path>& RomFs_" << project << "_get_paths() {\n";
         outputFile << "    static std::vector<fs::path> paths = {\n";
 
-        for (std::uint64_t i = 0; i < identifierCount; i++) {
-            outputFile << "        \"" << toPathString(paths[i].string()) << "\",\n";
+        for (const auto &path : paths) {
+            outputFile << "        \"" << toPathString(path) << "\",\n";
         }
         outputFile << "    };";
 
@@ -125,11 +162,11 @@ int main(int argc, char* argv[]) {
 
     {
         outputFile << "/* RomFS name */\n";
-        outputFile << "const std::string& RomFs_" + std::string(argv[1]) + "_get_name() {\n";
-        outputFile << "    static std::string name = \"" + std::string(argv[1]) + "\";\n";
+        outputFile << "const std::string& RomFs_" << project << "_get_name() {\n";
+        outputFile << "    static std::string name = \"" << project << "\";\n";
         outputFile << "    return name;\n";
         outputFile << "}\n\n";
     }
 
-    outputFile << "\n\n";
+    return 0;
 }

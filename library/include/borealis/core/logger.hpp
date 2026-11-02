@@ -33,7 +33,12 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 
+#ifdef PS5
+#include <unistd.h>
+#endif
+
 #include <borealis/core/event.hpp>
+#include <cstdio>
 #include <mutex>
 #include <string>
 
@@ -85,11 +90,47 @@ class Logger
      */
     static void setThreadSafeLogging(bool threadSafeLogging);
 
+    /**
+     * Bounds the size of the file the log is written to.
+     *
+     * When the output is a regular file and it grows past this many bytes, only
+     * warnings and errors are written from then on, so a title that runs for
+     * hours on a console - where debug logging is on and nothing ever rotates
+     * the file - cannot fill the storage. 0 keeps the log unbounded.
+     */
+    static void setLogFileLimit(std::size_t limit) { Logger::logFileLimit = limit; }
+
+    /**
+     * The handle the console's own log collects, or -1 to turn the copy off.
+     *
+     * A console title has no reader for its standard streams, so the platform
+     * moves them into a file. Warnings and errors are written to this handle as
+     * well, which is what a log server on the network shows while the title
+     * runs, and the only trace that survives a title that stops without
+     * reaching its file.
+     */
+    static void setConsoleLogHandle(int handle) { Logger::consoleLog = handle; }
+
     template <typename... Args>
     inline static void log(LogLevel level, std::string prefix, std::string color, fmt::format_string<Args...> format, Args&&... args)
     {
         if (Logger::logLevel < level)
             return;
+
+        if (Logger::logFileLimit != 0 && level < LogLevel::LOG_WARNING) {
+            if (Logger::logFull)
+                return;
+            // Measuring the file costs a call, so it is only done every now and
+            // then rather than for every line.
+            if ((++Logger::logWrites & 0xFF) == 0) {
+                long size = Logger::logOut == nullptr ? -1 : std::ftell(Logger::logOut);
+                if (size > 0 && (std::size_t)size >= Logger::logFileLimit) {
+                    Logger::logFull = true;
+                    Logger::log(LogLevel::LOG_WARNING, "WARNING", BRLS_WARNING_COLOR,
+                        "log file reached {} bytes, only warnings and errors follow", (std::size_t)size);
+                }
+            }
+        }
 
         TimePoint now = std::chrono::system_clock::now();
         uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -120,6 +161,17 @@ class Logger
             sceKernelDebugOutText(0, fmt::format("{:02d}:{:02d}:{:02d}.{:03d}\033{}[{}]\033[0m {}\n", lt.hour, lt.minute, lt.second, (int)ms, color, prefix, log).c_str());
 #else
             fmt::print(logOut, "{:%H:%M:%S}.{:03d}\033{}[{}]\033[0m {}\n", time_tm, (int)ms, color, prefix, log);
+#endif
+
+#ifdef PS5
+            // Warnings and errors also go to the console's own log, without
+            // the colours: it is read by a log server, not by a terminal.
+            if (Logger::consoleLog >= 0 && level <= LogLevel::LOG_WARNING) {
+                const std::string line = fmt::format("{:02d}:{:02d}:{:02d}.{:03d} [{}] {}\n",
+                    time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, (int)ms, prefix, log);
+                const ssize_t ignored = ::write(Logger::consoleLog, line.data(), line.size());
+                (void)ignored;
+            }
 #endif
 
             logEvent.fire(now, level, log);
@@ -176,6 +228,10 @@ class Logger
     inline static Event<TimePoint, LogLevel, std::string> logEvent;
     inline static std::FILE *logOut = stdout;
     inline static LogLevel logLevel = LogLevel::LOG_INFO;
+    inline static std::size_t logFileLimit = 0;
+    inline static std::size_t logWrites = 0;
+    inline static bool logFull = false;
+    inline static int consoleLog = -1;
 };
 
 } // namespace brls

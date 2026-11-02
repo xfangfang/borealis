@@ -23,6 +23,46 @@
 #include <yoga/YGNode.h>
 #include <yoga/event/event.h>
 
+#ifdef PS5
+// Diagnostics: the input stage of a frame is split into the polling of the
+// devices, the hit testing and the dispatch of the actions.
+namespace ps5input
+{
+double maxTouch = 0;
+double maxMouse = 0;
+double maxController = 0;
+double maxDispatch = 0;
+} // namespace ps5input
+
+// The console's memory pools: the kernel starts refusing allocations once
+// they are used up, which shows up as broken pictures and a crash.
+extern "C" int64_t sceKernelGetDirectMemorySize(void);
+extern "C" int sceKernelAvailableDirectMemorySize(size_t* available);
+extern "C" int sceKernelAvailableFlexibleMemorySize(size_t* available);
+extern "C" int sceKernelConfiguredFlexibleMemorySize(size_t* configured);
+// The heap the graphics driver and the application allocate from.
+extern "C" size_t ps5_opengl_heap_live_bytes(void);
+extern "C" size_t ps5_opengl_heap_peak_bytes(void);
+extern "C" size_t ps5_opengl_heap_failures(void);
+extern "C" size_t ps5_opengl_heap_capacity(void);
+
+inline size_t ps5FreeMemory(bool direct)
+{
+    size_t available = 0;
+    int rc = direct ? sceKernelAvailableDirectMemorySize(&available)
+                    : sceKernelAvailableFlexibleMemorySize(&available);
+    return rc == 0 ? available : 0;
+}
+
+inline size_t ps5TotalMemory(bool direct)
+{
+    size_t configured = 0;
+    if (direct) return (size_t)(sceKernelGetDirectMemorySize() >> 20);
+    if (sceKernelConfiguredFlexibleMemorySize(&configured) != 0) return 0;
+    return configured >> 20;
+}
+#endif
+
 #include <algorithm>
 #include <borealis/core/application.hpp>
 #include <borealis/core/font.hpp>
@@ -171,18 +211,44 @@ bool Application::internalMainLoop()
     Application::frameStartTime = getCPUTimeUsec();
     Application::setActiveEvent(false);
 
+#ifdef PS5
+    // Diagnostics: where the time of a frame goes. The report is written once
+    // a second so that a slow frame can be told apart from a slow stage.
+    static int ps5FrameCount   = 0;
+    static double ps5MaxFrame  = 0;
+    static double ps5MaxPump   = 0;
+    static double ps5MaxInput  = 0;
+    static double ps5MaxRender = 0;
+    static double ps5ReportAt  = 0;
+    const double ps5IterStart = getCPUTimeUsec();
+    double ps5InputStart = 0;
+    double ps5InputEnd   = 0;
+#endif
+
     // Main loop callback
+#ifdef PS5
+    const double ps5PumpStart = getCPUTimeUsec();
+#endif
     if (!Application::platform->mainLoopIteration() || Application::quitRequested)
     {
         Application::getWindowShouldCloseEvent()->fire();
         Application::exit();
         return false;
     }
+#ifdef PS5
+    const double ps5PumpEnd = getCPUTimeUsec();
+#endif
 
     // Mouse and touch
     if (Application::blockInputsTokens == 0)
     {
+#ifdef PS5
+        ps5InputStart = getCPUTimeUsec();
+#endif
         Application::processInput();
+#ifdef PS5
+        ps5InputEnd = getCPUTimeUsec();
+#endif
     }
     else
     {
@@ -198,7 +264,11 @@ bool Application::internalMainLoop()
     Ticking::updateTickings();
 
     // Render
+#ifdef PS5
+    const double ps5RenderStart = getCPUTimeUsec();
     Application::frame();
+    const double ps5RenderEnd = getCPUTimeUsec();
+#endif
 
     // Run sync functions
     Threading::performSyncTasks();
@@ -233,6 +303,37 @@ bool Application::internalMainLoop()
         }
     }
 
+#ifdef PS5
+    {
+        const double now = getCPUTimeUsec();
+        const double frameMs  = (now - ps5IterStart) / 1000.0;
+        const double pumpMs   = (ps5PumpEnd - ps5PumpStart) / 1000.0;
+        const double inputMs  = (ps5InputEnd - ps5InputStart) / 1000.0;
+        const double renderMs = (ps5RenderEnd - ps5RenderStart) / 1000.0;
+        ps5FrameCount++;
+        if (frameMs > ps5MaxFrame) ps5MaxFrame = frameMs;
+        if (pumpMs > ps5MaxPump) ps5MaxPump = pumpMs;
+        if (inputMs > ps5MaxInput) ps5MaxInput = inputMs;
+        if (renderMs > ps5MaxRender) ps5MaxRender = renderMs;
+        if (now - ps5ReportAt > 10000000.0)
+        {
+            Logger::info("[perf] frames={} last={:.1f}ms max={:.1f}ms | pump={:.1f} input={:.1f} render={:.1f} "
+                         "| touch={:.1f} mouse={:.1f} ctrl={:.1f} dispatch={:.1f} "
+                         "| mem cpu={}/{}MB gpu={}/{}MB heap={}/{}/{} of {}MB (live/peak/fail)",
+                ps5FrameCount, frameMs, ps5MaxFrame, ps5MaxPump, ps5MaxInput, ps5MaxRender,
+                ps5input::maxTouch, ps5input::maxMouse, ps5input::maxController, ps5input::maxDispatch,
+                ps5FreeMemory(false) >> 20, ps5TotalMemory(false),
+                ps5FreeMemory(true) >> 20, ps5TotalMemory(true),
+                ps5_opengl_heap_live_bytes() >> 20, ps5_opengl_heap_peak_bytes() >> 20,
+                ps5_opengl_heap_failures(), ps5_opengl_heap_capacity() >> 20);
+            ps5FrameCount = 0;
+            ps5MaxFrame = ps5MaxPump = ps5MaxInput = ps5MaxRender = 0;
+            ps5input::maxTouch = ps5input::maxMouse = ps5input::maxController = ps5input::maxDispatch = 0;
+            ps5ReportAt = now;
+        }
+    }
+#endif
+
     return true;
 }
 
@@ -265,9 +366,24 @@ void Application::processInput()
 
     InputManager* inputManager = Application::platform->getInputManager();
     inputManager->runloopStart();
+#ifdef PS5
+    const double ps5TouchStart = getCPUTimeUsec();
+#endif
     inputManager->updateTouchStates(&rawTouch);
+#ifdef PS5
+    const double ps5TouchEnd = getCPUTimeUsec();
+#endif
     inputManager->updateMouseStates(&rawMouse);
+#ifdef PS5
+    const double ps5MouseEnd = getCPUTimeUsec();
+#endif
     inputManager->updateUnifiedControllerState(&controllerState);
+#ifdef PS5
+    const double ps5ControllerEnd = getCPUTimeUsec();
+    ps5input::maxTouch = std::max(ps5input::maxTouch, (ps5TouchEnd - ps5TouchStart) / 1000.0);
+    ps5input::maxMouse = std::max(ps5input::maxMouse, (ps5MouseEnd - ps5TouchEnd) / 1000.0);
+    ps5input::maxController = std::max(ps5input::maxController, (ps5ControllerEnd - ps5MouseEnd) / 1000.0);
+#endif
 
     if (isSwapInputKeys())
     {
@@ -382,6 +498,9 @@ void Application::processInput()
     // Trigger controller events
     bool repeating                  = false;
     Time cpuTime = getCPUTimeUsec();
+#ifdef PS5
+    const double ps5DispatchStart = getCPUTimeUsec();
+#endif
 
     for (int i = 0; i < _BUTTON_MAX; i++)
     {
@@ -403,6 +522,9 @@ void Application::processInput()
     }
 
     oldControllerState = controllerState;
+#ifdef PS5
+    ps5input::maxDispatch = std::max(ps5input::maxDispatch, (getCPUTimeUsec() - ps5DispatchStart) / 1000.0);
+#endif
 
     // Trigger keyboard events
     const bool ctrlPressed  = inputManager->getKeyboardKeyState(BRLS_KBD_KEY_LEFT_CONTROL) || inputManager->getKeyboardKeyState(BRLS_KBD_KEY_RIGHT_CONTROL);

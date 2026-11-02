@@ -18,6 +18,7 @@
 #include <borealis/core/application.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_input.hpp>
+#include <sys/time.h>
 
 namespace brls
 {
@@ -381,6 +382,17 @@ static int sdlEventWatcher(void* data, SDL_Event* event)
             return x.first == jid;
         }), controllers.end());
     }
+    else if (event->type == SDL_CONTROLLERBUTTONDOWN || event->type == SDL_CONTROLLERBUTTONUP)
+    {
+        Logger::debug("{}: controller {} button {} -> {}",
+            event->type == SDL_CONTROLLERBUTTONDOWN ? "down" : "up",
+            event->cbutton.which, event->cbutton.button, event->cbutton.state);
+    }
+    else if (event->type == SDL_CONTROLLERAXISMOTION)
+    {
+        Logger::verbose("{}: controller {} axis {} -> {}", event->caxis.axis,
+            event->caxis.which, event->caxis.axis, event->caxis.value);
+    }
     else if (event->type == SDL_MOUSEBUTTONDOWN)
     {
         if (event->button.button <= 3)
@@ -404,12 +416,22 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
 {
 
     int32_t flags = SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
+    int32_t initFlags = flags;
 #ifndef __WINRT__
-    flags |= SDL_INIT_HAPTIC;
+    initFlags |= SDL_INIT_HAPTIC;
 #endif
-    if (SDL_Init(flags) < 0)
+    if (SDL_Init(initFlags) < 0)
     {
-        brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
+        // Some SDL builds (e.g. the console port) omit force feedback; plain
+        // joystick and gamecontroller support is enough for this application.
+        if ((initFlags & SDL_INIT_HAPTIC) && SDL_Init(flags) == 0)
+        {
+            brls::Logger::info("sdl: haptic (force feedback) unavailable, continuing without it");
+        }
+        else
+        {
+            brls::fatal("Couldn't initialize joystick: " + std::string(SDL_GetError()));
+        }
     }
 
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
@@ -420,8 +442,14 @@ SDLInputManager::SDLInputManager(SDL_Window* window)
     for (int i = 0; i < controllersCount; i++)
     {
         SDL_JoystickID jid = SDL_JoystickGetDeviceInstanceID(i);
-        Logger::info("sdl: joystick {}: \"{}\"", jid, SDL_JoystickNameForIndex(i));
-        controllers.push_back({ jid, SDL_GameControllerOpen(i) });
+        Logger::info("sdl: joystick {}: \"{}\" (is-gamecontroller: {})", jid, SDL_JoystickNameForIndex(i),
+            SDL_IsGameController(i) ? 1 : 0);
+        SDL_GameController* controller = SDL_GameControllerOpen(i);
+        if (!controller)
+            Logger::error("sdl: gamecontroller open failed: {}", SDL_GetError());
+        else
+            Logger::info("sdl: gamecontroller {} opened: \"{}\"", i, SDL_GameControllerName(controller));
+        controllers.push_back({ jid, controller });
     }
 
     SDL_AddEventWatch(sdlEventWatcher, this->window);
@@ -458,10 +486,12 @@ void SDLInputManager::updateUnifiedControllerState(ControllerState* state)
     for (float& axe : state->axes)
         axe = 0;
 
-    for (auto& c : controllers)
+    // The first entry of the vector holds the controller with the instance id
+    // 1, so the instance id cannot be used as an index into the vector.
+    for (size_t index = 0; index < controllers.size(); index++)
     {
         ControllerState localState {};
-        updateControllerState(&localState, c.first);
+        updateControllerState(&localState, (int)index);
 
         for (size_t i = 0; i < _BUTTON_MAX; i++)
             state->buttons[i] |= localState.buttons[i];

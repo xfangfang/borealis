@@ -52,6 +52,11 @@ extern "C"
 
 #include <borealis/platforms/driver/d3d11.hpp>
 std::unique_ptr<brls::D3D11Context> D3D11_CONTEXT;
+#elif defined(BOREALIS_USE_VULKAN)
+#define NANOVG_VULKAN_IMPLEMENTATION
+#include <nanovg_vk.h>
+
+#include <borealis/platforms/driver/vulkan.hpp>
 #endif
 
 namespace brls
@@ -80,6 +85,12 @@ static void sdlWindowFramebufferSizeCallback(SDL_Window* window, int width, int 
     fHeight     = height;
     scaleFactor = D3D11_CONTEXT->getScaleFactor();
     D3D11_CONTEXT->onFramebufferSize(fWidth, fHeight);
+#elif defined(BOREALIS_USE_VULKAN)
+    fWidth      = width;
+    fHeight     = height;
+    scaleFactor = VULKAN_CONTEXT ? VULKAN_CONTEXT->getScaleFactor() : 1.0;
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->onFramebufferSize(fWidth, fHeight);
 #endif
 
     Application::onWindowResized(fWidth, fHeight);
@@ -195,6 +206,12 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #elif defined(PS5)
+    // The console's G19 EGL driver owns exactly one fixed 1920x1080
+    // double-buffered OpenGL window and rejects any other dimensions or a
+    // resizable window, so coerce the request to what it accepts.
+    windowWidth  = 1920;
+    windowHeight = 1080;
+    windowFlags &= ~(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -249,6 +266,8 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
 #endif
     windowFlags |= SDL_WINDOW_OPENGL;
+#elif defined(BOREALIS_USE_VULKAN)
+    windowFlags |= SDL_WINDOW_VULKAN;
 #endif
     if (VideoContext::FULLSCREEN)
     {
@@ -260,6 +279,16 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     }
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 
+#if defined(PS5) && defined(BOREALIS_USE_VULKAN)
+    // On PS5 with Vulkan, presentation is direct to VideoOut via VK_KHR_display.
+    // SDL is used exclusively for gamepad controller input and audio.
+    // The PS5 G19 SDL2 video driver has no Vulkan support and rejects SDL_CreateWindow.
+    static uint64_t dummyStorage[64] = {0};
+    this->window = (SDL_Window*)dummyStorage;
+    windowWidth = 1920;
+    windowHeight = 1080;
+    Logger::info("sdl: using PS5 dummy window for Vulkan direct presentation");
+#else
     if (std::isnan(windowXPos) || std::isnan(windowYPos))
     {
         this->window = SDL_CreateWindow(windowTitle.c_str(),
@@ -283,12 +312,15 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     {
         fatal("sdl: failed to create window");
     }
+#endif
 #ifdef BOREALIS_USE_OPENGL
     // Configure window
     SDL_GLContext context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
 #endif
+#if !(defined(PS5) && defined(BOREALIS_USE_VULKAN))
     SDL_AddEventWatch(sdlWindowEventWatcher, window);
+#endif
 #ifdef BOREALIS_USE_OPENGL
 #if !defined(__PSV__) && !defined(PS4)
     // Load OpenGL routines using glad
@@ -318,6 +350,11 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     Logger::info("sdl: USE_D3D11");
     D3D11_CONTEXT    = std::make_unique<D3D11Context>(this->window, windowWidth, windowHeight);
     this->nvgContext = nvgCreateD3D11(D3D11_CONTEXT->getDevice(), NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+#elif defined(BOREALIS_USE_VULKAN)
+    Logger::info("sdl: USE_VULKAN");
+    VULKAN_CONTEXT   = std::make_unique<VulkanContext>(this->window, windowWidth, windowHeight);
+    VKNVGCreateInfo createInfo = VULKAN_CONTEXT->getNVGCreateInfo();
+    this->nvgContext = nvgCreateVk(createInfo, NVG_ANTIALIAS | NVG_STENCIL_STROKES, VULKAN_CONTEXT->getGraphicsQueue());
 #endif
     if (!this->nvgContext)
     {
@@ -327,8 +364,10 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     setSwapInterval(VideoContext::swapInterval);
 
     // Setup window state
-    int width, height;
+    int width = windowWidth, height = windowHeight;
+#if !(defined(PS5) && defined(BOREALIS_USE_VULKAN))
     SDL_GetWindowSize(window, &width, &height);
+#endif
 
     int fWidth, fHeight;
 #ifdef BOREALIS_USE_OPENGL
@@ -342,10 +381,32 @@ SDLVideoContext::SDLVideoContext(std::string windowTitle, uint32_t windowWidth, 
     fHeight          = height;
     Application::setWindowSize(fWidth, fHeight);
     D3D11_CONTEXT->onFramebufferSize(fWidth, fHeight);
+#elif defined(BOREALIS_USE_VULKAN)
+#if defined(PS5)
+    if (VULKAN_CONTEXT)
+    {
+        VkExtent2D extent = VULKAN_CONTEXT->getSwapchainExtent();
+        if (extent.width > 0 && extent.height > 0)
+        {
+            fWidth = extent.width;
+            fHeight = extent.height;
+            width = extent.width;
+            height = extent.height;
+        }
+    }
+#endif
+    scaleFactor      = VULKAN_CONTEXT ? VULKAN_CONTEXT->getScaleFactor() : 1.0;
+    fWidth           = width;
+    fHeight          = height;
+    Application::setWindowSize(fWidth, fHeight);
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->onFramebufferSize(fWidth, fHeight, true);
 #endif
 
-    int xPos, yPos;
+    int xPos = 0, yPos = 0;
+#if !(defined(PS5) && defined(BOREALIS_USE_VULKAN))
     SDL_GetWindowPosition(window, &xPos, &yPos);
+#endif
     Application::setWindowPosition(xPos, yPos);
 
     if (!VideoContext::FULLSCREEN)
@@ -361,6 +422,9 @@ void SDLVideoContext::beginFrame()
 {
 #if defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->beginFrame();
+#elif defined(BOREALIS_USE_VULKAN)
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->beginFrame();
 #endif
 }
 
@@ -370,6 +434,9 @@ void SDLVideoContext::endFrame()
     SDL_GL_SwapWindow(this->window);
 #elif defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->endFrame();
+#elif defined(BOREALIS_USE_VULKAN)
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->endFrame();
 #endif
 }
 
@@ -380,6 +447,9 @@ void SDLVideoContext::setSwapInterval(int interval)
     SDL_GL_SetSwapInterval(interval);
 #elif defined(BOREALIS_USE_D3D11)
     D3D11_CONTEXT->setSwapInterval(interval);
+#elif defined(BOREALIS_USE_VULKAN)
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->setSwapInterval(interval);
 #endif
 }
 
@@ -399,6 +469,9 @@ void SDLVideoContext::clear(NVGcolor color)
         color.g,
         color.b,
         color.a));
+#elif defined(BOREALIS_USE_VULKAN)
+    if (VULKAN_CONTEXT)
+        VULKAN_CONTEXT->clear(color);
 #endif
 }
 
@@ -437,6 +510,9 @@ SDLVideoContext::~SDLVideoContext()
 #elif defined(BOREALIS_USE_D3D11)
             nvgDeleteD3D11(this->nvgContext);
             D3D11_CONTEXT = nullptr;
+#elif defined(BOREALIS_USE_VULKAN)
+            nvgDeleteVk(this->nvgContext);
+            VULKAN_CONTEXT = nullptr;
 #endif
         }
     }
@@ -444,7 +520,9 @@ SDLVideoContext::~SDLVideoContext()
     {
         Logger::error("Cannot delete nvg Context");
     }
+#if !(defined(PS5) && defined(BOREALIS_USE_VULKAN))
     SDL_DestroyWindow(this->window);
+#endif
     SDL_Quit();
 }
 
@@ -460,6 +538,7 @@ SDL_Window* SDLVideoContext::getSDLWindow()
 
 void SDLVideoContext::fullScreen(bool fs)
 {
+#if !(defined(PS5) && defined(BOREALIS_USE_VULKAN))
 #ifdef __WINRT__
     // win32 会很模糊，而且点击事件貌似也错位了，只给 winrt 使用。
     static unsigned int flag = SDL_WINDOW_FULLSCREEN;
@@ -467,6 +546,7 @@ void SDLVideoContext::fullScreen(bool fs)
     static unsigned int flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 #endif
     SDL_SetWindowFullscreen(this->window, fs ? flag : 0);
+#endif
 }
 
 } // namespace brls

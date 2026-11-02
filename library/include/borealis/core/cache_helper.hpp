@@ -140,6 +140,24 @@ class LRUCache
     }
 
     /**
+     * Set the number of pictures the cache keeps, without the extra room the
+     * setting adds.
+     *
+     * A device with little memory uses it: a picture of the lists is a
+     * megabyte there, and the cache must not fill the heap the video needs.
+     */
+    void setCapacityLimit(size_t c)
+    {
+        if (c < 1)
+            throw std::logic_error("Cache capacity cannot less than 1.");
+        this->capacity = c;
+        if (cacheList.size() > capacity)
+        {
+            deleteCache(cacheList.size() - capacity);
+        }
+    }
+
+    /**
      * A dirty cache is not able to be hit
      * @param value
      */

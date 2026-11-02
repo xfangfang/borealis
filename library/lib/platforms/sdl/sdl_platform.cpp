@@ -21,6 +21,9 @@
 #include <borealis/core/i18n.hpp>
 #include <borealis/core/logger.hpp>
 #include <borealis/platforms/sdl/sdl_platform.hpp>
+#ifdef PS5
+#include <borealis/platforms/ps5/ps5_ime.hpp>
+#endif
 #include <unordered_map>
 
 #if defined(IOS) || defined(TVOS)
@@ -109,7 +112,13 @@ void SDLPlatform::createWindow(std::string windowTitle, uint32_t windowWidth, ui
 {
     this->videoContext = new SDLVideoContext(windowTitle, windowWidth, windowHeight, windowXPos, windowYPos);
     this->inputManager = new SDLInputManager(this->videoContext->getSDLWindow());
-    this->imeManager   = new SDLImeManager(&this->otherEvent);
+#ifdef PS5
+    // SDL's text input has no keyboard behind it on the console; the system's
+    // own is what a player can type into.
+    this->imeManager = new Ps5ImeManager(&this->otherEvent);
+#else
+    this->imeManager = new SDLImeManager(&this->otherEvent);
+#endif
 }
 
 void SDLPlatform::restoreWindow()
