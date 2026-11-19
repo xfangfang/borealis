@@ -157,7 +157,13 @@ void ScrollingFrame::naturalScrollingBehaviour()
     {
         // If current focus view is outside scrolling bounds,
         // change focus to this.
+        // Focus may legitimately be cleared (giveFocus(nullptr) from ~View)
+        // in the same frame this is drawn: never dereference a null focus.
         View* currentFocus = Application::getCurrentFocus();
+        if (!currentFocus)
+        {
+            return;
+        }
         if (!currentFocus->getFrame().inscribed(getFrame()))
         {
             Application::giveFocus(this);
@@ -488,6 +494,13 @@ void ScrollingFrame::onChildFocusGained(View* directChild, View* focusedView)
 
 void ScrollingFrame::onChildFocusLost(View* directChild, View* focusedView)
 {
+    // Must propagate to parent frames (mirrors onChildFocusGained and
+    // HScrollingFrame): nested ScrollingFrames (e.g. a RecyclingGrid inside a
+    // ScrollingFrame) otherwise kept a stale childFocused=true forever.
+    // naturalScrollingBehaviour() then hijacked the focus of a *different*
+    // activity whenever the old frame was drawn during a push transition.
+    Box::onChildFocusLost(directChild, focusedView);
+
     this->childFocused = false;
 }
 

@@ -1532,6 +1532,10 @@ View::~View()
     if (Application::getCurrentFocus() == this)
         Application::giveFocus(nullptr);
 
+    // The focus stack may still reference this view from a pushed activity:
+    // popActivity() would hand focus to freed memory. Drop those entries.
+    Application::purgeFocusStack(this);
+
     Application::tryDeinitFirstResponder(this);
     for (GestureRecognizer* recognizer : this->gestureRecognizers)
         delete recognizer;

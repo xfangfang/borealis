@@ -884,22 +884,28 @@ void Application::giveFocus(View* view)
     View* oldFocus = Application::currentFocus;
     View* newFocus = view ? view->getDefaultFocus() : nullptr;
 
-    if (oldFocus != newFocus && newFocus != nullptr)
+    if (oldFocus == newFocus) return;
+
+    // Clearing the focus (view == nullptr) must actually clear it: View::~View
+    // relies on this call, and leaving currentFocus pointing at a destroyed
+    // view made the next navigate() jump through a freed vtable (crash).
+    if (oldFocus)
+        oldFocus->onFocusLost();
+
+    Application::currentFocus = newFocus;
+
+    if (newFocus)
     {
-        if (oldFocus)
-            oldFocus->onFocusLost();
-
-        Application::currentFocus = newFocus;
         Application::globalFocusChangeEvent.fire(newFocus);
-
-        if (newFocus)
-        {
-            newFocus->onFocusGained();
-            Logger::debug("Giving focus to {}", newFocus->describe());
-        }
-
-        Application::globalHintsUpdateEvent.fire();
+        newFocus->onFocusGained();
+        Logger::debug("Giving focus to {}", newFocus->describe());
     }
+    else if (oldFocus)
+    {
+        Logger::warning("Focus cleared (previous: {})", oldFocus->describe());
+    }
+
+    Application::globalHintsUpdateEvent.fire();
 }
 
 bool Application::popActivity(TransitionAnimation animation, std::function<void(void)> cb, bool free)
@@ -943,6 +949,12 @@ bool Application::popActivity(TransitionAnimation animation, std::function<void(
 
         Application::focusStack.pop_back();
     }
+
+    // Nothing was restored (empty stack - e.g. its entry was purged because
+    // that view got destroyed while this activity was on top): focus the shown
+    // activity, otherwise input stays dead after the popped activity dies.
+    if (toShow && !Application::getCurrentFocus())
+        Application::giveFocus(toShow->getContentView());
 
     // Hide animation (and show previous activity, if any)
     last->hide([last, cb, free]()

@@ -41,14 +41,21 @@ void SwitchFontLoader::loadFonts()
 
     // Simplified Chinese
     // custom Font
+    bool loadedCustomFont = false;
     if (access(USER_FONT_PATH.c_str(), F_OK) != -1)
     {
         brls::Logger::info("Load custom font: {}", USER_FONT_PATH);
-        this->loadFontFromFile(FONT_CHINESE_SIMPLIFIED, USER_FONT_PATH);
+        loadedCustomFont = this->loadFontFromFile(FONT_CHINESE_SIMPLIFIED, USER_FONT_PATH);
+        if (!loadedCustomFont)
+            Logger::error("switch: custom font {} existed but failed to load, falling back to the shared Chinese Simplified font", USER_FONT_PATH);
     }
     else
     {
         brls::Logger::warning("Cannot find custom font, (Searched at: {})", USER_FONT_PATH);
+    }
+
+    if (!loadedCustomFont)
+    {
         rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
         if (R_SUCCEEDED(rc) && Application::loadFontFromMemory(FONT_CHINESE_SIMPLIFIED, font.address, font.size, false))
             nvgAddFallbackFontId(vg, Application::getFont(FONT_CHINESE_SIMPLIFIED), Application::getFont(FONT_REGULAR));
