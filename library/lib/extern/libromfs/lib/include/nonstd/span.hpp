@@ -242,6 +242,7 @@ using std::dynamic_extent;
 #else  // span_USES_STD_SPAN
 
 #include <algorithm>
+#include <exception>
 
 // Compiler versions:
 //
