@@ -119,7 +119,12 @@ bool D3D11Context::initDX(HWND hWnd, IUnknown* coreWindow, int width, int height
         swapDesc.SampleDesc.Quality = sampleDesc.Quality;
         swapDesc.Format             = DXGI_FORMAT_R8G8B8A8_UNORM;
         swapDesc.Stereo             = FALSE;
-        swapDesc.BufferUsage        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        // UAV is required for libplacebo to treat the wrapped back buffer as
+        // blit_dst on FL11+ (it emulates blits with compute shaders). Only
+        // DXGI 1.2 swap chains accept this usage.
+        swapDesc.BufferUsage        = DXGI_USAGE_RENDER_TARGET_OUTPUT |
+                                      DXGI_USAGE_SHADER_INPUT |
+                                      DXGI_USAGE_UNORDERED_ACCESS;
         swapDesc.BufferCount        = SwapChainBufferCount;
         swapDesc.Flags              = 0;
         swapDesc.Scaling            = DXGI_SCALING_STRETCH;
