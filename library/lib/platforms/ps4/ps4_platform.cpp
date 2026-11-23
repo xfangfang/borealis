@@ -113,6 +113,42 @@ Ps4Platform::Ps4Platform()
             case ORBIS_SYSTEM_PARAM_LANG_ITALIAN:
                 this->locale = LOCALE_IT;
                 break;
+            case ORBIS_SYSTEM_PARAM_LANG_GERMAN:
+                this->locale = LOCALE_DE;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_FRENCH:
+                this->locale = LOCALE_FR;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_FRENCH_CA:
+                this->locale = LOCALE_FR_CA;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_SPANISH:
+                this->locale = LOCALE_ES;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_SPANISH_LA:
+                this->locale = LOCALE_ES_419;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_PORTUGUESE_PT:
+                this->locale = LOCALE_PT;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_PORTUGUESE_BR:
+                this->locale = LOCALE_PT_BR;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_RUSSIAN:
+                this->locale = LOCALE_RU;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_DUTCH:
+                this->locale = LOCALE_NL;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_POLISH:
+                this->locale = LOCALE_PL;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_THAI:
+                this->locale = LOCALE_TH;
+                break;
+            case ORBIS_SYSTEM_PARAM_LANG_ENGLISH_GB:
+                this->locale = LOCALE_EN_GB;
+                break;
             default:
                 this->locale = LOCALE_DEFAULT;
         }

@@ -77,10 +77,12 @@ GLFWPlatform::GLFWPlatform()
         case LANG_JAPANESE: this->locale = LOCALE_JA; break;
         case LANG_GERMAN: this->locale = LOCALE_DE; break;
         case LANG_ITALIAN: this->locale = LOCALE_IT; break;
-        case LANG_SPANISH: this->locale = LOCALE_ES; break;
+        case LANG_SPANISH: this->locale = (SUBLANGID(lang) == SUBLANG_SPANISH_MEXICAN) ? LOCALE_ES_419 : LOCALE_ES; break;
         case LANG_KOREAN: this->locale = LOCALE_Ko; break;
         case LANG_DUTCH: this->locale = LOCALE_NL; break;
         case LANG_RUSSIAN: this->locale = LOCALE_RU; break;
+        case LANG_POLISH: this->locale = LOCALE_PL; break;
+        case LANG_THAI: this->locale = LOCALE_TH; break;
         default:;
         }
 #elif defined(__APPLE__)
@@ -97,6 +99,14 @@ GLFWPlatform::GLFWPlatform()
                 { "zh_TW", LOCALE_ZH_HANT },
                 { "ja_JP", LOCALE_JA },
                 { "ko_KR", LOCALE_Ko },
+                { "de_DE", LOCALE_DE },
+                { "fr_FR", LOCALE_FR },
+                { "es_ES", LOCALE_ES },
+                { "pt_PT", LOCALE_PT },
+                { "pt_BR", LOCALE_PT_BR },
+                { "ru_RU", LOCALE_RU },
+                { "pl_PL", LOCALE_PL },
+                { "th_TH", LOCALE_TH },
                 { "it_IT", LOCALE_IT }
             };
             char *ptr = strchr(langEnv, '.');
