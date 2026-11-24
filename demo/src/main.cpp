@@ -15,7 +15,7 @@
     limitations under the License.
 */
 
-#if defined(ANDROID) || defined(IOS)
+#if defined(__SDL2__)
 #include <SDL2/SDL_main.h>
 #endif
 

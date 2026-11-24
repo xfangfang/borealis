@@ -114,11 +114,11 @@ namespace brls
             dialog->setCursor(cursor);
         };
         auto updateTextAndCursor = [this, updateText, updateTextCursor, maxStringLength](std::string text) {
-            int prev_n = utf8_len(this->inputBuffer);
+            size_t prev_n = utf8_len(this->inputBuffer);
             if (prev_n >= maxStringLength) {
                 return;
             }
-            int n = utf8_len(text);
+            size_t n = utf8_len(text);
             if (prev_n + n > maxStringLength) {
                 n = maxStringLength - prev_n;
                 int end = utf8_find_next(text, 0, n);
