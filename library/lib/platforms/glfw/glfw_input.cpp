@@ -23,6 +23,9 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <unistd.h>
+#if defined(__linux__)
+#include <linux/input-event-codes.h>
+#endif
 
 namespace brls
 {
@@ -121,9 +124,48 @@ static void glfwTouchCallback(GLFWwindow* window, int touch, int action, double 
     Application::setActiveEvent(true);
 }
 
+static bool isBackKeyScancode(int scancode)
+{
+#if defined(__linux__)
+    // Linux evdev KEY_BACK (158); X11 keycodes have an offset of +8 (166)
+#if GLFW_VERSION_MAJOR > 3 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4)
+    int platform = glfwGetPlatform();
+    if (platform == GLFW_PLATFORM_X11)
+        return scancode == KEY_BACK + 8;
+    if (platform == GLFW_PLATFORM_WAYLAND)
+        return scancode == KEY_BACK;
+#else
+    return scancode == KEY_BACK + 8 || scancode == KEY_BACK;
+#endif
+#elif defined(_WIN32)
+    // VK_BROWSER_BACK extended scancode (0xE0 0x6A -> 0x16A)
+    return scancode == 0x16A;
+#else
+    (void)scancode;
+#endif
+    return false;
+}
+
+bool GLFWInputManager::getBackKeyState()
+{
+    if (backKeyState == GLFW_STICKY)
+    {
+        backKeyState = GLFW_RELEASE;
+        return true;
+    }
+    return backKeyState == GLFW_PRESS;
+}
+
 void GLFWInputManager::keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     auto* self = (GLFWInputManager*)Application::getPlatform()->getInputManager();
+    if (key == GLFW_KEY_UNKNOWN && isBackKeyScancode(scancode))
+    {
+        if (action == GLFW_RELEASE)
+            self->backKeyState = (self->backKeyState == GLFW_PRESS) ? GLFW_STICKY : GLFW_RELEASE;
+        else
+            self->backKeyState = GLFW_PRESS;
+    }
     KeyState state {};
     state.key            = (BrlsKeyboardScancode)key;
     state.mods           = mods;
@@ -242,7 +284,10 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
         state->axes[i] = 0;
 
     if (!glfwGetWindowAttrib(window, GLFW_FOCUSED))
+    {
+        backKeyState = GLFW_RELEASE;
         return;
+    }
 
     for (int i = 0; i < GAMEPADS_MAX; i++)
     {
@@ -263,19 +308,24 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
         }
     }
 
+    bool backPressed = getBackKeyState();
+
     // Add keyboard keys on top of gamepad buttons
     if (Application::isSwapInputKeys()) {
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
         state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
+        state->buttons[BUTTON_A] |= backPressed;
         state->buttons[BUTTON_A] |= glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     } else {
         state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_KP_ENTER) != 0;
         state->buttons[BUTTON_A] |= glfwGetKey(this->window, GLFW_KEY_ENTER) != 0;
         state->buttons[BUTTON_B] |= glfwGetKey(this->window, GLFW_KEY_ESCAPE) != 0;
+        state->buttons[BUTTON_B] |= backPressed;
         state->buttons[BUTTON_B] |= glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     }
     state->buttons[BUTTON_X] |= (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+    state->buttons[BUTTON_X] |= glfwGetKey(this->window, GLFW_KEY_MENU) != 0;
 
     state->buttons[BUTTON_UP] |= glfwGetKey(this->window, GLFW_KEY_UP) != 0;
     state->buttons[BUTTON_RIGHT] |= glfwGetKey(this->window, GLFW_KEY_RIGHT) != 0;
