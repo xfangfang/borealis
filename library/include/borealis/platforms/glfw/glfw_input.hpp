@@ -57,6 +57,8 @@ class GLFWInputManager : public InputManager
     static void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     GLFWwindow* window;
     bool pointerLocked = false;
+    int backKeyState   = GLFW_RELEASE;
+    bool getBackKeyState();
 };
 
 };
